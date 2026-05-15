@@ -38,7 +38,19 @@ Main Go abstractions and shared codebase (with shared implementations) will be u
 
 ### Project Herald
 
-Tbd
+The Project Herald is focused on Projects and its development. All Projects share some commons and Project Herald MUST FIT as the universal player here! Project Herald MUST offer several integrations:
+
+- Telegram
+- Slack
+- Max (max.ru)
+- Email
+- Markdown document with PDF and HTML export
+
+For each of Messaging services user MUST provide required tokens, credentials or API keys depending on the platform. All details MUST BE documented in proper user guides and manuals with step by step instructions so users can easily obtain and provide required information.
+
+All sensitive data like credentials, tokens or API keys MUST be in inside proper .env file (create for the documentation purposes .env.example file to illustrate everything that users can put there) which MUST BE Git ignored! System MUST BE capable to obtain all these environment variables from exported variables from `.bashrc` and `.zshrc` or any other System profile script which can export the variables. Using values fron .env comes after top level ones are loaded and everything defined inside the .env file will override them (if same variabels are defined there).
+
+Everything that is sent or received through any of the interated Messnger channels such as Telegram, Slack, Max and others (Email as well) will be stored inside main Markdown file and exported into PDF and HTML regularly. Markdown file and its exports MUST BE always in sync! Location of the Markdown file inside the Project MUST BE the following: `docs/herald/diary/main.md` (`main.pdf` and `main.html`).
 
 ### System Herald
 
@@ -46,7 +58,9 @@ Tbd
 
 ### Others and misc
 
-Tbd
+Here we will list main ideas for upcoming Flavors which MUST BE planned with proper deep web research and fully implemented:
+
+- Tbd
 
 ## Integration into the Constitution
 
