@@ -18,19 +18,23 @@ Possibilities are not limited.
 
 The structure of the System MUST be hierarchical so in the top levels (closest to the root) we have abstractions and base reusable, main shared mechanisms, while inside the `flvors` directory we MUST have all flavors - the implementations.
 
+*Note:* We MUST NOT be obligated to follow this structure as many parent project specific flavors (which may be propriatery) may exist! We MUST make sure that such flexibility is possible!
+
 ## How Herald should achieve its mission objectives?
 
 Every herald flavor will be individual binnary which users can add to the System path throguh the `.bashrc` or `.zshrc` (for example). Each Herald flavor will have shared set of commands and parameters while there will be as well commands and parameters specific to particular Herald flavors.
 
 Herald applications are CLI binarries which are mainly designed for CI integration and various Pipelines. They can be easily incorporate for use with various AI CLI Agents as well or any similar use cases (triggering by Crond and so on ...).
 
+Some Herald application names would be: `pherald` for the `Project Herald`, `sherald` for the `System Herald` and so on.
+
 ### Technology stack
 
-Tbd
+Herald project and all flavors MUST BE writtn in Go.
 
 ## Flavors (the implementations)
 
-Tbd
+Main Go abstractions and shared codebase (with shared implementations) will be used as the base which Flavors will inherit and build on top of it.
 
 ### Project Herald
 
