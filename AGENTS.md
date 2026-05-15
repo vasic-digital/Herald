@@ -1,11 +1,17 @@
 # Herald — AGENTS.md
 
-> Base agent rules: `constitution/AGENTS.md` — **READ IT FIRST.**
-> The base file is authoritative for any topic not covered here.
-> Herald-specific rules below extend them; they never weaken them.
+> Base agent rules: the Helix Constitution's `AGENTS.md`, provided by the **parent project's** `constitution/` submodule (Herald does not carry its own copy). **READ IT FIRST.**
 >
-> The constitution submodule is pinned at `1b0b03a2223fffcd71eb7fc8a9620d0c7b4ed8f3`
-> (incorporated 2026-05-15). Canonical: https://github.com/HelixDevelopment/HelixConstitution
+> Discover the constitution by walking up parent directories until you find `<ancestor>/constitution/Constitution.md`, or by invoking the canonical helper `<discovered>/find_constitution.sh`. For standalone Herald work, clone the constitution alongside Herald:
+>
+> ```bash
+> git clone git@github.com:HelixDevelopment/HelixConstitution.git \
+>     $(dirname "$PWD")/constitution
+> ```
+>
+> The base file is authoritative for any topic not covered here. Herald-specific rules below extend them; they never weaken them.
+>
+> Canonical: <https://github.com/HelixDevelopment/HelixConstitution>
 
 ## Critical base rules restated (for agents that don't follow @imports)
 
@@ -24,14 +30,16 @@
 
 Herald is **pre-implementation**. As of 2026-05-15 the repo contains:
 
-- `README.md` — one-line mission statement.
-- `docs/specs/mvp/specification.md` — section headings only (substantive content TBD).
-- `docs/guides/HERALD_CONSTITUTION.md` — project-specific constitutional extensions (TBD-heavy).
+- `README.md` — mission, deployment model, constitution-inheritance contract, how to run.
+- `docs/specs/mvp/specification.md` — MVP spec (section headings only; substantive content TBD).
+- `docs/guides/HERALD_CONSTITUTION.md` — project-specific constitutional extensions.
+- `docs/guides/CONSTITUTION_INHERITANCE.md` — operator/agent guide for the parent-discovery contract + the gate.
 - `upstreams/` — Herald's own mirror declarations (lowercase, §11.4.29-compliant).
-- `constitution/` — Helix Constitution submodule (READ-ONLY from Herald's side).
-- `tests/test_constitution_inheritance.sh` — inheritance gate.
-- `tests/test_constitution_inheritance_meta.sh` — paired mutation meta-test.
-- `.gitignore` tuned for Go.
+- `tests/test_constitution_inheritance.sh` — inheritance gate (read-only assertions).
+- `tests/test_constitution_inheritance_meta.sh` — paired mutation meta-test (§1.1).
+- `.gitignore` tuned for Go (also ignores `.DS_Store`).
+
+Herald **does not** ship a `constitution/` submodule of its own — see `docs/guides/CONSTITUTION_INHERITANCE.md` for the rationale and the discovery mechanism.
 
 There is no `go.mod`, no source code, and no build/lint tooling yet. When asked to "add a feature" or "fix" something, first disambiguate: **scaffold the project** (init the Go module, lay out packages) vs. **fill in the spec**? The answer determines whether you're writing Go or Markdown.
 
@@ -52,6 +60,7 @@ Both MUST return 0. If either fails, fix at root cause per Constitution §11.4.4
 
 ### Forbidden in this project
 
-- Promoting Herald-specific values into `constitution/` (universal status must be EARNED; see Constitution §11.4 + §11.4.10).
-- Modifying any file under `constitution/` from Herald commits — the submodule is read-only for Herald. Constitution changes go through the HelixConstitution repo directly.
-- Adding new submodules without re-running the inheritance audit afterward.
+- **Re-adding a `constitution/` submodule inside Herald.** Herald is consumed as a submodule of a parent project that already provides `constitution/`. A duplicate copy inside Herald is a deployment-model violation. The inheritance gate's invariant `I6` enforces this — re-adding it will turn the gate red.
+- Promoting Herald-specific values into the parent constitution (universal status must be EARNED; see Constitution §11.4 + §11.4.10).
+- Modifying any file under the discovered `constitution/` from Herald commits — the parent's constitution is read-only from Herald's perspective. Constitution changes go through the HelixConstitution repo directly.
+- Adding new submodules without re-running `bash tests/test_constitution_inheritance.sh` afterward.

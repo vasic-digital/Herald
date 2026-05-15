@@ -2,29 +2,49 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## INHERITED FROM constitution/CLAUDE.md
+## INHERITED FROM Helix Constitution (parent-discovery)
 
-All rules in `constitution/CLAUDE.md` (and the `constitution/Constitution.md` it references) apply unconditionally. Herald-specific rules below extend them — they MUST NOT weaken any inherited rule. When this file disagrees with the constitution submodule, the constitution wins.
+Herald is consumed as a submodule of a parent project that already carries the Helix Constitution submodule at `<parent>/constitution/`. Herald therefore does **NOT** keep its own copy. Locate the constitution from any nested depth by walking up parents until you find `<ancestor>/constitution/Constitution.md`, or by running the canonical helper:
 
-The HelixConstitution submodule is pinned at `1b0b03a2223fffcd71eb7fc8a9620d0c7b4ed8f3` (incorporated 2026-05-15). Re-read it from the submodule directly — do not paraphrase it here.
+```bash
+CONST_DIR="$(bash "$(find . -type d -name constitution -print -quit 2>/dev/null)/find_constitution.sh")"
+# or, more robustly, from any starting directory:
+CONST_DIR="$(bash <ancestor>/constitution/find_constitution.sh)"
+```
 
-@constitution/CLAUDE.md
+For standalone development of Herald (no parent project), clone the constitution alongside Herald:
+
+```bash
+git clone git@github.com:HelixDevelopment/HelixConstitution.git \
+    $(dirname "$PWD")/constitution
+```
+
+Once located, all rules in `<discovered>/CLAUDE.md` and the `<discovered>/Constitution.md` it references apply unconditionally. Herald-specific rules below extend them — they MUST NOT weaken any inherited rule. When this file disagrees with the discovered constitution, the constitution wins.
+
+Canonical: <https://github.com/HelixDevelopment/HelixConstitution>
 
 > **Read order on a cold start:**
-> 1. `constitution/CLAUDE.md` + `constitution/Constitution.md` — universal Helix rules. Inherited unconditionally.
-> 2. `constitution/AGENTS.md` — agent guardrails (anti-bluff, no-guessing, paired mutations).
-> 3. This file (Herald-specific notes below).
-> 4. `docs/guides/HERALD_CONSTITUTION.md` — Herald's project-specific constitutional extensions (currently mostly TBD, matches the spec).
-> 5. `docs/specs/mvp/specification.md` — mission spec (mostly TBD).
+> 1. `<discovered-constitution>/CLAUDE.md` + `Constitution.md` — universal Helix rules. Inherited unconditionally.
+> 2. `<discovered-constitution>/AGENTS.md` — agent guardrails (anti-bluff, no-guessing, paired mutations).
+> 3. `README.md` — Herald overview + how-to.
+> 4. This file (Herald-specific notes below).
+> 5. `docs/guides/HERALD_CONSTITUTION.md` — Herald's project-specific constitutional extensions.
+> 6. `docs/guides/CONSTITUTION_INHERITANCE.md` — operator/agent guide for the discovery contract + the inheritance gate.
+> 7. `docs/specs/mvp/specification.md` — mission spec (mostly TBD).
 
 ## Project status
 
-Herald is **pre-implementation**. As of this writing the repo contains only:
+Herald is **pre-implementation**. As of this writing the repo contains:
 
-- `README.md` — one-line mission statement.
-- `docs/specs/mvp/specification.md` — section headings only; every substantive section (capabilities, design, Constitution integration, notes) is still `Tbd`.
-- `upstreams/` — mirror configuration scripts (see below).
-- `.gitignore` tuned for Go.
+- `README.md` — mission, deployment model, inheritance contract, quickstart.
+- `docs/specs/mvp/specification.md` — MVP spec stub (substantive sections TBD).
+- `docs/guides/HERALD_CONSTITUTION.md` — Herald's project constitution (extends Helix).
+- `docs/guides/CONSTITUTION_INHERITANCE.md` — operator/agent guide for parent-discovery + gate semantics.
+- `upstreams/` — Herald's mirror declarations (see below).
+- `tests/test_constitution_inheritance.sh` + `_meta.sh` — paired inheritance gate (§1.1).
+- `.gitignore` tuned for Go + `.DS_Store`.
+
+Herald does **not** ship a `constitution/` submodule of its own; the parent project provides it. See `docs/guides/CONSTITUTION_INHERITANCE.md`.
 
 There is no `go.mod`, no source code, and no build/test/lint tooling yet. When the user asks you to "add a feature" or "fix" something, first confirm whether they want you to **scaffold the project** (init the module, lay out packages) or **fill in the spec** — the answer determines whether you're writing Go or Markdown.
 
@@ -53,9 +73,18 @@ Each script exports a single `UPSTREAMABLE_REPOSITORY` variable and is meant to 
 
 When adding a new mirror, copy an existing script and change only the URL — keep the `#!/bin/bash` shebang, blank line, and `export` form identical so any consumer that greps these files keeps working.
 
+## Inheritance gate (run before any commit touching root docs)
+
+```bash
+bash tests/test_constitution_inheritance.sh        # 9 invariants, must pass
+bash tests/test_constitution_inheritance_meta.sh   # paired §1.1 mutation proof
+```
+
+If either fails, fix at root cause per Universal §11.4.4. Never silently accept the FAIL.
+
 ## Notes for future scaffolding
 
 - The repo is in `main` branch and committed under "Milos Vasic" — no other contributors yet.
 - `.claude/` exists but is empty; project-local Claude config can go there.
 - `LICENSE` is present (do not overwrite without asking).
-- `docs/` and `docs/specs/` contain stray `.DS_Store` files; don't commit more of them, and consider adding `.DS_Store` to `.gitignore` if the user wants.
+- `.DS_Store` is now git-ignored; do not re-add the previously-stray files.
