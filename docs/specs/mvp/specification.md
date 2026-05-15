@@ -1,48 +1,51 @@
 # Herald
 
-Repository: `git@github.com:vasic-digital/Herald.git`
-
-## Purpose
-
 Ingesting system events and reliably fanning them out to multiple notification channels so every alert reaches the right destination without confusion.
 
-### What Herald can do?
+All exiting projetc upstreams:
 
-Herald is the mechanism which receives input from the source and sends it to one or more destinations.
-Depending on the implementation (flavor) of the Herald sources and destinations could be various.
-We can have single type or multiple type inputs and same for the outputs.
+- GitHub: `git@github.com:vasic-digital/Herald.git` (main repository)
+- GitLab: `git@gitlab.com:vasic-digital/herald.git`
+- GitFlic: `git@gitflic.ru:vasic-digital/herald.git`
+- GitFlic: `git@gitverse.ru:vasic-digital/Herald.git`
 
-For example input can be the result of execution of the pipeline and the output sending of this result (some report for example) to certain output - messagin system which notifies subscribers!
+## What Herald can (must be able to) do?
 
-Possibilities are not limited.
+Herald is the mechanism which receives input from the source and sends it to one or more destinations (implemented channels). Depending on the implementation (Flavor) of the Herald sources and destinations could be various. We can have single type or multiple type inputs and same applies for the outputs.
 
-The structure of the System MUST be hierarchical so in the top levels (closest to the root) we have abstractions and base reusable, main shared mechanisms, while inside the `flvors` directory we MUST have all flavors - the implementations.
+For example, input can be the result of execution of some pipeline. Heralds is then sending this result (some report for example) to certain output (or outputs). It could be, for a sake of illustration, a messaging system which notifies subscribers.
 
-*Note:* We MUST NOT be obligated to follow this structure as many parent project specific flavors (which may be propriatery) may exist! We MUST make sure that such flexibility is possible!
+The Possibilities are not limited!
+
+The structure of the System MUST be hierarchical so in the top levels (closest to the root) we have abstractions and base reusable, main shared mechanisms, shared codebase, while inside the `flavors` directory we MUST have all flavors - the implementations.
+
+*Note:* We MUST NOT be obligated to follow this structure as many parent project's specific custom flavors may need to exist! They could be private and require safe location in the System or project. We MUST make sure that such flexibility is possible! This MUST BE fully supported!
 
 ## How Herald should achieve its mission objectives?
 
-Every herald flavor will be individual binnary which users can add to the System path throguh the `.bashrc` or `.zshrc` (for example). Each Herald flavor will have shared set of commands and parameters while there will be as well commands and parameters specific to particular Herald flavors.
+Every herald flavor will be individual binnary which users can add to the System path throguh the `.bashrc` or `.zshrc` (for example). Each Herald flavor will have shared set of commands and parameters while there will be as well commands and parameters specific to particular Herald flavors (implementations).
 
-Herald applications are CLI binarries which are mainly designed for CI integration and various Pipelines. They can be easily incorporate for use with various AI CLI Agents as well or any similar use cases (triggering by Crond and so on ...).
+Herald applications are CLI binarries which are mainly designed for CI integration and various Pipelines. They can be easily incorporated for use with various AI CLI Agents (Claude Code, OpenCode and others...) as well or other similar use cases (triggering by Crond - cron jobs, and so on ...).
 
-Some Herald application names would be: `pherald` for the `Project Herald`, `sherald` for the `System Herald` and so on.
+Some Herald application names can be: `pherald` for the `Project Herald`, `sherald` for the `System Herald` and so on.
 
 ### Technology stack
 
 Herald project and all flavors MUST BE writtn in Go.
 
-## Flavors (the implementations)
-
-Main Go abstractions and shared codebase (with shared implementations) will be used as the base which Flavors will inherit and build on top of it.
-
 ## Commons
 
-The following paragraphs define shared functionality among all Flavors of Herald.
+The following paragraphs define shared functionality and implementations among all Flavors of Herald.
+
+The `commons` will contain the most generic abstractions and shared implementations which will be later inherited through the inheritance hierachy. 
+
+Example:
+
+`commons -> commons level 1 -> commons level 2 -> ... -> commons level N -> Flavor`
 
 ### Common Messeging Herald
 
-Every Messeging Herald Flavor MUST offer support for several integrations:
+Common Messeging Herald (`commons_messaging`) is the `commons level 1` abstraction layer. Every Messeging Herald Flavor MUST offer support for several main integrations:
 
 - Telegram
 - Slack
@@ -52,9 +55,17 @@ Every Messeging Herald Flavor MUST offer support for several integrations:
 
 For each of Messaging services user MUST provide required tokens, credentials or API keys depending on the platform. All details MUST BE documented in proper user guides and manuals with step by step instructions so users can easily obtain and provide required information.
 
-All sensitive data like credentials, tokens or API keys MUST be in inside proper .env file (create for the documentation purposes .env.example file to illustrate everything that users can put there) which MUST BE Git ignored! System MUST BE capable to obtain all these environment variables from exported variables from `.bashrc` and `.zshrc` or any other System profile script which can export the variables. Using values fron .env comes after top level ones are loaded and everything defined inside the .env file will override them (if same variabels are defined there).
+All sensitive data like credentials, tokens or API keys MUST be in inside proper `.env` file (create for the documentation purposes `.env.example` file to illustrate everything that users can put there) which MUST BE Git ignored! System MUST BE capable to obtain all these environment variables from exported variables from `.bashrc` and `.zshrc` or any other System profile script which can export the variables. Using values fron `.env` comes after top level ones are loaded and everything defined inside the `.env` file will override them (if same variabels are defined there).
 
-Everything that is sent or received through any of the interated Messnger channels such as Telegram, Slack, Max and others (Email as well) will be stored inside main Markdown file and exported into PDF and HTML regularly. Markdown file and its exports MUST BE always in sync! Location of the Markdown file inside the Project MUST BE the following: `docs/herald/diary/main.md` (`main.pdf` and `main.html`).
+Everything that is sent or received through any of the interated Messengers channels such as Telegram, Slack, Max and others (Email as well) will be stored inside main Markdown file and exported into PDF and HTML regularly. Markdown file and its exports MUST BE always in sync! Location of the Markdown file inside the Project MUST BE the following: `docs/herald/diary/main.md` (`main.pdf` and `main.html`).
+
+### APIs
+
+We MUST perform in depth research and bring int all required APIs and SDKs required for each Messaging solution to be fully incorporated. We MUST perform deep web research and obtain information about API documentation and SDKs (Go). Every SDK and API which are available as Git repositories MUST BE incorporated as Git Submodules into the project. Example path for the Submodule(s): `commons_messaging/api/telegram` or `commons_messaging/sdk/telegram`.
+
+## Flavors (the implementations)
+
+Main Go abstractions and shared codebase (with shared implementations) will be used as the base which Flavors will inherit and build on top of it.
 
 ### Project Herald
 
