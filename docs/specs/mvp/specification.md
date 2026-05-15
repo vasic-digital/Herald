@@ -89,6 +89,14 @@ Here we will list main ideas for upcoming Flavors which MUST BE planned with pro
 
 Tbd
 
+## Documentation
+
+Tbd
+
+## Testing
+
+Tbd
+
 ## Notes
 
 Tbd
