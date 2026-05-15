@@ -87,6 +87,8 @@ Here we will list main ideas for upcoming Flavors which MUST BE planned with pro
 
 ## Integration into the Constitution
 
+Once the whole project is fully implemented, tested and verified with proofs and confirmation of complete anti-bluff validation and verification we MUST incorporate it into the root Constitution, AGENTS.MD and CLAUDE.MD (constitution Submoudule) with the following mandatory rules and constraints:
+
 Tbd
 
 ## Documentation
