@@ -91,11 +91,13 @@ Tbd
 
 ## Documentation
 
-Tbd
+Make sure the main `README` document is fully updated with all relevant project details and all user guides and manuals are properly linked (and other documentation and relevant materials too) to it!
+
+We MUST have all mandatory documentation up to the smallest details, full user guides and manuals, diagrams and scheme in all major formats and other relevant materials users may need.
 
 ## Testing
 
-Tbd
+Whole project and all of its derrivates MUST follow testing rules from our root Constitution, CLAUDE.MD and AGENTS.MD (constitution Submodule from the main parent project).
 
 ## Notes
 
