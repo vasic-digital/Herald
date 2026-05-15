@@ -22,6 +22,10 @@ The structure of the System MUST be hierarchical so in the top levels (closest t
 
 Tbd
 
+### Technology stack
+
+Tbd
+
 ## Flavors (the implementations)
 
 Tbd
