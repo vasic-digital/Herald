@@ -1,6 +1,6 @@
 # Herald
 
-Repositoy: git@github.com:vasic-digital/Herald.git
+Repository: `git@github.com:vasic-digital/Herald.git`
 
 ## Purpose
 
