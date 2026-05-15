@@ -36,9 +36,13 @@ Herald project and all flavors MUST BE writtn in Go.
 
 Main Go abstractions and shared codebase (with shared implementations) will be used as the base which Flavors will inherit and build on top of it.
 
-### Project Herald
+## Commons
 
-The Project Herald is focused on Projects and its development. All Projects share some commons and Project Herald MUST FIT as the universal player here! Project Herald MUST offer several integrations:
+The following paragraphs define shared functionality among all Flavors of Herald.
+
+### Common Messeging Herald
+
+Every Messeging Herald Flavor MUST offer support for several integrations:
 
 - Telegram
 - Slack
@@ -52,9 +56,17 @@ All sensitive data like credentials, tokens or API keys MUST be in inside proper
 
 Everything that is sent or received through any of the interated Messnger channels such as Telegram, Slack, Max and others (Email as well) will be stored inside main Markdown file and exported into PDF and HTML regularly. Markdown file and its exports MUST BE always in sync! Location of the Markdown file inside the Project MUST BE the following: `docs/herald/diary/main.md` (`main.pdf` and `main.html`).
 
+### Project Herald
+
+The Project Herald is focused on Projects and its development. All Projects share some commons and Project Herald MUST FIT as the universal player here!
+
+What are the specifics that Project Herald is having and others do not?
+
 ### System Herald
 
 Tbd
+
+What are the specifics that System Herald is having and others do not?
 
 ### Others and misc
 
