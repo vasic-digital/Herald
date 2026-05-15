@@ -14,6 +14,22 @@ Tbd
 
 Tbd
 
+## Flavors
+
+Tbd
+
+### Project Herald
+
+Tbd
+
+### System Herald
+
+Tbd
+
+### Others and misc
+
+Tbd
+
 ## Integration into the Constitution
 
 Tbd
