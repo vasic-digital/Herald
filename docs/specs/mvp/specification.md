@@ -59,7 +59,19 @@ All sensitive data like credentials, tokens or API keys MUST be in inside proper
 
 Everything that is sent or received through any of the interated Messengers channels such as Telegram, Slack, Max and others (Email as well) will be stored inside main Markdown file and exported into PDF and HTML regularly. Markdown file and its exports MUST BE always in sync! Location of the Markdown file inside the Project MUST BE the following: `docs/herald/diary/main.md` (`main.pdf` and `main.html`).
 
-### APIs
+#### Messaging flow(s)
+
+Messages we send (the data) to the channels (messengers integrations) MUST BE supported to work (if particular messenger channel allows this) all of the following scenarios:
+
+- Simple message: we send content to the channel (textual), it is sent and displayed in messenger channel to all subscribers
+- Message with attachment(s): we sent the content with one or more attchments, it is sent and displayed in messenger channel to all subscribers which can then download the attchments
+- Simple quote message: we send content to the channel (textual) that is a reply to an existing channel message, it is sent and displayed in messenger channel to all subscribers (it can contain zero, one or more attachments which subscribers can download)
+
+#### Subscribers
+
+Tbd
+
+#### APIs
 
 We MUST perform in depth research and bring int all required APIs and SDKs required for each Messaging solution to be fully incorporated. We MUST perform deep web research and obtain information about API documentation and SDKs (Go). Every SDK and API which are available as Git repositories MUST BE incorporated as Git Submodules into the project. Example path for the Submodule(s): `commons_messaging/api/telegram` or `commons_messaging/sdk/telegram`.
 
