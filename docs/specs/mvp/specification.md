@@ -103,6 +103,12 @@ Once the whole project is fully implemented, tested and verified with proofs and
 
 Tbd
 
+### Specification documents
+
+We MUST add into the Constitution, AGENTS.MD and CLAUDE.MD of the Herald project itself the following rule / mandatory constraint related to this technical specification:
+
+Whenever this document (`docs/specs/mvp/specification.md`) or any under the `docs/specs` root directory and any of its children directories (any level deep) is modified, comprehensive planning and implementation of all changes is MANDATORY to be performed! This does not apply to new or renamed files! For new files we MUST explicitly tell the worker (CLI agent) what to do with the newly created / copied files!
+
 ## Documentation
 
 Make sure the main `README` document is fully updated with all relevant project details and all user guides and manuals are properly linked (and other documentation and relevant materials too) to it!
