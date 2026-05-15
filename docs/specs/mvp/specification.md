@@ -20,7 +20,9 @@ The structure of the System MUST be hierarchical so in the top levels (closest t
 
 ## How Herald should achieve its mission objectives?
 
-Tbd
+Every herald flavor will be individual binnary which users can add to the System path throguh the `.bashrc` or `.zshrc` (for example). Each Herald flavor will have shared set of commands and parameters while there will be as well commands and parameters specific to particular Herald flavors.
+
+Herald applications are CLI binarries which are mainly designed for CI integration and various Pipelines. They can be easily incorporate for use with various AI CLI Agents as well or any similar use cases (triggering by Crond and so on ...).
 
 ### Technology stack
 
