@@ -85,6 +85,16 @@ The Project Herald is focused on Projects and its development. All Projects shar
 
 What are the specifics that Project Herald is having and others do not?
 
+#### Inputs
+
+Tbd
+
+##### Input commands
+
+- `Bug:`, `Issue:` - Reporting problems
+- `Query:`, `Request:`, `Question:` - Requesting the information or report
+- Tbd
+
 ### System Herald
 
 Tbd
