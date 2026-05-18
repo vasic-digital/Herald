@@ -39,6 +39,8 @@ In-Memory Database: Redis, part of the main Container (Docker or Podman Compose 
 
 All Container ports shall start with 70XXX prefix for ports so we eliminate conflicts possibility woth other containers.
 
+So basically, we will be using ports one by one: 70001, 70002, 70003, etc.
+
 All System (Herald) Containers names MUST start with prefix `herald`.
 
 ## Commons
