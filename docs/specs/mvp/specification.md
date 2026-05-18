@@ -34,7 +34,12 @@ Some Herald application names can be: `pherald` for the `Project Herald`, `shera
 Herald project and all flavors MUST BE writtn in Go. The whole implementation - the binary we distribute and use with all its dependencies MUST BE Containerized using the `containers` Submodule:
 `https://github.com/vasic-digital/containers`.
 
-Database: Postgres, part of the main Container (Docker or Podman Compose stack).
+Main Database: Postgres, part of the main Container (Docker or Podman Compose stack).
+In-Memory Database: Redis, part of the main Container (Docker or Podman Compose stack).
+
+All Container ports shall start with 70XXX prefix for ports so we eliminate conflicts possibility woth other containers.
+
+All System (Herald) Containers names MUST start with prefix `herald`.
 
 ## Commons
 
