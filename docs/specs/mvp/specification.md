@@ -34,6 +34,8 @@ Some Herald application names can be: `pherald` for the `Project Herald`, `shera
 Herald project and all flavors MUST BE writtn in Go. The whole implementation - the binary we distribute and use with all its dependencies MUST BE Containerized using the `containers` Submodule:
 `https://github.com/vasic-digital/containers`.
 
+Database: Postgres, part of the main Container (Docker or Podman Compose stack).
+
 ## Commons
 
 The following paragraphs define shared functionality and implementations among all Flavors of Herald.
