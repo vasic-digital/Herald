@@ -1,6 +1,6 @@
 # Herald
 
-Ingesting system events and reliably fanning them out to multiple notification channels so every alert reaches the right destination without confusion.
+The bi-directional ingesting system events and reliably fanning them out to multiple notification channels so every alert reaches the right destination without confusion.
 
 All exiting projetc upstreams:
 
@@ -11,7 +11,7 @@ All exiting projetc upstreams:
 
 ## What Herald can (must be able to) do?
 
-Herald is the mechanism which receives input from the source and sends it to one or more destinations (implemented channels). Depending on the implementation (Flavor) of the Herald sources and destinations could be various. We can have single type or multiple type inputs and same applies for the outputs.
+Herald is the mechanism (system) which receives input from the source(s) and sends it to one or more destinations (implemented channels). Depending on the implementation (Flavor) of the Herald sources and destinations could be various. We can have single type or multiple type inputs and same applies for the outputs.
 
 For example, input can be the result of execution of some pipeline. Heralds is then sending this result (some report for example) to certain output (or outputs). It could be, for a sake of illustration, a messaging system which notifies subscribers.
 
@@ -31,13 +31,14 @@ Some Herald application names can be: `pherald` for the `Project Herald`, `shera
 
 ### Technology stack
 
-Herald project and all flavors MUST BE writtn in Go.
+Herald project and all flavors MUST BE writtn in Go. The whole implementation - the binary we distribute and use with all its dependencies MUST BE Containerized using the `containers` Submodule:
+`https://github.com/vasic-digital/containers`.
 
 ## Commons
 
 The following paragraphs define shared functionality and implementations among all Flavors of Herald.
 
-The `commons` will contain the most generic abstractions and shared implementations which will be later inherited through the inheritance hierachy. 
+The `commons` will contain the most generic abstractions and shared implementations which will be later inherited through the inheritance hierachy.
 
 Example:
 
