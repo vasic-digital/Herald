@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>Herald</title>
+  <title>Herald — MVP Specification (V1, superseded)</title>
   <style>
     /* Default styles provided by pandoc.
     ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -173,9 +173,10 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">Herald</h1>
+<h1 class="title">Herald — MVP Specification (V1, superseded)</h1>
 </header>
-<h1 id="herald">Herald</h1>
+<h1 id="herald--mvp-specification-v1-superseded">Herald — MVP
+Specification (V1, superseded)</h1>
 <table>
 <thead>
 <tr>
@@ -186,7 +187,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>2</td>
+<td>3</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -198,12 +199,14 @@
 </tr>
 <tr>
 <td>Status</td>
-<td>active</td>
+<td>superseded</td>
 </tr>
 <tr>
 <td>Status summary</td>
-<td>R-01/R-04/R-09/R-10/R-15/R-19/R-20/R-21/R-22 applied; heavier R
-items deferred</td>
+<td>Superseded by <a
+href="specification.V2.md"><code>specification.V2.md</code></a> on
+2026-05-19. Preserved for historical reference and as the source of the
+R-NN recommendation IDs that V2 references.</td>
 </tr>
 <tr>
 <td>Issues</td>
@@ -211,24 +214,30 @@ items deferred</td>
 </tr>
 <tr>
 <td>Issues summary</td>
-<td>open R items deferred for focused implementation rounds — see
-Review</td>
+<td>—</td>
 </tr>
 <tr>
 <td>Fixed</td>
 <td>R-01, R-04, R-09, R-10, R-15, R-19, R-20, R-21, R-22 (text-level
-fixes)</td>
+fixes carried into V2)</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
-<td>spec-text recommendations applied 2026-05-19</td>
+<td>text-level recommendations applied; heavier R items folded into V2
+sections (architecture, security, observability, supply chain)</td>
 </tr>
 <tr>
 <td>Continuation</td>
-<td>implement remaining R items (R-02/R-03/R-05–R-08 messaging stack,
-R-11/R-12/R-18 modules/release, R-13 constitutable loader, R-14 gate I7
-in this commit, R-16 security pipeline, R-17 prefix algo) when
-scaffolding starts</td>
+<td>See <a
+href="specification.V2.md"><code>specification.V2.md</code></a> —
+substantive next round: populated TBDs, added flavors
+(<code>bherald</code>/<code>dherald</code>/<code>aherald</code>/<code>scherald</code>/<code>iherald</code>/<code>rherald</code>/<code>cherald</code>),
+new sections §"Event model &amp; wire format" (CloudEvents),
+§"Architecture overview" (Watermill + River), §"Channel addressing"
+(Apprise-style URLs + tags), §"Multi-tenancy &amp; Isolation" (Postgres
+RLS + Redis ACL), §"Observability &amp; SLOs" (OpenTelemetry), §"Supply
+chain &amp; release engineering" (SLSA L3), §"Extensibility"
+(subprocess+manifest deferred)</td>
 </tr>
 </tbody>
 </table>

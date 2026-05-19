@@ -1,17 +1,17 @@
-# Herald
+# Herald — MVP Specification (V1, superseded)
 
 | Field | Value |
 |---|---|
-| Revision | 2 |
+| Revision | 3 |
 | Created | 2026-05-15 |
 | Last modified | 2026-05-19 |
-| Status | active |
-| Status summary | R-01/R-04/R-09/R-10/R-15/R-19/R-20/R-21/R-22 applied; heavier R items deferred |
+| Status | superseded |
+| Status summary | Superseded by [`specification.V2.md`](specification.V2.md) on 2026-05-19. Preserved for historical reference and as the source of the R-NN recommendation IDs that V2 references. |
 | Issues | none |
-| Issues summary | open R items deferred for focused implementation rounds — see Review |
-| Fixed | R-01, R-04, R-09, R-10, R-15, R-19, R-20, R-21, R-22 (text-level fixes) |
-| Fixed summary | spec-text recommendations applied 2026-05-19 |
-| Continuation | implement remaining R items (R-02/R-03/R-05–R-08 messaging stack, R-11/R-12/R-18 modules/release, R-13 constitutable loader, R-14 gate I7 in this commit, R-16 security pipeline, R-17 prefix algo) when scaffolding starts |
+| Issues summary | — |
+| Fixed | R-01, R-04, R-09, R-10, R-15, R-19, R-20, R-21, R-22 (text-level fixes carried into V2) |
+| Fixed summary | text-level recommendations applied; heavier R items folded into V2 sections (architecture, security, observability, supply chain) |
+| Continuation | See [`specification.V2.md`](specification.V2.md) — substantive next round: populated TBDs, added flavors (`bherald`/`dherald`/`aherald`/`scherald`/`iherald`/`rherald`/`cherald`), new sections §"Event model & wire format" (CloudEvents), §"Architecture overview" (Watermill + River), §"Channel addressing" (Apprise-style URLs + tags), §"Multi-tenancy & Isolation" (Postgres RLS + Redis ACL), §"Observability & SLOs" (OpenTelemetry), §"Supply chain & release engineering" (SLSA L3), §"Extensibility" (subprocess+manifest deferred) |
 
 The bi-directional ingesting system events and reliably fanning them out to multiple notification channels so every alert reaches the right destination without confusion.
 
