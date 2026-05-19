@@ -46,6 +46,8 @@ We MUST EXTEND the `constitution` Submodule with the following rules and mandato
 
 *Note:* The `tests` we have now and which may existi in `constitution` Submoudule MUST BE properly extended and updated once changes are applied and implementation(s) are improved and extended!
 
+*Note:* For Herald which will be ALWAYS incorporated as the Submodule of another Project access to the `constitution` Submodule will be through the root of that project. The `constitution` Submodule will be cloned (available) under: `project_root/constitution` (or some other subdirectory if end user prefers different name). Current development setup has the same organization, in parnet `Projects` directory we have the `constitution` cloned under the `constitution` directory.
+
 ### Workable items naming prefix
 
 For all opened workable items for the Herlad project (under Issues, Issues_Summary, Fixed, Fixed_Summary, Status and Status_Summary (for each existing contet), etc.) use the following prefix: `HRD`. For example: `HRD-001`, `HRD-002`, etc.
@@ -148,6 +150,8 @@ In processing the whole thread of communication in replies / qutes (chined repli
 
 Serious security validation is performed before any other steps are taken!
 
+If Project does not defint workable items tracking prefix, it will be determined by proper algorhythm applied to project name and we will have the 3 letters prefix! We MUST create simple algorhythm which will be doing the conversion from name to 3 letters prefix. For start we should do web research. Most likely opensourced codebase exists somewhere and does this out of the box. We can incorporate or port it!
+
 #### Inputs
 
 All data we receive from Subscribers - messages content (fresh messages or part of threads), attachments users provide, are all Inputs
@@ -201,3 +205,4 @@ Whole project and all of its derrivates MUST follow testing rules from our root 
 ## Notes
 
 - Many tehcnical details which can be specified for particular Herald Flavor or certain specialization may be actually general-purposed! These all MUST be identified during the processing of this specification and planned as shared (between the Flavors - Commons, or as shared Components in the System)!
+- We MUST pay attention which parts of the whole Project's codebase MUST be located in `commons` and how many (if any) `commons` layers are needed! This MUST BE carefully planned with a vision of potential grofth - more Herald Flavors and extending functinalites.
