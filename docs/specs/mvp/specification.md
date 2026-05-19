@@ -48,6 +48,8 @@ We MUST EXTEND the `constitution` Submodule with the following rules and mandato
 
 *Note:* For Herald which will be ALWAYS incorporated as the Submodule of another Project access to the `constitution` Submodule will be through the root of that project. The `constitution` Submodule will be cloned (available) under: `project_root/constitution` (or some other subdirectory if end user prefers different name). Current development setup has the same organization, in parnet `Projects` directory we have the `constitution` cloned under the `constitution` directory.
 
+*Note:* Carefully investigate the codebase of the `constitution` Submodule before any changes are applied! We MUST BE aware about every single detail - how it works, what are files there, with what purpose, what we have to update / extend and which new thing MUST BE added. Once everything is in-depth analyzed completely, then we can perform comprehensive changes to fullfill complete seamless integration with Herald project.
+
 ### Workable items naming prefix
 
 For all opened workable items for the Herlad project (under Issues, Issues_Summary, Fixed, Fixed_Summary, Status and Status_Summary (for each existing contet), etc.) use the following prefix: `HRD`. For example: `HRD-001`, `HRD-002`, etc.
