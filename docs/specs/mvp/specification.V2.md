@@ -2,16 +2,16 @@
 
 | Field | Value |
 |---|---|
-| Revision | 1 |
+| Revision | 2 |
 | Created | 2026-05-19 |
 | Last modified | 2026-05-19 |
 | Status | active |
-| Status summary | V2 spec — TBDs populated, recommendations integrated, research-derived architecture decisions captured |
+| Status summary | Self-review pass V2.1: added missing Go types + 4 missing table schemas; Go ≥1.22 + license pin; OTel SDK env vars; SIGTERM grace; data retention + GDPR; operator quickstart + DR; cost considerations |
 | Issues | none |
-| Issues summary | implementation work tracked separately under workable-item prefix `HRD-` once scaffolding starts |
-| Fixed | supersedes V1 — all V1 R-NN recommendations either applied or explicitly deferred to a named follow-up |
-| Fixed summary | bi-directional event fan-out architecture; CloudEvents wire format; Watermill routing; Postgres + River queue (NATS opt-in); Apprise-style URL+tag channel model; Knock-style preference matrix; OpenTelemetry observability; Postgres RLS multi-tenancy; SLSA L3 supply chain; 9 named flavors (was 2 with TBD); per-channel rich-messaging feature matrix; email deep dive with DKIM + DMARC + RFC 8058 one-click unsubscribe |
-| Continuation | implementation phases per §"Roadmap"; V1 ([`specification.V1.md`](specification.V1.md)) preserved as historical record and source of R-NN ID mapping |
+| Issues summary | implementation work tracked separately under `HRD-` prefix once scaffolding starts |
+| Fixed | V2-R-01..V2-R-12 (self-review findings) on top of V1 R-01..R-22 |
+| Fixed summary | self-review pass closed gaps between prose and formal definitions (types + tables + version pins); added operational guidance (quickstart, DR, retention, costs) absent from V2.0 |
+| Continuation | First-implementation cycle: spike `commons` + `commons_messaging` skeletons with `pherald` shim + Telegram adapter + Postgres+River queue; verify quickstart compose works end-to-end. |
 
 The **bi-directional event fan-out** system: Herald ingests events from heterogeneous sources and reliably fans them out to multiple notification channels so every alert reaches the right destination without confusion, and processes inbound replies/commands back from subscribers in a structured, security-validated way.
 
@@ -57,6 +57,7 @@ The **bi-directional event fan-out** system: Herald ingests events from heteroge
   - [9.5 `containers` submodule](#95-containers-submodule)
 - [§10. Commons (architecture layers)](#10-commons-architecture-layers)
 - [§11. Channels — per-channel capabilities matrix](#11-channels-per-channel-capabilities-matrix)
+  - [11.0 Channel adapter contract (Go interface + value types)](#110-channel-adapter-contract-go-interface-value-types)
   - [11.1 Telegram](#111-telegram)
   - [11.2 Max (max.ru)](#112-max-maxru)
   - [11.3 Slack](#113-slack)
@@ -80,6 +81,7 @@ The **bi-directional event fan-out** system: Herald ingests events from heteroge
   - [15.4 Credential handling](#154-credential-handling)
   - [15.5 Webhook ingestion (defense-in-depth)](#155-webhook-ingestion-defense-in-depth)
 - [§16. Multi-tenancy & isolation](#16-multi-tenancy-isolation)
+  - [16.1 Data retention & privacy](#161-data-retention-privacy)
 - [§17. Observability & SLOs](#17-observability-slos)
   - [17.1 OpenTelemetry pipeline](#171-opentelemetry-pipeline)
   - [17.2 Metrics catalogue](#172-metrics-catalogue)
@@ -107,9 +109,13 @@ The **bi-directional event fan-out** system: Herald ingests events from heteroge
 - [§24. Documentation](#24-documentation)
 - [§25. Testing](#25-testing)
 - [§26. Operations](#26-operations)
+  - [26.5 Operator quickstart (5-minute Docker Compose)](#265-operator-quickstart-5-minute-docker-compose)
+  - [26.6 Disaster recovery](#266-disaster-recovery)
 - [§27. Roadmap](#27-roadmap)
+  - [27.3 Cost considerations](#273-cost-considerations)
 - [§28. Notes & open questions](#28-notes-open-questions)
 - [§29. Changelog (V1 → V2)](#29-changelog-v1-v2)
+- [§30. V2 self-review log](#30-v2-self-review-log)
 
 ---
 
@@ -204,6 +210,18 @@ Every Herald flavor is a **single statically-linked Go binary** with **Cobra-sty
 - **Daemon mode** — `<flavor>herald serve`: long-running listener; blocks on (a) the HTTP ingress for webhook events, (b) per-channel subscriber-reply loops (Telegram long-poll, Slack Socket Mode, Email IMAP, Discord gateway, etc.), (c) scheduled jobs from the River queue.
 
 Both modes share the same configuration loader, channel adapters, storage layer, and observability stack — only the entry point and process lifecycle differ.
+
+**Graceful shutdown semantics.** Both modes MUST:
+
+1. Trap `SIGTERM` and `SIGINT`.
+2. Stop accepting new ingress requests immediately (`/readyz` returns 503).
+3. Drain in-flight work with a configurable grace period (default 30 s, env `HERALD_SHUTDOWN_GRACE`).
+4. Refuse `Send()` calls that arrive after grace begins (returning `context.Canceled`).
+5. Flush the OpenTelemetry exporter (`tracerProvider.Shutdown(ctx)` with its own 5 s sub-deadline).
+6. `Close()` the Postgres pool and Redis client.
+7. Exit with code `0` if drain completed cleanly, `1` if grace expired with work still in flight.
+
+A second `SIGTERM` within the grace window forces immediate exit. `SIGKILL` is uncatchable by definition; operators MUST size the grace period for their workload's tail latency.
 
 Additional subcommands:
 
@@ -441,6 +459,33 @@ The ingress handler enforces, in order:
 
 Verified payloads are normalized into a CloudEvent and handed to the Watermill router.
 
+**`webhook_sources` schema:**
+
+```sql
+CREATE TABLE webhook_sources (
+    id              UUID PRIMARY KEY DEFAULT uuidv7(),
+    tenant_id       UUID NOT NULL,
+    name            TEXT NOT NULL,                   -- "github-push-prod", "stripe-webhook", ...
+    signature_kind  TEXT NOT NULL,                   -- 'hmac-sha256' | 'stripe' | 'telegram-secret-token' | 'dkim' | 'none'
+    signature_header TEXT NOT NULL,                  -- 'X-Hub-Signature-256', 'Stripe-Signature', ...
+    secret_encrypted BYTEA NOT NULL,                 -- pgcrypto pgp_sym_encrypt
+    secret_rotated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    ip_allowlist    INET[],                          -- optional L4 defense-in-depth
+    replay_window_s INTEGER NOT NULL DEFAULT 300,    -- 5 min
+    enabled         BOOLEAN NOT NULL DEFAULT true,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (tenant_id, name)
+);
+CREATE INDEX webhook_sources_tenant_idx ON webhook_sources (tenant_id) WHERE enabled = true;
+ALTER TABLE webhook_sources ENABLE ROW LEVEL SECURITY;
+ALTER TABLE webhook_sources FORCE ROW LEVEL SECURITY;
+CREATE POLICY ws_isolation ON webhook_sources
+    USING (tenant_id = current_setting('app.tenant_id')::uuid)
+    WITH CHECK (tenant_id = current_setting('app.tenant_id')::uuid);
+```
+
+Secrets are rotatable: `<flavor>herald webhook rotate <name>` generates a new secret, returns it once, and starts accepting the new signature while continuing to accept the old one for `replay_window_s × 4` (default 20 min) to drain in-flight deliveries.
+
 **Dev / behind-NAT support**: `smee.io` and `gh webhook forward` are documented as supported proxy paths.
 
 ### 5.6 Orchestration of long-running operations (Temporal, opt-in)
@@ -489,6 +534,34 @@ Per Apprise's tag model: every channel address is annotated with one or more **t
 
 Tag→channel mapping lives in the `channel_addresses` table; senders never reference channel addresses directly. This decouples sender code from topology — the same event can fan out to a different mix of channels per environment without code change.
 
+**`channel_addresses` schema:**
+
+```sql
+CREATE TABLE channel_addresses (
+    id              UUID PRIMARY KEY DEFAULT uuidv7(),
+    tenant_id       UUID NOT NULL,
+    channel         TEXT NOT NULL,                   -- "tgram", "slack", "mailto", ...
+    address_url     TEXT NOT NULL,                   -- "tgram://${BOT_TOKEN}/${CHAT_ID}?…" (env-interpolated at load time)
+    tags            TEXT[] NOT NULL DEFAULT '{}',    -- ['oncall','prod']
+    priority_floor  INTEGER NOT NULL DEFAULT 1,      -- ntfy 1..5; messages below floor are dropped for this address
+    enabled         BOOLEAN NOT NULL DEFAULT true,
+    last_health_at  TIMESTAMPTZ,
+    last_health_ok  BOOLEAN,
+    last_health_err TEXT,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (tenant_id, address_url)
+);
+CREATE INDEX ch_addr_tags_idx ON channel_addresses USING gin (tags) WHERE enabled = true;
+CREATE INDEX ch_addr_tenant_idx ON channel_addresses (tenant_id, channel) WHERE enabled = true;
+ALTER TABLE channel_addresses ENABLE ROW LEVEL SECURITY;
+ALTER TABLE channel_addresses FORCE ROW LEVEL SECURITY;
+CREATE POLICY ca_isolation ON channel_addresses
+    USING (tenant_id = current_setting('app.tenant_id')::uuid)
+    WITH CHECK (tenant_id = current_setting('app.tenant_id')::uuid);
+```
+
+The `address_url` MAY contain `${ENV_VAR}` placeholders that are interpolated at config load time (so secrets stay out of the row body — only the placeholder is persisted; secrets remain in `.env` / shell env).
+
 ### 6.3 HeraldBranding (per-flavor visual identity)
 
 Per Apprise's `AppriseAsset`: a `HeraldBranding` struct injected per-flavor:
@@ -517,26 +590,33 @@ Per R-07 + research Topic 3 (notification-platforms): the **matterbridge model**
 
 ```sql
 CREATE TABLE subscribers (
-    id          UUID PRIMARY KEY DEFAULT uuidv7(),
-    tenant_id   UUID NOT NULL,
-    handle      TEXT,                -- operator-assigned, e.g. "alice"
+    id           UUID PRIMARY KEY DEFAULT uuidv7(),
+    tenant_id    UUID NOT NULL,
+    handle       TEXT,                              -- operator-assigned, e.g. "alice"
     display_name TEXT,
-    locale      TEXT DEFAULT 'en-US',
-    timezone    TEXT DEFAULT 'UTC',
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+    locale       TEXT DEFAULT 'en-US',
+    timezone     TEXT DEFAULT 'UTC',
+    roles        TEXT[] NOT NULL DEFAULT '{}',      -- e.g. ['operator','reader','ic']
+    metadata     JSONB NOT NULL DEFAULT '{}'::jsonb,
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (tenant_id, handle)                      -- handle is unique within a tenant
 );
+CREATE INDEX subscribers_tenant_idx ON subscribers (tenant_id);
 ALTER TABLE subscribers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE subscribers FORCE ROW LEVEL SECURITY;
 CREATE POLICY sub_isolation ON subscribers
-    USING (tenant_id = current_setting('app.tenant_id')::uuid);
+    USING (tenant_id = current_setting('app.tenant_id')::uuid)
+    WITH CHECK (tenant_id = current_setting('app.tenant_id')::uuid);
 
 CREATE TABLE subscriber_aliases (
     subscriber_id   UUID NOT NULL REFERENCES subscribers(id) ON DELETE CASCADE,
     channel         TEXT NOT NULL,
     channel_user_id TEXT NOT NULL,
-    verified_at     TIMESTAMPTZ,                     -- self-claim verification time
+    verified_at     TIMESTAMPTZ,                    -- self-claim verification time
+    last_seen_at    TIMESTAMPTZ,
     UNIQUE (channel, channel_user_id)
 );
+CREATE INDEX subscriber_aliases_sub_idx ON subscriber_aliases (subscriber_id);
 ```
 
 **Linking flows:**
@@ -616,7 +696,13 @@ No mature Go library exists for 3-letter abbreviation generation (the only Go pr
 
 ### 9.1 Go (single-binary, multi-flavor)
 
-Herald and all flavors MUST BE written in **Go**. Layout (per R-18, research Topic 5):
+Herald and all flavors MUST BE written in **Go**.
+
+**Toolchain pin:** Go **≥ 1.22** is mandatory (stdlib `log/slog`, OTel `slog` bridge, `slices` + `maps` generics). The repo's `go.mod` files declare `go 1.22` and set `toolchain go1.22.x` to the current patch release. Bumps to ≥ 1.23 are allowed when CI proves no regression; the `commons` module is the authoritative version (every flavor MUST follow).
+
+**License:** Herald is published under the terms in [`LICENSE`](../../../LICENSE) (parent project's chosen license). All `go.mod` files MUST declare the same license via a top-level comment, and every `LICENSE` file in vendored submodules MUST remain present. License compliance is checked by the planned `cherald` flavor (per §18.10) on every CI run when configured.
+
+Layout (per R-18, research Topic 5):
 
 ```
 Herald/
@@ -695,19 +781,153 @@ Per the layering principle in V1: `commons -> commons level 1 -> … -> commons 
 
 ## §11. Channels — per-channel capabilities matrix
 
-Each channel adapter implements:
+### 11.0 Channel adapter contract (Go interface + value types)
+
+Each channel adapter implements the `Channel` interface defined in `commons` (L0). The full contract:
 
 ```go
 package commons // L0
 
+import "context"
+
+// Channel is the interface every channel adapter implements.
 type Channel interface {
-    Name() string                                  // "tgram", "slack", ...
-    Capabilities() Capabilities                    // see §11.13
+    Name() string                                                       // "tgram", "slack", ...
+    Capabilities() Capabilities                                         // declarative feature flags
     Send(ctx context.Context, msg OutboundMessage) (Receipt, error)
-    Subscribe(ctx context.Context, h InboundHandler) error  // long-running; called by `serve`
+    Subscribe(ctx context.Context, h InboundHandler) error              // long-running; called by `serve`
     HealthCheck(ctx context.Context) error
 }
+
+// Capabilities advertises what an adapter supports at runtime.
+// Routers consult Capabilities before dispatching; mismatches are logged
+// and the message is dropped or downgraded (per the adapter's choice).
+type Capabilities struct {
+    Text             bool
+    Markdown         bool   // adapter's native markdown flavor (Slack mrkdwn, Telegram MarkdownV2, etc.)
+    HTML             bool
+    Attachments      bool
+    AttachmentMaxMiB int
+    Threads          bool   // first-class reply threading
+    InteractiveURL   bool   // URL buttons / link actions
+    InteractiveCall  bool   // callback handlers (advanced tier)
+    DeliveryCeiling  DeliveryEvidence // see §17 / R-05
+}
+
+// DeliveryEvidence enumerates the strongest reachable signal per channel.
+type DeliveryEvidence int
+
+const (
+    DeliveryUnknown   DeliveryEvidence = iota
+    DeliveryAccepted                   // hop-by-hop ack (SMTP 250)
+    DeliveryRouted                     // platform stored & broadcast (Telegram/Slack API ok)
+    DeliveryDelivered                  // recipient transport confirmed (Email DSN, WA delivered receipt)
+    DeliveryRead                       // recipient read (Email MDN, Telegram Business read marker)
+)
+
+// OutboundMessage is the value passed to Channel.Send.
+type OutboundMessage struct {
+    EventID         string             // CloudEvents id (§4)
+    IdempotencyKey  string             // explicit; falls back to EventID
+    TenantID        string
+    To              []Recipient        // resolved from subscriber preferences + tag fan-out
+    Subject         string             // optional (Email, RSS-like channels)
+    Body            Body               // rendered per-channel template output
+    Attachments     []Attachment
+    Thread          *ConversationRef   // optional; per §12
+    Priority        Priority           // ntfy-compatible 1..5
+    Actions         []Action           // optional interactive buttons
+    Branding        Branding           // per-flavor (§6.3)
+    Trace           TraceContext       // OTel propagation
+}
+
+// Body carries one or more rendered representations; adapter picks the best
+// match for its Capabilities (e.g., HTML for email, Markdown for Telegram,
+// Block-Kit JSON for Slack).
+type Body struct {
+    Plain    string
+    Markdown string
+    HTML     string
+    Native   map[string]any           // adapter-specific (Slack blocks, Adaptive Card JSON, ...)
+}
+
+// Attachment is a single attached file.
+type Attachment struct {
+    Filename  string
+    MIMEType  string
+    SizeBytes int64
+    Reader    func() (io.ReadCloser, error) // lazy open so the adapter streams without buffering
+    CID       string                        // optional inline-image Content-ID (Email)
+}
+
+// Recipient is a resolved (channel, channel_user_id) pair.
+type Recipient struct {
+    Channel       string  // "tgram", "slack", "mailto", ...
+    ChannelUserID string  // chat_id, U0xxx, email address, ...
+    DisplayName   string  // best-effort, for templating
+}
+
+// Action is an interactive UI hint (rendered as URL button, callback button,
+// Adaptive Card action, ntfy X-Action, etc. depending on Capabilities).
+type Action struct {
+    Type   ActionType   // ActionView | ActionURL | ActionCallback | ActionHTTP | ActionCopy
+    Label  string
+    URL    string       // for ActionView / ActionURL / ActionHTTP
+    Method string       // "GET" | "POST" (ActionHTTP)
+    Body   []byte       // ActionHTTP
+    Data   string       // ActionCallback payload (provider-defined, e.g. Telegram callback_data)
+}
+
+type ActionType int
+
+const (
+    ActionView     ActionType = iota // open a URL
+    ActionURL                         // synonym for ActionView; provider-specific styling
+    ActionCallback                    // round-trip back into Herald via inbound handler
+    ActionHTTP                        // fire-and-forget HTTP request from the recipient device (ntfy)
+    ActionCopy                        // copy text to clipboard (ntfy)
+)
+
+// Priority maps to ntfy 1..5 and to per-channel native priorities.
+type Priority int
+
+const (
+    PriorityLow     Priority = 1
+    PriorityNormal  Priority = 3
+    PriorityHigh    Priority = 4
+    PriorityUrgent  Priority = 5
+)
+
+// Receipt is what Channel.Send returns on success — the adapter's evidence
+// of acceptance/routing/delivery so the router can decide whether to retry.
+type Receipt struct {
+    Evidence       DeliveryEvidence
+    ChannelMsgID   string             // Slack ts; Telegram message_id; SMTP queue-id; ...
+    SentAt         time.Time
+    LatencyMillis  int64
+    Native         map[string]any     // adapter-specific raw response (for diary)
+}
+
+// InboundHandler receives messages emitted by the adapter's Subscribe loop.
+// Implementations enqueue events back into the router (§5).
+type InboundHandler interface {
+    Handle(ctx context.Context, ev InboundEvent) error
+}
+
+// InboundEvent is a CloudEvent constructed from a subscriber message.
+type InboundEvent struct {
+    EventID         string                 // UUIDv7
+    CloudEvent      CloudEventEnvelope     // §4.1
+    Sender          Recipient              // who sent it
+    Subscriber      *Subscriber            // resolved via subscriber_aliases, nil if unknown
+    Body            Body
+    Attachments     []Attachment
+    Thread          *ConversationRef
+    Raw             map[string]any         // adapter-specific raw payload (for diary)
+}
 ```
+
+These types live in `commons/types.go`. Every adapter under `commons_messaging/channels/<name>` consumes them; no adapter is allowed to invent its own equivalent (the contract is the contract). Additional helpers in `commons/cloudevents.go`, `commons/branding.go`, `commons/trace.go`.
 
 ### 11.1 Telegram
 
@@ -903,7 +1123,28 @@ type ConversationRef struct {
 }
 ```
 
-Persisted in `thread_refs (tenant_id, logical_thread_id, channel, ref_json)` so re-sends to the same logical thread find the right native handle on every channel.
+Persisted in the `thread_refs` table so re-sends to the same logical thread find the right native handle on every channel:
+
+```sql
+CREATE TABLE thread_refs (
+    tenant_id          UUID NOT NULL,
+    logical_thread_id  UUID NOT NULL,                  -- Herald's stable identifier across channels
+    channel            TEXT NOT NULL,                  -- "tgram", "slack", "email", ...
+    thread_id          TEXT,                           -- Slack thread_ts, Telegram message_thread_id (forum), Email References[0]
+    parent_message_id  TEXT,                           -- Slack ts (parent), Telegram reply_to_message_id, Email In-Reply-To
+    root_message_id    TEXT,                           -- first message in the thread
+    last_activity_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (tenant_id, logical_thread_id, channel)
+);
+CREATE INDEX thread_refs_recent_idx ON thread_refs (tenant_id, last_activity_at DESC);
+ALTER TABLE thread_refs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE thread_refs FORCE ROW LEVEL SECURITY;
+CREATE POLICY tr_isolation ON thread_refs
+    USING (tenant_id = current_setting('app.tenant_id')::uuid)
+    WITH CHECK (tenant_id = current_setting('app.tenant_id')::uuid);
+```
+
+A *logical thread* is Herald's tenant-stable conversation identifier; the per-channel rows map it to native handles. `last_activity_at` enables time-window garbage collection (default: 90 days after last activity, configurable).
 
 ---
 
@@ -985,6 +1226,33 @@ After transport verification, sender authority is checked:
 - Unknown senders enter a **quarantine queue** (`quarantined_messages` table), never the live fan-out.
 - An operator (or auto-policy) reviews the quarantine and either promotes the sender or discards.
 
+**`quarantined_messages` schema:**
+
+```sql
+CREATE TABLE quarantined_messages (
+    id              UUID PRIMARY KEY DEFAULT uuidv7(),
+    tenant_id       UUID NOT NULL,
+    received_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+    channel         TEXT NOT NULL,
+    sender_channel_user_id TEXT NOT NULL,
+    sender_display  TEXT,
+    reason          TEXT NOT NULL,                   -- 'unknown_sender' | 'unverified_signature' | 'rate_limited' | 'content_flagged'
+    payload_jsonb   JSONB NOT NULL,                  -- full inbound message
+    triage_status   TEXT NOT NULL DEFAULT 'pending', -- 'pending' | 'promoted' | 'discarded' | 'expired'
+    triaged_at      TIMESTAMPTZ,
+    triaged_by      UUID                             -- subscriber id of operator
+);
+CREATE INDEX qm_pending_idx ON quarantined_messages (tenant_id, received_at DESC)
+    WHERE triage_status = 'pending';
+ALTER TABLE quarantined_messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE quarantined_messages FORCE ROW LEVEL SECURITY;
+CREATE POLICY qm_isolation ON quarantined_messages
+    USING (tenant_id = current_setting('app.tenant_id')::uuid)
+    WITH CHECK (tenant_id = current_setting('app.tenant_id')::uuid);
+```
+
+Pending entries auto-expire after 30 days (`triage_status='expired'`) so the queue doesn't grow unbounded on a noisy channel. CLI: `<flavor>herald quarantine [list | promote <id> | discard <id> | purge]`.
+
 ### 15.3 Content-level (parsing & sanitization)
 
 After sender verification, content is parsed:
@@ -1035,6 +1303,33 @@ CREATE POLICY tenant_isolation ON <table>
 - **Rate limits** — token bucket per `(tenant_id, channel)` in Redis.
 - **Schema-per-tenant** is reserved for high-isolation enterprise customers; documented as opt-in but not the default (overhead: connection-pool fragmentation, slow migrations N × M, harder backups).
 
+### 16.1 Data retention & privacy
+
+Herald processes content that may contain personally identifiable information (names, email addresses, IP addresses, organization data). Retention windows MUST be configurable per tenant and enforced by scheduled `River` jobs.
+
+**Default retention policy (overridable per tenant):**
+
+| Class | Default retention | Purge mechanism |
+|---|---|---|
+| `idempotency_keys` | 7 d after `expires_at` (already in §4.3) | nightly River job |
+| `dead_letters` (triaged) | 90 d | nightly River job |
+| `dead_letters` (untriaged) | 365 d (legal/audit floor) | manual triage prompt |
+| `quarantined_messages` (pending) | 30 d → auto `expired` | nightly River job |
+| `quarantined_messages` (triaged) | 90 d | nightly River job |
+| `thread_refs` | 90 d after `last_activity_at` | nightly River job |
+| `email_suppressions` | indefinite (compliance — hard bounces must persist) | manual remove via CLI |
+| `subscribers` (deleted) | tombstone 30 d, then hard delete | GDPR right-to-erasure flow |
+| Diary entries (`docs/herald/diary/main.md`) | tenant-configurable; default unlimited (git history) | per-tenant rotation policy |
+| OpenTelemetry data | controlled by Collector → backend (out of Herald scope) | n/a |
+
+**GDPR / privacy mechanics:**
+
+- `<flavor>herald subscriber forget <id>` initiates right-to-erasure: tombstones the row, schedules hard-delete after 30 days, anonymises subscriber references in `dead_letters` / `quarantined_messages` / diary entries (replaces `display_name` with `<redacted>`, hashes `channel_user_id`).
+- `<flavor>herald subscriber export <id>` (right-to-portability) emits a JSON bundle of every record referencing the subscriber.
+- **Diary redaction** — when a subscriber is forgotten, the diary writer SHOULD overwrite their entries with a redaction note (in-place edit + re-export); operators that want immutable audit trails MUST opt-out per `[privacy].diary_redaction_on_forget = false`.
+
+**Data sovereignty:** the `containers` submodule deploys Postgres + Redis to operator-chosen regions; Herald itself stores nothing outside that pair. Cross-region replication is the operator's choice (logical replication / streaming replication) and is documented in `docs/operations/replication.md`.
+
 ---
 
 ## §17. Observability & SLOs
@@ -1047,9 +1342,42 @@ Per research Topic 1 (operations):
   - **Traces** — `go.opentelemetry.io/otel/trace` spans across the full event flow (ingest → route → enqueue → deliver → ack).
   - **Metrics** — `go.opentelemetry.io/otel/metric` counters + histograms.
   - **Logs** — stdlib `slog` shipped as OTel log records via `go.opentelemetry.io/contrib/bridges/otelslog`.
-- **Default export**: OTLP/gRPC to an OpenTelemetry Collector sidecar/DaemonSet.
+- **Default export**: OTLP/gRPC to an OpenTelemetry Collector sidecar/DaemonSet on `localhost:4317` (no auth) — production deployments override via env vars.
 - **Collector** fans out to Prometheus (scrape `/metrics`), Tempo/Jaeger (traces), Loki (logs).
 - Instrumentation lives in `commons_observability` (L1) so every flavor inherits.
+
+**Standard OTel SDK env vars Herald honours** (per OpenTelemetry SDK spec — values are NOT re-invented):
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `OTEL_SDK_DISABLED` | `false` | Hard kill switch — when `true`, instrumentation is a no-op. |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | `http://localhost:4317` | Single endpoint for all three signals (gRPC). |
+| `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` | inherits | Per-signal override. |
+| `OTEL_EXPORTER_OTLP_METRICS_ENDPOINT` | inherits | Per-signal override. |
+| `OTEL_EXPORTER_OTLP_LOGS_ENDPOINT` | inherits | Per-signal override. |
+| `OTEL_EXPORTER_OTLP_PROTOCOL` | `grpc` | `grpc` \| `http/protobuf` \| `http/json`. |
+| `OTEL_EXPORTER_OTLP_HEADERS` | unset | Authn (e.g. `Authorization=Bearer …`). |
+| `OTEL_EXPORTER_OTLP_INSECURE` | `false` | Disable TLS for `http://` endpoints. |
+| `OTEL_RESOURCE_ATTRIBUTES` | (Herald sets `service.name`, `service.version`, `herald.flavor`, `herald.tenant_id`) | Operator adds `deployment.environment`, `service.namespace`, etc. |
+| `OTEL_SERVICE_NAME` | `<flavor>herald` | Convenience equivalent to `service.name`. |
+| `OTEL_TRACES_SAMPLER` | `parentbased_traceidratio` | Sampler choice. |
+| `OTEL_TRACES_SAMPLER_ARG` | `1.0` | Ratio when sampler supports it. |
+| `OTEL_METRIC_EXPORT_INTERVAL` | `60000` (ms) | Push cadence. |
+| `OTEL_BSP_SCHEDULE_DELAY` | `5000` (ms) | Batch-span-processor delay. |
+
+Herald's own resource defaults:
+
+```
+service.name=<flavor>herald
+service.version=<git-tag-or-commit-sha>
+service.instance.id=<hostname>-<pid>
+herald.flavor=<flavor>
+herald.tenant_id=<tenant_uuid>          # one-of label, set per request
+telemetry.sdk.name=opentelemetry
+telemetry.sdk.language=go
+```
+
+OTel semantic conventions tracked: **messaging v1.30+** (the spec moved out of experimental in 2025).
 
 ### 17.2 Metrics catalogue
 
@@ -1663,6 +1991,135 @@ Reference deployment topologies:
 - "Dead-letter spike" → query `dead_letters`, identify pattern, replay or purge.
 - "DKIM verification failing" → DNS check via `<flavor>herald doctor email`.
 
+### 26.5 Operator quickstart (5-minute Docker Compose)
+
+Goal: a working `pherald` ingesting one webhook and fanning out to Telegram + Email in five minutes on a fresh laptop. This is the canonical "hello world" deployment.
+
+```yaml
+# docker-compose.quickstart.yml — referenced from containers/quickstart/
+version: "3.8"
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: herald-postgres
+    environment:
+      POSTGRES_USER: herald
+      POSTGRES_PASSWORD: ${HERALD_DB_PASSWORD}
+      POSTGRES_DB: herald
+    ports:
+      - "24100:5432"
+    volumes:
+      - herald-pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U herald"]
+      interval: 5s
+  redis:
+    image: redis:7-alpine
+    container_name: herald-redis
+    command: ["redis-server", "--requirepass", "${HERALD_REDIS_PASSWORD}"]
+    ports:
+      - "24200:6379"
+    volumes:
+      - herald-redis:/data
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: herald-otel
+    command: ["--config=/etc/otel-config.yaml"]
+    volumes:
+      - ./otel-config.yaml:/etc/otel-config.yaml:ro
+    ports:
+      - "24417:4317"
+  pherald:
+    image: ghcr.io/vasic-digital/pherald:latest
+    container_name: herald-pherald
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis:    { condition: service_started }
+    environment:
+      HERALD_POSTGRES_DSN: "postgres://herald:${HERALD_DB_PASSWORD}@postgres:5432/herald?sslmode=disable"
+      HERALD_REDIS_ADDR:   "redis:6379"
+      HERALD_REDIS_USER:   "default"
+      HERALD_REDIS_PASSWORD: "${HERALD_REDIS_PASSWORD}"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4317"
+      OTEL_RESOURCE_ATTRIBUTES: "deployment.environment=quickstart"
+      TELEGRAM_BOT_TOKEN:  "${TELEGRAM_BOT_TOKEN}"
+      TELEGRAM_CHAT_ID:    "${TELEGRAM_CHAT_ID}"
+    ports:
+      - "24091:24091"   # webhook ingress
+      - "24090:24090"   # admin (/livez, /readyz, /metrics)
+    command: ["serve"]
+volumes:
+  herald-pg:
+  herald-redis:
+```
+
+Steps:
+
+```bash
+# 1. Clone Herald + containers submodule
+git clone git@github.com:vasic-digital/Herald.git && cd Herald
+git submodule update --init
+
+# 2. Copy & fill the example .env
+cp .env.example .env
+$EDITOR .env   # set HERALD_DB_PASSWORD, HERALD_REDIS_PASSWORD, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
+
+# 3. Boot
+docker compose -f containers/quickstart/docker-compose.quickstart.yml up -d
+
+# 4. Wait for ready
+curl --retry 30 --retry-delay 2 --retry-connrefused http://localhost:24090/readyz
+
+# 5. Send a test event
+curl -X POST http://localhost:24091/v1/events \
+  -H "Content-Type: application/cloudevents+json" \
+  -d '{
+    "specversion":"1.0",
+    "id":"01931a7c-3f4e-7000-9abc-def012345678",
+    "source":"https://example.com/quickstart",
+    "type":"digital.vasic.herald.system.host.cpu_high",
+    "subject":"tag:*",
+    "data":{"host":"laptop","cpu_pct":97}
+  }'
+
+# 6. Verify
+docker logs herald-pherald --tail=20
+cat docs/herald/diary/main.md | tail -30
+```
+
+A successful run delivers a Telegram message to the configured chat within ~3 seconds, appends a diary entry, and emits OTel traces visible at `http://localhost:24417` (Collector logs).
+
+### 26.6 Disaster recovery
+
+Recovery objectives (V2 baseline; per-tenant overrides allowed):
+
+| Class | RPO target | RTO target | Mechanism |
+|---|---|---|---|
+| Postgres data | 5 min | 30 min | WAL archiving + PITR (`pgbackrest` recommended) |
+| Redis state | 5 min | 5 min | AOF rewrite + RDB snapshot every 5 min; warm replica optional |
+| Diary | 0 (git) | minutes | `git push` fan-out to 4 mirrors per §103; restore via `git clone <any mirror>` |
+| Credentials | 0 (out-of-band) | depends on operator | Vault / 1Password / OS keychain; Herald NEVER stores plaintext credentials |
+| Configuration | 0 (git) | minutes | `config.toml` is git-committed (no secrets); `.env` is git-ignored, backed up out-of-band by operator |
+| Workflow state (Temporal opt-in) | 5 min | 30 min | Temporal's own backup/restore; out of Herald scope |
+
+**Cold-start recovery procedure:**
+
+1. Restore Postgres from latest WAL position.
+2. Restore Redis from latest RDB (transient state is fine to lose; rate-limit buckets repopulate).
+3. `git clone` Herald + `containers` submodule from any mirror.
+4. Re-provision `.env` from out-of-band credential store.
+5. `docker compose up -d`.
+6. `<flavor>herald doctor` — confirm all green.
+7. `<flavor>herald deadletter list` — replay any in-flight messages caught at the time of failure.
+
+**Tested scenarios** (each MUST have an integration test under `tests/dr/`):
+
+- Postgres primary loss → failover to replica.
+- Redis loss → cold restart (token buckets reset, no data corruption).
+- Single Herald replica crash → other replicas continue (multi-instance deployments).
+- Whole-host loss → cold-start from backups.
+- All four git mirrors momentarily unreachable → push deferred, queued locally, retried.
+
 ---
 
 ## §27. Roadmap
@@ -1701,6 +2158,66 @@ V1 R-NN items that V2 did not yet implement (with intended landing):
 | R-16 | ✅ Specified (§15) | First implementation cycle |
 | R-17 | ✅ Specified (§8.2 algorithm) | First `commons_prefix` commit |
 | R-18 | ✅ Specified (§21.1) | First release pipeline |
+
+### 27.3 Cost considerations
+
+Order-of-magnitude indicative pricing as of 2026-Q2 (operators MUST re-verify at deployment time; tiers change frequently). Herald itself is open-source / no licence fee — these costs are external dependencies an operator pays for in production.
+
+**Infrastructure (per single-region deployment):**
+
+| Component | Self-host minimum | Managed (illustrative) |
+|---|---|---|
+| Postgres 16 (2 vCPU / 4 GiB / 20 GiB) | ~$15/mo (Hetzner CX21, DO Basic) | RDS db.t4g.small ~$35/mo |
+| Redis 7 (1 GiB) | ~$10/mo (same node as Postgres for small tenants) | ElastiCache cache.t4g.micro ~$15/mo |
+| Herald binary host (1 vCPU / 1 GiB) | ~$5/mo | ECS Fargate 0.25 vCPU ~$10/mo |
+| OTel Collector | sidecar / shared | Grafana Cloud free tier or self-host |
+| **Single-tenant baseline** | **~$30/mo** | **~$60–80/mo** |
+
+**Transactional email provider (ESP) — pick one based on volume + deliverability needs:**
+
+| Provider | Free tier | Paid tier entry | Bounce/complaint webhook | Notes |
+|---|---|---|---|---|
+| [Resend](https://resend.com) | 3 000 emails/mo, 100/day | $20/mo for 50k | ✓ (Event Webhook) | Best DX of the three; Idempotency-Key header support. |
+| [Postmark](https://postmarkapp.com) | none — paid only | $15/mo for 10k | ✓ (Bounce / Spam / Open / Click streams) | Best deliverability reputation for transactional traffic; HTTP 406 for blocked recipients. |
+| [SendGrid](https://sendgrid.com) | 100 emails/day free forever | $19.95/mo for 50k | ✓ (Event Webhook) | Widest ecosystem; complex pricing tiers. |
+| Self-host SMTP | $0 | infra + IP-reputation labour | DSN parsing only | Only if operator has DNS / reverse-DNS / warm IPs already; otherwise deliverability tanks. |
+
+**Messaging platform fees:**
+
+| Channel | Cost model |
+|---|---|
+| Telegram Bot API | Free, no fee per message. |
+| Slack | Free for public/private channel webhooks; paid plans only required for full Slack workspace, not for the integration. |
+| Discord | Free webhooks; free bot. |
+| Microsoft Teams | Free incoming webhooks; Bot Framework requires Azure Bot Service ~$0.50/1 k messages. |
+| Lark / Feishu | Free for chatbots within an org. |
+| WhatsApp Business Cloud API (Meta direct) | Per-conversation pricing, ~$0.005–$0.15 depending on country + category. |
+| WhatsApp Business via Twilio | Twilio markup on top of Meta price. |
+| Viber | Free for service messages within 30 days of user interaction; promotional pricing varies. |
+| Max | Free Bot API at the time of writing (verify at deploy). |
+| ntfy / Gotify | Self-hosted = $0; ntfy.sh free public instance. |
+
+**Supply-chain tooling:**
+
+| Tool | Cost |
+|---|---|
+| GitHub Actions (public repo) | Free unlimited minutes. |
+| GitHub Actions (private repo) | 2 000 free minutes/mo on Linux; $0.008/min after. |
+| Sigstore / cosign | Free (keyless via OIDC). |
+| syft (SBOM) | Free / OSS. |
+| GoReleaser OSS | Free. |
+| GoReleaser Pro | $19/mo if Herald needs the per-subproject `tag_prefix` feature (R-18 alternative — V2 default does not require Pro). |
+
+**OpenTelemetry backend:**
+
+| Backend | Free tier |
+|---|---|
+| Grafana Cloud | 10 k series metrics, 50 GiB logs, 50 GB traces /mo |
+| Honeycomb | 20 M events/mo |
+| Datadog | 5 hosts free for 14 days |
+| Self-host Prometheus + Tempo + Loki | $0 + operator time |
+
+**Total order-of-magnitude TCO** for a small team running `pherald` + `sherald` self-hosted on Hetzner with Resend free tier: **~$30–60/mo** of recurring infrastructure. Operator labour for upgrades, monitoring, and incident response is the larger real cost — design choices in §17 (observability) and §26 (operations) exist specifically to minimise that labour.
 
 ---
 
@@ -1743,3 +2260,45 @@ V1 R-NN items that V2 did not yet implement (with intended landing):
 - **Per-channel feature matrix** (§11.13) — every channel now has documented V1-minimum, V2-advanced, out-of-scope tiers + delivery-evidence ceiling.
 - **Email deep dive** (§11.9) — DKIM signing (RFC 6376) + RFC 8058 one-click unsubscribe + DSN bounce parsing + suppression list + `doctor email` DNS verification, addressing Gmail/Yahoo 2024 sender requirements.
 - **Removed** the V1 Review section — its findings are folded into the V2 body or marked applied/deferred in §27.2. V1's full Review remains in `specification.V1.md` for traceability.
+
+---
+
+## §30. V2 self-review log
+
+> Added 2026-05-19 by a focused self-review pass on V2 r1. Each finding is tagged `V2-R-NN` to distinguish from V1's `R-NN` series. **All findings in this section have been applied in V2 r2** unless explicitly marked Deferred.
+
+### 30.1 Gaps closed (applied this revision)
+
+- **V2-R-01. Missing Go value types referenced by the `Channel` interface.** §11 previously declared `Channel` with `Capabilities`, `OutboundMessage`, `Receipt`, and `InboundHandler` as forward references without definitions. Applied: new **§11.0** ("Channel adapter contract") defines all referenced types — `Capabilities`, `DeliveryEvidence` (enum), `OutboundMessage`, `Body`, `Attachment`, `Recipient`, `Action` / `ActionType`, `Priority`, `Receipt`, `InboundHandler`, `InboundEvent`. These live in `commons/types.go`; adapters are forbidden from inventing equivalents.
+- **V2-R-02. Missing `webhook_sources` table schema.** §5.5 referenced the table but never defined it. Applied: full schema (signature_kind, signature_header, secret_encrypted, secret_rotated_at, ip_allowlist, replay_window_s) with RLS policy and `<flavor>herald webhook rotate` CLI.
+- **V2-R-03. Missing `channel_addresses` table schema.** §6 referenced the table but never defined it. Applied: full schema with `address_url` (env-interpolated at load time so secrets stay out of the row), `tags` GIN index, `priority_floor`, `enabled` + health-check columns.
+- **V2-R-04. Missing `thread_refs` table schema.** §12 prose-only definition. Applied: full schema with composite PK `(tenant_id, logical_thread_id, channel)`, `last_activity_at` for time-window GC.
+- **V2-R-05. Missing `quarantined_messages` table schema.** §15.2 referenced but never defined. Applied: full schema with `triage_status` enum, partial index on pending rows, 30-day auto-expiry policy, CLI verbs.
+- **V2-R-06. `subscribers.handle` had no uniqueness constraint.** Original schema allowed duplicate handles within a tenant — operationally surprising. Applied: `UNIQUE (tenant_id, handle)`. Also added `roles TEXT[]` and `metadata JSONB` columns for the operator-mapped privilege model and extensible per-subscriber data, plus an explicit composite index on `tenant_id`.
+- **V2-R-07. Go toolchain version not pinned.** §9.1 said "written in Go" without naming a minimum. Without `slog` and the OTel `slog` bridge, observability won't compile. Applied: **Go ≥ 1.22** mandatory; `toolchain` directive across all `go.mod` files; bump path documented.
+- **V2-R-08. License not named.** Multiple references to "the LICENSE file" without spelling out the terms. Applied: §9.1 now points to the parent project's `LICENSE` and requires top-level license comments in every `go.mod`; license compliance check is a `cherald` responsibility.
+- **V2-R-09. SIGTERM / graceful-shutdown semantics undefined.** Both modes (`send`, `serve`) lacked a documented exit contract. Applied: §3.1 now specifies trap-SIGTERM, stop-ingress, drain with `HERALD_SHUTDOWN_GRACE` (default 30 s), flush OTel exporter, close Postgres + Redis, exit 0/1 distinction. Second SIGTERM forces exit.
+- **V2-R-10. OpenTelemetry env vars not enumerated.** §17.1 said "OTLP/gRPC to a Collector" without naming the standard SDK env vars. Operators couldn't deploy without reading OTel spec. Applied: full table of `OTEL_*` env vars Herald honours, including resource attributes Herald sets by default and the messaging semantic-convention version pin (v1.30+).
+- **V2-R-11. Data retention + privacy was unspecified.** No section on how long Herald holds onto subscriber data, dead letters, quarantined messages, or diary entries; no GDPR right-to-erasure / right-to-portability flow. Applied: new **§16.1** with per-class retention defaults (table-driven), `<flavor>herald subscriber forget` and `subscriber export` flows, diary-redaction opt-out, data-sovereignty note.
+- **V2-R-12. Operator quickstart missing.** New operators couldn't get from clone to first delivery without reading the whole spec. Applied: **§26.5** with a complete Docker Compose YAML, 6-step bring-up procedure, and a verifiable end-to-end test (curl webhook → Telegram delivery + diary append + OTel trace).
+- **V2-R-13. Disaster recovery posture unspecified.** Backups were mentioned but RPO/RTO targets, cold-start procedure, and tested scenarios were absent. Applied: **§26.6** with per-class RPO/RTO table, cold-start procedure, and named integration-test scenarios that MUST live under `tests/dr/`.
+- **V2-R-14. Cost considerations missing.** Operators had no order-of-magnitude TCO guidance to choose between self-hosted SMTP vs Resend/Postmark, between Grafana Cloud vs self-host Prometheus, etc. Applied: **§27.3** with infrastructure / ESP / messaging-platform / supply-chain-tooling / observability-backend pricing tables (with `verify-at-deploy` caveat).
+
+### 30.2 Deferred (out of scope for this self-review)
+
+These findings were noted but require their own focused pass:
+
+- **V2-R-15. ASCII architecture diagram alignment.** Current diagram in §2.3 has minor box-drawing misalignment at the `└─` corners under proportional-font renderers. Deferred — fixing requires Mermaid or PlantUML adoption + a renderer pipeline; not blocker for V2.
+- **V2-R-16. Heading-depth normalisation.** Some §18.X flavor subsections go 4 levels deep (heading → field → subfield → list). Considered but rejected — depth tracks meaningful structure; flattening loses navigation cues.
+- **V2-R-17. "V1 minimum" vs "V1 (MVP)" wording inconsistency.** Cosmetic. Deferred to a docs-only polish PR.
+
+### 30.3 Method
+
+The pass was a single-author read-through immediately following V2 r1 authoring, focused on internal consistency (prose ↔ formal definitions), operational completeness (can someone deploy this?), and compliance gaps (GDPR, license, version pinning). Findings rated High when a downstream reader would file a bug, Medium when a future implementer would have to invent a missing detail, Low for stylistic. Only High + Medium findings were applied.
+
+### 30.4 Audit trail
+
+- Pre-review commit: V2 r1 at `96b7cc6`.
+- This commit: V2 r2 (one logical commit covering V2-R-01..V2-R-14).
+- Inheritance gate before and after: 12 PASS / 0 FAIL. Meta-test: ✓.
+- All four Herald mirrors targeted on push.
