@@ -1,5 +1,32 @@
 # Constitution inheritance — operator & agent guide
 
+| Field | Value |
+|---|---|
+| Revision | 1 |
+| Created | 2026-05-15 |
+| Last modified | 2026-05-19 |
+| Status | active |
+| Status summary | — |
+| Issues | none |
+| Issues summary | — |
+| Fixed | none |
+| Fixed summary | — |
+| Continuation | — |
+
+## Table of contents
+
+- [Summary](#summary)
+- [Why no embedded submodule?](#why-no-embedded-submodule)
+- [Discovery contract](#discovery-contract)
+  - [Standalone development](#standalone-development)
+- [The inheritance gate](#the-inheritance-gate)
+  - [Common failure: `FAIL  I1 constitution NOT found …`](#common-failure-fail-i1-constitution-not-found)
+  - [Common failure: `FAIL  I6 No constitution submodule embedded in Herald`](#common-failure-fail-i6-no-constitution-submodule-embedded-in-herald)
+- [The paired mutation meta-test (§1.1)](#the-paired-mutation-meta-test-11)
+- [When to run the gates](#when-to-run-the-gates)
+- [Promoting Herald rules into the constitution](#promoting-herald-rules-into-the-constitution)
+- [Glossary](#glossary)
+
 This guide explains how Herald inherits from the Helix Universal Constitution, why Herald does **not** keep its own copy, how the runtime discovery contract works, and how the inheritance gate enforces both.
 
 If you only need the rule, read [§Summary](#summary) and stop. If you're operating Herald, building tooling around it, or debugging a `FAIL  I1` from the gate, read on.

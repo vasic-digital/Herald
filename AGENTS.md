@@ -1,5 +1,27 @@
 # Herald — AGENTS.md
 
+| Field | Value |
+|---|---|
+| Revision | 1 |
+| Created | 2026-05-15 |
+| Last modified | 2026-05-19 |
+| Status | active |
+| Status summary | — |
+| Issues | none |
+| Issues summary | — |
+| Fixed | none |
+| Fixed summary | — |
+| Continuation | — |
+
+## Table of contents
+
+- [Critical base rules restated (for agents that don't follow @imports)](#critical-base-rules-restated-for-agents-that-dont-follow-imports)
+- [Herald-specific agent rules](#herald-specific-agent-rules)
+  - [Project status (load-bearing for every task)](#project-status-load-bearing-for-every-task)
+  - [Inheritance gate (run before any commit that touches root docs or `constitution/`)](#inheritance-gate-run-before-any-commit-that-touches-root-docs-or-constitution)
+  - [Multi-host mirror convention (Herald's own upstreams)](#multi-host-mirror-convention-heralds-own-upstreams)
+  - [Forbidden in this project](#forbidden-in-this-project)
+
 > Base agent rules: the Helix Constitution's `AGENTS.md`, provided by the **parent project's** `constitution/` submodule (Herald does not carry its own copy). **READ IT FIRST.**
 >
 > Discover the constitution by walking up parent directories until you find `<ancestor>/constitution/Constitution.md`, or by invoking the canonical helper `<discovered>/find_constitution.sh`. For standalone Herald work, clone the constitution alongside Herald:

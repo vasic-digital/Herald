@@ -1,5 +1,31 @@
 # Herald Constitution
 
+| Field | Value |
+|---|---|
+| Revision | 1 |
+| Created | 2026-05-15 |
+| Last modified | 2026-05-19 |
+| Status | active |
+| Status summary | — |
+| Issues | none |
+| Issues summary | — |
+| Fixed | none |
+| Fixed summary | — |
+| Continuation | — |
+
+## Table of contents
+
+- [Project Articles](#project-articles)
+  - [§101. Pre-implementation status](#101-pre-implementation-status)
+  - [§102. Mission boundary](#102-mission-boundary)
+  - [§103. Mirror parity (extends Universal §2.1)](#103-mirror-parity-extends-universal-21)
+  - [§104. No embedded constitution (extends Universal §3)](#104-no-embedded-constitution-extends-universal-3)
+  - [§105. Inheritance gate (extends Universal §1.1)](#105-inheritance-gate-extends-universal-11)
+- [Overrides of Universal Constitution](#overrides-of-universal-constitution)
+- [Owned-submodule set (per Universal §4)](#owned-submodule-set-per-universal-4)
+- [Project-specific remotes](#project-specific-remotes)
+- [Notes](#notes)
+
 This constitution **extends** the Helix Universal Constitution provided by the **parent project's** `constitution/` submodule. Herald does not carry its own copy — see `docs/guides/CONSTITUTION_INHERITANCE.md` for the discovery contract.
 
 All clauses in the parent-provided `constitution/Constitution.md` apply unless explicitly overridden below with an explicit `Override §X.Y` section.

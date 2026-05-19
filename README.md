@@ -1,5 +1,33 @@
 # Herald
 
+| Field | Value |
+|---|---|
+| Revision | 1 |
+| Created | 2026-05-15 |
+| Last modified | 2026-05-19 |
+| Status | active |
+| Status summary | — |
+| Issues | none |
+| Issues summary | — |
+| Fixed | none |
+| Fixed summary | — |
+| Continuation | — |
+
+## Table of contents
+
+- [Status](#status)
+- [Mission](#mission)
+- [Deployment model](#deployment-model)
+- [Governance — Helix Constitution inheritance](#governance-helix-constitution-inheritance)
+- [Repository layout](#repository-layout)
+- [Quickstart for developers and agents](#quickstart-for-developers-and-agents)
+  - [1. Place a copy of the Helix Constitution alongside Herald](#1-place-a-copy-of-the-helix-constitution-alongside-herald)
+  - [2. Verify the inheritance contract](#2-verify-the-inheritance-contract)
+  - [3. Read the inherited rules](#3-read-the-inherited-rules)
+- [Mirror & push convention](#mirror-push-convention)
+- [License](#license)
+- [Contact / contribution](#contact-contribution)
+
 Ingesting system events and reliably fanning them out to multiple notification channels so every alert reaches the right destination without confusion.
 
 ---

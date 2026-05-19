@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Herald — AGENTS.md</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Herald — AGENTS.md</h1>
+</header>
+<h1 id="herald--agentsmd">Herald — AGENTS.md</h1>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-05-15</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-05-19</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>active</td>
+</tr>
+<tr>
+<td>Status summary</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Issues</td>
+<td>none</td>
+</tr>
+<tr>
+<td>Issues summary</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Fixed</td>
+<td>none</td>
+</tr>
+<tr>
+<td>Fixed summary</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Continuation</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a
+href="#critical-base-rules-restated-for-agents-that-dont-follow-imports">Critical
+base rules restated (for agents that don't follow @imports)</a></li>
+<li><a href="#herald-specific-agent-rules">Herald-specific agent
+rules</a>
+<ul>
+<li><a href="#project-status-load-bearing-for-every-task">Project status
+(load-bearing for every task)</a></li>
+<li><a
+href="#inheritance-gate-run-before-any-commit-that-touches-root-docs-or-constitution">Inheritance
+gate (run before any commit that touches root docs or
+<code>constitution/</code>)</a></li>
+<li><a
+href="#multi-host-mirror-convention-heralds-own-upstreams">Multi-host
+mirror convention (Herald's own upstreams)</a></li>
+<li><a href="#forbidden-in-this-project">Forbidden in this
+project</a></li>
+</ul></li>
+</ul>
+<blockquote>
+<p>Base agent rules: the Helix Constitution's <code>AGENTS.md</code>,
+provided by the <strong>parent project's</strong>
+<code>constitution/</code> submodule (Herald does not carry its own
+copy). <strong>READ IT FIRST.</strong></p>
+<p>Discover the constitution by walking up parent directories until you
+find <code>&lt;ancestor&gt;/constitution/Constitution.md</code>, or by
+invoking the canonical helper
+<code>&lt;discovered&gt;/find_constitution.sh</code>. For standalone
+Herald work, clone the constitution alongside Herald:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone git@github.com:HelixDevelopment/HelixConstitution.git <span class="dt">\</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="va">$(</span><span class="fu">dirname</span> <span class="st">&quot;</span><span class="va">$PWD</span><span class="st">&quot;</span><span class="va">)</span>/constitution</span></code></pre></div>
+<p>The base file is authoritative for any topic not covered here.
+Herald-specific rules below extend them; they never weaken them.</p>
+<p>Canonical: <a
+href="https://github.com/HelixDevelopment/HelixConstitution">https://github.com/HelixDevelopment/HelixConstitution</a></p>
+</blockquote>
+<h2
+id="critical-base-rules-restated-for-agents-that-dont-follow-imports">Critical
+base rules restated (for agents that don't follow @imports)</h2>
+<ul>
+<li><strong>No bluffing.</strong> Every PASS carries positive evidence.
+Constitution §11.4 / §1.1.</li>
+<li><strong>Mutation-paired gates.</strong> Every new gate has a paired
+mutation proving it catches regressions. Constitution §1.1.</li>
+<li><strong>No guessing language</strong> (<code>likely</code>,
+<code>probably</code>, <code>maybe</code>, <code>seems</code>,
+<code>appears</code>) when reporting causes. Constitution §11.4.6.</li>
+<li><strong>Credentials never tracked.</strong> <code>.env</code>
+git-ignored; runtime-load only. Constitution §11.4.10.</li>
+<li><strong>Never force-push.</strong> Requires explicit per-session
+authorization.</li>
+<li><strong>Hardlinked backup before any destructive op.</strong>
+Constitution §9.</li>
+<li><strong>60% RAM cap on heavy work.</strong> Constitution §12.6.</li>
+<li><strong>Multi-upstream push.</strong> Every commit fans out to all 4
+hosts (GitHub + GitLab + GitFlic + GitVerse). Constitution §2.1.</li>
+</ul>
+<h2 id="herald-specific-agent-rules">Herald-specific agent rules</h2>
+<h3 id="project-status-load-bearing-for-every-task">Project status
+(load-bearing for every task)</h3>
+<p>Herald is <strong>pre-implementation</strong>. As of 2026-05-15 the
+repo contains:</p>
+<ul>
+<li><code>README.md</code> — mission, deployment model,
+constitution-inheritance contract, how to run.</li>
+<li><code>docs/specs/mvp/specification.md</code> — MVP spec (section
+headings only; substantive content TBD).</li>
+<li><code>docs/guides/HERALD_CONSTITUTION.md</code> — project-specific
+constitutional extensions.</li>
+<li><code>docs/guides/CONSTITUTION_INHERITANCE.md</code> —
+operator/agent guide for the parent-discovery contract + the gate.</li>
+<li><code>upstreams/</code> — Herald's own mirror declarations
+(lowercase, §11.4.29-compliant).</li>
+<li><code>tests/test_constitution_inheritance.sh</code> — inheritance
+gate (read-only assertions).</li>
+<li><code>tests/test_constitution_inheritance_meta.sh</code> — paired
+mutation meta-test (§1.1).</li>
+<li><code>.gitignore</code> tuned for Go (also ignores
+<code>.DS_Store</code>).</li>
+</ul>
+<p>Herald <strong>does not</strong> ship a <code>constitution/</code>
+submodule of its own — see
+<code>docs/guides/CONSTITUTION_INHERITANCE.md</code> for the rationale
+and the discovery mechanism.</p>
+<p>There is no <code>go.mod</code>, no source code, and no build/lint
+tooling yet. When asked to "add a feature" or "fix" something, first
+disambiguate: <strong>scaffold the project</strong> (init the Go module,
+lay out packages) vs. <strong>fill in the spec</strong>? The answer
+determines whether you're writing Go or Markdown.</p>
+<p>Never invent build/test commands. If a command is needed but the
+supporting file (<code>go.mod</code>, <code>Makefile</code>, CI config)
+isn't present, say so and confirm before scaffolding.</p>
+<h3
+id="inheritance-gate-run-before-any-commit-that-touches-root-docs-or-constitution">Inheritance
+gate (run before any commit that touches root docs or
+<code>constitution/</code>)</h3>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> tests/test_constitution_inheritance.sh        <span class="co"># the gate</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> tests/test_constitution_inheritance_meta.sh   <span class="co"># paired mutation proof (§1.1)</span></span></code></pre></div>
+<p>Both MUST return 0. If either fails, fix at root cause per
+Constitution §11.4.4 — never silently accept the FAIL.</p>
+<h3 id="multi-host-mirror-convention-heralds-own-upstreams">Multi-host
+mirror convention (Herald's own upstreams)</h3>
+<p><code>upstreams/</code> contains one script per mirror host (GitHub,
+GitLab, GitFlic, GitVerse). Each script exports
+<code>UPSTREAMABLE_REPOSITORY</code> and is sourced, not executed. The
+Herald repo's <code>origin</code> remote is already fan-out (1 fetch URL
++ 4 push URLs) — a single <code>git push origin &lt;branch&gt;</code>
+propagates to all four hosts. Per-host naming intentionally matches each
+provider's brand capitalization; do not normalize.</p>
+<h3 id="forbidden-in-this-project">Forbidden in this project</h3>
+<ul>
+<li><strong>Re-adding a <code>constitution/</code> submodule inside
+Herald.</strong> Herald is consumed as a submodule of a parent project
+that already provides <code>constitution/</code>. A duplicate copy
+inside Herald is a deployment-model violation. The inheritance gate's
+invariant <code>I6</code> enforces this — re-adding it will turn the
+gate red.</li>
+<li>Promoting Herald-specific values into the parent constitution
+(universal status must be EARNED; see Constitution §11.4 +
+§11.4.10).</li>
+<li>Modifying any file under the discovered <code>constitution/</code>
+from Herald commits — the parent's constitution is read-only from
+Herald's perspective. Constitution changes go through the
+HelixConstitution repo directly.</li>
+<li>Adding new submodules without re-running
+<code>bash tests/test_constitution_inheritance.sh</code> afterward.</li>
+</ul>
+</body>
+</html>

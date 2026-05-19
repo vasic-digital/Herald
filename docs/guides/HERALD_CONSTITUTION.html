@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Herald Constitution</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Herald Constitution</h1>
+</header>
+<h1 id="herald-constitution">Herald Constitution</h1>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-05-15</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-05-19</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>active</td>
+</tr>
+<tr>
+<td>Status summary</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Issues</td>
+<td>none</td>
+</tr>
+<tr>
+<td>Issues summary</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Fixed</td>
+<td>none</td>
+</tr>
+<tr>
+<td>Fixed summary</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Continuation</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#project-articles">Project Articles</a>
+<ul>
+<li><a href="#101-pre-implementation-status">§101. Pre-implementation
+status</a></li>
+<li><a href="#102-mission-boundary">§102. Mission boundary</a></li>
+<li><a href="#103-mirror-parity-extends-universal-21">§103. Mirror
+parity (extends Universal §2.1)</a></li>
+<li><a href="#104-no-embedded-constitution-extends-universal-3">§104. No
+embedded constitution (extends Universal §3)</a></li>
+<li><a href="#105-inheritance-gate-extends-universal-11">§105.
+Inheritance gate (extends Universal §1.1)</a></li>
+</ul></li>
+<li><a href="#overrides-of-universal-constitution">Overrides of
+Universal Constitution</a></li>
+<li><a href="#owned-submodule-set-per-universal-4">Owned-submodule set
+(per Universal §4)</a></li>
+<li><a href="#project-specific-remotes">Project-specific
+remotes</a></li>
+<li><a href="#notes">Notes</a></li>
+</ul>
+<p>This constitution <strong>extends</strong> the Helix Universal
+Constitution provided by the <strong>parent project's</strong>
+<code>constitution/</code> submodule. Herald does not carry its own copy
+— see <code>docs/guides/CONSTITUTION_INHERITANCE.md</code> for the
+discovery contract.</p>
+<p>All clauses in the parent-provided
+<code>constitution/Constitution.md</code> apply unless explicitly
+overridden below with an explicit <code>Override §X.Y</code>
+section.</p>
+<p>Canonical constitution repo: <a
+href="https://github.com/HelixDevelopment/HelixConstitution">https://github.com/HelixDevelopment/HelixConstitution</a></p>
+<h2 id="project-articles">Project Articles</h2>
+<h3 id="101-pre-implementation-status">§101. Pre-implementation
+status</h3>
+<p>Herald is pre-implementation. Until a <code>go.mod</code> is
+committed, no clause below may be interpreted as authorizing the agent
+to fabricate build/test infrastructure that doesn't yet exist. Confirm
+the disambiguation (scaffold vs. fill spec) with the operator before
+writing code, per Universal §11.4.6 (no-guessing).</p>
+<h3 id="102-mission-boundary">§102. Mission boundary</h3>
+<p>Herald ingests system events and fans them out to multiple
+notification channels. Anything outside event ingestion or notification
+fan-out is <strong>out of scope</strong> for this repo and belongs in a
+different submodule of the consuming project.</p>
+<h3 id="103-mirror-parity-extends-universal-21">§103. Mirror parity
+(extends Universal §2.1)</h3>
+<p>Every commit on <code>main</code> MUST land on all four upstream
+hosts (GitHub, GitLab, GitFlic, GitVerse) in a single fan-out push. The
+repo's <code>origin</code> remote already aggregates the four push URLs;
+do not bypass <code>origin</code> with per-host pushes unless rebuilding
+the fan-out configuration.</p>
+<h3 id="104-no-embedded-constitution-extends-universal-3">§104. No
+embedded constitution (extends Universal §3)</h3>
+<p>Herald <strong>MUST NOT</strong> carry its own
+<code>constitution/</code> submodule. Herald is consumed as a submodule
+of a parent project that already provides the constitution; a duplicated
+copy would diverge in pinning, cause confusion about which is
+authoritative, and violate the "submodule commits propagate first"
+propagation order (Universal §3). The inheritance gate's invariant
+<code>I6</code> enforces this: it FAILs if
+<code>&lt;repo-root&gt;/constitution/</code> or <code>.gitmodules</code>
+reappears.</p>
+<p>For standalone development of Herald (no parent project), clone the
+constitution <strong>alongside</strong> Herald, not inside it:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone git@github.com:HelixDevelopment/HelixConstitution.git <span class="dt">\</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="va">$(</span><span class="fu">dirname</span> <span class="st">&quot;</span><span class="va">$PWD</span><span class="st">&quot;</span><span class="va">)</span>/constitution</span></code></pre></div>
+<h3 id="105-inheritance-gate-extends-universal-11">§105. Inheritance
+gate (extends Universal §1.1)</h3>
+<p><code>tests/test_constitution_inheritance.sh</code> discovers the
+parent-provided constitution via inline parent-walk (mirrors
+<code>find_constitution.sh</code> Phase 1), then asserts six
+invariants:</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Invariant</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>I1</td>
+<td>A <code>constitution/Constitution.md</code> is reachable by walking
+up the parent chain from Herald's repo root.</td>
+</tr>
+<tr>
+<td>I2</td>
+<td>The discovered <code>Constitution.md</code> contains the
+<code>§11.4 End-user quality guarantee — forensic anchor</code> line
+(the exact string the §1.1 mutation removes).</td>
+</tr>
+<tr>
+<td>I3</td>
+<td>The discovered <code>CLAUDE.md</code> contains the
+<code>MANDATORY ANTI-BLUFF COVENANT</code> anchor.</td>
+</tr>
+<tr>
+<td>I4</td>
+<td>The discovered <code>AGENTS.md</code> contains the
+<code>Anti-bluff covenant</code> anchor.</td>
+</tr>
+<tr>
+<td>I5a–d</td>
+<td>Herald's root docs (<code>CLAUDE.md</code>, <code>AGENTS.md</code>,
+this file, and <code>README.md</code>) all declare the parent-discovery
+inheritance contract.</td>
+</tr>
+<tr>
+<td>I6</td>
+<td>No <code>constitution/</code> directory or <code>.gitmodules</code>
+file exists at Herald's root (the §104 invariant).</td>
+</tr>
+</tbody>
+</table>
+<p><code>tests/test_constitution_inheritance_meta.sh</code> delegates to
+the discovered constitution's <code>meta_test_inheritance.sh</code>,
+which strips the §11.4 anchor from <code>Constitution.md</code>, runs
+the gate, and asserts FAIL — proving the gate is not a bluff (Universal
+§1.1).</p>
+<p>Both scripts run as a precondition to any commit that touches root
+docs or the discovery contract.</p>
+<hr />
+<h2 id="overrides-of-universal-constitution">Overrides of Universal
+Constitution</h2>
+<p>(none — Herald has no exceptions to universal clauses at
+pre-implementation stage)</p>
+<hr />
+<h2 id="owned-submodule-set-per-universal-4">Owned-submodule set (per
+Universal §4)</h2>
+<pre><code>(none)</code></pre>
+<p>Herald owns no submodules. The constitution is provided by the parent
+project, not vendored here.</p>
+<hr />
+<h2 id="project-specific-remotes">Project-specific remotes</h2>
+<table>
+<thead>
+<tr>
+<th>Repo</th>
+<th>Remotes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Herald (this repo)</td>
+<td><code>github</code>, <code>gitlab</code>, <code>gitflic</code>,
+<code>gitverse</code> + <code>origin</code> (fan-out push to all
+four)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="notes">Notes</h2>
+<p>Most substantive sections of Herald's spec
+(<code>docs/specs/mvp/specification.md</code>) are still
+<code>Tbd</code>. As they fill in, project-specific articles (§106+) may
+be added here for invariants that are universal-grade but not yet
+promoted to the Helix Constitution. Promotion requires the §11.4
+universal-vs-project audit; default to keeping rules in this file until
+that audit clears.</p>
+</body>
+</html>

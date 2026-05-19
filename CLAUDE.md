@@ -1,5 +1,32 @@
 # CLAUDE.md
 
+| Field | Value |
+|---|---|
+| Revision | 1 |
+| Created | 2026-05-15 |
+| Last modified | 2026-05-19 |
+| Status | active |
+| Status summary | — |
+| Issues | none |
+| Issues summary | — |
+| Fixed | none |
+| Fixed summary | — |
+| Continuation | — |
+
+## Table of contents
+
+- [INHERITED FROM Helix Constitution (parent-discovery)](#inherited-from-helix-constitution-parent-discovery)
+- [Project status](#project-status)
+- [Mission (from the spec)](#mission-from-the-spec)
+- [Intended stack](#intended-stack)
+- [Multi-host mirror convention](#multi-host-mirror-convention)
+- [Inheritance gate (run before any commit touching root docs)](#inheritance-gate-run-before-any-commit-touching-root-docs)
+- [Spec-change rule (load-bearing — `docs/specs/mvp/specification.md` §"Specification documents")](#spec-change-rule-load-bearing-docsspecsmvpspecificationmd-specification-documents)
+- [Project conventions from the spec (apply when scaffolding)](#project-conventions-from-the-spec-apply-when-scaffolding)
+- [`constitutable/` directory (parent-project extension hook)](#constitutable-directory-parent-project-extension-hook)
+- [Documentation artefacts (PDF/HTML siblings)](#documentation-artefacts-pdfhtml-siblings)
+- [Notes for future scaffolding](#notes-for-future-scaffolding)
+
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## INHERITED FROM Helix Constitution (parent-discovery)
@@ -76,11 +103,38 @@ When adding a new mirror, copy an existing script and change only the URL — ke
 ## Inheritance gate (run before any commit touching root docs)
 
 ```bash
-bash tests/test_constitution_inheritance.sh        # 9 invariants, must pass
+bash tests/test_constitution_inheritance.sh        # 6 invariants (I1–I6), 9 checks
 bash tests/test_constitution_inheritance_meta.sh   # paired §1.1 mutation proof
 ```
 
-If either fails, fix at root cause per Universal §11.4.4. Never silently accept the FAIL.
+The gate inline-walks parents for `<ancestor>/constitution/Constitution.md`. I5 is split into I5a–d (one check per root doc that must declare parent-discovery: `CLAUDE.md`, `AGENTS.md`, `docs/guides/HERALD_CONSTITUTION.md`, `README.md`). I6 forbids re-introducing `<repo-root>/constitution/` or `.gitmodules` — the §104 invariant.
+
+If either script fails, fix at root cause per Universal §11.4.4. Never silently accept the FAIL.
+
+## Spec-change rule (load-bearing — `docs/specs/mvp/specification.md` §"Specification documents")
+
+Any modification to a file under `docs/specs/` (any depth) triggers **mandatory comprehensive planning and implementation** of the implied changes — you may not edit the spec in isolation. This rule does **not** apply to creating or renaming files; for those, ask the operator what to do with the new path. Treat every spec edit as a project-wide ripple, not a doc tweak.
+
+## Project conventions from the spec (apply when scaffolding)
+
+These are declared in `docs/specs/mvp/specification.md` and are easy to miss because no code enforces them yet:
+
+- **Workable-item prefix:** `HRD-` (e.g. `HRD-001`). Use it for issues, status entries, fix logs.
+- **Flavor binaries:** each Herald flavor ships as its own CLI binary, named `<prefix>herald` — `pherald` (Project Herald), `sherald` (System Herald), etc. Designed for CI / pipeline / cron / AI-agent invocation.
+- **Layered shared code:** `commons` → `commons_messaging` (level 1) → … → flavor. Put new shared code in the **lowest layer that still makes sense**; flavors inherit upward. `commons_messaging` owns the Telegram / Max / Slack / Email / Markdown-export integrations.
+- **Messenger integration priority:** Telegram → Max → Slack (then Email, then Markdown/PDF/HTML export). Microsoft Teams, Lark, Discord, WhatsApp, Viber are explicitly later iterations — don't pre-implement.
+- **Conversation diary:** every message in/out is appended to `docs/herald/diary/main.md` and re-exported to `main.pdf` + `main.html` in sync. Don't break this invariant when designing channel I/O.
+- **Container stack:** Postgres (main DB) + Redis (in-memory) bundled via the `containers` submodule (`https://github.com/vasic-digital/containers`). All container names start with `herald`; all host ports start with `70XXX` (70001, 70002, …) to avoid collisions.
+- **Credentials:** `.env` (git-ignored) with a committed `.env.example`. Resolution order: exported shell vars from `.bashrc`/`.zshrc` load first, then `.env` overrides them on key collision.
+- **Vendored SDKs:** any official/unofficial messenger SDK or API client we depend on goes in as a **git submodule**, e.g. `commons_messaging/sdk/telegram` or `commons_messaging/api/telegram` — not `go get`'d into `go.mod`.
+
+## `constitutable/` directory (parent-project extension hook)
+
+The empty `constitutable/` directory at the repo root is intentional. Per the spec, a parent project may drop additional `Constitution.md` / `CLAUDE.md` / `AGENTS.md` (in `constitutable/`, `constitutable/<flavor>/`, `constitutable/<flavor>/<variant>/`, etc.) to layer extensions or overrides on top of the discovered `constitution/` submodule. Apply-order: `constitution/` submodule → `constitutable/` extensions → Herald's own docs. Do not delete the directory because it's empty.
+
+## Documentation artefacts (PDF/HTML siblings)
+
+`docs/guides/HERALD_CONSTITUTION.md` and `docs/guides/CONSTITUTION_INHERITANCE.md` each ship with a committed `.pdf` sibling. When you edit one of these Markdown files, the PDF goes stale — flag it; do not regenerate silently unless the operator asks.
 
 ## Notes for future scaffolding
 
