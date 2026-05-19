@@ -2,7 +2,7 @@
 
 The bi-directional ingesting system events and reliably fanning them out to multiple notification channels so every alert reaches the right destination without confusion.
 
-All exiting projetc upstreams:
+All exiting project upstreams:
 
 - GitHub: `git@github.com:vasic-digital/Herald.git` (main repository)
 - GitLab: `git@gitlab.com:vasic-digital/herald.git`
@@ -31,7 +31,9 @@ Some Herald application names can be: `pherald` for the `Project Herald`, `shera
 
 ## Integration into the Constitution
 
-Once the whole project is fully implemented, tested and verified with proof(s) and confirmation of complete anti-bluff validation and verification we MUST incorporate it into the root Constitution, `AGENTS.md` and `CLAUDE.md` (`constitution` Submoudule - [git@github.com:HelixDevelopment/HelixConstitution.git](git@github.com:HelixDevelopment/HelixConstitution.git)) with the mandatory rules and constraints. Each Flavor (see below) will present its Constitution extensions!
+Once the whole project is fully implemented, tested and verified with proof(s) and confirmation of complete anti-bluff validation and verification we MUST incorporate it into the root Constitution, `AGENTS.md` and `CLAUDE.md` (`constitution` Submoudule - [git@github.com:HelixDevelopment/HelixConstitution.git](git@github.com:HelixDevelopment/HelixConstitution.git)) with the mandatory rules and constraints. Each Flavor (see below) will present its Constitution extensions.
+
+*Note* Herald's implementation MUST BE in direct connection with the `constitution` Submoudule!
 
 ### How Constitution Submodule rules and mandatory constraints are extended
 
@@ -41,6 +43,12 @@ We MUST EXTEND the `constitution` Submodule with the following rules and mandato
 - Rules and mandatory constraints are loaded, evaluated and applied in the following priority:
 `constitution` Submodule -> `constitutable` directories extensions and overrides for Constitution, `CLAUDE.md`, `AGENTS.md` and other defintions we support by the `constitution` Submodule -> Project and Submodules Constitution, `CLAUDE.md` and `CLAUDE.md` and other definition files defining rules and mandatory constraints.
 - The `constitutable` directory can have multiple subdirectories with `constitution` Submodule layouts in it. For example all these paths are roots for extending or overriding `constitution` Submodule rules and mandatory constraints: `constitutable` (and all content directly in the root of the directory), `constitutable/flavor_1`, `constitutable/flavor_2`, `constitutable/flavor_3/variant_1`, `constitutable/flavor_3/variant_2`. Each MUST HAVE in itself the one of the mandatory files used for recognizing the `constitution` Submodule compatible defintions for rules and mandatory constraints: `Constitution.md`, ``CLAUDE.md`` or ``AGENTS.md``.
+
+*Note:* The `tests` we have now and which may existi in `constitution` Submoudule MUST BE properly extended and updated once changes are applied and implementation(s) are improved and extended!
+
+### Workable items naming prefix
+
+For all opened workable items for the Herlad project (under Issues, Issues_Summary, Fixed, Fixed_Summary, Status and Status_Summary (for each existing contet), etc.) use the following prefix: `HRD`. For example: `HRD-001`, `HRD-002`, etc.
 
 ### Technology stack
 
@@ -188,7 +196,7 @@ We MUST have all mandatory documentation up to the smallest details, full user g
 
 ## Testing
 
-Whole project and all of its derrivates MUST follow testing rules from our root Constitution, `CLAUDE.md` and `AGENTS.md` (`constitution` Submodule from the main parent project).
+Whole project and all of its derrivates MUST follow testing rules from our root Constitution (`Constitution.md`), `CLAUDE.md` and `AGENTS.md` (`constitution` Submodule from the main parent project).
 
 ## Notes
 
