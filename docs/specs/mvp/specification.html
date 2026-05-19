@@ -186,7 +186,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>1</td>
+<td>2</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -202,7 +202,8 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td>—</td>
+<td>R-01/R-04/R-09/R-10/R-15/R-19/R-20/R-21/R-22 applied; heavier R
+items deferred</td>
 </tr>
 <tr>
 <td>Issues</td>
@@ -210,19 +211,24 @@
 </tr>
 <tr>
 <td>Issues summary</td>
-<td>—</td>
+<td>open R items deferred for focused implementation rounds — see
+Review</td>
 </tr>
 <tr>
 <td>Fixed</td>
-<td>none</td>
+<td>R-01, R-04, R-09, R-10, R-15, R-19, R-20, R-21, R-22 (text-level
+fixes)</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
-<td>—</td>
+<td>spec-text recommendations applied 2026-05-19</td>
 </tr>
 <tr>
 <td>Continuation</td>
-<td>—</td>
+<td>implement remaining R items (R-02/R-03/R-05–R-08 messaging stack,
+R-11/R-12/R-18 modules/release, R-13 constitutable loader, R-14 gate I7
+in this commit, R-16 security pipeline, R-17 prefix algo) when
+scaffolding starts</td>
 </tr>
 </tbody>
 </table>
@@ -325,12 +331,17 @@ and so on ...).</p>
 Constitution</h2>
 <p>Once the whole project is fully implemented, tested and verified with
 proof(s) and confirmation of complete anti-bluff validation and
-verification we MUST incorporate it into the root Constitution,
-<code>AGENTS.md</code> and <code>CLAUDE.md</code>
-(<code>constitution</code> Submodule —
-<code>git@github.com:HelixDevelopment/HelixConstitution.git</code>) with
-the mandatory rules and constraints. Each Flavor (see below) will
-present its Constitution extensions.</p>
+verification we MUST promote candidate universal rules into the root
+Constitution, <code>AGENTS.md</code> and <code>CLAUDE.md</code>
+<strong>via a HelixConstitution PR</strong> (audited per Universal §11.4
++ §11.4.17 — universal-vs-project classification), never by editing the
+parent <code>constitution</code> Submodule
+(<code>git@github.com:HelixDevelopment/HelixConstitution.git</code>)
+from inside Herald (see <a
+href="#r-09--incorporate-into-root-constitution-wording">R-09</a> and
+<code>CONSTITUTION_INHERITANCE.md</code> §"Promoting Herald rules into
+the constitution"). Each Flavor (see below) will present its
+Constitution extensions through the same promotion process.</p>
 <blockquote>
 <p><strong>Note:</strong> Herald's implementation MUST BE in direct
 connection with the <code>constitution</code> Submodule!</p>
@@ -362,7 +373,7 @@ the following priority: <code>constitution</code> Submodule →
 Constitution, <code>CLAUDE.md</code>, <code>AGENTS.md</code> and other
 definitions we support by the <code>constitution</code> Submodule →
 Project and Submodules Constitution, <code>CLAUDE.md</code> and
-<code>CLAUDE.md</code> and other definition files defining rules and
+<code>AGENTS.md</code> and other definition files defining rules and
 mandatory constraints.</li>
 <li>The <code>constitutable</code> directory can have multiple
 subdirectories with <code>constitution</code> Submodule layouts in it.
@@ -385,15 +396,19 @@ extended and updated once changes are applied and implementation(s) are
 improved and extended!</p>
 </blockquote>
 <blockquote>
-<p><strong>Note:</strong> For Herald which will be ALWAYS incorporated
-as the Submodule of another Project access to the
-<code>constitution</code> Submodule will be through the root of that
-project. The <code>constitution</code> Submodule will be cloned
-(available) under: <code>project_root/constitution</code> (or some other
-subdirectory if end user prefers different name). Current development
-setup has the same organization, in parent <code>Projects</code>
-directory we have the <code>constitution</code> cloned under the
-<code>constitution</code> directory.</p>
+<p><strong>Note:</strong> Herald is <strong>primarily</strong> consumed
+as a Submodule of another Project; in that case access to the
+<code>constitution</code> Submodule is through the root of that project
+(cloned under <code>project_root/constitution</code>, or another
+subdirectory of the operator's choice). For <strong>standalone
+development</strong> of Herald, the <code>constitution</code> is cloned
+<strong>alongside</strong> Herald (sibling-clone) — current development
+setup uses this layout, with <code>constitution/</code> next to
+<code>Herald/</code> under the parent <code>Projects/</code> directory.
+See <a
+href="../../guides/CONSTITUTION_INHERITANCE.md#standalone-development"><code>../../guides/CONSTITUTION_INHERITANCE.md</code>
+§"Standalone development"</a> and <a
+href="#r-10--always-submodule-wording">R-10</a>.</p>
 </blockquote>
 <blockquote>
 <p><strong>Note:</strong> Carefully investigate the codebase of the
@@ -419,10 +434,16 @@ href="https://github.com/vasic-digital/containers">https://github.com/vasic-digi
 <p><strong>Main Database:</strong> Postgres, part of the main Container
 (Docker or Podman Compose stack). <strong>In-Memory Database:</strong>
 Redis, part of the main Container (Docker or Podman Compose stack).</p>
-<p>All Container ports shall start with <code>70XXX</code> prefix for
-ports so we eliminate conflicts possibility with other containers.</p>
-<p>So basically, we will be using ports one by one: <code>70001</code>,
-<code>70002</code>, <code>70003</code>, etc.</p>
+<p>All Container ports shall start with
+<strong><code>24XXX</code></strong> prefix (chosen to sit inside the
+IANA User Ports band — 1024–49151 — below the Linux ephemeral floor at
+32768 and above all common service defaults; see <a
+href="#r-01--container-host-port-range">R-01</a> for the rationale and
+the rejected <code>70XXX</code> proposal that exceeded the 65535 TCP/UDP
+maximum) so we eliminate conflicts possibility with other
+containers.</p>
+<p>So basically, we will be using ports one by one: <code>24001</code>,
+<code>24002</code>, <code>24003</code>, etc.</p>
 <p>All System (Herald) Containers names MUST start with prefix
 <code>herald</code>.</p>
 <h2 id="commons">Commons</h2>
@@ -455,17 +476,26 @@ purposes <code>.env.example</code> file to illustrate everything that
 users can put there) which MUST BE Git ignored! System MUST BE capable
 to obtain all these environment variables from exported variables from
 <code>.bashrc</code> and <code>.zshrc</code> or any other System profile
-script which can export the variables. Using values from
-<code>.env</code> comes after top level ones are loaded and everything
-defined inside the <code>.env</code> file will override them (if same
-variables are defined there).</p>
+script which can export the variables. <strong>Resolution order
+(12-factor aligned, per <a
+href="#r-04--env-precedence">R-04</a>):</strong> (1) explicit CLI flag →
+(2) shell-exported env var → (3) value from <code>.env</code> (fallback
+only — does NOT override exported shell vars) → (4) compiled default.
+Operators who need the inverse ("file wins") can opt in via an explicit
+<code>--env-file-override</code> flag when the loader supports it.</p>
 <p>Everything that is sent or received through any of the integrated
 Messengers channels such as Telegram, Slack, Max and others (Email as
 well) will be stored inside main Markdown file and exported into PDF and
-HTML regularly. Markdown file and its exports MUST BE always in sync!
-Location of the Markdown file inside the Project MUST BE the following:
-<code>docs/herald/diary/main.md</code> (<code>main.pdf</code> and
-<code>main.html</code>).</p>
+HTML regularly. Markdown file and its exports MUST BE always in sync
+(per Universal Constitution §11.4.61 + §11.4.65). Location of the
+Markdown file MUST BE <code>docs/herald/diary/main.md</code>
+(<code>main.pdf</code> and <code>main.html</code>) relative to the
+<strong>operator-specified working directory</strong> — defaulting to
+(a) Herald's own root when running standalone, or (b) the parent
+project's root when consumed as a submodule (discovered via the same
+parent-walk as <code>find_constitution.sh</code>). Override with
+<code>--diary-root &lt;path&gt;</code>. See <a
+href="#r-20--diary-path-scope">R-20</a>.</p>
 <h4 id="messaging-flows">Messaging flow(s)</h4>
 <p>Messages we send (the data) to the channels (messengers integrations)
 MUST BE supported to work (if particular messenger channel allows this)
@@ -487,9 +517,9 @@ download).</li>
 <p>Subscribers are all users added to channels of the supported
 Messengers. They can communicate with the System! Users (Subscribers)
 can receive everything the System publishes and interact! For example,
-to particular message containing some information User (Subscriber) can
-reply, reply with an attachment or he can just brand new message with or
-without attachment.</p>
+to a particular message containing some information a User (Subscriber)
+can reply, reply with an attachment, or they can send a brand new
+message with or without attachment.</p>
 <p>Particular Flavors of Herald will have the understanding for the
 content received from Subscribers and about the ones we send towards
 them (with or without attachments).</p>
@@ -509,7 +539,7 @@ href="https://business.max.ru/">https://business.max.ru/</a>).</p>
 <p><strong>Priority of integration:</strong> Telegram → Max → Slack.</p>
 <p>For upcoming iterations we MUST document the following upcoming
 Messengers to be integrated: Microsoft Teams, Lark, Discord, WhatsApp,
-Viber. Probably some more will be added.</p>
+Viber. Additional channels may be added in later iterations.</p>
 <p>For each platform (Messenger integration) we MUST perform in-depth
 web deep research and gather all documentation, articles, technical
 documentation and open-sourced codebases with official and unofficial
@@ -1067,10 +1097,25 @@ approach with references, derived from web research (cited per item) and
 from desk review of the existing project guides
 (<code>HERALD_CONSTITUTION.md</code>,
 <code>CONSTITUTION_INHERITANCE.md</code>, <code>CLAUDE.md</code>,
-<code>AGENTS.md</code>, <code>README.md</code>). <strong>Nothing is
-applied yet</strong> — these are proposals for operator review before
-implementation. Where a number is approximate (e.g. GitHub stars), it is
-order-of-magnitude only; re-verify at the moment of pinning.</p>
+<code>AGENTS.md</code>, <code>README.md</code>). Where a number is
+approximate (e.g. GitHub stars), it is order-of-magnitude only;
+re-verify at the moment of pinning.</p>
+<p><strong>Applied 2026-05-19 (text-level fixes, this commit):</strong>
+R-01 (port range 24XXX), R-04 (.env precedence reverted to 12-factor),
+R-09 (constitution promotion wording), R-10 (sibling-clone for
+standalone), R-15 (<code>CLAUDE.md</code> and <code>AGENTS.md</code>
+duplicate fix), R-19 (deterministic phrasing for "Probably some more"),
+R-20 (diary path scope clarification), R-21 (missing verb), R-22
+(gendered pronoun). R-14 partially applied: spec-change rule propagated
+to Herald <code>AGENTS.md</code> + <code>HERALD_CONSTITUTION.md</code>
+§106, gate invariant I7 added.</p>
+<p><strong>Deferred to focused next rounds:</strong> R-02 (CLI/daemon
+split), R-03 (Markdown sync strategy), R-05 (delivery enum), R-06 (Max
+integration), R-07 (subscriber identity), R-08 (reply abstraction),
+R-11/R-12 (submodule additions when scaffolding starts), R-13
+(<code>constitutable/</code> loader + I8/I9 gates), R-16 (security
+pipeline), R-17 (prefix algorithm in <code>commons/prefix</code>), R-18
+(multi-binary versioning).</p>
 </blockquote>
 <h4 id="r-01--container-host-port-range">R-01 — Container host port
 range</h4>

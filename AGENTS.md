@@ -2,16 +2,16 @@
 
 | Field | Value |
 |---|---|
-| Revision | 1 |
+| Revision | 2 |
 | Created | 2026-05-15 |
 | Last modified | 2026-05-19 |
 | Status | active |
-| Status summary | — |
+| Status summary | added Spec-change rule per R-14 + Constitution §11.4.61 |
 | Issues | none |
 | Issues summary | — |
-| Fixed | none |
-| Fixed summary | — |
-| Continuation | — |
+| Fixed | R-14 partial |
+| Fixed summary | spec-change rule propagated from CLAUDE.md to AGENTS.md |
+| Continuation | I7 gate invariant pending in `tests/test_constitution_inheritance.sh` |
 
 ## Table of contents
 
@@ -19,6 +19,7 @@
 - [Herald-specific agent rules](#herald-specific-agent-rules)
   - [Project status (load-bearing for every task)](#project-status-load-bearing-for-every-task)
   - [Inheritance gate (run before any commit that touches root docs or `constitution/`)](#inheritance-gate-run-before-any-commit-that-touches-root-docs-or-constitution)
+  - [Spec-change rule (load-bearing — `docs/specs/mvp/specification.md` §"Specification documents")](#spec-change-rule-load-bearing-docsspecsmvpspecificationmd-specification-documents)
   - [Multi-host mirror convention (Herald's own upstreams)](#multi-host-mirror-convention-heralds-own-upstreams)
   - [Forbidden in this project](#forbidden-in-this-project)
 
@@ -75,6 +76,12 @@ bash tests/test_constitution_inheritance_meta.sh   # paired mutation proof (§1.
 ```
 
 Both MUST return 0. If either fails, fix at root cause per Constitution §11.4.4 — never silently accept the FAIL.
+
+### Spec-change rule (load-bearing — `docs/specs/mvp/specification.md` §"Specification documents")
+
+Whenever `docs/specs/mvp/specification.md` or any file under `docs/specs/` (any depth) is modified, **comprehensive planning and implementation of all changes is MANDATORY** — agents may not edit the spec in isolation. This rule does NOT apply to creating or renaming files; for those, ask the operator what to do with the new path. Treat every spec edit as a project-wide ripple, not a doc tweak.
+
+This rule is mirrored in `CLAUDE.md` and in `docs/guides/HERALD_CONSTITUTION.md` §106. The inheritance gate's invariant **I7a–c** asserts the rule anchor (`comprehensive planning and implementation`) is present in all three files; a missing copy is a §1.1 propagation bluff and the gate FAILs.
 
 ### Multi-host mirror convention (Herald's own upstreams)
 

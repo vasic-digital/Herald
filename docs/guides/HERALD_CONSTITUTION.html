@@ -251,7 +251,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>1</td>
+<td>2</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -267,7 +267,7 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td>—</td>
+<td>§106 spec-change rule added per R-14 + I7 gate landed</td>
 </tr>
 <tr>
 <td>Issues</td>
@@ -279,11 +279,11 @@
 </tr>
 <tr>
 <td>Fixed</td>
-<td>none</td>
+<td>R-14</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
-<td>—</td>
+<td>spec-change rule now mirrored in CLAUDE.md / AGENTS.md / §106</td>
 </tr>
 <tr>
 <td>Continuation</td>
@@ -304,6 +304,8 @@ parity (extends Universal §2.1)</a></li>
 embedded constitution (extends Universal §3)</a></li>
 <li><a href="#105-inheritance-gate-extends-universal-11">§105.
 Inheritance gate (extends Universal §1.1)</a></li>
+<li><a href="#106-spec-change-rule-extends-universal-114">§106.
+Spec-change rule (extends Universal §11.4)</a></li>
 </ul></li>
 <li><a href="#overrides-of-universal-constitution">Overrides of
 Universal Constitution</a></li>
@@ -406,6 +408,12 @@ inheritance contract.</td>
 <td>No <code>constitution/</code> directory or <code>.gitmodules</code>
 file exists at Herald's root (the §104 invariant).</td>
 </tr>
+<tr>
+<td>I7a–c</td>
+<td>Herald's <code>CLAUDE.md</code>, <code>AGENTS.md</code>, and this
+file all contain the §106 spec-change rule anchor (per §1.1 propagation,
+mutation-paired).</td>
+</tr>
 </tbody>
 </table>
 <p><code>tests/test_constitution_inheritance_meta.sh</code> delegates to
@@ -415,6 +423,34 @@ the gate, and asserts FAIL — proving the gate is not a bluff (Universal
 §1.1).</p>
 <p>Both scripts run as a precondition to any commit that touches root
 docs or the discovery contract.</p>
+<h3 id="106-spec-change-rule-extends-universal-114">§106. Spec-change
+rule (extends Universal §11.4)</h3>
+<p>Any modification to <code>docs/specs/mvp/specification.md</code> or
+any file under <code>docs/specs/</code> (any depth) triggers
+<strong>mandatory comprehensive planning and implementation of all
+changes</strong>. An agent or contributor may not edit the spec in
+isolation: every change is a project-wide ripple that requires the
+corresponding code, tests, and downstream doc updates in the same
+logical work effort.</p>
+<p>This rule does NOT apply to creating or renaming files; for those,
+the operator must explicitly tell the worker (CLI agent or human
+contributor) what to do with the newly created or copied files.</p>
+<p><strong>Propagation.</strong> The same rule is restated in Herald's
+<code>CLAUDE.md</code> and <code>AGENTS.md</code> (per §1.1 multi-file
+propagation discipline). The inheritance gate's invariant
+<strong>I7a–c</strong> asserts the rule's anchor literal
+(<code>comprehensive planning and implementation</code>) is present in
+all three files; a missing copy is a propagation bluff and the gate
+FAILs.</p>
+<p><strong>Anchor (forensic):</strong> the literal text
+<code>Whenever this document (\</code>docs/specs/mvp/specification.md`)<code>MUST appear in</code>docs/specs/mvp/specification.md`
+§"Specification documents" — that line is the source of truth that all
+three propagated copies summarize.</p>
+<p><strong>Paired §1.1 mutation (planned).</strong> Removing the
+spec-change anchor from any of the three propagation files MUST cause
+<code>I7a/b/c</code> to FAIL; the paired meta-test will be added when
+<code>test_constitution_inheritance_meta.sh</code> is generalised beyond
+its current single-anchor mutation.</p>
 <hr />
 <h2 id="overrides-of-universal-constitution">Overrides of Universal
 Constitution</h2>

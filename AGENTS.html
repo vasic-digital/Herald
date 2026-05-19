@@ -251,7 +251,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>1</td>
+<td>2</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -267,7 +267,7 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td>—</td>
+<td>added Spec-change rule per R-14 + Constitution §11.4.61</td>
 </tr>
 <tr>
 <td>Issues</td>
@@ -279,15 +279,16 @@
 </tr>
 <tr>
 <td>Fixed</td>
-<td>none</td>
+<td>R-14 partial</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
-<td>—</td>
+<td>spec-change rule propagated from CLAUDE.md to AGENTS.md</td>
 </tr>
 <tr>
 <td>Continuation</td>
-<td>—</td>
+<td>I7 gate invariant pending in
+<code>tests/test_constitution_inheritance.sh</code></td>
 </tr>
 </tbody>
 </table>
@@ -305,6 +306,10 @@ rules</a>
 href="#inheritance-gate-run-before-any-commit-that-touches-root-docs-or-constitution">Inheritance
 gate (run before any commit that touches root docs or
 <code>constitution/</code>)</a></li>
+<li><a
+href="#spec-change-rule-load-bearing-docsspecsmvpspecificationmd-specification-documents">Spec-change
+rule (load-bearing — <code>docs/specs/mvp/specification.md</code>
+§"Specification documents")</a></li>
 <li><a
 href="#multi-host-mirror-convention-heralds-own-upstreams">Multi-host
 mirror convention (Herald's own upstreams)</a></li>
@@ -395,6 +400,23 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> tests/test_constitution_inheritance_meta.sh   <span class="co"># paired mutation proof (§1.1)</span></span></code></pre></div>
 <p>Both MUST return 0. If either fails, fix at root cause per
 Constitution §11.4.4 — never silently accept the FAIL.</p>
+<h3
+id="spec-change-rule-load-bearing--docsspecsmvpspecificationmd-specification-documents">Spec-change
+rule (load-bearing — <code>docs/specs/mvp/specification.md</code>
+§"Specification documents")</h3>
+<p>Whenever <code>docs/specs/mvp/specification.md</code> or any file
+under <code>docs/specs/</code> (any depth) is modified,
+<strong>comprehensive planning and implementation of all changes is
+MANDATORY</strong> — agents may not edit the spec in isolation. This
+rule does NOT apply to creating or renaming files; for those, ask the
+operator what to do with the new path. Treat every spec edit as a
+project-wide ripple, not a doc tweak.</p>
+<p>This rule is mirrored in <code>CLAUDE.md</code> and in
+<code>docs/guides/HERALD_CONSTITUTION.md</code> §106. The inheritance
+gate's invariant <strong>I7a–c</strong> asserts the rule anchor
+(<code>comprehensive planning and implementation</code>) is present in
+all three files; a missing copy is a §1.1 propagation bluff and the gate
+FAILs.</p>
 <h3 id="multi-host-mirror-convention-heralds-own-upstreams">Multi-host
 mirror convention (Herald's own upstreams)</h3>
 <p><code>upstreams/</code> contains one script per mirror host (GitHub,

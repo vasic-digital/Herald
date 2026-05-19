@@ -96,6 +96,19 @@ check "I5d README.md documents the constitution-inheritance contract" \
 check "I6 No constitution submodule embedded in Herald" \
     "! [ -d '${REPO_ROOT}/constitution' ] && ! [ -f '${REPO_ROOT}/.gitmodules' ]"
 
+# Invariant 7: spec-change rule propagated to CLAUDE.md, AGENTS.md, and
+# HERALD_CONSTITUTION.md (§106). The literal anchor is the phrase
+# 'comprehensive planning and implementation' from the spec's
+# §"Specification documents" — see docs/guides/HERALD_CONSTITUTION.md §106.
+SPEC_CHANGE_ANCHOR='comprehensive planning and implementation'
+check "I7a CLAUDE.md contains spec-change rule anchor" \
+    "grep -qF '${SPEC_CHANGE_ANCHOR}' '${REPO_ROOT}/CLAUDE.md'"
+check "I7b AGENTS.md contains spec-change rule anchor" \
+    "grep -qF '${SPEC_CHANGE_ANCHOR}' '${REPO_ROOT}/AGENTS.md'"
+check "I7c HERALD_CONSTITUTION.md §106 contains spec-change rule anchor" \
+    "grep -qF '${SPEC_CHANGE_ANCHOR}' '${REPO_ROOT}/docs/guides/HERALD_CONSTITUTION.md' && \
+     grep -qF '§106' '${REPO_ROOT}/docs/guides/HERALD_CONSTITUTION.md'"
+
 echo "----"
 echo "Result: ${pass_count} PASS / ${fail_count} FAIL"
 if [ "${fail_count}" -gt 0 ]; then

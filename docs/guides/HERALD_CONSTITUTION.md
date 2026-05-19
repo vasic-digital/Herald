@@ -2,15 +2,15 @@
 
 | Field | Value |
 |---|---|
-| Revision | 1 |
+| Revision | 2 |
 | Created | 2026-05-15 |
 | Last modified | 2026-05-19 |
 | Status | active |
-| Status summary | — |
+| Status summary | §106 spec-change rule added per R-14 + I7 gate landed |
 | Issues | none |
 | Issues summary | — |
-| Fixed | none |
-| Fixed summary | — |
+| Fixed | R-14 |
+| Fixed summary | spec-change rule now mirrored in CLAUDE.md / AGENTS.md / §106 |
 | Continuation | — |
 
 ## Table of contents
@@ -21,6 +21,7 @@
   - [§103. Mirror parity (extends Universal §2.1)](#103-mirror-parity-extends-universal-21)
   - [§104. No embedded constitution (extends Universal §3)](#104-no-embedded-constitution-extends-universal-3)
   - [§105. Inheritance gate (extends Universal §1.1)](#105-inheritance-gate-extends-universal-11)
+  - [§106. Spec-change rule (extends Universal §11.4)](#106-spec-change-rule-extends-universal-114)
 - [Overrides of Universal Constitution](#overrides-of-universal-constitution)
 - [Owned-submodule set (per Universal §4)](#owned-submodule-set-per-universal-4)
 - [Project-specific remotes](#project-specific-remotes)
@@ -69,10 +70,23 @@ git clone git@github.com:HelixDevelopment/HelixConstitution.git \
 | I4 | The discovered `AGENTS.md` contains the `Anti-bluff covenant` anchor. |
 | I5a–d | Herald's root docs (`CLAUDE.md`, `AGENTS.md`, this file, and `README.md`) all declare the parent-discovery inheritance contract. |
 | I6 | No `constitution/` directory or `.gitmodules` file exists at Herald's root (the §104 invariant). |
+| I7a–c | Herald's `CLAUDE.md`, `AGENTS.md`, and this file all contain the §106 spec-change rule anchor (per §1.1 propagation, mutation-paired). |
 
 `tests/test_constitution_inheritance_meta.sh` delegates to the discovered constitution's `meta_test_inheritance.sh`, which strips the §11.4 anchor from `Constitution.md`, runs the gate, and asserts FAIL — proving the gate is not a bluff (Universal §1.1).
 
 Both scripts run as a precondition to any commit that touches root docs or the discovery contract.
+
+### §106. Spec-change rule (extends Universal §11.4)
+
+Any modification to `docs/specs/mvp/specification.md` or any file under `docs/specs/` (any depth) triggers **mandatory comprehensive planning and implementation of all changes**. An agent or contributor may not edit the spec in isolation: every change is a project-wide ripple that requires the corresponding code, tests, and downstream doc updates in the same logical work effort.
+
+This rule does NOT apply to creating or renaming files; for those, the operator must explicitly tell the worker (CLI agent or human contributor) what to do with the newly created or copied files.
+
+**Propagation.** The same rule is restated in Herald's `CLAUDE.md` and `AGENTS.md` (per §1.1 multi-file propagation discipline). The inheritance gate's invariant **I7a–c** asserts the rule's anchor literal (`comprehensive planning and implementation`) is present in all three files; a missing copy is a propagation bluff and the gate FAILs.
+
+**Anchor (forensic):** the literal text `Whenever this document (\`docs/specs/mvp/specification.md\`)` MUST appear in `docs/specs/mvp/specification.md` §"Specification documents" — that line is the source of truth that all three propagated copies summarize.
+
+**Paired §1.1 mutation (planned).** Removing the spec-change anchor from any of the three propagation files MUST cause `I7a/b/c` to FAIL; the paired meta-test will be added when `test_constitution_inheritance_meta.sh` is generalised beyond its current single-anchor mutation.
 
 ---
 
