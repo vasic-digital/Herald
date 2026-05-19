@@ -29,6 +29,18 @@ Herald applications are CLI binarries which are mainly designed for CI integrati
 
 Some Herald application names can be: `pherald` for the `Project Herald`, `sherald` for the `System Herald` and so on.
 
+## Integration into the Constitution
+
+Once the whole project is fully implemented, tested and verified with proof(s) and confirmation of complete anti-bluff validation and verification we MUST incorporate it into the root Constitution, AGENTS.MD and CLAUDE.MD (`constitution` Submoudule - [git@github.com:HelixDevelopment/HelixConstitution.git](git@github.com:HelixDevelopment/HelixConstitution.git)) with the mandatory rules and constraints. Each Flavor (see below) will present its Constitution extensions!
+
+### How Constitution Submodule rules and mandatory constraints are extended
+
+We MUST EXTEND the `constitution` Submodule with the following rules and mandatory constraints which will make possible for us to do the extending:
+
+- Any Submodule that has the constitutable directory or any directory containing it located in the root of the Project and which contains the structure and files like the `constitution` Submodule has, they will be used as extendsion and overrides on top of the definitions provided by the `constitution` Submodule.
+- Rules and mandatory constraints are loaded, evaluated and applied in the following priority:
+`constitution` Submodule -> `constitutable` diretcories extensions and overrides for Constitution, CLAUDE.MD, AGENTS.MD and other defintions we support by the `constitution` Submodule -> Project and Submodules Constitution, CLAUDE.MD and CLAUDE.MD and other definition files defining rules and mandatory constraints.
+
 ### Technology stack
 
 Herald project and all flavors MUST BE writtn in Go. The whole implementation - the binary we distribute and use with all its dependencies MUST BE Containerized using the `containers` Submodule:
@@ -98,14 +110,6 @@ For upcoming iterations we MUST document the following upcoming Messengers to be
 For each platform (Messenger integration) we MUST perform in-depth web deep research and gather all documentation, articles, technical documentation and opensourced codebases with official and unoffcial APIs and SDKs and other components we could integrate.
 
 We MUST make sure that all materials we gather and use MUST BE properly adapted and put in our own version of technical documentation under the `docs` directory into properly structured hierarchy (SDKs, APIs, and so on).
-
-## Integration into the Constitution
-
-Once the whole project is fully implemented, tested and verified with proof(s) and confirmation of complete anti-bluff validation and verification we MUST incorporate it into the root Constitution, AGENTS.MD and CLAUDE.MD (constitution Submoudule - [git@github.com:HelixDevelopment/HelixConstitution.git](git@github.com:HelixDevelopment/HelixConstitution.git)) with the mandatory rules and constraints. Each Flavor (see below) will present its Constitution extensions!
-
-### How Constitution Submodule rules and mandatory constraints are extended
-
-Tbd - How we technically to achieve this?
 
 ## Flavors (the implementations)
 
@@ -183,7 +187,7 @@ We MUST have all mandatory documentation up to the smallest details, full user g
 
 ## Testing
 
-Whole project and all of its derrivates MUST follow testing rules from our root Constitution, CLAUDE.MD and AGENTS.MD (constitution Submodule from the main parent project).
+Whole project and all of its derrivates MUST follow testing rules from our root Constitution, CLAUDE.MD and AGENTS.MD (`constitution` Submodule from the main parent project).
 
 ## Notes
 
