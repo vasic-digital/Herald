@@ -4,10 +4,10 @@ The bi-directional ingesting system events and reliably fanning them out to mult
 
 All exiting project upstreams:
 
-- GitHub: `git@github.com:vasic-digital/Herald.git` (main repository)
-- GitLab: `git@gitlab.com:vasic-digital/herald.git`
-- GitFlic: `git@gitflic.ru:vasic-digital/herald.git`
-- GitFlic: `git@gitverse.ru:vasic-digital/Herald.git`
+- GitHub: [git@github.com:vasic-digital/Herald.git](git@github.com:vasic-digital/Herald.git) (main repository)
+- GitLab: [git@gitlab.com:vasic-digital/herald.git](git@gitlab.com:vasic-digital/herald.git)
+- GitFlic: [git@gitflic.ru:vasic-digital/herald.git](git@gitflic.ru:vasic-digital/herald.git)
+- GitFlic: [git@gitverse.ru:vasic-digital/Herald.git](git@gitverse.ru:vasic-digital/Herald.git)
 
 ## What Herald can (must be able to) do?
 
