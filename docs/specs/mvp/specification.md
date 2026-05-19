@@ -31,15 +31,16 @@ Some Herald application names can be: `pherald` for the `Project Herald`, `shera
 
 ## Integration into the Constitution
 
-Once the whole project is fully implemented, tested and verified with proof(s) and confirmation of complete anti-bluff validation and verification we MUST incorporate it into the root Constitution, AGENTS.MD and CLAUDE.MD (`constitution` Submoudule - [git@github.com:HelixDevelopment/HelixConstitution.git](git@github.com:HelixDevelopment/HelixConstitution.git)) with the mandatory rules and constraints. Each Flavor (see below) will present its Constitution extensions!
+Once the whole project is fully implemented, tested and verified with proof(s) and confirmation of complete anti-bluff validation and verification we MUST incorporate it into the root Constitution, `AGENTS.md` and `CLAUDE.md` (`constitution` Submoudule - [git@github.com:HelixDevelopment/HelixConstitution.git](git@github.com:HelixDevelopment/HelixConstitution.git)) with the mandatory rules and constraints. Each Flavor (see below) will present its Constitution extensions!
 
 ### How Constitution Submodule rules and mandatory constraints are extended
 
 We MUST EXTEND the `constitution` Submodule with the following rules and mandatory constraints which will make possible for us to do the extending:
 
-- Any Submodule that has the constitutable directory or any directory containing it located in the root of the Project and which contains the structure and files like the `constitution` Submodule has, they will be used as extendsion and overrides on top of the definitions provided by the `constitution` Submodule.
+- Any Submodule that has the `constitutable` directory or any directory containing it inside and that is located in the root of the Project and which contains the structure and files like the `constitution` Submodule has, it will be used for extensions and overrides of the top of the definitions provided by the `constitution` Submodule.
 - Rules and mandatory constraints are loaded, evaluated and applied in the following priority:
-`constitution` Submodule -> `constitutable` diretcories extensions and overrides for Constitution, CLAUDE.MD, AGENTS.MD and other defintions we support by the `constitution` Submodule -> Project and Submodules Constitution, CLAUDE.MD and CLAUDE.MD and other definition files defining rules and mandatory constraints.
+`constitution` Submodule -> `constitutable` directories extensions and overrides for Constitution, `CLAUDE.md`, `AGENTS.md` and other defintions we support by the `constitution` Submodule -> Project and Submodules Constitution, `CLAUDE.md` and `CLAUDE.md` and other definition files defining rules and mandatory constraints.
+- The `constitutable` directory can have multiple subdirectories with `constitution` Submodule layouts in it. For example all these paths are roots for extending or overriding `constitution` Submodule rules and mandatory constraints: `constitutable` (and all content directly in the root of the directory), `constitutable/flavor_1`, `constitutable/flavor_2`, `constitutable/flavor_3/variant_1`, `constitutable/flavor_3/variant_2`. Each MUST HAVE in itself the one of the mandatory files used for recognizing the `constitution` Submodule compatible defintions for rules and mandatory constraints: `Constitution.md`, ``CLAUDE.md`` or ``AGENTS.md``.
 
 ### Technology stack
 
@@ -175,7 +176,7 @@ Here we will list main ideas for upcoming Flavors which MUST BE planned with pro
 
 ### Specification documents
 
-We MUST add into the Constitution, AGENTS.MD and CLAUDE.MD of the Herald project itself the following rule / mandatory constraint related to this technical specification:
+We MUST add into the Constitution (`Constitution.md`), `AGENTS.md` and `CLAUDE.md` of the Herald project itself the following rule / mandatory constraint related to this technical specification:
 
 Whenever this document (`docs/specs/mvp/specification.md`) or any under the `docs/specs` root directory and any of its children directories (any level deep) is modified, comprehensive planning and implementation of all changes is MANDATORY to be performed! This does not apply to new or renamed files! For new files we MUST explicitly tell the worker (CLI agent) what to do with the newly created / copied files!
 
@@ -187,7 +188,7 @@ We MUST have all mandatory documentation up to the smallest details, full user g
 
 ## Testing
 
-Whole project and all of its derrivates MUST follow testing rules from our root Constitution, CLAUDE.MD and AGENTS.MD (`constitution` Submodule from the main parent project).
+Whole project and all of its derrivates MUST follow testing rules from our root Constitution, `CLAUDE.md` and `AGENTS.md` (`constitution` Submodule from the main parent project).
 
 ## Notes
 
