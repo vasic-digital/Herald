@@ -53,7 +53,7 @@ Example:
 
 `commons -> commons level 1 -> commons level 2 -> ... -> commons level N -> Flavor`
 
-### Common Messeging Herald
+### Common Messaging Herald
 
 Common Messeging Herald (`commons_messaging`) is the `commons level 1` abstraction layer. Every Messeging Herald Flavor MUST offer support for several main integrations:
 
@@ -99,6 +99,14 @@ For each platform (Messenger integration) we MUST perform in-depth web deep rese
 
 We MUST make sure that all materials we gather and use MUST BE properly adapted and put in our own version of technical documentation under the `docs` directory into properly structured hierarchy (SDKs, APIs, and so on).
 
+## Integration into the Constitution
+
+Once the whole project is fully implemented, tested and verified with proof(s) and confirmation of complete anti-bluff validation and verification we MUST incorporate it into the root Constitution, AGENTS.MD and CLAUDE.MD (constitution Submoudule - [git@github.com:HelixDevelopment/HelixConstitution.git](git@github.com:HelixDevelopment/HelixConstitution.git)) with the mandatory rules and constraints. Each Flavor (see below) will present its Constitution extensions!
+
+### How Constitution Submodule rules and mandatory constraints are extended
+
+Tbd - How we technically to achieve this?
+
 ## Flavors (the implementations)
 
 Main Go abstractions and shared codebase (with shared implementations) will be used as the base which Flavors will inherit and build on top of it.
@@ -129,7 +137,7 @@ Serious security validation is performed before any other steps are taken!
 
 #### Inputs
 
-Tbd
+All data we receive from Subscribers - messages content (fresh messages or part of threads), attachments users provide, are all Inputs
 
 ##### Input commands
 
@@ -137,23 +145,29 @@ Tbd
 - `Query:`, `Request:`, `Question:` - Requesting the information or report
 - Tbd
 
+##### Input attachments
+
+Tbd
+
+#### Project Herald's Constitution rules and mandatory constraints
+
+Tbd
+
 ### System Herald
 
 Tbd
 
 What are the specifics that System Herald is having and others do not?
 
+#### System Herald's Constitution rules and mandatory constraints
+
+Tbd
+
 ### Others and misc
 
 Here we will list main ideas for upcoming Flavors which MUST BE planned with proper deep web research and fully implemented:
 
 - Tbd
-
-## Integration into the Constitution
-
-Once the whole project is fully implemented, tested and verified with proofs and confirmation of complete anti-bluff validation and verification we MUST incorporate it into the root Constitution, AGENTS.MD and CLAUDE.MD (constitution Submoudule) with the following mandatory rules and constraints:
-
-Tbd
 
 ### Specification documents
 
