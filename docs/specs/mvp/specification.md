@@ -109,6 +109,24 @@ The Project Herald is focused on Projects and its development. All Projects shar
 
 What are the specifics that Project Herald is having and others do not?
 
+Project Flavor of Herald is focused on Projects development and all development lifecycles. Main purpose is integrating it into the development cycles and pipelines (for example LLM driven).
+
+System during the process gets into situations, certain events happen during the development lifecycle and these information are properly organized and formulated for sending to Subscribers.
+
+Project Flavor recognizes most common scenarios during the regular development lifecycles and in what form to communicate the events and content towards the Subscribers (Users).
+
+Project Flawor recognizes special commands and keywords that can be part of sent content (messages) towards the Subscribers and vice versa.
+
+Project Flavor (like all other Flavors) MUST support proper mechanisms to detect validity of messages received from Subscribers.
+
+Our System - Project Flavor listens for messages (and responses) from the Subscribers. Every received message from Subscribers side is processed. Some of received messages do require response, some may not.
+
+Responding to messages MUST reference the parent message in the conversation (reply / quote) if any! If it exists (parent message) IT MUS BE REFERENCED!
+
+In processing the whole thread of communication in replies / qutes (chined replies - all from bottom to the start of the particular thread) is fully taken into the account and parsed and processed!
+
+Serious security validation is performed before any other steps are taken!
+
 #### Inputs
 
 Tbd
@@ -155,4 +173,4 @@ Whole project and all of its derrivates MUST follow testing rules from our root 
 
 ## Notes
 
-Tbd
+- Many tehcnical details which can be specified for particular Herald Flavor or certain specialization may be actually general-purposed! These all MUST be identified during the processing of this specification and planned as shared (between the Flavors - Commons, or as shared Components in the System)!
