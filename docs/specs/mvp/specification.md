@@ -79,11 +79,25 @@ Messages we send (the data) to the channels (messengers integrations) MUST BE su
 
 #### Subscribers
 
-Tbd
+Subscribers are all users added to channels of the supported Messengers. They can communicate with the System! Users (Subscribers) can receive everything the System publishes and interact! For example, to particular message contaning some information User (Subscriber) can reply, reply with an attachment or he can just brand new message with or without attachment.
+
+Particular Flavors of Herald will have the understanding for the content received from Subscribers and about the once we send towards them (with or without attchemtns).
 
 #### APIs
 
 We MUST perform in depth research and bring int all required APIs and SDKs required for each Messaging solution to be fully incorporated. We MUST perform deep web research and obtain information about API documentation and SDKs (Go). Every SDK and API which are available as Git repositories MUST BE incorporated as Git Submodules into the project. Example path for the Submodule(s): `commons_messaging/api/telegram` or `commons_messaging/sdk/telegram`.
+
+We MUST fully integrate Max for Business ([https://max.ru](https://max.ru) and [https://business.max.ru/](https://business.max.ru/))
+
+Same applies for Slack and Telegram.
+
+Priority of integration is: Telegram, Max, Slack.
+
+For upcoming iterations we MUST document the following upcoming Messengers to be integrated: Microsoft Teams, Lark, Discord, WhatsApp, Viber. Probably some more will be added.
+
+For each platform (Messenger integration) we MUST perform in-depth web deep research and gather all documentation, articles, technical documentation and opensourced codebases with official and unoffcial APIs and SDKs and other components we could integrate.
+
+We MUST make sure that all materials we gather and use MUST BE properly adapted and put in our own version of technical documentation under the `docs` directory into properly structured hierarchy (SDKs, APIs, and so on).
 
 ## Flavors (the implementations)
 
