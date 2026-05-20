@@ -11,7 +11,7 @@
 # "compiles and tests green" but doesn't work for the user will FAIL
 # at least one assertion here.
 #
-# Twelve invariants (each is the "captured-evidence" for one feature
+# Fifteen invariants (each is the "captured-evidence" for one feature
 # class per §11.4.5 + §11.4.69):
 #
 #   E1.  pherald binary builds (compile-level — necessary, not sufficient).
@@ -94,11 +94,13 @@ check "E3 go test -race -count=1 across 11 Herald packages" \
 # ----------------------------------------------------------------------
 # E4: Gate + paired meta.
 echo ""
-echo "== E4: Inheritance gate + paired I6 meta-test =="
-check "E4a inheritance gate 12 PASS / 0 FAIL" \
+echo "== E4: Inheritance gate + paired I6/I8 meta-tests =="
+check "E4a inheritance gate 15 PASS / 0 FAIL (includes I8a/b/c §107 covenant)" \
     "bash tests/test_constitution_inheritance.sh"
 check "E4b I6 paired meta-test 3 PASS / 0 FAIL" \
     "bash tests/test_i6_refinement_meta.sh"
+check "E4c I8 paired meta-test 5 PASS / 0 FAIL (§107 covenant anchor mutation)" \
+    "bash tests/test_i8_usability_meta.sh"
 
 # ----------------------------------------------------------------------
 # E5: CodeGraph validate.
@@ -111,7 +113,7 @@ check "E5 codegraph_validate.sh 7/7 PASS" \
 # E6: Anti-bluff audit.
 echo ""
 echo "== E6: scripts/audit_antibluff.sh =="
-check "E6 audit_antibluff.sh 13/13 PASS" \
+check "E6 audit_antibluff.sh 14/14 PASS (includes I8 §107 paired meta-test)" \
     "bash scripts/audit_antibluff.sh"
 
 # ----------------------------------------------------------------------

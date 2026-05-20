@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>Herald — AGENTS.md</title>
+  <title>AGENTS.md</title>
   <style>
     /* Default styles provided by pandoc.
     ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -238,10 +238,55 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">Herald — AGENTS.md</h1>
+<h1 class="title">AGENTS.md</h1>
 </header>
-<h1 id="herald--agentsmd">Herald — AGENTS.md</h1>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#herald-agents.md" id="toc-herald-agents.md">Herald —
+AGENTS.md</a>
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+contents</a></li>
+<li><a
+href="#critical-base-rules-restated-for-agents-that-dont-follow-imports"
+id="toc-critical-base-rules-restated-for-agents-that-dont-follow-imports">Critical
+base rules restated (for agents that don’t follow <span class="citation"
+data-cites="imports">@imports</span>)</a></li>
+<li><a href="#herald-specific-agent-rules"
+id="toc-herald-specific-agent-rules">Herald-specific agent rules</a>
+<ul>
+<li><a href="#project-status-load-bearing-for-every-task"
+id="toc-project-status-load-bearing-for-every-task">Project status
+(load-bearing for every task)</a></li>
+<li><a
+href="#end-user-usability-covenant-herald-107-helix-11.4-mandatory-anti-bluff"
+id="toc-end-user-usability-covenant-herald-107-helix-11.4-mandatory-anti-bluff">End-user-usability
+covenant (Herald §107 / Helix §11.4 — MANDATORY ANTI-BLUFF)</a></li>
+<li><a
+href="#inheritance-gate-run-before-any-commit-that-touches-root-docs-or-constitution"
+id="toc-inheritance-gate-run-before-any-commit-that-touches-root-docs-or-constitution">Inheritance
+gate (run before any commit that touches root docs or
+<code>constitution/</code>)</a></li>
+<li><a
+href="#spec-change-rule-load-bearing-docsspecsmvpspecification.v3.md-specification-documents"
+id="toc-spec-change-rule-load-bearing-docsspecsmvpspecification.v3.md-specification-documents">Spec-change
+rule (load-bearing — <code>docs/specs/mvp/specification.V3.md</code>
+§“Specification documents”)</a></li>
+<li><a href="#multi-host-mirror-convention-heralds-own-upstreams"
+id="toc-multi-host-mirror-convention-heralds-own-upstreams">Multi-host
+mirror convention (Herald’s own upstreams)</a></li>
+<li><a href="#forbidden-in-this-project"
+id="toc-forbidden-in-this-project">Forbidden in this project</a></li>
+</ul></li>
+</ul></li>
+</ul>
+</nav>
+<h1 id="herald-agents.md">Herald — AGENTS.md</h1>
 <table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
 <thead>
 <tr>
 <th>Field</th>
@@ -251,7 +296,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>4</td>
+<td>5</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -267,8 +312,11 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td>"Project status" updated: Go scaffold landed; build+test commands
-documented; open HRD list embedded for agent reference.</td>
+<td>r5: added the End-user-usability covenant section restating the
+verbatim operator mandate at Herald agent-rule level; binds every CLI
+agent (Claude Code, Codex, Cursor, Gemini, Aider, subagents) to the
+§11.4 anti-bluff enforcement; ties to HERALD_CONSTITUTION.md §107 +
+inheritance-gate invariant I8b.</td>
 </tr>
 <tr>
 <td>Issues</td>
@@ -280,13 +328,14 @@ documented; open HRD list embedded for agent reference.</td>
 </tr>
 <tr>
 <td>Fixed</td>
-<td>R-14 (V2), V3-path-sync (V3 r3), Go-scaffold-status-update (V3
-r4)</td>
+<td>R-14 (V2), V3-path-sync (V3 r3), Go-scaffold-status-update (V3 r4),
+§107 mandate restatement + I8b anchor (r5)</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
 <td>aligned with HRD-009/HRD-009b/HRD-013/HRD-014 landing in the same
-commit.</td>
+commit; r5 closes the Herald-level explicit-restatement gap identified
+by the 2026-05-20 audit.</td>
 </tr>
 <tr>
 <td>Continuation</td>
@@ -299,12 +348,16 @@ HRD-010..HRD-012/HRD-016 live integrations.</td>
 <ul>
 <li><a
 href="#critical-base-rules-restated-for-agents-that-dont-follow-imports">Critical
-base rules restated (for agents that don't follow @imports)</a></li>
+base rules restated (for agents that don’t follow <span class="citation"
+data-cites="imports">@imports</span>)</a></li>
 <li><a href="#herald-specific-agent-rules">Herald-specific agent
 rules</a>
 <ul>
 <li><a href="#project-status-load-bearing-for-every-task">Project status
 (load-bearing for every task)</a></li>
+<li><a
+href="#end-user-usability-covenant-herald-107--helix-114--mandatory-anti-bluff">End-user-usability
+covenant (Herald §107 / Helix §11.4 — MANDATORY ANTI-BLUFF)</a></li>
 <li><a
 href="#inheritance-gate-run-before-any-commit-that-touches-root-docs-or-constitution">Inheritance
 gate (run before any commit that touches root docs or
@@ -312,17 +365,17 @@ gate (run before any commit that touches root docs or
 <li><a
 href="#spec-change-rule-load-bearing-docsspecsmvpspecificationmd-specification-documents">Spec-change
 rule (load-bearing — <code>docs/specs/mvp/specification.V3.md</code>
-§"Specification documents")</a></li>
+§“Specification documents”)</a></li>
 <li><a
 href="#multi-host-mirror-convention-heralds-own-upstreams">Multi-host
-mirror convention (Herald's own upstreams)</a></li>
+mirror convention (Herald’s own upstreams)</a></li>
 <li><a href="#forbidden-in-this-project">Forbidden in this
 project</a></li>
 </ul></li>
 </ul>
 <blockquote>
-<p>Base agent rules: the Helix Constitution's <code>AGENTS.md</code>,
-provided by the <strong>parent project's</strong>
+<p>Base agent rules: the Helix Constitution’s <code>AGENTS.md</code>,
+provided by the <strong>parent project’s</strong>
 <code>constitution/</code> submodule (Herald does not carry its own
 copy). <strong>READ IT FIRST.</strong></p>
 <p>Discover the constitution by walking up parent directories until you
@@ -336,11 +389,13 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="
 <p>The base file is authoritative for any topic not covered here.
 Herald-specific rules below extend them; they never weaken them.</p>
 <p>Canonical: <a
-href="https://github.com/HelixDevelopment/HelixConstitution">https://github.com/HelixDevelopment/HelixConstitution</a></p>
+href="https://github.com/HelixDevelopment/HelixConstitution"
+class="uri">https://github.com/HelixDevelopment/HelixConstitution</a></p>
 </blockquote>
 <h2
 id="critical-base-rules-restated-for-agents-that-dont-follow-imports">Critical
-base rules restated (for agents that don't follow @imports)</h2>
+base rules restated (for agents that don’t follow <span class="citation"
+data-cites="imports">@imports</span>)</h2>
 <ul>
 <li><strong>No bluffing.</strong> Every PASS carries positive evidence.
 Constitution §11.4 / §1.1.</li>
@@ -373,7 +428,7 @@ headings only; substantive content TBD).</li>
 constitutional extensions.</li>
 <li><code>docs/guides/CONSTITUTION_INHERITANCE.md</code> —
 operator/agent guide for the parent-discovery contract + the gate.</li>
-<li><code>upstreams/</code> — Herald's own mirror declarations
+<li><code>upstreams/</code> — Herald’s own mirror declarations
 (lowercase, §11.4.29-compliant).</li>
 <li><code>tests/test_constitution_inheritance.sh</code> — inheritance
 gate (read-only assertions).</li>
@@ -403,16 +458,13 @@ submodule landed). On-demand container orchestration is provided by the
 <p>Build + test from repo root:</p>
 <pre><code>go test ./commons/... ./commons_prefix/... ./commons_messaging/... ./commons_storage/...
 go build -o /tmp/pherald-dev ./pherald/cmd/pherald</code></pre>
-<p>What's NOT yet live (per <code>docs/Issues.md</code>):</p>
-<ul>
-<li>HRD-008 operator-side Quickstart compose validation.</li>
-<li>HRD-010 commons_storage live (pgx + River + Redis).</li>
-<li>HRD-011 Telegram adapter live (telebot + getUpdates).</li>
-<li>HRD-012 Claude Code dispatcher live
-(<code>claude --resume</code>).</li>
-<li>HRD-016 REST API per §41 (Gin Gonic).</li>
-</ul>
-<p>When asked to "add a feature": find the spec section, open / claim
+<p>What’s NOT yet live (per <code>docs/Issues.md</code>): - HRD-008
+operator-side Quickstart compose validation. - HRD-010 commons_storage
+live (pgx + River + Redis). - HRD-011 Telegram adapter live (telebot +
+getUpdates). - HRD-012 Claude Code dispatcher live
+(<code>claude --resume</code>). - HRD-016 REST API per §41 (Gin
+Gonic).</p>
+<p>When asked to “add a feature”: find the spec section, open / claim
 the relevant HRD-NNN in <code>docs/Issues.md</code>, write Go + tests,
 ensure <code>go test</code> passes, close the HRD-NNN by migrating its
 row to <code>docs/Fixed.md</code> (per Universal §11.4.19
@@ -421,6 +473,54 @@ atomic-migration mandate).</p>
 <code>go test ./&lt;module&gt;/...</code>. Live-integration tests
 require operator-supplied bot tokens / Claude sessions / Postgres —
 <code>docs/CONTINUATION.md</code> carries the handoff prompt.</p>
+<h3
+id="end-user-usability-covenant-herald-107-helix-11.4-mandatory-anti-bluff">End-user-usability
+covenant (Herald §107 / Helix §11.4 — MANDATORY ANTI-BLUFF)</h3>
+<p><strong>Forensic anchor — verbatim operator mandate:</strong></p>
+<blockquote>
+<p>“all existing tests and Challenges do work in anti-bluff manner -
+they MUST confirm that all tested codebase really works as expected! We
+had been in position that all tests do execute with success and all
+Challenges as well, but in reality the most of the features does not
+work and can’t be used! This MUST NOT be the case and execution of tests
+and Challenges MUST guarantee the quality, the completition and full
+usability by end users of the product! This MUST BE part of Constitution
+of our project, its CLAUDE.MD and AGENTS.MD if it is not there already,
+and to be applied to all Submodules’s Constitution, CLAUDE.MD and
+AGENTS.MD as well (if not there already)!”</p>
+</blockquote>
+<p><strong>Agent-binding rule.</strong> No agent — Claude Code, Codex,
+Cursor, Gemini, Aider, any CLI subagent — may declare a Herald feature
+“done”, “landed”, “shipped”, or “tests pass” without <strong>positive
+runtime evidence captured during execution</strong> that an end user of
+the relevant <code>&lt;flavor&gt;herald</code> binary can actually use
+the feature.</p>
+<ul>
+<li>Unit-test green is necessary but <strong>not
+sufficient</strong>.</li>
+<li>Integration-test green is necessary but <strong>not
+sufficient</strong>.</li>
+<li>Compile success is necessary but <strong>not
+sufficient</strong>.</li>
+<li>A <code>PASS</code> line in a Challenge runner is a §11.4 PASS-bluff
+if it doesn’t cross-check against runtime evidence (HTTP response body,
+DB row, log line, captured screenshot/audio, etc.).</li>
+</ul>
+<p>Canonical Herald enforcement: <code>scripts/e2e_bluff_hunt.sh</code>
+— boots real services (Gin server + Postgres container via the
+<code>containers/</code> submodule), hits real <code>/v1/*</code>
+endpoints, asserts response bodies, runs M2 RLS-tenant-isolation
+integration tests, and SIGTERM-graceful-shutdowns. ALL 14 invariants
+MUST PASS before any release-tag, risky commit, or “milestone landed”
+claim. Canonical Helix authority:
+<code>&lt;discovered&gt;/Constitution.md</code> §11.4 +
+§11.4.1..§11.4.16. Canonical Herald authority:
+<code>docs/guides/HERALD_CONSTITUTION.md</code> §107. Inheritance-gate
+invariant <strong>I8b</strong> asserts the verbatim covenant anchor is
+present in this file.</p>
+<p>Tests AND Challenges are bound equally: a Challenge that scores PASS
+on a broken-for-end-user feature is the same defect class as a unit test
+that does. Both are release blockers.</p>
 <h3
 id="inheritance-gate-run-before-any-commit-that-touches-root-docs-or-constitution">Inheritance
 gate (run before any commit that touches root docs or
@@ -431,9 +531,9 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="
 <p>Both MUST return 0. If either fails, fix at root cause per
 Constitution §11.4.4 — never silently accept the FAIL.</p>
 <h3
-id="spec-change-rule-load-bearing--docsspecsmvpspecificationv3md-specification-documents">Spec-change
+id="spec-change-rule-load-bearing-docsspecsmvpspecification.v3.md-specification-documents">Spec-change
 rule (load-bearing — <code>docs/specs/mvp/specification.V3.md</code>
-§"Specification documents")</h3>
+§“Specification documents”)</h3>
 <p>Whenever <code>docs/specs/mvp/specification.V3.md</code> or any file
 under <code>docs/specs/</code> (any depth) is modified,
 <strong>comprehensive planning and implementation of all changes is
@@ -443,33 +543,33 @@ operator what to do with the new path. Treat every spec edit as a
 project-wide ripple, not a doc tweak.</p>
 <p>This rule is mirrored in <code>CLAUDE.md</code> and in
 <code>docs/guides/HERALD_CONSTITUTION.md</code> §106. The inheritance
-gate's invariant <strong>I7a–c</strong> asserts the rule anchor
+gate’s invariant <strong>I7a–c</strong> asserts the rule anchor
 (<code>comprehensive planning and implementation</code>) is present in
 all three files; a missing copy is a §1.1 propagation bluff and the gate
 FAILs.</p>
 <h3 id="multi-host-mirror-convention-heralds-own-upstreams">Multi-host
-mirror convention (Herald's own upstreams)</h3>
+mirror convention (Herald’s own upstreams)</h3>
 <p><code>upstreams/</code> contains one script per mirror host (GitHub,
 GitLab, GitFlic, GitVerse). Each script exports
 <code>UPSTREAMABLE_REPOSITORY</code> and is sourced, not executed. The
-Herald repo's <code>origin</code> remote is already fan-out (1 fetch URL
+Herald repo’s <code>origin</code> remote is already fan-out (1 fetch URL
 + 4 push URLs) — a single <code>git push origin &lt;branch&gt;</code>
 propagates to all four hosts. Per-host naming intentionally matches each
-provider's brand capitalization; do not normalize.</p>
+provider’s brand capitalization; do not normalize.</p>
 <h3 id="forbidden-in-this-project">Forbidden in this project</h3>
 <ul>
 <li><strong>Re-adding a <code>constitution/</code> submodule inside
 Herald.</strong> Herald is consumed as a submodule of a parent project
 that already provides <code>constitution/</code>. A duplicate copy
-inside Herald is a deployment-model violation. The inheritance gate's
+inside Herald is a deployment-model violation. The inheritance gate’s
 invariant <code>I6</code> enforces this — re-adding it will turn the
 gate red.</li>
 <li>Promoting Herald-specific values into the parent constitution
 (universal status must be EARNED; see Constitution §11.4 +
 §11.4.10).</li>
 <li>Modifying any file under the discovered <code>constitution/</code>
-from Herald commits — the parent's constitution is read-only from
-Herald's perspective. Constitution changes go through the
+from Herald commits — the parent’s constitution is read-only from
+Herald’s perspective. Constitution changes go through the
 HelixConstitution repo directly.</li>
 <li>Adding new submodules without re-running
 <code>bash tests/test_constitution_inheritance.sh</code> afterward.</li>

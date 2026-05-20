@@ -175,8 +175,29 @@
 <header id="title-block-header">
 <h1 class="title">Herald — Status</h1>
 </header>
-<h1 id="herald--status">Herald — Status</h1>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#herald-status" id="toc-herald-status">Herald — Status</a>
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+contents</a></li>
+<li><a href="#project-phase" id="toc-project-phase">Project
+phase</a></li>
+<li><a href="#specification"
+id="toc-specification">Specification</a></li>
+<li><a href="#implementation"
+id="toc-implementation">Implementation</a></li>
+<li><a href="#operations" id="toc-operations">Operations</a></li>
+<li><a href="#risk-surface" id="toc-risk-surface">Risk surface</a></li>
+</ul></li>
+</ul>
+</nav>
+<h1 id="herald-status">Herald — Status</h1>
 <table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
 <thead>
 <tr>
 <th>Field</th>
@@ -186,7 +207,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>5</td>
+<td>6</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -202,25 +223,29 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>Foundation M1 landed.</strong>
-<code>commons_constitution</code> package (14 files, ~2.9k LOC) —
-Evaluator + Registry + 12 emit helpers + BundleHash captureer +
-ModeLadder + ConstitutionStore + in-process MemoryBus + Runner with
-panic isolation + CloudEvents v1.0 adapter — all green under
-<code>go test -race</code>. Spec V3 bumped to Revision 7 with new §44
-Foundation implementation contract. HRD-080 opened to refine the I6
-gate-invariant before M2 (which needs git submodules for Helix-stack
-modules). M2 (Postgres + <code>digital.vasic.background</code>)
-next.</td>
+<td><strong>Foundation M1 + M2 + M3 all landed.</strong> M1:
+<code>commons_constitution</code> (14 files, ~2.9k LOC) — Evaluator +
+Registry + 12 emit helpers + BundleHash + ModeLadder + ConstitutionStore
++ MemoryBus + Runner + CloudEvents v1.0 adapter. M2 (commit c8eed7e):
+Postgres backends with live RLS-tenant-isolation proof. M3 (commit
+21593e6): Gin REST surface + 4 M3 submodules + LIVE
+<code>pherald serve</code> accepting HTTP on :24791. Anti-bluff regime
+now complete: e2e_bluff_hunt.sh 14/14 PASS against real services (commit
+92ecdc6); audit_antibluff.sh 14/14 PASS (was 13 — added I8 meta-test for
+§107 covenant on 2026-05-20); inheritance gate 15/15 PASS (was 12 —
+added I8a/b/c).</td>
 </tr>
 <tr>
 <td>Issues</td>
 <td>HRD-008, HRD-010, HRD-011, HRD-012, HRD-015, HRD-016, HRD-018
-(in_progress), HRD-019..HRD-028, HRD-029..HRD-056</td>
+(in_progress), HRD-019..HRD-028, HRD-029..HRD-056, HRD-081</td>
 </tr>
 <tr>
 <td>Issues summary</td>
-<td>see <code>Issues.md</code></td>
+<td>see <code>Issues.md</code> — 45 open items spanning live channel
+integrations (HRD-010..012), REST surface (HRD-016), §42 constitution
+bindings (HRD-018..028), §43 command-catalogue (HRD-029..056), and
+HRD-081 (containers podman-compose adapter refinement).</td>
 </tr>
 <tr>
 <td>Fixed</td>
@@ -232,13 +257,12 @@ next.</td>
 </tr>
 <tr>
 <td>Continuation</td>
-<td>M1 scaffold: integrate 9 <code>digital.vasic.*</code> submodules
-under <code>submodules/</code>; write bespoke
-<code>commons_constitution</code> package (Evaluator + 12 emit helpers +
-BundleHash + ModeLadder + in-memory ConstitutionStore); verify M1 smoke
-(in-process evaluator → transition → emit → memory pubsub listener
-counts). Then M2 (Postgres + background queue) then M3 (Gin REST +
-Redis). Each milestone followed by multi-mirror push.</td>
+<td>Foundation complete; live integrations next. Priority order: HRD-008
+(operator quickstart e2e validation) → HRD-011/012 (Telegram + Claude
+Code live) → HRD-010 (commons_storage live pgx/River/Redis wiring) → §42
+constitution-binding rollout (HRD-018..028) → §43 command catalogue
+(HRD-029..056). Each milestone followed by multi-mirror push + full
+anti-bluff verification (audit + gate + e2e bluff-hunt).</td>
 </tr>
 </tbody>
 </table>
@@ -251,25 +275,39 @@ Redis). Each milestone followed by multi-mirror push.</td>
 <li><a href="#risk-surface">Risk surface</a></li>
 </ul>
 <h2 id="project-phase">Project phase</h2>
-<p><strong>Implementation-r1.</strong> Spec V3 r4 is complete + the Go
-module foundation compiles. The remaining cycle is wiring live
-integrations and validating the §26.5 quickstart end-to-end.</p>
+<p><strong>Implementation-r1, Foundation complete.</strong> Spec V3 r6
+is active, the Go module foundation compiles, all three Foundation
+milestones (M1/M2/M3) have landed, and the §107 end-user-usability
+covenant is now explicit in Herald’s three root docs + gate (added
+2026-05-20). The remaining cycle is wiring live channel integrations and
+validating the §26.5 quickstart end-to-end on operator hardware.</p>
 <h2 id="specification">Specification</h2>
 <ul>
 <li><strong>Active spec:</strong>
-<code>docs/specs/mvp/specification.V3.md</code> (Revision 4, ~4300
+<code>docs/specs/mvp/specification.V3.md</code> (Revision 7, ~4300
 lines).</li>
 <li><strong>Archived specs:</strong> V1 + V2 in
 <code>docs/specs/mvp/archive/</code> (frozen).</li>
-<li><strong>New sections this cycle:</strong> §37 Tracker-doc change
-events; §38 Workable-item announcement contract; §39 Message
-presentation + Herald Canonical Template; §40 Documentation + 15 named
-test challenges; §41 REST API surface (Gin Gonic).</li>
+<li><strong>Recent sections:</strong> §37 Tracker-doc change events; §38
+Workable-item announcement contract; §39 Message presentation + Herald
+Canonical Template; §40 Documentation + 15 named test challenges; §41
+REST API surface (Gin Gonic); §42 Constitution-binding integration; §43
+Constitution-derived flavor commands (27 entries → HRD-029..HRD-056);
+§44 Foundation implementation contract.</li>
 <li><strong>Spec-change rule:</strong> §23 + HERALD_CONSTITUTION §106 +
 I7 gate — green throughout.</li>
+<li><strong>End-user-usability covenant:</strong> HERALD_CONSTITUTION
+§107 + I8 gate (added 2026-05-20) — green; paired §1.1 mutation
+meta-test in <code>tests/test_i8_usability_meta.sh</code> (5/5
+PASS).</li>
 </ul>
 <h2 id="implementation">Implementation</h2>
 <table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
 <thead>
 <tr>
 <th>Module</th>
@@ -289,80 +327,100 @@ I7 gate — green throughout.</li>
 <td>§8.2 algorithm + 5 test functions; tests pass.</td>
 </tr>
 <tr>
+<td><code>commons_constitution</code></td>
+<td>✅ landed (M1)</td>
+<td>14 files, ~2.9k LOC — Evaluator + Registry + 12 emit helpers +
+BundleHash + ModeLadder + ConstitutionStore + MemoryBus + Runner +
+CloudEvents v1.0 adapter; all green under
+<code>go test -race</code>.</td>
+</tr>
+<tr>
 <td><code>commons_messaging</code> (L1)</td>
 <td>partial</td>
-<td>null:// adapter fully working; Telegram + Claude Code stubs in
-place.</td>
+<td>null:// adapter fully working; Telegram + Claude Code stubs in place
+(HRD-011/012 for live wiring).</td>
 </tr>
 <tr>
 <td><code>commons_storage</code> (L1)</td>
-<td>partial</td>
-<td>9 SQL migrations embedded; pgx pool + River + Redis wiring pending
-HRD-010.</td>
+<td>✅ landed (M2)</td>
+<td>9 SQL migrations embedded; pgx + RLS-tenant-isolation live (commit
+c8eed7e); River + Redis still to wire per HRD-010.</td>
 </tr>
 <tr>
-<td><code>commons_security</code> (L1)</td>
-<td>not started</td>
-<td>spec §15 ready. HRD-018 follow-up.</td>
-</tr>
-<tr>
-<td><code>commons_observability</code> (L1)</td>
-<td>not started</td>
-<td>OTel wiring per §17. HRD-019 follow-up.</td>
-</tr>
-<tr>
-<td><code>commons_diary</code> (L1)</td>
-<td>not started</td>
-<td>spec §19 — fsnotify + Pandoc-WeasyPrint sync. HRD-020
-follow-up.</td>
+<td><code>commons_infra</code></td>
+<td>✅ landed</td>
+<td>QuickstartBoot + WithTenantContext + on-demand container
+orchestration via <code>containers/</code>.</td>
 </tr>
 <tr>
 <td><code>pherald</code> (CLI)</td>
-<td>partial</td>
-<td>Cobra root + version subcommand work end-to-end;
-serve/send/doctor/migrate/subscriber/deadletter stubbed with HRD
+<td>✅ partial (M3)</td>
+<td>Cobra root + version + <strong><code>serve</code> (live HTTP on
+:24791, /v1/healthz, /v1/readyz, /v1/events, /metrics)</strong>, commit
+21593e6. send/doctor/migrate/subscriber/deadletter stubbed with HRD
 pointers.</td>
 </tr>
 <tr>
-<td>Other flavors (sherald/bherald/…)</td>
+<td>Other flavors
+(sherald/bherald/cherald/rherald/iherald/scherald)</td>
 <td>not started</td>
-<td>scaffold once pherald end-to-end runs the quickstart compose.</td>
+<td>scaffold once HRD-018..028 §42 binding rollout begins.</td>
 </tr>
 </tbody>
 </table>
 <h2 id="operations">Operations</h2>
 <ul>
 <li><strong>Repo hygiene:</strong> <code>main</code> only; four-mirror
-fan-out proven across spec + Go-scaffold commits.</li>
-<li><strong>Constitution inheritance gate:</strong> 12 PASS / 0
-FAIL.</li>
-<li><strong>Submodules:</strong> none yet (<code>containers/</code> is a
-local directory in this commit; will migrate to
-<code>vasic-digital/containers</code> submodule when HRD-008 validation
-passes and the submodule is created).</li>
-<li><strong>Build / test toolchain:</strong> Go 1.22+, Pandoc 3.9,
-WeasyPrint 66, Podman 5.8 — verified locally.</li>
+fan-out proven across spec + Foundation M1/M2/M3 + anti-bluff infra +
+§107 covenant landing.</li>
+<li><strong>Constitution inheritance gate:</strong> <strong>15 PASS / 0
+FAIL</strong> (was 12; I8a/b/c added 2026-05-20 for §107 covenant).</li>
+<li><strong>Anti-bluff audit:</strong> <strong>14 PASS / 0 FAIL</strong>
+(was 13; I8 paired meta-test added).</li>
+<li><strong>CodeGraph validate:</strong> 7 PASS / 0 FAIL.</li>
+<li><strong>E2E bluff-hunt against real services:</strong> <strong>14
+PASS / 0 FAIL</strong> — builds pherald, starts real Gin server, hits
+live <code>/v1/*</code> endpoints, boots real Postgres container via
+<code>containers/</code> submodule, runs M2 RLS integration tests,
+SIGTERM-graceful-shutdowns. This is the canonical §107 evidence per
+Herald §107.</li>
+<li><strong>Submodules:</strong> 10 vendored — 9 Helix-stack capability
+modules under <code>submodules/</code> (<code>auth</code>,
+<code>background</code>, <code>cache</code>, <code>config</code>,
+<code>database</code>, <code>eventbus</code>, <code>middleware</code>,
+<code>observability</code>, <code>recovery</code>) referenced via
+<code>replace</code> directives in consuming <code>go.mod</code> files,
+NOT via <code>go.work</code>; plus <code>containers/</code> (runtime
+auto-detection + on-demand container boot, consumed directly by
+Foundation tests + <code>pherald doctor</code>). All 10 carry the §11.4
+anti-bluff anchor.</li>
+<li><strong>Build / test toolchain:</strong> Go 1.25+ (verified on 1.26
+per CLAUDE.md), Pandoc 3.9, WeasyPrint 66, Podman 5.8 — verified
+locally.</li>
 </ul>
 <h2 id="risk-surface">Risk surface</h2>
 <ul>
 <li><strong>Submodule-catalogue discovery (operator mandate
-2026-05-20).</strong> Before scaffolding more modules, Herald work MUST
-audit <code>vasic-digital</code> + <code>HelixDevelopment</code> orgs
-(GitHub + GitLab) for reusable Submodules — pending in the upcoming
-constitution-submodule mandate.</li>
+2026-05-20).</strong> Every new HRD MUST carry a
+<code>Catalogue-Check: reuse|extend|no-match &lt;org/repo&gt;@&lt;sha&gt;</code>
+line per Universal §11.4.74. New HRDs (HRD-029..056 §43 catalogue)
+currently default to <code>TBD</code> pending operator review.</li>
 <li><strong>Versioning discipline (operator mandate
 2026-05-20).</strong> Minor changes bump secondary version, major bump
-primary. Currently we're at Revision 4 within V3; the next "minor"
-addition continues incrementing Revision; a full V4 rewrite is reserved
-for a primary-version jump.</li>
-<li><strong>Live integrations untested.</strong> HRD-008 quickstart
-compose hasn't been verified end-to-end on a fresh laptop yet — that's
-the next concrete operator-driven validation.</li>
-<li><strong>Claude Code session model.</strong> §33.2 anchor file
-pattern hasn't been validated against the live <code>claude</code>
-binary yet; HRD-012 will deliver that evidence.</li>
+primary. Currently at V3 r6→r7 within the V3 series; a full V4 rewrite
+is reserved for a primary-version jump.</li>
+<li><strong>Live channel integrations untested at runtime.</strong>
+HRD-011 (Telegram telebot live) + HRD-012 (Claude Code
+<code>claude --resume</code> live) require operator-supplied credentials
+per <code>docs/CONTINUATION.md</code>. The §107 covenant blocks claims
+of “done” on these until end-user evidence is captured.</li>
+<li><strong>HRD-008 operator-side quickstart not yet validated
+end-to-end on a fresh laptop.</strong> The compose stack works in dev;
+operator hardware validation is the next concrete §107 evidence
+point.</li>
 <li><strong>No CI yet.</strong> No GitHub Actions / GitLab CI / etc.
-Operator runs <code>go test ./...</code> manually for now.</li>
+Operator runs <code>scripts/e2e_bluff_hunt.sh</code> manually for now —
+that script IS the local CI surrogate.</li>
 </ul>
 </body>
 </html>

@@ -2,15 +2,15 @@
 
 | Field | Value |
 |---|---|
-| Revision | 4 |
+| Revision | 5 |
 | Created | 2026-05-15 |
 | Last modified | 2026-05-20 |
 | Status | active |
-| Status summary | "Project status" updated: Go scaffold landed; build+test commands documented; open HRD list embedded for agent reference. |
+| Status summary | r5: added the End-user-usability covenant section restating the verbatim operator mandate at Herald agent-rule level; binds every CLI agent (Claude Code, Codex, Cursor, Gemini, Aider, subagents) to the §11.4 anti-bluff enforcement; ties to HERALD_CONSTITUTION.md §107 + inheritance-gate invariant I8b. |
 | Issues | none |
 | Issues summary | — |
-| Fixed | R-14 (V2), V3-path-sync (V3 r3), Go-scaffold-status-update (V3 r4) |
-| Fixed summary | aligned with HRD-009/HRD-009b/HRD-013/HRD-014 landing in the same commit. |
+| Fixed | R-14 (V2), V3-path-sync (V3 r3), Go-scaffold-status-update (V3 r4), §107 mandate restatement + I8b anchor (r5) |
+| Fixed summary | aligned with HRD-009/HRD-009b/HRD-013/HRD-014 landing in the same commit; r5 closes the Herald-level explicit-restatement gap identified by the 2026-05-20 audit. |
 | Continuation | bump again when first-implementation cycle completes HRD-010..HRD-012/HRD-016 live integrations. |
 
 ## Table of contents
@@ -18,6 +18,7 @@
 - [Critical base rules restated (for agents that don't follow @imports)](#critical-base-rules-restated-for-agents-that-dont-follow-imports)
 - [Herald-specific agent rules](#herald-specific-agent-rules)
   - [Project status (load-bearing for every task)](#project-status-load-bearing-for-every-task)
+  - [End-user-usability covenant (Herald §107 / Helix §11.4 — MANDATORY ANTI-BLUFF)](#end-user-usability-covenant-herald-107--helix-114--mandatory-anti-bluff)
   - [Inheritance gate (run before any commit that touches root docs or `constitution/`)](#inheritance-gate-run-before-any-commit-that-touches-root-docs-or-constitution)
   - [Spec-change rule (load-bearing — `docs/specs/mvp/specification.V3.md` §"Specification documents")](#spec-change-rule-load-bearing-docsspecsmvpspecificationmd-specification-documents)
   - [Multi-host mirror convention (Herald's own upstreams)](#multi-host-mirror-convention-heralds-own-upstreams)
@@ -83,6 +84,23 @@ What's NOT yet live (per `docs/Issues.md`):
 When asked to "add a feature": find the spec section, open / claim the relevant HRD-NNN in `docs/Issues.md`, write Go + tests, ensure `go test` passes, close the HRD-NNN by migrating its row to `docs/Fixed.md` (per Universal §11.4.19 atomic-migration mandate).
 
 Never invent build / test commands beyond `go test ./<module>/...`. Live-integration tests require operator-supplied bot tokens / Claude sessions / Postgres — `docs/CONTINUATION.md` carries the handoff prompt.
+
+### End-user-usability covenant (Herald §107 / Helix §11.4 — MANDATORY ANTI-BLUFF)
+
+**Forensic anchor — verbatim operator mandate:**
+
+> "all existing tests and Challenges do work in anti-bluff manner - they MUST confirm that all tested codebase really works as expected! We had been in position that all tests do execute with success and all Challenges as well, but in reality the most of the features does not work and can't be used! This MUST NOT be the case and execution of tests and Challenges MUST guarantee the quality, the completition and full usability by end users of the product! This MUST BE part of Constitution of our project, its CLAUDE.MD and AGENTS.MD if it is not there already, and to be applied to all Submodules's Constitution, CLAUDE.MD and AGENTS.MD as well (if not there already)!"
+
+**Agent-binding rule.** No agent — Claude Code, Codex, Cursor, Gemini, Aider, any CLI subagent — may declare a Herald feature "done", "landed", "shipped", or "tests pass" without **positive runtime evidence captured during execution** that an end user of the relevant `<flavor>herald` binary can actually use the feature.
+
+- Unit-test green is necessary but **not sufficient**.
+- Integration-test green is necessary but **not sufficient**.
+- Compile success is necessary but **not sufficient**.
+- A `PASS` line in a Challenge runner is a §11.4 PASS-bluff if it doesn't cross-check against runtime evidence (HTTP response body, DB row, log line, captured screenshot/audio, etc.).
+
+Canonical Herald enforcement: `scripts/e2e_bluff_hunt.sh` — boots real services (Gin server + Postgres container via the `containers/` submodule), hits real `/v1/*` endpoints, asserts response bodies, runs M2 RLS-tenant-isolation integration tests, and SIGTERM-graceful-shutdowns. ALL 14 invariants MUST PASS before any release-tag, risky commit, or "milestone landed" claim. Canonical Helix authority: `<discovered>/Constitution.md` §11.4 + §11.4.1..§11.4.16. Canonical Herald authority: `docs/guides/HERALD_CONSTITUTION.md` §107. Inheritance-gate invariant **I8b** asserts the verbatim covenant anchor is present in this file.
+
+Tests AND Challenges are bound equally: a Challenge that scores PASS on a broken-for-end-user feature is the same defect class as a unit test that does. Both are release blockers.
 
 ### Inheritance gate (run before any commit that touches root docs or `constitution/`)
 

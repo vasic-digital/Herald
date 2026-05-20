@@ -124,6 +124,20 @@ check "I7c HERALD_CONSTITUTION.md §106 contains spec-change rule anchor" \
     "grep -qF '${SPEC_CHANGE_ANCHOR}' '${REPO_ROOT}/docs/guides/HERALD_CONSTITUTION.md' && \
      grep -qF '§106' '${REPO_ROOT}/docs/guides/HERALD_CONSTITUTION.md'"
 
+# Invariant 8: §107 End-user-usability covenant propagated to CLAUDE.md,
+# AGENTS.md, and HERALD_CONSTITUTION.md (the verbatim operator mandate).
+# The literal anchor is a unique fragment of the verbatim operator
+# mandate quoted in all three files. The fragment is intentionally a
+# multi-word phrase the §1.1 paired mutation can strip atomically.
+USABILITY_ANCHOR='all tests do execute with success and all Challenges as well, but in reality the most of the features does not work'
+check "I8a CLAUDE.md contains §107 end-user-usability covenant anchor" \
+    "grep -qF \"\${USABILITY_ANCHOR}\" '${REPO_ROOT}/CLAUDE.md'"
+check "I8b AGENTS.md contains §107 end-user-usability covenant anchor" \
+    "grep -qF \"\${USABILITY_ANCHOR}\" '${REPO_ROOT}/AGENTS.md'"
+check "I8c HERALD_CONSTITUTION.md §107 contains end-user-usability covenant anchor" \
+    "grep -qF \"\${USABILITY_ANCHOR}\" '${REPO_ROOT}/docs/guides/HERALD_CONSTITUTION.md' && \
+     grep -qF '§107' '${REPO_ROOT}/docs/guides/HERALD_CONSTITUTION.md'"
+
 echo "----"
 echo "Result: ${pass_count} PASS / ${fail_count} FAIL"
 if [ "${fail_count}" -gt 0 ]; then

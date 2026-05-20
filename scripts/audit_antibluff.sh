@@ -96,6 +96,14 @@ else
     tail -10 /tmp/herald_i6_out.log
     fail=$((fail+1))
 fi
+if bash tests/test_i8_usability_meta.sh > /tmp/herald_i8_out.log 2>&1; then
+    echo "PASS  tests/test_i8_usability_meta.sh (paired §1.1 mutation — §107 covenant)"
+    pass=$((pass+1))
+else
+    echo "FAIL  I8 paired meta-test FAILed — see /tmp/herald_i8_out.log"
+    tail -10 /tmp/herald_i8_out.log
+    fail=$((fail+1))
+fi
 
 echo ""
 echo "----"

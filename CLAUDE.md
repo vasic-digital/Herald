@@ -2,21 +2,22 @@
 
 | Field | Value |
 |---|---|
-| Revision | 3 |
+| Revision | 5 |
 | Created | 2026-05-15 |
 | Last modified | 2026-05-20 |
 | Status | active |
-| Status summary | "Project status" section updated to reflect that the Go scaffold (5 modules, passing unit tests, Quickstart compose) has landed. New commands documented (go build/test). The pre-implementation language replaced with implementation-r1 reality. |
+| Status summary | r5: added §107 End-user-usability covenant section restating the verbatim operator mandate at Herald level + ToC entry; ties to HERALD_CONSTITUTION.md §107 + inheritance-gate invariant I8a (paired with I8b/c on AGENTS.md + HERALD_CONSTITUTION.md). |
 | Issues | none |
 | Issues summary | — |
-| Fixed | spec-path references (r2), pre-implementation-language update (r3) |
-| Fixed summary | aligned with HRD-009/HRD-009b/HRD-013/HRD-014 landing in the same commit. |
+| Fixed | spec-path references (r2), pre-implementation-language update (r3), submodules + HRD-docs + codegraph-index enumeration (r4), §107 mandate restatement + I8a anchor (r5) |
+| Fixed summary | aligned with HRD-009/HRD-009b/HRD-013/HRD-014 landing in the same commit; r4 closes the discoverability gaps observed during a fresh `/init` review; r5 closes the Herald-level explicit-restatement gap identified by the 2026-05-20 audit (Helix root + 10 submodules had the verbatim mandate; only Herald's three root docs lacked it). |
 | Continuation | bump again when first-implementation cycle completes HRD-010..HRD-012/HRD-016 live integrations. |
 
 ## Table of contents
 
 - [INHERITED FROM Helix Constitution (parent-discovery)](#inherited-from-helix-constitution-parent-discovery)
 - [Project status](#project-status)
+- [End-user-usability covenant (Herald §107 / Helix §11.4 — MANDATORY ANTI-BLUFF)](#end-user-usability-covenant-herald-107--helix-114--mandatory-anti-bluff)
 - [Mission (from the spec)](#mission-from-the-spec)
 - [Intended stack](#intended-stack)
 - [Multi-host mirror convention](#multi-host-mirror-convention)
@@ -61,7 +62,7 @@ Canonical: <https://github.com/HelixDevelopment/HelixConstitution>
 
 ## Project status
 
-Herald is **pre-implementation**. As of this writing the repo contains:
+Herald is in **first-implementation cycle (r1)** as of 2026-05-20. The Go scaffold has landed; live-integration work (HRD-010..HRD-012, HRD-016) is still open. The repo contains:
 
 - `README.md` — mission, deployment model, inheritance contract, quickstart.
 - `docs/specs/mvp/specification.V3.md` — MVP spec stub (substantive sections TBD).
@@ -103,11 +104,21 @@ scripts/codegraph_validate.sh   # CodeGraph index integrity (7 probes)
 scripts/e2e_bluff_hunt.sh       # 14 end-to-end checks against real services
 ```
 
+CodeGraph index lives in `.codegraph/` (`codegraph.db` + `config.json`, both gitignored). Rebuild with `scripts/codegraph_setup.sh` when source layout changes; `codegraph_validate.sh` will FAIL otherwise.
+
 `scripts/e2e_bluff_hunt.sh` is the canonical end-to-end smoke per Universal §11.4. It builds pherald, runs the full test suite, starts a real Gin server + hits every /v1 route + asserts response bodies, boots a real Postgres container via the `containers/` submodule, runs the M2 integration tests against it, and graceful-shutdowns. ALL 14 invariants must PASS — a single FAIL means a real feature is broken for end users. At 2026-05-20 it reports 14/14 PASS.
 
 When the user asks to "add a feature" the spec is the source of truth — find the relevant §, then the relevant module + package, then the relevant HRD-NNN if one is already open. New work opens a new HRD-NNN in `docs/Issues.md` per V3 §8.3 lifecycle.
 
 Do not invent build/test commands beyond what `go test ./<module>/...` provides. Live-integration tests (Telegram bot, Claude Code session, real Postgres) require operator-supplied credentials — see `docs/CONTINUATION.md` for the live-test handoff prompt.
+
+## End-user-usability covenant (Herald §107 / Helix §11.4 — MANDATORY ANTI-BLUFF)
+
+**Forensic anchor — verbatim operator mandate:**
+
+> "all existing tests and Challenges do work in anti-bluff manner - they MUST confirm that all tested codebase really works as expected! We had been in position that all tests do execute with success and all Challenges as well, but in reality the most of the features does not work and can't be used! This MUST NOT be the case and execution of tests and Challenges MUST guarantee the quality, the completition and full usability by end users of the product! This MUST BE part of Constitution of our project, its CLAUDE.MD and AGENTS.MD if it is not there already, and to be applied to all Submodules's Constitution, CLAUDE.MD and AGENTS.MD as well (if not there already)!"
+
+The bar for shipping any Herald feature is **NOT** "tests pass" — it is **"the end user of the flavor binary can actually use the feature."** Every PASS (unit, integration, gate, Challenge, smoke, e2e) MUST carry positive runtime evidence that the user-visible behaviour works. Metadata-only / configuration-only / "absence-of-error" / grep-only PASS are §11.4 PASS-bluffs and constitute critical defects regardless of how green the summary line looks. Canonical Herald authority: `docs/guides/HERALD_CONSTITUTION.md` §107. Canonical Helix authority: `<discovered>/Constitution.md` §11.4 + §11.4.1..§11.4.16 and `<discovered>/CLAUDE.md` "MANDATORY ANTI-BLUFF COVENANT — END-USER QUALITY GUARANTEE". Canonical Herald evidence: `scripts/e2e_bluff_hunt.sh` (14 invariants against real services; ALL must PASS). Inheritance gate invariant **I8a** asserts this covenant anchor is present in this file.
 
 ## Mission (from the spec)
 
@@ -168,8 +179,11 @@ The empty `constitutable/` directory at the repo root is intentional. Per the sp
 
 `docs/guides/HERALD_CONSTITUTION.md` and `docs/guides/CONSTITUTION_INHERITANCE.md` each ship with a committed `.pdf` sibling. When you edit one of these Markdown files, the PDF goes stale — flag it; do not regenerate silently unless the operator asks.
 
+The HRD-lifecycle docs in `docs/` also ship as PDF/HTML/DOCX quadruples: `Issues.md` (open HRDs per V3 §8.3), `Fixed.md` (closed-HRD log per §11.4.19 atomic migration), `Status.md` (status summary), `CONTINUATION.md` (live-test handoff prompt for operator-supplied credentials). The `*_Summary.md` variants are derived; do not hand-edit.
+
 ## Notes for future scaffolding
 
+- `submodules/` holds 9 vendored Helix-stack modules (each its own `git@github.com:vasic-digital/<name>.git` repo): `auth`, `background`, `cache`, `config`, `database`, `eventbus`, `middleware`, `observability`, `recovery`. They are referenced via `replace` directives in the consuming Herald modules' `go.mod`, NOT via `go.work` (which only lists the 7 Herald-owned modules). Do not add them to `go.work`.
 - The repo is in `main` branch and committed under "Milos Vasic" — no other contributors yet.
 - `.claude/` exists but is empty; project-local Claude config can go there.
 - `LICENSE` is present (do not overwrite without asking).
