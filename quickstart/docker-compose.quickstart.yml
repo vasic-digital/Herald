@@ -4,7 +4,7 @@
 # service image (ghcr.io/vasic-digital/pherald:latest) does not exist
 # yet — operators MUST first build it locally via:
 #
-#   podman build -t herald/pherald:dev -f containers/quickstart/Dockerfile.pherald .
+#   podman build -t herald/pherald:dev -f quickstart/Dockerfile.pherald .
 #
 # (or `docker build` if Docker is preferred). The image tag below is
 # overridden to `herald/pherald:dev` so the same compose file works
@@ -12,10 +12,10 @@
 # once the build pipeline (HRD-018-style work) is in place.
 #
 # Bring-up:
-#   1. cp containers/quickstart/.env.example .env (in repo root)
+#   1. cp quickstart/.env.example .env (in repo root)
 #   2. fill in HERALD_DB_PASSWORD + HERALD_REDIS_PASSWORD + optional
 #      TELEGRAM_BOT_TOKEN/TELEGRAM_CHAT_ID
-#   3. podman-compose -f containers/quickstart/docker-compose.quickstart.yml up -d
+#   3. podman-compose -f quickstart/docker-compose.quickstart.yml up -d
 #   4. curl --retry 30 --retry-delay 2 --retry-connrefused \
 #          http://localhost:24090/readyz
 #   5. Send a test CloudEvent:
@@ -79,7 +79,7 @@ services:
   pherald:
     image: herald/pherald:dev
     # Build locally from the included Dockerfile (see header comments):
-    #   podman build -t herald/pherald:dev -f containers/quickstart/Dockerfile.pherald .
+    #   podman build -t herald/pherald:dev -f quickstart/Dockerfile.pherald .
     container_name: herald-pherald
     depends_on:
       postgres:        { condition: service_healthy }

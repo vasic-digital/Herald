@@ -468,7 +468,7 @@ Three tiers, mapped to the milestones:
 
 ### §5.3 M3 end-to-end smoke (containerised)
 
-Manual + scripted via `containers/quickstart/`:
+Manual + scripted via `quickstart/`:
 
 ```
 podman-compose -f docker-compose.quickstart.yml up -d
@@ -517,7 +517,7 @@ The following are flagged as open for resolution before each milestone closes:
 1. **Bundle path resolution under parent-discovery.** `bundle.Capture` needs the path to `<ancestor>/constitution/Constitution.md`. Should this be (a) resolved once at process startup via the §103 walk and cached in a global, or (b) re-resolved per Capture call with TTL? Recommendation: (a) at startup, with a SIGHUP handler to force re-walk. **Resolve before M1 closes.**
 2. **River job payload size cap.** River persists job args as JSONB. With a CloudEvent + attachment metadata + trace context, payloads can exceed 1 MB. Recommendation: store the CloudEvent body in `inbound_messages` (existing table from r1) and pass only the `ce-id` to the River job. **Resolve before M2 closes.**
 3. **Cache-invalidate fan-out on mode-ladder Set.** When `ladder.Set` mutates a binding, the 60 s Redis TTL means stale reads for up to 60 s. Acceptable for `allow→warn` (perms tightening) but risky for `enforce→allow` (perms loosening). Recommendation: on every `Set`, publish a `mode-ladder.invalidated` event on a Watermill topic; every running process invalidates its own local cache. **Resolve before M3 closes.**
-4. **JWT issuer + JWKS source.** Foundation needs a dev-mode issuer for the M3 smoke. Options: (a) a static dev-only JWKS file under `containers/quickstart/`, (b) embed a tiny HS256 issuer in pherald itself for dev, (c) require operator to point at an external IdP from day one. Recommendation: (a) — minimum friction, clearly dev-only. **Resolve before M3 closes.**
+4. **JWT issuer + JWKS source.** Foundation needs a dev-mode issuer for the M3 smoke. Options: (a) a static dev-only JWKS file under `quickstart/`, (b) embed a tiny HS256 issuer in pherald itself for dev, (c) require operator to point at an external IdP from day one. Recommendation: (a) — minimum friction, clearly dev-only. **Resolve before M3 closes.**
 
 ## §8. Spec landing — §44 of `specification.V3.md`
 

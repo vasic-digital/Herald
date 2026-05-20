@@ -33,7 +33,7 @@ Paste the following block into any CLI agent (Claude Code / OpenCode / Cursor / 
 - **Active spec:** `docs/specs/mvp/specification.V3.md` Revision 4 (~4300 lines).
 - **Archived specs:** V1 + V2 in `docs/specs/mvp/archive/` (frozen).
 - **Go modules:** `commons`, `commons_prefix`, `commons_messaging`, `commons_storage`, `pherald` (all compile + unit tests pass).
-- **Container scaffold:** `containers/quickstart/{docker-compose.quickstart.yml, Dockerfile.pherald, otel-config.yaml, .env.example}` for §26.5 quickstart.
+- **Container scaffold:** `quickstart/{docker-compose.quickstart.yml, Dockerfile.pherald, otel-config.yaml, .env.example}` for §26.5 quickstart.
 - **CLI:** `pherald version --json` returns canonical build info; `serve`/`send`/`doctor`/`migrate`/`subscriber`/`deadletter` stubbed with HRD-NNN pointers.
 - **Inheritance gate:** 12 PASS / 0 FAIL. Meta-test ✓.
 - **Phase:** implementation r1.
@@ -71,7 +71,7 @@ ok  	github.com/vasic-digital/herald/commons_storage	1.630s
    ```
    git clone <Herald repo>
    git submodule update --init
-   cd containers/quickstart
+   cd quickstart
    podman build -t herald/pherald:dev -f Dockerfile.pherald ../..
    cp .env.example ../../.env && $EDITOR ../../.env
    podman-compose -f docker-compose.quickstart.yml up -d
@@ -91,5 +91,5 @@ ok  	github.com/vasic-digital/herald/commons_storage	1.630s
 - `docs/guides/HERALD_CONSTITUTION.md` — §101..§106 extending Universal.
 - `docs/guides/CONSTITUTION_INHERITANCE.md` — parent-discovery + gate.
 - `tests/test_constitution_inheritance.sh` — the gate.
-- `containers/quickstart/` — HRD-008 scaffold.
+- `quickstart/` — HRD-008 scaffold.
 - `commons/types.go` — the §11.0 type contract reference.

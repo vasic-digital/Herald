@@ -64,7 +64,7 @@ Herald is **pre-implementation**. As of 2026-05-15 the repo contains:
 
 Herald **does not** ship a `constitution/` submodule of its own — see `docs/guides/CONSTITUTION_INHERITANCE.md` for the rationale and the discovery mechanism.
 
-**As of 2026-05-20** the Go scaffold landed (first-implementation cycle r1). 5 Go modules (`commons`, `commons_prefix`, `commons_messaging`, `commons_storage`, `pherald`) compile + unit tests pass. `pherald version --json` returns build info. The full §11.0 type contract is realized in `commons/types.go`. The `null://` sandbox adapter is fully working with 8 unit tests. SQL migrations 000001..000005 embedded via `//go:embed`. Docker/Podman Compose for §26.5 Quickstart shipped under `containers/quickstart/`.
+**As of 2026-05-20** the Go scaffold landed (first-implementation cycle r1). 5 Go modules (`commons`, `commons_prefix`, `commons_messaging`, `commons_storage`, `pherald`) compile + unit tests pass. `pherald version --json` returns build info. The full §11.0 type contract is realized in `commons/types.go`. The `null://` sandbox adapter is fully working with 8 unit tests. SQL migrations 000001..000005 embedded via `//go:embed`. Docker/Podman Compose for §26.5 Quickstart shipped under `quickstart/` (migrated from `containers/quickstart/` when the `containers/` submodule landed). On-demand container orchestration is provided by the `containers/` submodule (`digital.vasic.containers`).
 
 Build + test from repo root:
 

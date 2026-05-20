@@ -2845,7 +2845,7 @@ Reference deployment topologies:
 Goal: a working `pherald` ingesting one webhook and fanning out to Telegram + Email in five minutes on a fresh laptop. This is the canonical "hello world" deployment.
 
 ```yaml
-# docker-compose.quickstart.yml — referenced from containers/quickstart/
+# docker-compose.quickstart.yml — referenced from quickstart/
 version: "3.8"
 services:
   postgres:
@@ -2914,7 +2914,7 @@ cp .env.example .env
 $EDITOR .env   # set HERALD_DB_PASSWORD, HERALD_REDIS_PASSWORD, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
 
 # 3. Boot
-docker compose -f containers/quickstart/docker-compose.quickstart.yml up -d
+docker compose -f quickstart/docker-compose.quickstart.yml up -d
 
 # 4. Wait for ready
 curl --retry 30 --retry-delay 2 --retry-connrefused http://localhost:24090/readyz
@@ -4161,7 +4161,7 @@ Reinforced operator mandate (2026-05-20): every flavor binary MUST be distribute
 - Reproducible-build flags (`CGO_ENABLED=0`, `GOFLAGS=-trimpath`, deterministic `-ldflags`).
 - SBOM + cosign signatures per V3 §21.
 
-Operators MAY use `containers/quickstart/Dockerfile.pherald` (shipped in this commit at HRD-008) as a *local development bridge* until the `containers` Submodule is added; once the submodule lands, the quickstart files migrate there and Herald's `containers/` directory becomes a thin pointer.
+Operators MAY use `quickstart/Dockerfile.pherald` (shipped in this commit at HRD-008) as a *local development bridge* until the `containers` Submodule is added; once the submodule lands, the quickstart files migrate there and Herald's `containers/` directory becomes a thin pointer.
 
 ### 41.7 OpenAPI generation
 
@@ -4509,7 +4509,7 @@ Foundation composes HRD-018 (`commons_constitution`) + HRD-010 (`commons_storage
 
 ### §44.2 Done criterion (locked)
 
-The Quickstart compose stack accepts a real CloudEvent v1.0 on `POST /v1/events`, fans it out to the `null://` channel, writes a `constitution_state` row with the correct transition, and exposes that row via `GET /v1/compliance`. The full smoke is reproduced in `containers/quickstart/` and runs in CI per §40.
+The Quickstart compose stack accepts a real CloudEvent v1.0 on `POST /v1/events`, fans it out to the `null://` channel, writes a `constitution_state` row with the correct transition, and exposes that row via `GET /v1/compliance`. The full smoke is reproduced in `quickstart/` and runs in CI per §40.
 
 ### §44.3 Three-milestone delivery (Approach B — bottom-up vertical slices)
 

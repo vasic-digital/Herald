@@ -83,7 +83,8 @@ Herald does **not** ship a `constitution/` submodule of its own; the parent proj
 - `commons_messaging/dispatch/claude_code/` — Claude Code session-resolution + envelope formatter; live `claude --resume` invocation pending (HRD-012 open).
 - `commons_storage/` — 9 SQL migrations (000001..000005) embedded via `//go:embed`; pgx + River + Redis wiring pending (HRD-010 open).
 - `pherald/cmd/pherald/` — Cobra CLI; `pherald version` works end-to-end; other subcommands stubbed with HRD-NNN error pointers.
-- `containers/quickstart/` — Docker/Podman Compose + Dockerfile + otel-config + `.env.example` per §26.5 (HRD-008 open for operator validation).
+- `quickstart/` — Herald-specific Docker/Podman Compose + Dockerfile + otel-config + `.env.example` per §26.5 (HRD-008 open for operator validation). Migrated from `containers/quickstart/` 2026-05-20 when the `containers/` submodule was added.
+- `containers/` — git submodule pointing at `git@github.com:vasic-digital/containers.git` (the `digital.vasic.containers` Go module — runtime auto-detection + on-demand container boot + lifecycle/health). Imported by Foundation tests + the `pherald doctor` subcommand to bring Postgres + Redis + OTel up on-demand.
 
 **Build + test:** from the repo root:
 
