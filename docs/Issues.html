@@ -786,6 +786,27 @@ threshold watcher emitting <code>.host.safety_breach</code></td>
 <td>2026-05-20</td>
 <td>spec §43.2 / §12.6; Catalogue-Check: TBD</td>
 </tr>
+<tr>
+<td>HRD-081</td>
+<td>task</td>
+<td>open</td>
+<td>low</td>
+<td>Extend <code>digital.vasic.containers/pkg/compose</code> to detect
+podman-compose vs docker compose runtime and either emit
+runtime-appropriate flags (no <code>--wait</code> for podman-compose) or
+fall back to host-side healthcheck polling. Composes with §11.4.76 —
+required so <code>compose.WithWait(true)</code> works across both
+backends. Also fix <code>Status()</code> parsing for podman-compose ps
+output (returns 0 services even when containers are visible to podman
+directly). Per §11.4.76: extend upstream submodule, never
+reimplement.</td>
+<td>2026-05-20</td>
+<td>2026-05-20</td>
+<td>spec V3 §44 + Universal §11.4.76; Catalogue-Check: extend
+<code>vasic-digital/containers</code> (workaround applied in
+<code>commons_infra/boot.go</code> — dropped <code>WithWait</code>,
+TCP-probe used for healthcheck).</td>
+</tr>
 </tbody>
 </table>
 <h2 id="in-progress">In progress</h2>
