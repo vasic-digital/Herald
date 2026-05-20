@@ -251,7 +251,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>1</td>
+<td>2</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -259,7 +259,7 @@
 </tr>
 <tr>
 <td>Last modified</td>
-<td>2026-05-19</td>
+<td>2026-05-20</td>
 </tr>
 <tr>
 <td>Status</td>
@@ -267,7 +267,9 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td>—</td>
+<td>Spec path references updated to specification.V3.md (active). All
+four <code>docs/specs/mvp/specification.md</code> occurrences rewritten
+in lockstep with V3 §23 anchor change.</td>
 </tr>
 <tr>
 <td>Issues</td>
@@ -279,11 +281,12 @@
 </tr>
 <tr>
 <td>Fixed</td>
-<td>none</td>
+<td>spec-path references updated to specification.V3.md path</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
-<td>—</td>
+<td>matches V3 §23 anchor + I7 gate (anchor phrase 'comprehensive
+planning and implementation' unchanged so gate stays green)</td>
 </tr>
 <tr>
 <td>Continuation</td>
@@ -306,7 +309,7 @@ href="#inheritance-gate-run-before-any-commit-touching-root-docs">Inheritance
 gate (run before any commit touching root docs)</a></li>
 <li><a
 href="#spec-change-rule-load-bearing-docsspecsmvpspecificationmd-specification-documents">Spec-change
-rule (load-bearing — <code>docs/specs/mvp/specification.md</code>
+rule (load-bearing — <code>docs/specs/mvp/specification.V3.md</code>
 §"Specification documents")</a></li>
 <li><a
 href="#project-conventions-from-the-spec-apply-when-scaffolding">Project
@@ -361,8 +364,8 @@ project-specific constitutional extensions.</li>
 <li><code>docs/guides/CONSTITUTION_INHERITANCE.md</code> —
 operator/agent guide for the discovery contract + the inheritance
 gate.</li>
-<li><code>docs/specs/mvp/specification.md</code> — mission spec (mostly
-TBD).</li>
+<li><code>docs/specs/mvp/specification.V3.md</code> — mission spec
+(mostly TBD).</li>
 </ol>
 </blockquote>
 <h2 id="project-status">Project status</h2>
@@ -371,7 +374,7 @@ repo contains:</p>
 <ul>
 <li><code>README.md</code> — mission, deployment model, inheritance
 contract, quickstart.</li>
-<li><code>docs/specs/mvp/specification.md</code> — MVP spec stub
+<li><code>docs/specs/mvp/specification.V3.md</code> — MVP spec stub
 (substantive sections TBD).</li>
 <li><code>docs/guides/HERALD_CONSTITUTION.md</code> — Herald's project
 constitution (extends Helix).</li>
@@ -454,8 +457,8 @@ into I5a–d (one check per root doc that must declare parent-discovery:
 <p>If either script fails, fix at root cause per Universal §11.4.4.
 Never silently accept the FAIL.</p>
 <h2
-id="spec-change-rule-load-bearing--docsspecsmvpspecificationmd-specification-documents">Spec-change
-rule (load-bearing — <code>docs/specs/mvp/specification.md</code>
+id="spec-change-rule-load-bearing--docsspecsmvpspecificationv3md-specification-documents">Spec-change
+rule (load-bearing — <code>docs/specs/mvp/specification.V3.md</code>
 §"Specification documents")</h2>
 <p>Any modification to a file under <code>docs/specs/</code> (any depth)
 triggers <strong>mandatory comprehensive planning and
@@ -467,7 +470,7 @@ tweak.</p>
 <h2
 id="project-conventions-from-the-spec-apply-when-scaffolding">Project
 conventions from the spec (apply when scaffolding)</h2>
-<p>These are declared in <code>docs/specs/mvp/specification.md</code>
+<p>These are declared in <code>docs/specs/mvp/specification.V3.md</code>
 and are easy to miss because no code enforces them yet:</p>
 <ul>
 <li><strong>Workable-item prefix:</strong> <code>HRD-</code> (e.g.

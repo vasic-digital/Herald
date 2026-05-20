@@ -251,7 +251,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>1</td>
+<td>2</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -259,7 +259,7 @@
 </tr>
 <tr>
 <td>Last modified</td>
-<td>2026-05-19</td>
+<td>2026-05-20</td>
 </tr>
 <tr>
 <td>Status</td>
@@ -267,7 +267,8 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td>—</td>
+<td>Updated spec links to V3 (active) + archive/ for V1/V2; repo-layout
+block reflects current docs/specs/mvp/ tree.</td>
 </tr>
 <tr>
 <td>Issues</td>
@@ -279,11 +280,11 @@
 </tr>
 <tr>
 <td>Fixed</td>
-<td>none</td>
+<td>spec-path references updated to specification.V3.md path</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
-<td>—</td>
+<td>aligned README with the V1→V2→V3 supersession chain</td>
 </tr>
 <tr>
 <td>Continuation</td>
@@ -324,9 +325,14 @@ without confusion.</p>
 repository currently contains:</p>
 <ul>
 <li>This README.</li>
-<li>An MVP specification stub at <a
-href="docs/specs/mvp/specification.md"><code>docs/specs/mvp/specification.md</code></a>
-— substantive sections are still TBD.</li>
+<li>The current specification at <a
+href="docs/specs/mvp/specification.V3.md"><code>docs/specs/mvp/specification.V3.md</code></a>
+— comprehensive (~3900 lines): project-integration contract, inbound
+processing pipeline, LLM/agent dispatch with Claude Code, tri-stage
+reply protocol, versioned reports, multi-format outbound attachments,
+nine refined flavors. V1 and V2 preserved in <a
+href="docs/specs/mvp/archive/"><code>docs/specs/mvp/archive/</code></a>
+for traceability.</li>
 <li>Project-specific Constitution + operator/agent guides under <a
 href="docs/guides/"><code>docs/guides/</code></a>.</li>
 <li>Mirror declarations at <a
@@ -408,7 +414,10 @@ and is mirrored to GitLab, GitFlic, and GitVerse.</p>
 │   │   └── CONSTITUTION_INHERITANCE.md        # operator/agent guide for the inheritance contract
 │   └── specs/
 │       └── mvp/
-│           └── specification.md               # MVP spec (TBD)
+│           ├── specification.V3.md           # active spec (operator-product)
+│           └── archive/
+│               ├── specification.V1.md       # historical, superseded
+│               └── specification.V2.md       # historical, superseded
 ├── upstreams/                                 # Herald&#39;s mirror declarations
 │   ├── GitHub.sh
 │   ├── GitLab.sh
@@ -456,13 +465,14 @@ href="AGENTS.md"><code>AGENTS.md</code></a> — Herald-specific
 guidance.</li>
 <li><a
 href="docs/guides/HERALD_CONSTITUTION.md"><code>docs/guides/HERALD_CONSTITUTION.md</code></a>
-— Herald's articles §101–§105.</li>
+— Herald's articles §101–§106.</li>
 <li><a
 href="docs/guides/CONSTITUTION_INHERITANCE.md"><code>docs/guides/CONSTITUTION_INHERITANCE.md</code></a>
 — the discovery contract and gate semantics.</li>
 <li><a
-href="docs/specs/mvp/specification.md"><code>docs/specs/mvp/specification.md</code></a>
-— MVP spec (TBD).</li>
+href="docs/specs/mvp/specification.V3.md"><code>docs/specs/mvp/specification.V3.md</code></a>
+— current spec (active). Historical V1/V2 in <a
+href="docs/specs/mvp/archive/"><code>docs/specs/mvp/archive/</code></a>.</li>
 </ol>
 <h2 id="mirror--push-convention">Mirror &amp; push convention</h2>
 <p>Herald is mirrored to four hosts. The <code>origin</code> remote is

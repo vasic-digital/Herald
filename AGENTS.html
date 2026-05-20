@@ -251,7 +251,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>2</td>
+<td>3</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -259,7 +259,7 @@
 </tr>
 <tr>
 <td>Last modified</td>
-<td>2026-05-19</td>
+<td>2026-05-20</td>
 </tr>
 <tr>
 <td>Status</td>
@@ -267,7 +267,8 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td>added Spec-change rule per R-14 + Constitution §11.4.61</td>
+<td>Spec-path references updated from specification.md →
+specification.V3.md (lockstep with V3 §23 anchor change).</td>
 </tr>
 <tr>
 <td>Issues</td>
@@ -279,16 +280,17 @@
 </tr>
 <tr>
 <td>Fixed</td>
-<td>R-14 partial</td>
+<td>R-14 (V2), V3-path-sync (V3 r3)</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
-<td>spec-change rule propagated from CLAUDE.md to AGENTS.md</td>
+<td>spec-change rule references the currently-active spec file (V3);
+anchor phrase 'comprehensive planning and implementation' unchanged so
+I7 gate stays green.</td>
 </tr>
 <tr>
 <td>Continuation</td>
-<td>I7 gate invariant pending in
-<code>tests/test_constitution_inheritance.sh</code></td>
+<td>—</td>
 </tr>
 </tbody>
 </table>
@@ -308,7 +310,7 @@ gate (run before any commit that touches root docs or
 <code>constitution/</code>)</a></li>
 <li><a
 href="#spec-change-rule-load-bearing-docsspecsmvpspecificationmd-specification-documents">Spec-change
-rule (load-bearing — <code>docs/specs/mvp/specification.md</code>
+rule (load-bearing — <code>docs/specs/mvp/specification.V3.md</code>
 §"Specification documents")</a></li>
 <li><a
 href="#multi-host-mirror-convention-heralds-own-upstreams">Multi-host
@@ -364,7 +366,7 @@ repo contains:</p>
 <ul>
 <li><code>README.md</code> — mission, deployment model,
 constitution-inheritance contract, how to run.</li>
-<li><code>docs/specs/mvp/specification.md</code> — MVP spec (section
+<li><code>docs/specs/mvp/specification.V3.md</code> — MVP spec (section
 headings only; substantive content TBD).</li>
 <li><code>docs/guides/HERALD_CONSTITUTION.md</code> — project-specific
 constitutional extensions.</li>
@@ -401,10 +403,10 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="
 <p>Both MUST return 0. If either fails, fix at root cause per
 Constitution §11.4.4 — never silently accept the FAIL.</p>
 <h3
-id="spec-change-rule-load-bearing--docsspecsmvpspecificationmd-specification-documents">Spec-change
-rule (load-bearing — <code>docs/specs/mvp/specification.md</code>
+id="spec-change-rule-load-bearing--docsspecsmvpspecificationv3md-specification-documents">Spec-change
+rule (load-bearing — <code>docs/specs/mvp/specification.V3.md</code>
 §"Specification documents")</h3>
-<p>Whenever <code>docs/specs/mvp/specification.md</code> or any file
+<p>Whenever <code>docs/specs/mvp/specification.V3.md</code> or any file
 under <code>docs/specs/</code> (any depth) is modified,
 <strong>comprehensive planning and implementation of all changes is
 MANDATORY</strong> — agents may not edit the spec in isolation. This

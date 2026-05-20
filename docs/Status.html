@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Herald — Status</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Herald — Status</h1>
+</header>
+<h1 id="herald--status">Herald — Status</h1>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-05-20</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-05-20</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>active</td>
+</tr>
+<tr>
+<td>Status summary</td>
+<td>Pre-implementation. Spec complete at V3 r3. Tracking docs (Issues /
+Fixed / Status / CONTINUATION) established this commit. Next milestone:
+first-implementation cycle.</td>
+</tr>
+<tr>
+<td>Issues</td>
+<td>HRD-007 (closing this commit)</td>
+</tr>
+<tr>
+<td>Issues summary</td>
+<td>see <code>Issues.md</code></td>
+</tr>
+<tr>
+<td>Fixed</td>
+<td>HRD-001..HRD-006</td>
+</tr>
+<tr>
+<td>Fixed summary</td>
+<td>see <code>Fixed.md</code></td>
+</tr>
+<tr>
+<td>Continuation</td>
+<td>scaffold <code>commons</code> + <code>commons_messaging</code> +
+<code>pherald</code> shim against §11.0 type contract; verify §26.5
+quickstart compose works end-to-end.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#project-phase">Project phase</a></li>
+<li><a href="#specification">Specification</a></li>
+<li><a href="#implementation">Implementation</a></li>
+<li><a href="#operations">Operations</a></li>
+<li><a href="#risk-surface">Risk surface</a></li>
+</ul>
+<h2 id="project-phase">Project phase</h2>
+<p><strong>Pre-implementation.</strong> The spec set (V1 → V2 → V3) is
+complete and stable; no Go source code, <code>go.mod</code>, build
+pipeline, or container compose stack exists yet. The next major
+milestone is the first-implementation cycle.</p>
+<h2 id="specification">Specification</h2>
+<ul>
+<li><strong>Active spec:</strong>
+<code>docs/specs/mvp/specification.V3.md</code> (Revision 3, ~3900
+lines).</li>
+<li><strong>Archived specs:</strong> V1 + V2 in
+<code>docs/specs/mvp/archive/</code> for traceability.</li>
+<li><strong>Spec-change rule:</strong> per V3 §23 + HERALD_CONSTITUTION
+§106 + CLAUDE.md + AGENTS.md — every edit under <code>docs/specs/</code>
+triggers comprehensive planning (gate I7a/b/c).</li>
+<li><strong>Outstanding spec work:</strong> none for V3. V4 would only
+be triggered by post-implementation feedback (see §30.7.3 plus V3 r2
+metadata Continuation).</li>
+</ul>
+<h2 id="implementation">Implementation</h2>
+<ul>
+<li><strong><code>commons</code></strong> (L0) — not started.</li>
+<li><strong><code>commons_messaging</code></strong> (L1) — not
+started.</li>
+<li><strong><code>commons_storage</code></strong> (L1) — not
+started.</li>
+<li><strong><code>commons_security</code></strong> (L1) — not
+started.</li>
+<li><strong><code>commons_observability</code></strong> (L1) — not
+started.</li>
+<li><strong>Flavor binaries</strong> (<code>pherald</code>,
+<code>sherald</code>, <code>bherald</code>, <code>dherald</code>,
+<code>aherald</code>, <code>scherald</code>, <code>iherald</code>,
+<code>rherald</code>, <code>cherald</code>) — not started.</li>
+<li><strong>Channel adapters</strong> — none yet; spec mandates Telegram
++ Slack + Max + Email + Diary for V1-tier, with eight more channels
+documented for V2-tier (§11).</li>
+</ul>
+<h2 id="operations">Operations</h2>
+<ul>
+<li><strong>Repo hygiene:</strong> main is the only branch; four-mirror
+fan-out via <code>origin</code> (GitHub + GitLab + GitFlic + GitVerse)
+is configured and proven.</li>
+<li><strong>Constitution inheritance gate:</strong> 12 PASS / 0
+FAIL.</li>
+<li><strong>Submodules:</strong> none yet (<code>containers</code>
+planned per spec §9.5; SDK submodules planned per §11 once first channel
+adapter lands).</li>
+</ul>
+<h2 id="risk-surface">Risk surface</h2>
+<ul>
+<li><strong>Spec-vs-implementation gap.</strong> The longer the spec
+evolves without code, the higher the risk of accidentally documenting
+something un-buildable. Mitigation: §26.5 Operator quickstart is the
+first thing to actually build and verify end-to-end; it'll surface
+invalid assumptions fast.</li>
+<li><strong>Claude Code session model assumption.</strong> V3 §33.2
+commits to a project-named-session anchor pattern that hasn't been
+validated against Claude Code in a real test. Mitigation: in HRD-008+
+scaffolding work, the Claude Code dispatcher MUST be the first
+integration with a captured-evidence end-to-end test.</li>
+<li><strong>Channel-credential rotation.</strong> V3 spec mandates
+rotation paths but no operator tooling exists. Mitigation:
+<code>&lt;flavor&gt;herald doctor</code> (§17.6) will be one of the
+first CLI subcommands implemented so operators catch credential drift
+before it bites.</li>
+</ul>
+</body>
+</html>

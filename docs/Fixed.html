@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Herald — Fixed</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Herald — Fixed</h1>
+</header>
+<h1 id="herald--fixed">Herald — Fixed</h1>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-05-20</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-05-20</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>active</td>
+</tr>
+<tr>
+<td>Status summary</td>
+<td>Retrospective tracker established 2026-05-20 (V3 r3) for
+spec-revision work HRD-001..HRD-006 already shipped. Going forward every
+closed item migrates here from <code>Issues.md</code> per Universal
+§11.4.19 atomic-migration mandate.</td>
+</tr>
+<tr>
+<td>Issues</td>
+<td>n/a (see <code>Issues.md</code>)</td>
+</tr>
+<tr>
+<td>Issues summary</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Fixed</td>
+<td>HRD-001..HRD-006 (six items retroactively recorded)</td>
+</tr>
+<tr>
+<td>Fixed summary</td>
+<td>V1 MVP authoring → V2 architecture (3 revisions) → V3
+operator-product (2 revisions); ~3900 lines of spec across V1+V2+V3; all
+commits pushed to all four Herald mirrors.</td>
+</tr>
+<tr>
+<td>Continuation</td>
+<td>regenerate <code>Fixed_Summary.md</code> whenever this file changes;
+manual until the auto-sync wrapper exists.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#recently-fixed">Recently fixed</a></li>
+<li><a href="#hrd-001--v1-mvp-specification">HRD-001 — V1 MVP
+specification</a></li>
+<li><a href="#hrd-002--v2-r1-architecture">HRD-002 — V2 r1
+architecture</a></li>
+<li><a href="#hrd-003--v2-r2-self-review">HRD-003 — V2 r2
+self-review</a></li>
+<li><a href="#hrd-004--v2-r3-self-review">HRD-004 — V2 r3
+self-review</a></li>
+<li><a href="#hrd-005--v3-r1-operator-product-layer">HRD-005 — V3 r1
+operator-product layer</a></li>
+<li><a href="#hrd-006--v3-r2-flavor-refinement">HRD-006 — V3 r2 flavor
+refinement</a></li>
+</ul>
+<h2 id="recently-fixed">Recently fixed</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Type</th>
+<th>Criticality</th>
+<th>Title</th>
+<th>Closed</th>
+<th>Commit</th>
+<th>Reference</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HRD-006</td>
+<td>task</td>
+<td>middle</td>
+<td>V3 r2 — refine 9 flavors for richer channel interaction</td>
+<td>2026-05-20</td>
+<td><code>f8b8073</code></td>
+<td>spec V3 §30.7</td>
+</tr>
+<tr>
+<td>HRD-005</td>
+<td>task</td>
+<td>middle</td>
+<td>V3 r1 — operator-product layer (§31..§36 + §18.2 expansion)</td>
+<td>2026-05-20</td>
+<td><code>e26a8dc</code></td>
+<td>spec V3 §30.6</td>
+</tr>
+<tr>
+<td>HRD-004</td>
+<td>task</td>
+<td>middle</td>
+<td>V2 r3 — define remaining Go types + operational ops (workers,
+hot-reload, API paths, …)</td>
+<td>2026-05-20</td>
+<td><code>f4ebba1</code></td>
+<td>archived V2 §30.5</td>
+</tr>
+<tr>
+<td>HRD-003</td>
+<td>task</td>
+<td>middle</td>
+<td>V2 r2 — close prose↔︎definition gaps; add operational guidance
+(quickstart, DR, retention, costs)</td>
+<td>2026-05-19</td>
+<td><code>9648545</code></td>
+<td>archived V2 §30.1</td>
+</tr>
+<tr>
+<td>HRD-002</td>
+<td>task</td>
+<td>middle</td>
+<td>V2 r1 — architectural authoring (CloudEvents, Watermill, OTel, RLS,
+SLSA, 9 flavors)</td>
+<td>2026-05-19</td>
+<td><code>96b7cc6</code></td>
+<td>archived V2 §29</td>
+</tr>
+<tr>
+<td>HRD-001</td>
+<td>task</td>
+<td>middle</td>
+<td>V1 — initial MVP specification + Review section +
+Recommendations</td>
+<td>2026-05-19</td>
+<td><code>b421fe1</code> (and earlier)</td>
+<td>archive V1 §"Review"</td>
+</tr>
+</tbody>
+</table>
+<h2 id="hrd-001--v1-mvp-specification">HRD-001 — V1 MVP
+specification</h2>
+<p><strong>Outcome:</strong> authored the initial Herald MVP spec
+covering Upstreams, Mission, Execution Model, Constitution Integration,
+Workable-item prefix, Technology stack, Commons + Messaging +
+Subscribers + APIs, Project Herald + System Herald + Future flavors,
+Documentation, Testing. Closing Review section with 22 findings
+(R-01..R-22) catalogued for later passes. Renamed to
+<code>specification.V1.md</code> at the V2 supersession point; preserved
+in <code>docs/specs/mvp/archive/</code>.</p>
+<h2 id="hrd-002--v2-r1-architecture">HRD-002 — V2 r1 architecture</h2>
+<p><strong>Outcome:</strong> introduced V2 superseding V1. Adopted
+CloudEvents v1.0 wire format, Watermill routing, Postgres + River queue
+(NATS opt-in), Apprise-style URL+tag channel addressing, Knock-style
+preference matrix, OpenTelemetry observability, Postgres RLS
+multi-tenancy, SLSA L3 supply-chain stack, MJML email templates,
+<code>nicksnyder/go-i18n</code> for i18n. Filled in every V1 TBD; added
+seven flavors beyond <code>pherald</code>+<code>sherald</code>
+(<code>bherald</code>, <code>dherald</code>, <code>aherald</code>,
+<code>scherald</code>, <code>iherald</code>, <code>rherald</code>,
+<code>cherald</code>).</p>
+<h2 id="hrd-003--v2-r2-self-review">HRD-003 — V2 r2 self-review</h2>
+<p><strong>Outcome:</strong> closed V1's V2-R-01..V2-R-14 — defined
+missing tables (<code>webhook_sources</code> /
+<code>channel_addresses</code> / <code>thread_refs</code> /
+<code>quarantined_messages</code>), pinned Go ≥ 1.22 + license, added
+§16.1 Data retention + GDPR, §17.1 OTel env-var table, §26.5 Operator
+quickstart, §26.6 Disaster recovery, §27.3 Cost considerations.</p>
+<h2 id="hrd-004--v2-r3-self-review">HRD-004 — V2 r3 self-review</h2>
+<p><strong>Outcome:</strong> closed V3-R-01..V3-R-12 — added remaining
+Go type definitions (<code>Subscriber</code>,
+<code>CloudEventEnvelope</code>, <code>TraceContext</code>,
+<code>Branding</code>, <code>ChannelID</code>,
+<code>PreferenceSet</code>), §9.6 Database migration tooling, §3.4
+Worker pools + SIGHUP hot-reload, §5.7 Ingress API URLs, §7.5 AI-agent
+subscribers, §8.3 Workable-item lifecycle, §11.14 <code>null://</code>
+sandbox channel, §17.4.1 Per-channel SLO budgets, §24.1 Machine-readable
+API specs, §5.4.1 Outbound idempotency, §3.5 Time/clock abstraction.</p>
+<h2 id="hrd-005--v3-r1-operator-product-layer">HRD-005 — V3 r1
+operator-product layer</h2>
+<p><strong>Outcome:</strong> authored V3 superseding V2. New top-level
+sections §31 Project integration contract, §32 Inbound processing
+pipeline (30 s poll + FIFO + 7 worker stages + 4-layer anti-spam), §33
+LLM/agent dispatch (Claude Code session-resolution +
+<code>&lt;&lt;&lt;HERALD-DISPATCH-v1&gt;&gt;&gt;</code> envelope), §34
+Reply protocol (queued→processing→result tri-stage), §35 Versioned
+reports with Git linkage, §36 Multi-format outbound attachments (.md +
+.html + .pdf + .docx). Expanded §18.2 Project Herald with
+§18.2.1..§18.2.5 Investigation-before-Fixing flow + criticality + type
+classification + attachment storage at
+<code>issues/users/attachments/&lt;WORKABLE_ITEM_ID&gt;/</code>.</p>
+<h2 id="hrd-006--v3-r2-flavor-refinement">HRD-006 — V3 r2 flavor
+refinement</h2>
+<p><strong>Outcome:</strong> refined every non-<code>pherald</code>
+flavor for richer channel interaction. §18.1.1 cross-flavor primitives
+(slash/prefix command palette, 9-emoji reaction set, interactive
+buttons, modal forms, thread/forum-topic affinity,
+capability-degradation rule). §18.2.6..§18.10.1 per-flavor
+channel-interaction tables documenting buttons / reactions / slash
+commands / modals / threads tuned to each flavor's use case. Archived V2
+to <code>docs/specs/mvp/archive/</code>.</p>
+</body>
+</html>

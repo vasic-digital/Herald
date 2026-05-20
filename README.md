@@ -2,15 +2,15 @@
 
 | Field | Value |
 |---|---|
-| Revision | 1 |
+| Revision | 2 |
 | Created | 2026-05-15 |
-| Last modified | 2026-05-19 |
+| Last modified | 2026-05-20 |
 | Status | active |
-| Status summary | — |
+| Status summary | Updated spec links to V3 (active) + archive/ for V1/V2; repo-layout block reflects current docs/specs/mvp/ tree. |
 | Issues | none |
 | Issues summary | — |
-| Fixed | none |
-| Fixed summary | — |
+| Fixed | spec-path references updated to specification.V3.md path |
+| Fixed summary | aligned README with the V1→V2→V3 supersession chain |
 | Continuation | — |
 
 ## Table of contents
@@ -37,7 +37,7 @@ Ingesting system events and reliably fanning them out to multiple notification c
 Herald is **pre-implementation** (2026-05-15). The repository currently contains:
 
 - This README.
-- An MVP specification stub at [`docs/specs/mvp/specification.md`](docs/specs/mvp/specification.md) — substantive sections are still TBD.
+- The current specification at [`docs/specs/mvp/specification.V3.md`](docs/specs/mvp/specification.V3.md) — comprehensive (~3900 lines): project-integration contract, inbound processing pipeline, LLM/agent dispatch with Claude Code, tri-stage reply protocol, versioned reports, multi-format outbound attachments, nine refined flavors. V1 and V2 preserved in [`docs/specs/mvp/archive/`](docs/specs/mvp/archive/) for traceability.
 - Project-specific Constitution + operator/agent guides under [`docs/guides/`](docs/guides/).
 - Mirror declarations at [`upstreams/`](upstreams/) — one shell script per host that exports `UPSTREAMABLE_REPOSITORY`.
 - The inheritance gate + paired mutation meta-test at [`tests/`](tests/).
@@ -93,7 +93,10 @@ Herald/
 │   │   └── CONSTITUTION_INHERITANCE.md        # operator/agent guide for the inheritance contract
 │   └── specs/
 │       └── mvp/
-│           └── specification.md               # MVP spec (TBD)
+│           ├── specification.V3.md           # active spec (operator-product)
+│           └── archive/
+│               ├── specification.V1.md       # historical, superseded
+│               └── specification.V2.md       # historical, superseded
 ├── upstreams/                                 # Herald's mirror declarations
 │   ├── GitHub.sh
 │   ├── GitLab.sh
@@ -136,9 +139,9 @@ In this order, read fully before submitting any change:
 2. `<discovered-constitution>/AGENTS.md` — anti-bluff, no-guessing, paired mutations.
 3. This README — Herald overview.
 4. [`CLAUDE.md`](CLAUDE.md) / [`AGENTS.md`](AGENTS.md) — Herald-specific guidance.
-5. [`docs/guides/HERALD_CONSTITUTION.md`](docs/guides/HERALD_CONSTITUTION.md) — Herald's articles §101–§105.
+5. [`docs/guides/HERALD_CONSTITUTION.md`](docs/guides/HERALD_CONSTITUTION.md) — Herald's articles §101–§106.
 6. [`docs/guides/CONSTITUTION_INHERITANCE.md`](docs/guides/CONSTITUTION_INHERITANCE.md) — the discovery contract and gate semantics.
-7. [`docs/specs/mvp/specification.md`](docs/specs/mvp/specification.md) — MVP spec (TBD).
+7. [`docs/specs/mvp/specification.V3.md`](docs/specs/mvp/specification.V3.md) — current spec (active). Historical V1/V2 in [`docs/specs/mvp/archive/`](docs/specs/mvp/archive/).
 
 ## Mirror & push convention
 

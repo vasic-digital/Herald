@@ -2,16 +2,16 @@
 
 | Field | Value |
 |---|---|
-| Revision | 2 |
+| Revision | 3 |
 | Created | 2026-05-20 |
 | Last modified | 2026-05-20 |
 | Status | active |
-| Status summary | V3 r2 (this revision) refines all nine flavors for richer per-channel interaction: §18.1.1 common interaction primitives (slash/prefix command palette, reaction-based quick ops, interactive buttons, modal forms, thread/forum-topic affinity, capability degradation), §18.2.6/§18.3.1/§18.4.1/§18.5.1/§18.6.1/§18.7.1/§18.8.1/§18.9.1/§18.10.1 per-flavor channel-interaction tables. V3 r1 architecture (§31 project contract, §32 inbound pipeline, §33 LLM dispatch, §34 reply protocol, §35 versioned reports, §36 multi-format attachments) unchanged. |
+| Status summary | V3 r3 polish pass + Herald-internal cross-doc sync: parent docs (README/CLAUDE.md/AGENTS.md/HERALD_CONSTITUTION.md) updated to reference `specification.V3.md` (V2 spec-path string in §23 anchor was stale); HERALD_CONSTITUTION Notes section refreshed to reflect V1+V2 archived under `archive/`. V3 r2 architecture + flavor-interaction tables unchanged. |
 | Issues | none |
-| Issues summary | First-implementation work tracked under `HRD-` prefix; V3 is the version consuming projects integrate against. |
-| Fixed | V3-R2-01..V3-R2-09 (this revision: nine flavors' channel-interaction surfaces + cross-flavor primitives); V3-R1-01..V3-R1-14 (V3 r1); inherits closed: V2-R-01..V2-R-14 (V2 r2), V3-R-01..V3-R-12 (V2 r3), V1 R-01..R-22. |
-| Fixed summary | r2 fills the "how do subscribers actually interact with each flavor" gap r1 left open. Every flavor now has documented buttons / reactions / slash commands / modals / threads tuned to its use case, with explicit cross-flavor primitives in §18.1.1 so subscribers learn one mental model. |
-| Continuation | V3 r3 (next, same workstream): polish pass + full re-export of V1+V2+V3 (+ touched parent-project docs if any) + push EVERYTHING to all four Herald mirrors and constitution mirrors. |
+| Issues summary | — |
+| Fixed | V3-R3-01..V3-R3-03 (this revision: parent-doc spec-path sync); V3-R2-01..V3-R2-09 (r2); V3-R1-01..V3-R1-14 (r1); inherits closed V2 + V1 lineage. |
+| Fixed summary | r3 closes the gap between V3 §23 anchor (now points at `specification.V3.md`) and the propagated copies in README + CLAUDE + AGENTS + HERALD_CONSTITUTION §106 — all four parent docs aligned. Inheritance gate stays green (anchor-phrase 'comprehensive planning and implementation' was the I7 enforcement target, not the path string). |
+| Continuation | First-implementation cycle: scaffold `commons` + `commons_messaging` per §11.0 contract + per-channel adapters + River queue + Claude Code dispatcher + quickstart compose. Track under `HRD-` prefix. |
 
 The **bi-directional event fan-out** system: Herald ingests events from heterogeneous sources and reliably fans them out to multiple notification channels so every alert reaches the right destination without confusion, and processes inbound replies/commands back from subscribers in a structured, security-validated way.
 
@@ -2725,9 +2725,9 @@ Each `constitutable/<path>` MUST contain at least one of: `Constitution.md`, `CL
 
 We MUST keep the following rule / mandatory constraint in `Constitution.md` (parent), `AGENTS.md`, `CLAUDE.md`, and `HERALD_CONSTITUTION.md` §106:
 
-> **IMPORTANT:** Whenever this document (`docs/specs/mvp/specification.V2.md`) or any file under `docs/specs/` (any depth) is modified, **comprehensive planning and implementation of all changes is MANDATORY**. This rule does NOT apply to creating or renaming files; for those, explicitly tell the worker (CLI agent) what to do with the new path. Treat every spec edit as a project-wide ripple, not a doc tweak.
+> **IMPORTANT:** Whenever this document (`docs/specs/mvp/specification.V3.md`) or any file under `docs/specs/` (any depth) is modified, **comprehensive planning and implementation of all changes is MANDATORY**. This rule does NOT apply to creating or renaming files; for those, explicitly tell the worker (CLI agent) what to do with the new path. Treat every spec edit as a project-wide ripple, not a doc tweak.
 
-Inheritance-gate invariant **I7a–c** enforces presence of this anchor in `CLAUDE.md`, `AGENTS.md`, and `HERALD_CONSTITUTION.md`.
+The rule's enforcement anchor is the phrase `comprehensive planning and implementation` — inheritance-gate invariants **I7a–c** assert its presence in `CLAUDE.md`, `AGENTS.md`, and `HERALD_CONSTITUTION.md`. Path references in those propagated files MUST point at the currently-active spec file (V3 at time of writing; bump in lockstep when V4 supersedes).
 
 ---
 
@@ -3875,3 +3875,42 @@ V3 r1 specified the operator-product architecture but left every non-`pherald` f
 - **V3-R3-02. Polish pass** — minor refinements surfaced during r2 authoring (e.g., the §31 mandatory-integration list and the §18.x.1 channel-interaction tables share an implicit "every channel supports degradation" assumption that should be explicit; the Roadmap §27.1 table doesn't yet mention the V3 additions).
 - **V3-R3-03. Touch test on parent-project docs** — check whether `README.md`/`CLAUDE.md`/`AGENTS.md`/`HERALD_CONSTITUTION.md` reference the old `specification.md` path and need redirection to V3.
 - **Final commit + push EVERYTHING** to all 4 Herald mirrors (plus constitution mirrors if any constitution edit is needed).
+
+### 30.8 V3 r3 review log (this revision — final polish)
+
+V3 r3 is the closing-out commit for the user-defined "after r1 + r2, refining and improvements and re-export and push EVERYTHING" ask. Where r1 added the operator-product layer and r2 refined every flavor's channel interactions, r3 closes the cross-doc sync gap and finalises the spec evolution chain.
+
+#### 30.8.1 Findings applied (V3-R3-NN)
+
+- **V3-R3-01. Stale path string in V3 §23 spec-change anchor.** §23 still referenced `specification.V2.md` even though V3 supersedes V2. Applied: rewrote §23 to point at `specification.V3.md` and added a note clarifying that the I7-gated enforcement anchor is the *phrase* `comprehensive planning and implementation`, not the path — so the gate stayed green throughout the path-string churn.
+- **V3-R3-02. Parent docs (README/CLAUDE.md/AGENTS.md/HERALD_CONSTITUTION.md) referenced the pre-V1-rename path `specification.md`.** Three of the four still said `MVP spec (TBD)` even though V3 is ~3900 lines and architecturally complete. Applied: all four files updated:
+  - **README.md** — repo-layout block now shows `specification.V3.md` + `archive/specification.V1.md` + `archive/specification.V2.md`. Read-order item 7 now points at V3. Status updated to describe the current spec.
+  - **CLAUDE.md** — all four `docs/specs/mvp/specification.md` occurrences replaced with `…specification.V3.md` (ToC entry, read-order, spec-change-rule heading, body reference).
+  - **AGENTS.md** — same path-replacement across all occurrences.
+  - **HERALD_CONSTITUTION.md** — §106 forensic anchor + §"Notes" section both updated; Notes now reflects "V3 is active; V1+V2 in archive/".
+- **V3-R3-03. Metadata revisions out of date in all four parent docs.** Applied: bumped Revision on README (1→2), CLAUDE.md (1→2), AGENTS.md (2→3), HERALD_CONSTITUTION.md (2→3); refreshed Status summary / Fixed / Fixed summary on each to capture the V3-path-sync work.
+
+#### 30.8.2 Audit trail (r3)
+
+- Pre-review commit: V3 r2 at `f8b8073`.
+- r3 commit: covers V3-R3-01..V3-R3-03 + parent-doc updates + .html/.pdf regen for V3 and all four parent docs.
+- Inheritance gate before and after: 12 PASS / 0 FAIL. I7a/b/c specifically re-verified (the path-string change could have affected them in principle but does not because I7 grep keys on the phrase, not the path).
+- All four Herald mirrors targeted on push.
+- Constitution submodule untouched in r3 (no constitution-level change needed; the §11.4.61 + §11.4.65 invariants are satisfied by the in-repo re-export).
+- V1 + V2 untouched in r3 (already current in `archive/`).
+
+#### 30.8.3 What r3 does NOT do
+
+- Does NOT refactor V3 body content. Polish was deliberately limited to cross-doc sync to keep r3 commits surgical.
+- Does NOT bump V1 or V2 revision/status (they're frozen archives).
+- Does NOT touch the constitution submodule (out of scope; the parent constitution already carries the §11.4.61/§11.4.65 mandates Herald composes with).
+
+#### 30.8.4 Spec-evolution chain — final state after r3
+
+| Version | Path | Revision | Status | Lines (md) | Role |
+|---|---|---|---|---|---|
+| V1 | `docs/specs/mvp/archive/specification.V1.md` | 3 | superseded | ~590 | Historical (first cut + R-NN audit baseline) |
+| V2 | `docs/specs/mvp/archive/specification.V2.md` | 4 | superseded | ~3000 | Historical (architectural maturity over three revisions r1-r3) |
+| V3 | `docs/specs/mvp/specification.V3.md` | 3 | active | ~3900 | **Current** — operator-product layer + nine refined flavors |
+
+Anyone reading the spec set starts at V3. V1 + V2 exist for traceability when a r3 or later change ID (V3-R-NN) needs cross-reference to the V2 audit log (§30.5) or the V1 R-NN ID-system (§30.1).

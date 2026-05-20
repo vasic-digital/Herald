@@ -2,16 +2,16 @@
 
 | Field | Value |
 |---|---|
-| Revision | 2 |
+| Revision | 3 |
 | Created | 2026-05-15 |
-| Last modified | 2026-05-19 |
+| Last modified | 2026-05-20 |
 | Status | active |
-| Status summary | added Spec-change rule per R-14 + Constitution §11.4.61 |
+| Status summary | Spec-path references updated from specification.md → specification.V3.md (lockstep with V3 §23 anchor change). |
 | Issues | none |
 | Issues summary | — |
-| Fixed | R-14 partial |
-| Fixed summary | spec-change rule propagated from CLAUDE.md to AGENTS.md |
-| Continuation | I7 gate invariant pending in `tests/test_constitution_inheritance.sh` |
+| Fixed | R-14 (V2), V3-path-sync (V3 r3) |
+| Fixed summary | spec-change rule references the currently-active spec file (V3); anchor phrase 'comprehensive planning and implementation' unchanged so I7 gate stays green. |
+| Continuation | — |
 
 ## Table of contents
 
@@ -19,7 +19,7 @@
 - [Herald-specific agent rules](#herald-specific-agent-rules)
   - [Project status (load-bearing for every task)](#project-status-load-bearing-for-every-task)
   - [Inheritance gate (run before any commit that touches root docs or `constitution/`)](#inheritance-gate-run-before-any-commit-that-touches-root-docs-or-constitution)
-  - [Spec-change rule (load-bearing — `docs/specs/mvp/specification.md` §"Specification documents")](#spec-change-rule-load-bearing-docsspecsmvpspecificationmd-specification-documents)
+  - [Spec-change rule (load-bearing — `docs/specs/mvp/specification.V3.md` §"Specification documents")](#spec-change-rule-load-bearing-docsspecsmvpspecificationmd-specification-documents)
   - [Multi-host mirror convention (Herald's own upstreams)](#multi-host-mirror-convention-heralds-own-upstreams)
   - [Forbidden in this project](#forbidden-in-this-project)
 
@@ -54,7 +54,7 @@
 Herald is **pre-implementation**. As of 2026-05-15 the repo contains:
 
 - `README.md` — mission, deployment model, constitution-inheritance contract, how to run.
-- `docs/specs/mvp/specification.md` — MVP spec (section headings only; substantive content TBD).
+- `docs/specs/mvp/specification.V3.md` — MVP spec (section headings only; substantive content TBD).
 - `docs/guides/HERALD_CONSTITUTION.md` — project-specific constitutional extensions.
 - `docs/guides/CONSTITUTION_INHERITANCE.md` — operator/agent guide for the parent-discovery contract + the gate.
 - `upstreams/` — Herald's own mirror declarations (lowercase, §11.4.29-compliant).
@@ -77,9 +77,9 @@ bash tests/test_constitution_inheritance_meta.sh   # paired mutation proof (§1.
 
 Both MUST return 0. If either fails, fix at root cause per Constitution §11.4.4 — never silently accept the FAIL.
 
-### Spec-change rule (load-bearing — `docs/specs/mvp/specification.md` §"Specification documents")
+### Spec-change rule (load-bearing — `docs/specs/mvp/specification.V3.md` §"Specification documents")
 
-Whenever `docs/specs/mvp/specification.md` or any file under `docs/specs/` (any depth) is modified, **comprehensive planning and implementation of all changes is MANDATORY** — agents may not edit the spec in isolation. This rule does NOT apply to creating or renaming files; for those, ask the operator what to do with the new path. Treat every spec edit as a project-wide ripple, not a doc tweak.
+Whenever `docs/specs/mvp/specification.V3.md` or any file under `docs/specs/` (any depth) is modified, **comprehensive planning and implementation of all changes is MANDATORY** — agents may not edit the spec in isolation. This rule does NOT apply to creating or renaming files; for those, ask the operator what to do with the new path. Treat every spec edit as a project-wide ripple, not a doc tweak.
 
 This rule is mirrored in `CLAUDE.md` and in `docs/guides/HERALD_CONSTITUTION.md` §106. The inheritance gate's invariant **I7a–c** asserts the rule anchor (`comprehensive planning and implementation`) is present in all three files; a missing copy is a §1.1 propagation bluff and the gate FAILs.
 

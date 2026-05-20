@@ -2,15 +2,15 @@
 
 | Field | Value |
 |---|---|
-| Revision | 2 |
+| Revision | 3 |
 | Created | 2026-05-15 |
-| Last modified | 2026-05-19 |
+| Last modified | 2026-05-20 |
 | Status | active |
-| Status summary | §106 spec-change rule added per R-14 + I7 gate landed |
+| Status summary | Spec-path references updated to specification.V3.md (active); Notes section reflects V1+V2 archived under docs/specs/mvp/archive/. |
 | Issues | none |
 | Issues summary | — |
-| Fixed | R-14 |
-| Fixed summary | spec-change rule now mirrored in CLAUDE.md / AGENTS.md / §106 |
+| Fixed | R-14 (V2), V3-path-sync (V3 r3) |
+| Fixed summary | §106 spec-change rule retargeted to V3 path; gate-checked anchor 'comprehensive planning and implementation' unchanged so I7 stays green. |
 | Continuation | — |
 
 ## Table of contents
@@ -78,13 +78,13 @@ Both scripts run as a precondition to any commit that touches root docs or the d
 
 ### §106. Spec-change rule (extends Universal §11.4)
 
-Any modification to `docs/specs/mvp/specification.md` or any file under `docs/specs/` (any depth) triggers **mandatory comprehensive planning and implementation of all changes**. An agent or contributor may not edit the spec in isolation: every change is a project-wide ripple that requires the corresponding code, tests, and downstream doc updates in the same logical work effort.
+Any modification to `docs/specs/mvp/specification.V3.md` or any file under `docs/specs/` (any depth) triggers **mandatory comprehensive planning and implementation of all changes**. An agent or contributor may not edit the spec in isolation: every change is a project-wide ripple that requires the corresponding code, tests, and downstream doc updates in the same logical work effort.
 
 This rule does NOT apply to creating or renaming files; for those, the operator must explicitly tell the worker (CLI agent or human contributor) what to do with the newly created or copied files.
 
 **Propagation.** The same rule is restated in Herald's `CLAUDE.md` and `AGENTS.md` (per §1.1 multi-file propagation discipline). The inheritance gate's invariant **I7a–c** asserts the rule's anchor literal (`comprehensive planning and implementation`) is present in all three files; a missing copy is a propagation bluff and the gate FAILs.
 
-**Anchor (forensic):** the literal text `Whenever this document (\`docs/specs/mvp/specification.md\`)` MUST appear in `docs/specs/mvp/specification.md` §"Specification documents" — that line is the source of truth that all three propagated copies summarize.
+**Anchor (forensic):** the literal text `Whenever this document (\`docs/specs/mvp/specification.V3.md\`)` MUST appear in `docs/specs/mvp/specification.V3.md` §"Specification documents" — that line is the source of truth that all three propagated copies summarize.
 
 **Paired §1.1 mutation (planned).** Removing the spec-change anchor from any of the three propagation files MUST cause `I7a/b/c` to FAIL; the paired meta-test will be added when `test_constitution_inheritance_meta.sh` is generalised beyond its current single-anchor mutation.
 
@@ -116,4 +116,4 @@ Herald owns no submodules. The constitution is provided by the parent project, n
 
 ## Notes
 
-Most substantive sections of Herald's spec (`docs/specs/mvp/specification.md`) are still `Tbd`. As they fill in, project-specific articles (§106+) may be added here for invariants that are universal-grade but not yet promoted to the Helix Constitution. Promotion requires the §11.4 universal-vs-project audit; default to keeping rules in this file until that audit clears.
+Herald's spec is now in V3 (`docs/specs/mvp/specification.V3.md`, ~3900 lines, active) — V1 and V2 are preserved under `docs/specs/mvp/archive/` for historical reference. As project-specific articles mature toward universal status they may move into the Helix Constitution; promotion requires the §11.4 universal-vs-project audit. Default is to keep rules here until the audit clears.

@@ -251,7 +251,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>2</td>
+<td>3</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -259,7 +259,7 @@
 </tr>
 <tr>
 <td>Last modified</td>
-<td>2026-05-19</td>
+<td>2026-05-20</td>
 </tr>
 <tr>
 <td>Status</td>
@@ -267,7 +267,8 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td>§106 spec-change rule added per R-14 + I7 gate landed</td>
+<td>Spec-path references updated to specification.V3.md (active); Notes
+section reflects V1+V2 archived under docs/specs/mvp/archive/.</td>
 </tr>
 <tr>
 <td>Issues</td>
@@ -279,11 +280,13 @@
 </tr>
 <tr>
 <td>Fixed</td>
-<td>R-14</td>
+<td>R-14 (V2), V3-path-sync (V3 r3)</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
-<td>spec-change rule now mirrored in CLAUDE.md / AGENTS.md / §106</td>
+<td>§106 spec-change rule retargeted to V3 path; gate-checked anchor
+'comprehensive planning and implementation' unchanged so I7 stays
+green.</td>
 </tr>
 <tr>
 <td>Continuation</td>
@@ -425,8 +428,8 @@ the gate, and asserts FAIL — proving the gate is not a bluff (Universal
 docs or the discovery contract.</p>
 <h3 id="106-spec-change-rule-extends-universal-114">§106. Spec-change
 rule (extends Universal §11.4)</h3>
-<p>Any modification to <code>docs/specs/mvp/specification.md</code> or
-any file under <code>docs/specs/</code> (any depth) triggers
+<p>Any modification to <code>docs/specs/mvp/specification.V3.md</code>
+or any file under <code>docs/specs/</code> (any depth) triggers
 <strong>mandatory comprehensive planning and implementation of all
 changes</strong>. An agent or contributor may not edit the spec in
 isolation: every change is a project-wide ripple that requires the
@@ -443,7 +446,7 @@ propagation discipline). The inheritance gate's invariant
 all three files; a missing copy is a propagation bluff and the gate
 FAILs.</p>
 <p><strong>Anchor (forensic):</strong> the literal text
-<code>Whenever this document (\</code>docs/specs/mvp/specification.md`)<code>MUST appear in</code>docs/specs/mvp/specification.md`
+<code>Whenever this document (\</code>docs/specs/mvp/specification.V3.md`)<code>MUST appear in</code>docs/specs/mvp/specification.V3.md`
 §"Specification documents" — that line is the source of truth that all
 three propagated copies summarize.</p>
 <p><strong>Paired §1.1 mutation (planned).</strong> Removing the
@@ -482,12 +485,12 @@ four)</td>
 </table>
 <hr />
 <h2 id="notes">Notes</h2>
-<p>Most substantive sections of Herald's spec
-(<code>docs/specs/mvp/specification.md</code>) are still
-<code>Tbd</code>. As they fill in, project-specific articles (§106+) may
-be added here for invariants that are universal-grade but not yet
-promoted to the Helix Constitution. Promotion requires the §11.4
-universal-vs-project audit; default to keeping rules in this file until
-that audit clears.</p>
+<p>Herald's spec is now in V3
+(<code>docs/specs/mvp/specification.V3.md</code>, ~3900 lines, active) —
+V1 and V2 are preserved under <code>docs/specs/mvp/archive/</code> for
+historical reference. As project-specific articles mature toward
+universal status they may move into the Helix Constitution; promotion
+requires the §11.4 universal-vs-project audit. Default is to keep rules
+here until the audit clears.</p>
 </body>
 </html>

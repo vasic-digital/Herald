@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Herald — Continuation</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Herald — Continuation</h1>
+</header>
+<h1 id="herald--continuation">Herald — Continuation</h1>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-05-20</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-05-20</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>active</td>
+</tr>
+<tr>
+<td>Status summary</td>
+<td>Sacred handoff doc per Universal §12.10. Carries the verbatim
+resumption prompt + concrete next steps so any agent can resume work
+without conversational context.</td>
+</tr>
+<tr>
+<td>Issues</td>
+<td>HRD-007 (closing this commit)</td>
+</tr>
+<tr>
+<td>Issues summary</td>
+<td>see <code>Issues_Summary.md</code></td>
+</tr>
+<tr>
+<td>Fixed</td>
+<td>HRD-001..HRD-006</td>
+</tr>
+<tr>
+<td>Fixed summary</td>
+<td>see <code>Fixed_Summary.md</code></td>
+</tr>
+<tr>
+<td>Continuation</td>
+<td>This file IS the continuation pointer. Update on every non-trivial
+commit (per Universal §12.10).</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#0-how-to-use-this-document">§0. How to use this
+document</a></li>
+<li><a href="#1-snapshot">§1. Snapshot</a></li>
+<li><a href="#2-last-commit-landed">§2. Last commit landed</a></li>
+<li><a href="#3-active-work">§3. Active work</a></li>
+<li><a href="#4-next-concrete-steps">§4. Next concrete steps</a></li>
+<li><a href="#5-long-form-pointers">§5. Long-form pointers</a></li>
+</ul>
+<h2 id="0-how-to-use-this-document">§0. How to use this document</h2>
+<p>Paste the following block into any CLI agent (Claude Code, OpenCode,
+Cursor, Aider, Gemini CLI) to resume Herald work exactly where it was
+left:</p>
+<blockquote>
+<p>You are working on the Herald project at
+<code>~/Projects/Herald</code> (also reachable as the
+<code>Herald/</code> submodule of a consuming project). The Helix
+Universal Constitution lives at
+<code>&lt;ancestor&gt;/constitution/</code> (parent-walk discovery).
+Read in this order: <code>CLAUDE.md</code>, <code>AGENTS.md</code>,
+<code>README.md</code>, <code>docs/guides/HERALD_CONSTITUTION.md</code>,
+<code>docs/guides/CONSTITUTION_INHERITANCE.md</code>,
+<code>docs/specs/mvp/specification.V3.md</code>. Then read
+<code>docs/CONTINUATION.md</code> (this file) for live state,
+<code>docs/Issues.md</code> for open work, <code>docs/Status.md</code>
+for current phase, <code>docs/Fixed.md</code> for closed history. The
+inheritance gate <code>tests/test_constitution_inheritance.sh</code>
+MUST exit 0 before any commit. Multi-mirror fan-out push to all four
+hosts (GitHub + GitLab + GitFlic + GitVerse) is mandatory on every
+commit per Constitution §103.</p>
+</blockquote>
+<h2 id="1-snapshot">§1. Snapshot</h2>
+<ul>
+<li><strong>Active spec:</strong>
+<code>docs/specs/mvp/specification.V3.md</code> (Revision 3, ~3900
+lines, Status=active).</li>
+<li><strong>Archived specs:</strong>
+<code>docs/specs/mvp/archive/specification.V1.md</code>,
+<code>…/specification.V2.md</code> (frozen).</li>
+<li><strong>Tracking docs:</strong> <code>Issues.md</code>,
+<code>Issues_Summary.md</code>, <code>Fixed.md</code>,
+<code>Fixed_Summary.md</code>, <code>Status.md</code>,
+<code>Status_Summary.md</code>, <code>CONTINUATION.md</code> (this file)
+— all established this commit.</li>
+<li><strong>Inheritance gate:</strong> 12 PASS / 0 FAIL. Meta-test
+✓.</li>
+<li><strong>Phase:</strong> pre-implementation. No <code>go.mod</code>,
+no Go source, no container compose stack yet.</li>
+<li><strong>Branch:</strong> <code>main</code> only. Fan-out push to 4
+mirrors is proven.</li>
+</ul>
+<h2 id="2-last-commit-landed">§2. Last commit landed</h2>
+<p>(This commit, when merged) — V3 r3 final polish: cross-doc sync
+(parent docs point at <code>specification.V3.md</code>); tracking docs
+scaffold
+(<code>Issues.md</code>/<code>Fixed.md</code>/<code>Status.md</code>/<code>CONTINUATION.md</code>
++ summaries); §30.8 review log added; full re-export of V3 + 4 parent
+docs to <code>.html</code> + <code>.pdf</code>. Inheritance gate 12 PASS
+/ 0 FAIL throughout.</p>
+<p>Prior commit: V3 r2 at <code>f8b8073</code> — refined all nine
+flavors for richer channel interaction; V2 archived; ToC duplicates
+cleaned.</p>
+<h2 id="3-active-work">§3. Active work</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Status</th>
+<th>What</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HRD-007</td>
+<td>in_progress → resolving in this commit</td>
+<td>V3 r3 cross-doc sync + tracking-docs scaffold</td>
+</tr>
+</tbody>
+</table>
+<p>No other items in flight.</p>
+<h2 id="4-next-concrete-steps">§4. Next concrete steps</h2>
+<ol type="1">
+<li><strong>Validate the V3 §26.5 quickstart compose</strong> on a fresh
+laptop. Confirm Postgres + Redis + OTel collector + <code>pherald</code>
+boot cleanly, that <code>curl</code> posts a CloudEvent to
+<code>/v1/events</code>, that a Telegram delivery lands, and the diary
+appends. <strong>Open <code>HRD-008</code> for this validation
+work.</strong></li>
+<li><strong>Scaffold <code>commons</code> and
+<code>commons_messaging</code></strong> against the §11.0 type contract.
+Goal: empty implementations of <code>Channel</code>,
+<code>OutboundMessage</code>, <code>Receipt</code>,
+<code>InboundEvent</code>, <code>Branding</code>,
+<code>ChannelID</code>, <code>Subscriber</code> — plus the
+<code>null://</code> adapter (§11.14) for tests. <strong>Open
+<code>HRD-009</code>.</strong></li>
+<li><strong>Implement the Postgres + River queue layer</strong> per §5.3
++ §16. RLS policy template + per-tenant key prefixing in Redis.
+Migrations under <code>commons_storage/migrations/000NNN_*.sql</code>
+per §9.6. <strong>Open <code>HRD-010</code>.</strong></li>
+<li><strong>First channel adapter</strong> — Telegram per §11.1. Bot API
+client behind <code>Channel</code> interface; webhook ingress with §5.5
+signature verification. <strong>Open <code>HRD-011</code>.</strong></li>
+<li><strong>Claude Code dispatcher</strong> — per §33.2 + §33.3. The
+session-resolution algorithm needs real-world validation; capture
+evidence in <code>HRD-008</code>'s end-to-end test extension.
+<strong>Open <code>HRD-012</code>.</strong></li>
+</ol>
+<p>After those five, the first-implementation cycle is verifiably
+complete and Herald is consumable as a submodule by a real project.</p>
+<h2 id="5-long-form-pointers">§5. Long-form pointers</h2>
+<ul>
+<li><code>docs/specs/mvp/specification.V3.md</code> — full active
+spec.</li>
+<li><code>docs/specs/mvp/specification.V3.md#30-v2-self-review-log</code>
+— every review pass (§30.1..§30.8) documented for any future
+archaeology.</li>
+<li><code>docs/guides/HERALD_CONSTITUTION.md</code> — Herald-specific
+articles §101..§106 extending Universal Constitution.</li>
+<li><code>docs/guides/CONSTITUTION_INHERITANCE.md</code> —
+parent-discovery + inheritance-gate contract.</li>
+<li><code>tests/test_constitution_inheritance.sh</code> — the gate. Run
+before every commit that touches root docs.</li>
+<li><code>tests/test_constitution_inheritance_meta.sh</code> — paired
+§1.1 mutation proof.</li>
+</ul>
+</body>
+</html>
