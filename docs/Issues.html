@@ -186,7 +186,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>3</td>
+<td>4</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -202,21 +202,22 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td>Constitution-flavor binding plan landed in spec V3 §42 (65
-rule→flavor bindings); HRD-018..HRD-028 opened for the implementation
-rollout. HRD-017 closed (universal §11.4.73 + §11.4.74 mandates landed
-in constitution commit 34a82b3).</td>
+<td>Spec V3 r6 adds §43 Constitution-derived flavor commands + workflows
+(27 entries). HRD-029..HRD-056 opened to track each command's
+implementation. Combined with HRD-018..HRD-028 from r5, the
+constitution-flavor integration plan now spans 39 workable items rolled
+out in 4 implementation waves.</td>
 </tr>
 <tr>
 <td>Issues</td>
 <td>HRD-008, HRD-010, HRD-011, HRD-012, HRD-015, HRD-016,
-HRD-018..HRD-028</td>
+HRD-018..HRD-028, HRD-029..HRD-056</td>
 </tr>
 <tr>
 <td>Issues summary</td>
-<td>17 open / in-progress workable items spanning quickstart validation,
-live channel integrations, REST surface, and the §42
-constitution-binding rollout.</td>
+<td>45 open / in-progress workable items across quickstart validation,
+live channel integrations, REST surface, the §42 binding rollout, and
+the §43 command-catalogue implementation.</td>
 </tr>
 <tr>
 <td>Fixed</td>
@@ -454,6 +455,325 @@ decision; paginated</td>
 <td>2026-05-20</td>
 <td>2026-05-20</td>
 <td>spec V3 §42.1.5 + §41; Catalogue-Check: TBD</td>
+</tr>
+<tr>
+<td>HRD-029</td>
+<td>task</td>
+<td>open</td>
+<td>middle</td>
+<td>§2 <code>pherald commit-push</code> — single-entrypoint locked
+commit + multi-mirror push</td>
+<td>2026-05-20</td>
+<td>2026-05-20</td>
+<td>spec §43.2 / §2; Catalogue-Check: TBD (likely existing as
+constitution-submodule script)</td>
+</tr>
+<tr>
+<td>HRD-030</td>
+<td>task</td>
+<td>open</td>
+<td>middle</td>
+<td>§3 <code>pherald submodule propagate</code> — owned-submodule walk
+in propagation order</td>
+<td>2026-05-20</td>
+<td>2026-05-20</td>
+<td>spec §43.2 / §3; Catalogue-Check: TBD</td>
+</tr>
+<tr>
+<td>HRD-031</td>
+<td>task</td>
+<td>open</td>
+<td>middle</td>
+<td>§4 <code>rherald tag mirror</code> — assert tag exists on every
+owned submodule</td>
+<td>2026-05-20</td>
+<td>2026-05-20</td>
+<td>spec §43.2 / §4; Catalogue-Check: TBD</td>
+</tr>
+<tr>
+<td>HRD-032</td>
+<td>task</td>
+<td>open</td>
+<td>low</td>
+<td>§5 <code>rherald changelog generate</code> — Conventional Commits →
+<code>docs/changelogs/&lt;v&gt;.md</code> + multi-format export</td>
+<td>2026-05-20</td>
+<td>2026-05-20</td>
+<td>spec §43.2 / §5 / §36; Catalogue-Check: TBD</td>
+</tr>
+<tr>
+<td>HRD-033</td>
+<td>task</td>
+<td>open</td>
+<td>high</td>
+<td>§9.1 <code>sherald destructive guard &lt;op&gt;</code> — wrap
+rm/git-reset/git-push-force with prerequisite checks</td>
+<td>2026-05-20</td>
+<td>2026-05-20</td>
+<td>spec §43.2 / §9.1; Catalogue-Check: TBD</td>
+</tr>
+<tr>
+<td>HRD-034</td>
+<td>task</td>
+<td>open</td>
+<td>middle</td>
+<td>§9.3 <code>sherald backup snapshot &lt;path&gt;</code> — hardlinked
+snapshot helper</td>
+<td>2026-05-20</td>
+<td>2026-05-20</td>
+<td>spec §43.2 / §9.3; Catalogue-Check: TBD</td>
+</tr>
+<tr>
+<td>HRD-035</td>
+<td>task</td>
+<td>open</td>
+<td>middle</td>
+<td>§11.4.2 <code>bherald evidence capture &lt;test_id&gt;</code> —
+captured-evidence recorder</td>
+<td>2026-05-20</td>
+<td>2026-05-20</td>
+<td>spec §43.2 / §11.4.2 + §11.4.5; Catalogue-Check: TBD</td>
+</tr>
+<tr>
+<td>HRD-036</td>
+<td>task</td>
+<td>open</td>
+<td>high</td>
+<td>§11.4.10 <code>cherald creds scan</code> — gitleaks/trufflehog
+integration, emits <code>.credential.leak</code></td>
+<td>2026-05-20</td>
+<td>2026-05-20</td>
+<td>spec §43.2 / §11.4.10; Catalogue-Check: TBD — likely an existing OSS
+scanner</td>
+</tr>
+<tr>
+<td>HRD-037</td>
+<td>task</td>
+<td>open</td>
+<td>low</td>
+<td>§11.4.12 <code>cherald docs sync</code> — regen Issues_Summary /
+Fixed_Summary / Status_Summary</td>
+<td>2026-05-20</td>
+<td>2026-05-20</td>
+<td>spec §43.2 / §11.4.12; Catalogue-Check: TBD (likely existing
+constitution-submodule script)</td>
+</tr>
+<tr>
+<td>HRD-038</td>
+<td>task</td>
+<td>open</td>
+<td>low</td>
+<td>§11.4.18 <code>cherald script-docs check</code> — assert sibling .md
+for every scripts/**/*.sh</td>
+<td>2026-05-20</td>
+<td>2026-05-20</td>
+<td>spec §43.2 / §11.4.18; Catalogue-Check: TBD</td>
+</tr>
+<tr>
+<td>HRD-039</td>
+<td>task</td>
+<td>open</td>
+<td>low</td>
+<td>§11.4.19 / .23 <code>cherald fixed align</code> +
+<code>cherald colorize</code> — Issues/Fixed format + HTML
+colorizer</td>
+<td>2026-05-20</td>
+<td>2026-05-20</td>
+<td>spec §43.2 / §11.4.19 + §11.4.23; Catalogue-Check: TBD</td>
+</tr>
+<tr>
+<td>HRD-040</td>
+<td>task</td>
+<td>open</td>
+<td>high</td>
+<td>§11.4.26 <code>sherald constitution pull</code> — wrap fetch +
+rebase + validation gate, emits <code>.bundle.updated</code></td>
+<td>2026-05-20</td>
+<td>2026-05-20</td>
+<td>spec §43.2 / §11.4.26 + §11.4.32; Catalogue-Check: TBD</td>
+</tr>
+<tr>
+<td>HRD-041</td>
+<td>task</td>
+<td>open</td>
+<td>middle</td>
+<td>§11.4.27 <code>bherald test-tier verify</code> — 8-tier matrix
+verification</td>
+<td>2026-05-20</td>
+<td>2026-05-20</td>
+<td>spec §43.2 / §11.4.27 + §40.2; Catalogue-Check: TBD</td>
+</tr>
+<tr>
+<td>HRD-042</td>
+<td>task</td>
+<td>open</td>
+<td>low</td>
+<td>§11.4.31 <code>cherald submanifest verify</code> —
+Submodule-Dependency-Manifest gate</td>
+<td>2026-05-20</td>
+<td>2026-05-20</td>
+<td>spec §43.2 / §11.4.31; Catalogue-Check: TBD</td>
+</tr>
+<tr>
+<td>HRD-043</td>
+<td>task</td>
+<td>open</td>
+<td>high</td>
+<td>§11.4.36 <code>pherald install-upstreams</code> — install_upstreams
+wrapper</td>
+<td>2026-05-20</td>
+<td>2026-05-20</td>
+<td>spec §43.2 / §11.4.36; Catalogue-Check: extend constitution
+submodule's install_upstreams.sh</td>
+</tr>
+<tr>
+<td>HRD-044</td>
+<td>task</td>
+<td>open</td>
+<td>middle</td>
+<td>§11.4.37 <code>pherald fetch-guard</code> — pre-edit fetch + rebase
+enforcement</td>
+<td>2026-05-20</td>
+<td>2026-05-20</td>
+<td>spec §43.2 / §11.4.37; Catalogue-Check: TBD</td>
+</tr>
+<tr>
+<td>HRD-045</td>
+<td>task</td>
+<td>open</td>
+<td>high</td>
+<td>§11.4.40 <code>rherald gate retest</code> — pre-tag full-suite
+retest gate</td>
+<td>2026-05-20</td>
+<td>2026-05-20</td>
+<td>spec §43.2 / §11.4.40; Catalogue-Check: TBD</td>
+</tr>
+<tr>
+<td>HRD-046</td>
+<td>task</td>
+<td>open</td>
+<td>high</td>
+<td>§11.4.41 <code>sherald force-push gate</code> — merge-first +
+per-session-auth enforcement</td>
+<td>2026-05-20</td>
+<td>2026-05-20</td>
+<td>spec §43.2 / §11.4.41 + §9.2; Catalogue-Check: TBD</td>
+</tr>
+<tr>
+<td>HRD-047</td>
+<td>task</td>
+<td>open</td>
+<td>middle</td>
+<td>§11.4.45 / .56 <code>scherald status digest</code> — periodic
+Status.md sweep + Status_Summary regen</td>
+<td>2026-05-20</td>
+<td>2026-05-20</td>
+<td>spec §43.2 / §11.4.45 + §11.4.56; Catalogue-Check: TBD</td>
+</tr>
+<tr>
+<td>HRD-048</td>
+<td>task</td>
+<td>open</td>
+<td>low</td>
+<td>§11.4.53 <code>cherald fixed-summary sync</code> — standalone
+Fixed_Summary backfill</td>
+<td>2026-05-20</td>
+<td>2026-05-20</td>
+<td>spec §43.2 / §11.4.53; Catalogue-Check: TBD (likely existing
+script)</td>
+</tr>
+<tr>
+<td>HRD-049</td>
+<td>task</td>
+<td>open</td>
+<td>middle</td>
+<td>§11.4.55 <code>pherald reopen &lt;HRD-NNN&gt;</code> — Issues→Fixed
+reversal + Reopens history</td>
+<td>2026-05-20</td>
+<td>2026-05-20</td>
+<td>spec §43.2 / §11.4.55; Catalogue-Check: no-match (Herald-specific
+HRD flow)</td>
+</tr>
+<tr>
+<td>HRD-050</td>
+<td>task</td>
+<td>open</td>
+<td>middle</td>
+<td>§11.4.59 <code>cherald readme sync</code> — README doc-link regen +
+multi-format re-export</td>
+<td>2026-05-20</td>
+<td>2026-05-20</td>
+<td>spec §43.2 / §11.4.57 + §11.4.59; Catalogue-Check: TBD</td>
+</tr>
+<tr>
+<td>HRD-051</td>
+<td>task</td>
+<td>open</td>
+<td>high</td>
+<td>§11.4.60 <code>cherald composite-gate</code> — canonical
+implementation of CM-DOCS-COMPOSITE-SYNC</td>
+<td>2026-05-20</td>
+<td>2026-05-20</td>
+<td>spec §43.2 / §11.4.60; Catalogue-Check: TBD</td>
+</tr>
+<tr>
+<td>HRD-052</td>
+<td>task</td>
+<td>open</td>
+<td>middle</td>
+<td>§11.4.65 <code>cherald export</code> — bulk Markdown export wrapper
+(md/html/pdf/docx)</td>
+<td>2026-05-20</td>
+<td>2026-05-20</td>
+<td>spec §43.2 / §11.4.65 + §36; Catalogue-Check: extend (built atop
+Pandoc + WeasyPrint)</td>
+</tr>
+<tr>
+<td>HRD-053</td>
+<td>task</td>
+<td>open</td>
+<td>high</td>
+<td>§11.4.71 <code>pherald pre-push</code> — fetch + investigate +
+integrate hook</td>
+<td>2026-05-20</td>
+<td>2026-05-20</td>
+<td>spec §43.2 / §11.4.71; Catalogue-Check: TBD</td>
+</tr>
+<tr>
+<td>HRD-054</td>
+<td>task</td>
+<td>open</td>
+<td>middle</td>
+<td>§11.4.73 <code>cherald spec-version check</code> — Revision-vs-edits
+drift detection</td>
+<td>2026-05-20</td>
+<td>2026-05-20</td>
+<td>spec §43.2 / §11.4.73; Catalogue-Check: no-match (very-new
+mandate)</td>
+</tr>
+<tr>
+<td>HRD-055</td>
+<td>task</td>
+<td>open</td>
+<td>middle</td>
+<td>§11.4.74 <code>cherald catalogue-check &lt;pr&gt;</code> — scan PR
+for Catalogue-Check + survey runner over vasic-digital +
+HelixDevelopment</td>
+<td>2026-05-20</td>
+<td>2026-05-20</td>
+<td>spec §43.2 / §11.4.74; Catalogue-Check: no-match (very-new
+mandate)</td>
+</tr>
+<tr>
+<td>HRD-056</td>
+<td>task</td>
+<td>open</td>
+<td>high</td>
+<td>§12.6 <code>sherald mem-budget watch</code> — daemon-mode 60%
+threshold watcher emitting <code>.host.safety_breach</code></td>
+<td>2026-05-20</td>
+<td>2026-05-20</td>
+<td>spec §43.2 / §12.6; Catalogue-Check: TBD</td>
 </tr>
 </tbody>
 </table>

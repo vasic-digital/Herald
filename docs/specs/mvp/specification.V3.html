@@ -251,7 +251,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>5</td>
+<td>6</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -267,19 +267,14 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td>V3 r5 — new §42 Constitution-flavor binding catalogue lands: 65
-rule→flavor bindings derived from a deep survey of Constitution.md +
-research across OPA Gatekeeper, OPA Decision Logs, Kyverno
-PolicyReports, AWS CloudTrail/Config, GCP Cloud Audit Logs, GitHub
-branch-protection, NIST SSDF, SLSA VSA, Sigstore policy-controller,
-Anthropic Constitutional Classifiers. Establishes three-axis envelope
-<code>(rule_id, severity, decision)</code>, transitions-only emission
-discipline, constitution-bundle hash for replayability, three-mode
-rollout ladder (allow/warn/enforce), push (CloudEvents) + pull
-(<code>/v1/compliance</code> REST). Eleven process-only rules explicitly
-excluded (no runtime event surface). Per Universal §11.4.73, this is a
-secondary bump (Revision 4 → 5); §42 is additive, not a primary-version
-rewrite.</td>
+<td>V3 r6 — §43 Constitution-derived flavor commands + workflows. 27
+concrete operator-facing CLI subcommands + REST endpoints
+(HRD-029..HRD-056) that wrap constitution-named workflows
+(install_upstreams, constitution pull, composite-gate, creds-scan, docs
+sync, force-push gate, etc.) as native flavor capabilities. Composes
+with §42 (events emitted) + §41 (REST surface) + §39 (subscriber-facing
+template). Per Universal §11.4.73, secondary bump (Revision 5 → 6); §43
+is additive.</td>
 </tr>
 <tr>
 <td>Issues</td>
@@ -638,6 +633,22 @@ gated, not aspirational</a></li>
 cross-references</a></li>
 <li><a href="#427-composition-anti-bluff">42.7 Composition +
 anti-bluff</a></li>
+</ul></li>
+<li><a href="#43-constitution-derived-flavor-commands-workflows">§43.
+Constitution-derived flavor commands + workflows</a>
+<ul>
+<li><a href="#431-why-43-is-distinct-from-42">43.1 Why §43 is distinct
+from §42</a></li>
+<li><a
+href="#432-master-command-catalogue-constitution-rule-flavor-commandworkflow">43.2
+Master command catalogue (constitution rule → flavor
+command/workflow)</a></li>
+<li><a href="#433-implementation-gating">43.3 Implementation
+gating</a></li>
+<li><a href="#434-composition-with-41-rest-42-events-39-templates">43.4
+Composition with §41 REST + §42 events + §39 templates</a></li>
+<li><a href="#435-boundary-what-43-does-not-add">43.5 Boundary: what §43
+does NOT add</a></li>
 </ul></li>
 </ul>
 <hr />
@@ -9419,6 +9430,399 @@ a paired §1.1 mutation: mutate the <code>last_decision</code> row to a
 different value while leaving the actual evaluator deterministic; expect
 the gate to detect the drift.</li>
 </ul>
+<hr />
+<h2 id="43-constitution-derived-flavor-commands--workflows">§43.
+Constitution-derived flavor commands + workflows</h2>
+<blockquote>
+<p><strong>Operator mandate (2026-05-20):</strong> the constitution
+analysis surfaces concrete <em>tooling integrations</em> — workflows +
+CLI subcommands + REST endpoints — that Herald flavors MUST ship as
+native capabilities, not as external scripts the operator stitches
+together. §43 enumerates those integrations. Each row is implementable
+as either (a) a Cobra subcommand on the owning flavor's binary, (b) a
+Gin endpoint under <code>/v1/&lt;verb&gt;</code> per §41, or both. Items
+in this catalogue are the <em>implementation</em> counterpart to §42's
+<em>event-binding</em> catalogue: §42 says "fan this event out"; §43
+says "ship the tool that produces or acts on that event".</p>
+</blockquote>
+<h3 id="431-why-43-is-distinct-from-42">43.1 Why §43 is distinct from
+§42</h3>
+<p>§42 binds constitution <em>rules</em> to event types so violations +
+state changes surface to subscribers. §43 catalogues the
+<em>workflows</em> (often already named in the constitution itself —
+<code>install_upstreams</code>, <code>sync_issues_docs.sh</code>, the
+composite always-sync gate, etc.) that operators run today as standalone
+shell scripts. Herald wraps those workflows as flavor-native CLI
+subcommands + REST endpoints so:</p>
+<ul>
+<li>Operators get a single binary surface to call
+("<code>pherald install-upstreams</code>" instead of "find the script in
+the constitution submodule and run it").</li>
+<li>The CLI/REST invocation emits the matching §42 event
+automatically.</li>
+<li>The workflow result lands in the diary + the §41 audit log + the §6
+fan-out without bespoke instrumentation.</li>
+</ul>
+<p>Every row in §43.2 below MUST land as its own HRD-NNN (already opened
+HRD-029..HRD-052 in <code>Issues.md</code>, with the catalogue-check
+field per Universal §11.4.74).</p>
+<h3
+id="432-master-command-catalogue-constitution-rule--flavor-commandworkflow">43.2
+Master command catalogue (constitution rule → flavor
+command/workflow)</h3>
+<table>
+<thead>
+<tr>
+<th>Constitution rule</th>
+<th>Flavor</th>
+<th>CLI surface</th>
+<th>REST surface (§41)</th>
+<th>What it does</th>
+<th>HRD</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>§2 Commit + push mechanics</td>
+<td><code>pherald</code></td>
+<td><code>pherald commit-push [--scope=…]</code></td>
+<td><code>POST /v1/commit-push</code></td>
+<td>Single-entrypoint locked commit + multi-mirror push per §2. Emits
+<code>.repo.safety_breach</code> if entrypoint bypassed.</td>
+<td>HRD-029</td>
+</tr>
+<tr>
+<td>§3 Submodule propagation order</td>
+<td><code>pherald</code></td>
+<td><code>pherald submodule propagate</code></td>
+<td><code>POST /v1/submodule/propagate</code></td>
+<td>Walks owned-submodule set, commits inner first, then parent —
+enforces §3 propagation order.</td>
+<td>HRD-030</td>
+</tr>
+<tr>
+<td>§4 Tag mirroring</td>
+<td><code>rherald</code></td>
+<td><code>rherald tag mirror &lt;tag&gt;</code></td>
+<td><code>POST /v1/release/tag/mirror</code></td>
+<td>Asserts tag exists on every owned submodule before allowing tag on
+parent.</td>
+<td>HRD-031</td>
+</tr>
+<tr>
+<td>§5 Changelog discipline + multi-format export</td>
+<td><code>rherald</code></td>
+<td><code>rherald changelog generate</code></td>
+<td><code>POST /v1/release/changelog</code></td>
+<td>Generates <code>docs/changelogs/&lt;version&gt;.md</code> from
+Conventional Commits + exports to <code>.html/.pdf/.docx</code> per
+§36.</td>
+<td>HRD-032</td>
+</tr>
+<tr>
+<td>§9.1 Destructive-op protocol</td>
+<td><code>sherald</code></td>
+<td><code>sherald destructive guard &lt;op&gt;</code></td>
+<td><code>POST /v1/safety/destructive</code></td>
+<td>Wraps <code>rm -rf</code> / <code>git reset --hard</code> /
+<code>git push --force</code> and asserts the §9.1 prerequisites
+(backup, authorization).</td>
+<td>HRD-033</td>
+</tr>
+<tr>
+<td>§9.3 Hardlinked backup</td>
+<td><code>sherald</code></td>
+<td><code>sherald backup snapshot &lt;path&gt;</code></td>
+<td><code>POST /v1/safety/backup</code></td>
+<td>Creates a hardlinked snapshot per §9.3; emits
+<code>.gate.recovered</code> on success.</td>
+<td>HRD-034</td>
+</tr>
+<tr>
+<td>§11.4.2 Recorded-evidence requirement</td>
+<td><code>bherald</code></td>
+<td><code>bherald evidence capture &lt;test_id&gt;</code></td>
+<td><code>POST /v1/build/evidence</code></td>
+<td>Records test stdout/stderr/exit + artefact under
+<code>tests/.captured-evidence/&lt;test_id&gt;/</code> per §11.4.2 +
+§11.4.5.</td>
+<td>HRD-035</td>
+</tr>
+<tr>
+<td>§11.4.10 / .10.A Credentials handling</td>
+<td><code>cherald</code></td>
+<td><code>cherald creds scan [--repo=…]</code></td>
+<td><code>POST /v1/compliance/creds-scan</code></td>
+<td>Runs gitleaks / trufflehog against the working tree + history; emits
+<code>.credential.leak</code> events on hit.</td>
+<td>HRD-036</td>
+</tr>
+<tr>
+<td>§11.4.12 Auto-generated docs sync</td>
+<td><code>cherald</code></td>
+<td><code>cherald docs sync</code></td>
+<td><code>POST /v1/compliance/docs/sync</code></td>
+<td>Regenerates <code>Issues_Summary.md</code> /
+<code>Fixed_Summary.md</code> / <code>Status_Summary.md</code> from
+canonical sources. Composes with §37.</td>
+<td>HRD-037</td>
+</tr>
+<tr>
+<td>§11.4.18 Script-companion docs</td>
+<td><code>cherald</code></td>
+<td><code>cherald script-docs check</code></td>
+<td><code>POST /v1/compliance/script-docs</code></td>
+<td>Asserts every <code>scripts/**/*.sh</code> has a sibling
+<code>.md</code> per §11.4.18.</td>
+<td>HRD-038</td>
+</tr>
+<tr>
+<td>§11.4.19 / .23 Fixed-doc colorize + align</td>
+<td><code>cherald</code></td>
+<td><code>cherald fixed align</code> +
+<code>cherald colorize</code></td>
+<td><code>POST /v1/compliance/fixed/align</code></td>
+<td>Enforces §11.4.19 column alignment + §11.4.23 visual-cue HTML
+colorizer over Issues/Fixed docs.</td>
+<td>HRD-039</td>
+</tr>
+<tr>
+<td>§11.4.26 Constitution-submodule update</td>
+<td><code>sherald</code></td>
+<td><code>sherald constitution pull</code></td>
+<td><code>POST /v1/safety/constitution/pull</code></td>
+<td>Wraps the §11.4.26 update workflow: fetch+rebase constitution, run
+validation gate per §11.4.32, emit <code>.bundle.updated</code> /
+<code>.bundle.update_failed</code>.</td>
+<td>HRD-040</td>
+</tr>
+<tr>
+<td>§11.4.27 No-fakes + 100% test-type coverage</td>
+<td><code>bherald</code></td>
+<td><code>bherald test-tier verify</code></td>
+<td><code>POST /v1/build/tier-verify</code></td>
+<td>Walks the 8-tier test matrix (§40.2) and emits
+<code>.gate.failed</code> for missing tiers.</td>
+<td>HRD-041</td>
+</tr>
+<tr>
+<td>§11.4.31 Submodule-Dependency-Manifest</td>
+<td><code>cherald</code></td>
+<td><code>cherald submanifest verify</code></td>
+<td><code>POST /v1/compliance/submanifest</code></td>
+<td>Validates <code>docs/dependencies/submodules.md</code> against
+<code>.gitmodules</code> + actual SHAs.</td>
+<td>HRD-042</td>
+</tr>
+<tr>
+<td>§11.4.36 install_upstreams</td>
+<td><code>pherald</code></td>
+<td><code>pherald install-upstreams</code></td>
+<td><code>POST /v1/project/install-upstreams</code></td>
+<td>Reads <code>Upstreams/*.sh</code> declarations + configures all 4
+mirror remotes locally per §11.4.36.</td>
+<td>HRD-043</td>
+</tr>
+<tr>
+<td>§11.4.37 Fetch-before-edit</td>
+<td><code>pherald</code></td>
+<td><code>pherald fetch-guard</code></td>
+<td><code>POST /v1/project/fetch-guard</code></td>
+<td>Pre-edit hook: asserts working tree is rebased on
+<code>origin/&lt;branch&gt;</code> before any edit.</td>
+<td>HRD-044</td>
+</tr>
+<tr>
+<td>§11.4.40 Full-suite retest before tag</td>
+<td><code>rherald</code></td>
+<td><code>rherald gate retest</code></td>
+<td><code>POST /v1/release/retest-gate</code></td>
+<td>Pre-tag gate runs the entire test suite + asserts every tier (§40.2)
+green. Emits <code>.release.gate_blocked</code> on FAIL.</td>
+<td>HRD-045</td>
+</tr>
+<tr>
+<td>§11.4.41 Pre-force-push merge-first</td>
+<td><code>sherald</code></td>
+<td><code>sherald force-push gate</code></td>
+<td><code>POST /v1/safety/force-push-gate</code></td>
+<td>Asserts the merge-first prerequisite + explicit per-session
+authorization before allowing force-push.</td>
+<td>HRD-046</td>
+</tr>
+<tr>
+<td>§11.4.45 / .56 Status + Status_Summary maintenance</td>
+<td><code>scherald</code></td>
+<td><code>scherald status digest [--cadence=daily|weekly|monthly]</code></td>
+<td><code>POST /v1/schedule/status-digest</code></td>
+<td>Periodic Status.md sweep + Status_Summary.md regen. Composes with
+§35 versioned reports.</td>
+<td>HRD-047</td>
+</tr>
+<tr>
+<td>§11.4.53 Fixed_Summary parity</td>
+<td><code>cherald</code></td>
+<td><code>cherald fixed-summary sync</code></td>
+<td><code>POST /v1/compliance/fixed-summary</code></td>
+<td>Auto-regen of <code>Fixed_Summary.md</code> whenever
+<code>Fixed.md</code> changes — already a §37 trigger, this provides the
+standalone CLI for backfills.</td>
+<td>HRD-048</td>
+</tr>
+<tr>
+<td>§11.4.55 Reopens-history</td>
+<td><code>pherald</code></td>
+<td><code>pherald reopen &lt;HRD-NNN&gt; [--reason="…"]</code></td>
+<td><code>POST /v1/items/{id}/reopen</code> (§41 alignment)</td>
+<td>Reverses an Issues→Fixed migration + writes
+<code>docs/Reopens/&lt;HRD-NNN&gt;.md</code> per §11.4.55.</td>
+<td>HRD-049</td>
+</tr>
+<tr>
+<td>§11.4.59 README always-sync</td>
+<td><code>cherald</code></td>
+<td><code>cherald readme sync</code></td>
+<td><code>POST /v1/compliance/readme/sync</code></td>
+<td>Regenerates the README doc-link section (§11.4.57) + re-exports
+siblings (§11.4.65).</td>
+<td>HRD-050</td>
+</tr>
+<tr>
+<td>§11.4.60 Composite always-sync covenant</td>
+<td><code>cherald</code></td>
+<td><code>cherald composite-gate</code></td>
+<td><code>POST /v1/compliance/composite-gate</code></td>
+<td>The canonical implementation of <code>CM-DOCS-COMPOSITE-SYNC</code>
+— walks all 8 bound doc classes + asserts artefact-mtime invariants.
+Emits <code>.gate.failed</code> on FAIL.</td>
+<td>HRD-051</td>
+</tr>
+<tr>
+<td>§11.4.65 Universal Markdown export</td>
+<td><code>cherald</code></td>
+<td><code>cherald export &lt;doc&gt; [--formats=md,html,pdf,docx]</code></td>
+<td><code>POST /v1/compliance/export</code></td>
+<td>Single-doc + bulk export wrapper around Pandoc + WeasyPrint; emits
+<code>.md/.html/.pdf/.docx</code> per §36 formats.</td>
+<td>HRD-052</td>
+</tr>
+<tr>
+<td>§11.4.71 Pre-push fetch + investigate + integrate</td>
+<td><code>pherald</code></td>
+<td><code>pherald pre-push</code></td>
+<td><code>POST /v1/project/pre-push</code></td>
+<td>Pre-push hook: fetch all remotes, summarise incoming changes, prompt
+operator to acknowledge the integration plan before pushing. Emits
+<code>.repo.safety_breach</code> if skipped.</td>
+<td>HRD-053</td>
+</tr>
+<tr>
+<td>§11.4.73 Main-spec version + revision discipline</td>
+<td><code>cherald</code></td>
+<td><code>cherald spec-version check</code></td>
+<td><code>POST /v1/compliance/spec-version</code></td>
+<td>Asserts the main-spec metadata <code>Revision</code> is current vs.
+uncommitted spec edits + project config <code>main_spec_path</code>.
+Emits <code>.spec.revision_drift</code>.</td>
+<td>HRD-054</td>
+</tr>
+<tr>
+<td>§11.4.74 Submodule-catalogue-first</td>
+<td><code>cherald</code></td>
+<td><code>cherald catalogue-check &lt;pr-url&gt;</code></td>
+<td><code>POST /v1/compliance/catalogue-check</code></td>
+<td>Scans a PR description + linked Issues.md row for the
+<code>Catalogue-Check:</code> line; survey-runner that lists
+<code>vasic-digital</code> + <code>HelixDevelopment</code> repos
+matching a search term. Emits <code>.catalogue.miss</code> if
+missing.</td>
+<td>HRD-055</td>
+</tr>
+<tr>
+<td>§12.6 Memory-budget ceiling</td>
+<td><code>sherald</code></td>
+<td><code>sherald mem-budget watch</code> (daemon-mode subcommand)</td>
+<td><code>GET /v1/safety/mem-budget</code></td>
+<td>Continuous watcher emitting <code>.host.safety_breach</code> when
+60% threshold crossed. Composes with §17 metrics.</td>
+<td>HRD-056</td>
+</tr>
+</tbody>
+</table>
+<p>Total: <strong>27 new flavor commands / workflows</strong> — one per
+HRD-029 through HRD-056 (note: HRD-049 is <code>reopen</code> which maps
+onto an existing REST endpoint per §41 rather than a fresh
+<code>/v1/&lt;verb&gt;</code>; net new HRDs: 27).</p>
+<h3 id="433-implementation-gating">43.3 Implementation gating</h3>
+<p>§43 is a <em>catalogue</em>; landing all 27 commands at once would
+freeze every other workstream. Order:</p>
+<ol type="1">
+<li><strong>First wave</strong> — workflows the inheritance gate already
+depends on (no Herald implementation required to FUNCTION, but Herald
+wrapping them makes the operator surface uniform):
+<code>pherald install-upstreams</code> (HRD-043),
+<code>sherald constitution pull</code> (HRD-040),
+<code>cherald composite-gate</code> (HRD-051),
+<code>cherald export</code> (HRD-052).</li>
+<li><strong>Second wave</strong> — workflows that produce
+<code>.gate.failed</code> / <code>.policy.violation</code> events the
+§42 catalogue references but currently have no emitter:
+<code>cherald creds scan</code> (HRD-036),
+<code>cherald docs sync</code> (HRD-037),
+<code>cherald script-docs check</code> (HRD-038),
+<code>pherald fetch-guard</code> (HRD-044),
+<code>sherald force-push gate</code> (HRD-046).</li>
+<li><strong>Third wave</strong> — operator-quality-of-life CLIs:
+<code>pherald reopen</code> (HRD-049),
+<code>rherald changelog generate</code> (HRD-032),
+<code>rherald gate retest</code> (HRD-045),
+<code>scherald status digest</code> (HRD-047).</li>
+<li><strong>Fourth wave</strong> — the remainder.</li>
+</ol>
+<p>The §11.4.74 catalogue-check applies: each HRD-029..-056 MUST start
+with a survey of <code>vasic-digital</code> +
+<code>HelixDevelopment</code> for an existing Submodule. Many of these
+workflows already exist as shell scripts in the constitution submodule
+itself (<code>install_upstreams.sh</code>,
+<code>sync_issues_docs.sh</code>, etc.); the Herald implementation wraps
++ extends them rather than reinventing.</p>
+<h3 id="434-composition-with-41-rest--42-events--39-templates">43.4
+Composition with §41 REST + §42 events + §39 templates</h3>
+<p>Every §43 command flows through the same three layers:</p>
+<ul>
+<li><strong>§41 REST</strong> — every command exposes a matching
+<code>/v1/&lt;verb&gt;</code> endpoint accepting the same parameters as
+the CLI; apps + dashboards consume the REST surface.</li>
+<li><strong>§42 events</strong> — invoking the command emits the
+matching event class (<code>.gate.failed</code> /
+<code>.policy.violation</code> / <code>.repo.safety_breach</code> /
+etc.) via <code>commons_constitution</code>; subscribers see the action
+through their configured channels.</li>
+<li><strong>§39 templates</strong> — the subscriber-visible message uses
+the Herald Canonical Template per-flavor; outcomes (success / failure /
+partial) follow the §39.5 style rules.</li>
+</ul>
+<p>This three-layer pattern makes adding a 28th workflow (or a
+project-specific Submodule's workflow per §11.4.74) trivial: define the
+command + register its event class + author the §39 template + open the
+HRD.</p>
+<h3 id="435-boundary-what-43-does-not-add">43.5 Boundary: what §43 does
+NOT add</h3>
+<ul>
+<li><strong>Per-channel adapters</strong> — those are §11 + §18.X.1, not
+§43.</li>
+<li><strong>General-purpose Go libraries</strong> —
+<code>commons_*</code> packages are §10, not §43.</li>
+<li><strong>Subscribers' workflows</strong> — <code>Bug:</code> /
+<code>Query:</code> / <code>Status:</code> style subscriber commands are
+§18.X (per-flavor inbound) + §32 (inbound pipeline), not §43. §43 is
+operator-facing (CLI + REST), not subscriber-facing
+(chat/email/etc.).</li>
+</ul>
+<p>§43 is intentionally scoped to <em>operator workflows that the
+constitution itself names or implies</em>. Anything else (custom project
+tooling, integrations with external SaaS) is the consuming project's
+concern, not Herald's.</p>
 <hr />
 <h2 id="30-v2-self-review-log">§30. V2 self-review log</h2>
 <blockquote>

@@ -2,13 +2,13 @@
 
 | Field | Value |
 |---|---|
-| Revision | 3 |
+| Revision | 4 |
 | Created | 2026-05-20 |
 | Last modified | 2026-05-20 |
 | Status | active |
-| Status summary | Constitution-flavor binding plan landed in spec V3 §42 (65 rule→flavor bindings); HRD-018..HRD-028 opened for the implementation rollout. HRD-017 closed (universal §11.4.73 + §11.4.74 mandates landed in constitution commit 34a82b3). |
-| Issues | HRD-008, HRD-010, HRD-011, HRD-012, HRD-015, HRD-016, HRD-018..HRD-028 |
-| Issues summary | 17 open / in-progress workable items spanning quickstart validation, live channel integrations, REST surface, and the §42 constitution-binding rollout. |
+| Status summary | Spec V3 r6 adds §43 Constitution-derived flavor commands + workflows (27 entries). HRD-029..HRD-056 opened to track each command's implementation. Combined with HRD-018..HRD-028 from r5, the constitution-flavor integration plan now spans 39 workable items rolled out in 4 implementation waves. |
+| Issues | HRD-008, HRD-010, HRD-011, HRD-012, HRD-015, HRD-016, HRD-018..HRD-028, HRD-029..HRD-056 |
+| Issues summary | 45 open / in-progress workable items across quickstart validation, live channel integrations, REST surface, the §42 binding rollout, and the §43 command-catalogue implementation. |
 | Fixed | HRD-001..HRD-007, HRD-009, HRD-009b, HRD-013, HRD-014, HRD-017 |
 | Fixed summary | see `Fixed.md`. |
 | Continuation | see `CONTINUATION.md`. |
@@ -42,6 +42,34 @@ Per Universal §11.4.74 every new row carries a `Catalogue-Check` line in its Re
 | HRD-026 | task | open | middle | Constitution-bundle hash captureer — computes SHA-256 of rendered Constitution.md at evaluation time; persists on every emitted event for replayability | 2026-05-20 | 2026-05-20 | spec V3 §42.1.3; Catalogue-Check: TBD |
 | HRD-027 | task | open | middle | Mode-ladder runtime config (`constitution_bindings` table + admin REST endpoints to flip allow/warn/enforce per binding per tenant without redeploy) | 2026-05-20 | 2026-05-20 | spec V3 §42.1.4; Catalogue-Check: TBD |
 | HRD-028 | task | open | low | `/v1/compliance` pull surface — Gin handler returning `constitution_state` rows filtered by rule / subject / decision; paginated | 2026-05-20 | 2026-05-20 | spec V3 §42.1.5 + §41; Catalogue-Check: TBD |
+| HRD-029 | task | open | middle | §2 `pherald commit-push` — single-entrypoint locked commit + multi-mirror push | 2026-05-20 | 2026-05-20 | spec §43.2 / §2; Catalogue-Check: TBD (likely existing as constitution-submodule script) |
+| HRD-030 | task | open | middle | §3 `pherald submodule propagate` — owned-submodule walk in propagation order | 2026-05-20 | 2026-05-20 | spec §43.2 / §3; Catalogue-Check: TBD |
+| HRD-031 | task | open | middle | §4 `rherald tag mirror` — assert tag exists on every owned submodule | 2026-05-20 | 2026-05-20 | spec §43.2 / §4; Catalogue-Check: TBD |
+| HRD-032 | task | open | low | §5 `rherald changelog generate` — Conventional Commits → `docs/changelogs/<v>.md` + multi-format export | 2026-05-20 | 2026-05-20 | spec §43.2 / §5 / §36; Catalogue-Check: TBD |
+| HRD-033 | task | open | high | §9.1 `sherald destructive guard <op>` — wrap rm/git-reset/git-push-force with prerequisite checks | 2026-05-20 | 2026-05-20 | spec §43.2 / §9.1; Catalogue-Check: TBD |
+| HRD-034 | task | open | middle | §9.3 `sherald backup snapshot <path>` — hardlinked snapshot helper | 2026-05-20 | 2026-05-20 | spec §43.2 / §9.3; Catalogue-Check: TBD |
+| HRD-035 | task | open | middle | §11.4.2 `bherald evidence capture <test_id>` — captured-evidence recorder | 2026-05-20 | 2026-05-20 | spec §43.2 / §11.4.2 + §11.4.5; Catalogue-Check: TBD |
+| HRD-036 | task | open | high | §11.4.10 `cherald creds scan` — gitleaks/trufflehog integration, emits `.credential.leak` | 2026-05-20 | 2026-05-20 | spec §43.2 / §11.4.10; Catalogue-Check: TBD — likely an existing OSS scanner |
+| HRD-037 | task | open | low | §11.4.12 `cherald docs sync` — regen Issues_Summary / Fixed_Summary / Status_Summary | 2026-05-20 | 2026-05-20 | spec §43.2 / §11.4.12; Catalogue-Check: TBD (likely existing constitution-submodule script) |
+| HRD-038 | task | open | low | §11.4.18 `cherald script-docs check` — assert sibling .md for every scripts/**/*.sh | 2026-05-20 | 2026-05-20 | spec §43.2 / §11.4.18; Catalogue-Check: TBD |
+| HRD-039 | task | open | low | §11.4.19 / .23 `cherald fixed align` + `cherald colorize` — Issues/Fixed format + HTML colorizer | 2026-05-20 | 2026-05-20 | spec §43.2 / §11.4.19 + §11.4.23; Catalogue-Check: TBD |
+| HRD-040 | task | open | high | §11.4.26 `sherald constitution pull` — wrap fetch + rebase + validation gate, emits `.bundle.updated` | 2026-05-20 | 2026-05-20 | spec §43.2 / §11.4.26 + §11.4.32; Catalogue-Check: TBD |
+| HRD-041 | task | open | middle | §11.4.27 `bherald test-tier verify` — 8-tier matrix verification | 2026-05-20 | 2026-05-20 | spec §43.2 / §11.4.27 + §40.2; Catalogue-Check: TBD |
+| HRD-042 | task | open | low | §11.4.31 `cherald submanifest verify` — Submodule-Dependency-Manifest gate | 2026-05-20 | 2026-05-20 | spec §43.2 / §11.4.31; Catalogue-Check: TBD |
+| HRD-043 | task | open | high | §11.4.36 `pherald install-upstreams` — install_upstreams wrapper | 2026-05-20 | 2026-05-20 | spec §43.2 / §11.4.36; Catalogue-Check: extend constitution submodule's install_upstreams.sh |
+| HRD-044 | task | open | middle | §11.4.37 `pherald fetch-guard` — pre-edit fetch + rebase enforcement | 2026-05-20 | 2026-05-20 | spec §43.2 / §11.4.37; Catalogue-Check: TBD |
+| HRD-045 | task | open | high | §11.4.40 `rherald gate retest` — pre-tag full-suite retest gate | 2026-05-20 | 2026-05-20 | spec §43.2 / §11.4.40; Catalogue-Check: TBD |
+| HRD-046 | task | open | high | §11.4.41 `sherald force-push gate` — merge-first + per-session-auth enforcement | 2026-05-20 | 2026-05-20 | spec §43.2 / §11.4.41 + §9.2; Catalogue-Check: TBD |
+| HRD-047 | task | open | middle | §11.4.45 / .56 `scherald status digest` — periodic Status.md sweep + Status_Summary regen | 2026-05-20 | 2026-05-20 | spec §43.2 / §11.4.45 + §11.4.56; Catalogue-Check: TBD |
+| HRD-048 | task | open | low | §11.4.53 `cherald fixed-summary sync` — standalone Fixed_Summary backfill | 2026-05-20 | 2026-05-20 | spec §43.2 / §11.4.53; Catalogue-Check: TBD (likely existing script) |
+| HRD-049 | task | open | middle | §11.4.55 `pherald reopen <HRD-NNN>` — Issues→Fixed reversal + Reopens history | 2026-05-20 | 2026-05-20 | spec §43.2 / §11.4.55; Catalogue-Check: no-match (Herald-specific HRD flow) |
+| HRD-050 | task | open | middle | §11.4.59 `cherald readme sync` — README doc-link regen + multi-format re-export | 2026-05-20 | 2026-05-20 | spec §43.2 / §11.4.57 + §11.4.59; Catalogue-Check: TBD |
+| HRD-051 | task | open | high | §11.4.60 `cherald composite-gate` — canonical implementation of CM-DOCS-COMPOSITE-SYNC | 2026-05-20 | 2026-05-20 | spec §43.2 / §11.4.60; Catalogue-Check: TBD |
+| HRD-052 | task | open | middle | §11.4.65 `cherald export` — bulk Markdown export wrapper (md/html/pdf/docx) | 2026-05-20 | 2026-05-20 | spec §43.2 / §11.4.65 + §36; Catalogue-Check: extend (built atop Pandoc + WeasyPrint) |
+| HRD-053 | task | open | high | §11.4.71 `pherald pre-push` — fetch + investigate + integrate hook | 2026-05-20 | 2026-05-20 | spec §43.2 / §11.4.71; Catalogue-Check: TBD |
+| HRD-054 | task | open | middle | §11.4.73 `cherald spec-version check` — Revision-vs-edits drift detection | 2026-05-20 | 2026-05-20 | spec §43.2 / §11.4.73; Catalogue-Check: no-match (very-new mandate) |
+| HRD-055 | task | open | middle | §11.4.74 `cherald catalogue-check <pr>` — scan PR for Catalogue-Check + survey runner over vasic-digital + HelixDevelopment | 2026-05-20 | 2026-05-20 | spec §43.2 / §11.4.74; Catalogue-Check: no-match (very-new mandate) |
+| HRD-056 | task | open | high | §12.6 `sherald mem-budget watch` — daemon-mode 60% threshold watcher emitting `.host.safety_breach` | 2026-05-20 | 2026-05-20 | spec §43.2 / §12.6; Catalogue-Check: TBD |
 
 ## In progress
 
