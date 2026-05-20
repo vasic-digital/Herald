@@ -186,7 +186,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>1</td>
+<td>2</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -202,70 +202,125 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td>Pre-implementation tracker established 2026-05-20 (V3 r3).
-Workable-item prefix <code>HRD-</code> per spec §8.1. First six
-spec-revision items retroactively recorded in
-<code>Fixed.md</code>.</td>
+<td>First-implementation cycle in progress: V3 spec extended (§37–§41),
+Go scaffold landed (commons + commons_prefix + commons_messaging +
+commons_storage + pherald CLI), Quickstart compose scaffolded, null://
+adapter fully working with passing tests.</td>
 </tr>
 <tr>
 <td>Issues</td>
-<td>HRD-007</td>
+<td>HRD-008, HRD-010, HRD-011, HRD-012, HRD-015, HRD-016, HRD-017</td>
 </tr>
 <tr>
 <td>Issues summary</td>
-<td>one open: V3 r3 cross-doc sync — closed by the same commit that
-introduces this file.</td>
+<td>live integrations + REST API surface + universal versioning rule
+propagation pending.</td>
 </tr>
 <tr>
 <td>Fixed</td>
-<td>HRD-001..HRD-006 (see <code>Fixed.md</code>)</td>
+<td>HRD-007, HRD-009, HRD-009b, HRD-013, HRD-014 (this commit)</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
-<td>V1 + V2 (r1/r2/r3) + V3 (r1/r2) spec-revision work landed across
-commits b421fe1 → f8b8073.</td>
+<td>see <code>Fixed.md</code>.</td>
 </tr>
 <tr>
 <td>Continuation</td>
-<td>First-implementation cycle starts here. New items (HRD-008+) opened
-as work begins; per Universal §11.4.12, every commit that introduces a
-non-trivial change MUST reference its <code>HRD-</code> id.</td>
+<td>see <code>CONTINUATION.md</code>.</td>
 </tr>
 </tbody>
 </table>
 <h2 id="table-of-contents">Table of contents</h2>
 <ul>
-<li><a href="#format-and-scope">Format and scope</a></li>
 <li><a href="#open">Open</a></li>
 <li><a href="#in-progress">In progress</a></li>
 <li><a href="#blocked">Blocked</a></li>
-<li><a href="#conventions">Conventions</a></li>
 </ul>
-<h2 id="format-and-scope">Format and scope</h2>
-<p><code>Issues.md</code> is the canonical open-work tracker for the
-Herald repository (per Universal Constitution §11.4.12 + §11.4.15 +
-§11.4.16). Every entry has:</p>
-<ul>
-<li><strong>ID</strong> — <code>HRD-NNN</code>, zero-padded, monotonic
-per project (per spec §8.1).</li>
-<li><strong>Type</strong> — one of
-<code>bug | issue | task | implementation | investigation | query | request</code>
-(per Universal §11.4.16; spec §32.6).</li>
-<li><strong>Status</strong> —
-<code>open | in_progress | blocked | operator-blocked</code> (per
-Universal §11.4.15 / §11.4.21).</li>
-<li><strong>Criticality</strong> —
-<code>critical | high | middle | low</code> (per spec §18.2.2).</li>
-<li><strong>Opened</strong> — ISO 8601 date.</li>
-<li><strong>Last update</strong> — ISO 8601 date; the auto-bump script
-updates this whenever the row changes.</li>
-<li><strong>Reference</strong> — link to investigation doc / PR /
-external tracker.</li>
-</ul>
-<p>When an item is resolved its row migrates atomically (per Universal
-§11.4.19) from this file into <code>Fixed.md</code>.</p>
 <h2 id="open">Open</h2>
-<p>(none — first-implementation cycle has not started)</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Type</th>
+<th>Status</th>
+<th>Criticality</th>
+<th>Title</th>
+<th>Opened</th>
+<th>Last update</th>
+<th>Reference</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HRD-010</td>
+<td>task</td>
+<td>open</td>
+<td>middle</td>
+<td>commons_storage live wiring (golang-migrate driver, pgx pool, River
+queue, Redis ACL)</td>
+<td>2026-05-20</td>
+<td>2026-05-20</td>
+<td>spec V3 §9.6 + §16; migrations already shipped in this commit</td>
+</tr>
+<tr>
+<td>HRD-011</td>
+<td>task</td>
+<td>open</td>
+<td>middle</td>
+<td>Telegram channel adapter live integration (telebot SDK + getUpdates
+long-poll + webhook secret_token)</td>
+<td>2026-05-20</td>
+<td>2026-05-20</td>
+<td>spec V3 §11.1; stub shipped</td>
+</tr>
+<tr>
+<td>HRD-012</td>
+<td>task</td>
+<td>open</td>
+<td>middle</td>
+<td>Claude Code dispatcher live integration (resolve_session +
+<code>claude --resume</code> + parse
+<code>&lt;&lt;&lt;HERALD-REPLY&gt;&gt;&gt;</code>)</td>
+<td>2026-05-20</td>
+<td>2026-05-20</td>
+<td>spec V3 §33; stub + envelope formatter + tests shipped</td>
+</tr>
+<tr>
+<td>HRD-015</td>
+<td>task</td>
+<td>open</td>
+<td>low</td>
+<td>Add inheritance gate I8 invariants for Go scaffold (go.work present
++ commons/types.go present + null adapter passes test)</td>
+<td>2026-05-20</td>
+<td>2026-05-20</td>
+<td>spec V3 §40 + gate I7 pattern</td>
+</tr>
+<tr>
+<td>HRD-016</td>
+<td>task</td>
+<td>open</td>
+<td>middle</td>
+<td>REST API surface via Gin Gonic per spec §41 — pherald/internal/http/
+with /v1/* routes + JWT auth + OpenAPI tags</td>
+<td>2026-05-20</td>
+<td>2026-05-20</td>
+<td>spec V3 §41 (new this commit)</td>
+</tr>
+<tr>
+<td>HRD-017</td>
+<td>task</td>
+<td>open</td>
+<td>low</td>
+<td>Propagate the new Universal §11.4.6X spec-versioning mandate into
+the parent constitution; add corresponding HERALD_CONSTITUTION §107</td>
+<td>2026-05-20</td>
+<td>2026-05-20</td>
+<td>pending in the constitution-submodule commit immediately
+following</td>
+</tr>
+</tbody>
+</table>
 <h2 id="in-progress">In progress</h2>
 <table>
 <thead>
@@ -282,38 +337,23 @@ external tracker.</li>
 </thead>
 <tbody>
 <tr>
-<td>HRD-007</td>
+<td>HRD-008</td>
 <td>task</td>
 <td>in_progress</td>
 <td>middle</td>
-<td>V3 r3 cross-doc sync (this file + parent-doc path refs + full
-re-export)</td>
+<td>Operator-side quickstart compose validation (Postgres + Redis + OTel
++ pherald container)</td>
 <td>2026-05-20</td>
 <td>2026-05-20</td>
-<td>spec §30.8</td>
+<td>spec V3 §26.5 — scaffold shipped this commit; live end-to-end run
+pending operator.</td>
 </tr>
 </tbody>
 </table>
 <h2 id="blocked">Blocked</h2>
 <p>(none)</p>
 <h2 id="conventions">Conventions</h2>
-<ul>
-<li>New items: append to the <strong>Open</strong> section; allocate
-next sequence via the <code>workable_items</code> schema (spec §8.3)
-once that schema exists; for now, manually increment.</li>
-<li>Status transitions: edit row in place; <code>Last update</code> MUST
-move; status vocabulary follows Universal §11.4.15 + §11.4.33.</li>
-<li>Closure: move the row atomically (one commit) from
-<code>Issues.md</code> to <code>Fixed.md</code> (per Universal
-§11.4.19); record closure date + outcome.</li>
-<li>Reopens: per Universal §11.4.55 — move back to
-<code>Issues.md</code> with <code>status=in_progress</code> and create /
-append to <code>Reopens/&lt;HRD-NNN&gt;.md</code>.</li>
-<li>Sync to summary: <code>Issues_Summary.md</code> is regenerated
-whenever this file changes (per Universal §11.4.12).</li>
-<li>Diary/exports: <code>.html</code> + <code>.pdf</code> siblings stay
-in sync via Pandoc + WeasyPrint (per Universal §11.4.61 +
-§11.4.65).</li>
-</ul>
+<p>See <a href="Fixed.md"><code>Fixed.md</code></a> for closed items +
+Universal §11.4.12/.15/.16/.19/.33/.55 composition rules.</p>
 </body>
 </html>

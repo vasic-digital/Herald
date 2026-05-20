@@ -2,48 +2,39 @@
 
 | Field | Value |
 |---|---|
-| Revision | 1 |
+| Revision | 2 |
 | Created | 2026-05-20 |
 | Last modified | 2026-05-20 |
 | Status | active |
-| Status summary | Pre-implementation tracker established 2026-05-20 (V3 r3). Workable-item prefix `HRD-` per spec §8.1. First six spec-revision items retroactively recorded in `Fixed.md`. |
-| Issues | HRD-007 |
-| Issues summary | one open: V3 r3 cross-doc sync — closed by the same commit that introduces this file. |
-| Fixed | HRD-001..HRD-006 (see `Fixed.md`) |
-| Fixed summary | V1 + V2 (r1/r2/r3) + V3 (r1/r2) spec-revision work landed across commits b421fe1 → f8b8073. |
-| Continuation | First-implementation cycle starts here. New items (HRD-008+) opened as work begins; per Universal §11.4.12, every commit that introduces a non-trivial change MUST reference its `HRD-` id. |
+| Status summary | First-implementation cycle in progress: V3 spec extended (§37–§41), Go scaffold landed (commons + commons_prefix + commons_messaging + commons_storage + pherald CLI), Quickstart compose scaffolded, null:// adapter fully working with passing tests. |
+| Issues | HRD-008, HRD-010, HRD-011, HRD-012, HRD-015, HRD-016, HRD-017 |
+| Issues summary | live integrations + REST API surface + universal versioning rule propagation pending. |
+| Fixed | HRD-007, HRD-009, HRD-009b, HRD-013, HRD-014 (this commit) |
+| Fixed summary | see `Fixed.md`. |
+| Continuation | see `CONTINUATION.md`. |
 
 ## Table of contents
 
-- [Format and scope](#format-and-scope)
 - [Open](#open)
 - [In progress](#in-progress)
 - [Blocked](#blocked)
-- [Conventions](#conventions)
-
-## Format and scope
-
-`Issues.md` is the canonical open-work tracker for the Herald repository (per Universal Constitution §11.4.12 + §11.4.15 + §11.4.16). Every entry has:
-
-- **ID** — `HRD-NNN`, zero-padded, monotonic per project (per spec §8.1).
-- **Type** — one of `bug | issue | task | implementation | investigation | query | request` (per Universal §11.4.16; spec §32.6).
-- **Status** — `open | in_progress | blocked | operator-blocked` (per Universal §11.4.15 / §11.4.21).
-- **Criticality** — `critical | high | middle | low` (per spec §18.2.2).
-- **Opened** — ISO 8601 date.
-- **Last update** — ISO 8601 date; the auto-bump script updates this whenever the row changes.
-- **Reference** — link to investigation doc / PR / external tracker.
-
-When an item is resolved its row migrates atomically (per Universal §11.4.19) from this file into `Fixed.md`.
 
 ## Open
 
-(none — first-implementation cycle has not started)
+| ID | Type | Status | Criticality | Title | Opened | Last update | Reference |
+|---|---|---|---|---|---|---|---|
+| HRD-010 | task | open | middle | commons_storage live wiring (golang-migrate driver, pgx pool, River queue, Redis ACL) | 2026-05-20 | 2026-05-20 | spec V3 §9.6 + §16; migrations already shipped in this commit |
+| HRD-011 | task | open | middle | Telegram channel adapter live integration (telebot SDK + getUpdates long-poll + webhook secret_token) | 2026-05-20 | 2026-05-20 | spec V3 §11.1; stub shipped |
+| HRD-012 | task | open | middle | Claude Code dispatcher live integration (resolve_session + `claude --resume` + parse `<<<HERALD-REPLY>>>`) | 2026-05-20 | 2026-05-20 | spec V3 §33; stub + envelope formatter + tests shipped |
+| HRD-015 | task | open | low | Add inheritance gate I8 invariants for Go scaffold (go.work present + commons/types.go present + null adapter passes test) | 2026-05-20 | 2026-05-20 | spec V3 §40 + gate I7 pattern |
+| HRD-016 | task | open | middle | REST API surface via Gin Gonic per spec §41 — pherald/internal/http/ with /v1/* routes + JWT auth + OpenAPI tags | 2026-05-20 | 2026-05-20 | spec V3 §41 (new this commit) |
+| HRD-017 | task | open | low | Propagate the new Universal §11.4.6X spec-versioning mandate into the parent constitution; add corresponding HERALD_CONSTITUTION §107 | 2026-05-20 | 2026-05-20 | pending in the constitution-submodule commit immediately following |
 
 ## In progress
 
 | ID | Type | Status | Criticality | Title | Opened | Last update | Reference |
 |---|---|---|---|---|---|---|---|
-| HRD-007 | task | in_progress | middle | V3 r3 cross-doc sync (this file + parent-doc path refs + full re-export) | 2026-05-20 | 2026-05-20 | spec §30.8 |
+| HRD-008 | task | in_progress | middle | Operator-side quickstart compose validation (Postgres + Redis + OTel + pherald container) | 2026-05-20 | 2026-05-20 | spec V3 §26.5 — scaffold shipped this commit; live end-to-end run pending operator. |
 
 ## Blocked
 
@@ -51,9 +42,4 @@ When an item is resolved its row migrates atomically (per Universal §11.4.19) f
 
 ## Conventions
 
-- New items: append to the **Open** section; allocate next sequence via the `workable_items` schema (spec §8.3) once that schema exists; for now, manually increment.
-- Status transitions: edit row in place; `Last update` MUST move; status vocabulary follows Universal §11.4.15 + §11.4.33.
-- Closure: move the row atomically (one commit) from `Issues.md` to `Fixed.md` (per Universal §11.4.19); record closure date + outcome.
-- Reopens: per Universal §11.4.55 — move back to `Issues.md` with `status=in_progress` and create / append to `Reopens/<HRD-NNN>.md`.
-- Sync to summary: `Issues_Summary.md` is regenerated whenever this file changes (per Universal §11.4.12).
-- Diary/exports: `.html` + `.pdf` siblings stay in sync via Pandoc + WeasyPrint (per Universal §11.4.61 + §11.4.65).
+See [`Fixed.md`](Fixed.md) for closed items + Universal §11.4.12/.15/.16/.19/.33/.55 composition rules.

@@ -186,7 +186,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>1</td>
+<td>2</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -202,25 +202,27 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td>Sacred handoff doc per Universal §12.10. Carries the verbatim
-resumption prompt + concrete next steps so any agent can resume work
-without conversational context.</td>
+<td>First-implementation cycle r1 LANDED — Go scaffold across 5 modules
+with passing unit tests. Spec V3 r4 (§37 tracker events + §38
+announcement contract + §39 templates + §40 docs/tests + §41 REST).
+Next: HRD-008 operator-side compose validation, then
+HRD-010/-011/-012/-016 live integrations.</td>
 </tr>
 <tr>
 <td>Issues</td>
-<td>HRD-007 (closing this commit)</td>
+<td>HRD-008, HRD-010, HRD-011, HRD-012, HRD-015, HRD-016, HRD-017</td>
 </tr>
 <tr>
 <td>Issues summary</td>
-<td>see <code>Issues_Summary.md</code></td>
+<td>see <code>Issues.md</code></td>
 </tr>
 <tr>
 <td>Fixed</td>
-<td>HRD-001..HRD-006</td>
+<td>HRD-001..HRD-007 + HRD-009, HRD-009b, HRD-013, HRD-014</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
-<td>see <code>Fixed_Summary.md</code></td>
+<td>see <code>Fixed.md</code></td>
 </tr>
 <tr>
 <td>Continuation</td>
@@ -240,9 +242,9 @@ document</a></li>
 <li><a href="#5-long-form-pointers">§5. Long-form pointers</a></li>
 </ul>
 <h2 id="0-how-to-use-this-document">§0. How to use this document</h2>
-<p>Paste the following block into any CLI agent (Claude Code, OpenCode,
-Cursor, Aider, Gemini CLI) to resume Herald work exactly where it was
-left:</p>
+<p>Paste the following block into any CLI agent (Claude Code / OpenCode
+/ Cursor / Aider / Gemini CLI) to resume Herald work exactly where it
+was left:</p>
 <blockquote>
 <p>You are working on the Herald project at
 <code>~/Projects/Herald</code> (also reachable as the
@@ -255,43 +257,49 @@ Read in this order: <code>CLAUDE.md</code>, <code>AGENTS.md</code>,
 <code>docs/specs/mvp/specification.V3.md</code>. Then read
 <code>docs/CONTINUATION.md</code> (this file) for live state,
 <code>docs/Issues.md</code> for open work, <code>docs/Status.md</code>
-for current phase, <code>docs/Fixed.md</code> for closed history. The
-inheritance gate <code>tests/test_constitution_inheritance.sh</code>
-MUST exit 0 before any commit. Multi-mirror fan-out push to all four
-hosts (GitHub + GitLab + GitFlic + GitVerse) is mandatory on every
-commit per Constitution §103.</p>
+for current phase, <code>docs/Fixed.md</code> for closed history. Go
+workspace builds via
+<code>go test ./commons/... ./commons_prefix/... ./commons_messaging/... ./commons_storage/...</code>.
+Inheritance gate <code>tests/test_constitution_inheritance.sh</code>
+MUST exit 0 before any commit. Multi-mirror fan-out push to four hosts
+(GitHub + GitLab + GitFlic + GitVerse) is mandatory per Constitution
+§103.</p>
 </blockquote>
 <h2 id="1-snapshot">§1. Snapshot</h2>
 <ul>
 <li><strong>Active spec:</strong>
-<code>docs/specs/mvp/specification.V3.md</code> (Revision 3, ~3900
-lines, Status=active).</li>
-<li><strong>Archived specs:</strong>
-<code>docs/specs/mvp/archive/specification.V1.md</code>,
-<code>…/specification.V2.md</code> (frozen).</li>
-<li><strong>Tracking docs:</strong> <code>Issues.md</code>,
-<code>Issues_Summary.md</code>, <code>Fixed.md</code>,
-<code>Fixed_Summary.md</code>, <code>Status.md</code>,
-<code>Status_Summary.md</code>, <code>CONTINUATION.md</code> (this file)
-— all established this commit.</li>
+<code>docs/specs/mvp/specification.V3.md</code> Revision 4 (~4300
+lines).</li>
+<li><strong>Archived specs:</strong> V1 + V2 in
+<code>docs/specs/mvp/archive/</code> (frozen).</li>
+<li><strong>Go modules:</strong> <code>commons</code>,
+<code>commons_prefix</code>, <code>commons_messaging</code>,
+<code>commons_storage</code>, <code>pherald</code> (all compile + unit
+tests pass).</li>
+<li><strong>Container scaffold:</strong>
+<code>containers/quickstart/{docker-compose.quickstart.yml, Dockerfile.pherald, otel-config.yaml, .env.example}</code>
+for §26.5 quickstart.</li>
+<li><strong>CLI:</strong> <code>pherald version --json</code> returns
+canonical build info;
+<code>serve</code>/<code>send</code>/<code>doctor</code>/<code>migrate</code>/<code>subscriber</code>/<code>deadletter</code>
+stubbed with HRD-NNN pointers.</li>
 <li><strong>Inheritance gate:</strong> 12 PASS / 0 FAIL. Meta-test
 ✓.</li>
-<li><strong>Phase:</strong> pre-implementation. No <code>go.mod</code>,
-no Go source, no container compose stack yet.</li>
-<li><strong>Branch:</strong> <code>main</code> only. Fan-out push to 4
-mirrors is proven.</li>
+<li><strong>Phase:</strong> implementation r1.</li>
 </ul>
 <h2 id="2-last-commit-landed">§2. Last commit landed</h2>
-<p>(This commit, when merged) — V3 r3 final polish: cross-doc sync
-(parent docs point at <code>specification.V3.md</code>); tracking docs
-scaffold
-(<code>Issues.md</code>/<code>Fixed.md</code>/<code>Status.md</code>/<code>CONTINUATION.md</code>
-+ summaries); §30.8 review log added; full re-export of V3 + 4 parent
-docs to <code>.html</code> + <code>.pdf</code>. Inheritance gate 12 PASS
-/ 0 FAIL throughout.</p>
-<p>Prior commit: V3 r2 at <code>f8b8073</code> — refined all nine
-flavors for richer channel interaction; V2 archived; ToC duplicates
-cleaned.</p>
+<p>This commit (V3 r4 + Go scaffold + tracking-doc refresh) closes
+HRD-009/HRD-009b/HRD-013/HRD-014 (with a Universal §11.4.19 atomic
+Issues.md → Fixed.md migration) and lands spec V3 §37–§41 (tracker
+events, workable-item announcement contract, message presentation +
+Herald Canonical Template, docs/tests completeness, REST API surface).
+Builds + tests:</p>
+<pre><code>$ go test ./commons/... ./commons_prefix/... ./commons_messaging/... ./commons_storage/...
+ok      github.com/vasic-digital/herald/commons 1.135s
+ok      github.com/vasic-digital/herald/commons_prefix  0.639s
+ok      github.com/vasic-digital/herald/commons_messaging/channels/null 0.890s
+ok      github.com/vasic-digital/herald/commons_messaging/dispatch/claude_code  1.381s
+ok      github.com/vasic-digital/herald/commons_storage 1.630s</code></pre>
 <h2 id="3-active-work">§3. Active work</h2>
 <table>
 <thead>
@@ -303,58 +311,102 @@ cleaned.</p>
 </thead>
 <tbody>
 <tr>
-<td>HRD-007</td>
-<td>in_progress → resolving in this commit</td>
-<td>V3 r3 cross-doc sync + tracking-docs scaffold</td>
+<td>HRD-008</td>
+<td>in_progress</td>
+<td>Operator-side Quickstart compose validation (Postgres + Redis + OTel
++ pherald container) — scaffold shipped this commit; live end-to-end run
+pending operator.</td>
+</tr>
+<tr>
+<td>HRD-010</td>
+<td>open</td>
+<td>commons_storage live (pgx pool + golang-migrate driver + River queue
++ Redis ACL).</td>
+</tr>
+<tr>
+<td>HRD-011</td>
+<td>open</td>
+<td>Telegram adapter live (telebot SDK + getUpdates long-poll + webhook
+secret_token).</td>
+</tr>
+<tr>
+<td>HRD-012</td>
+<td>open</td>
+<td>Claude Code dispatcher live (<code>claude --resume</code> + parse
+<code>&lt;&lt;&lt;HERALD-REPLY&gt;&gt;&gt;</code>).</td>
+</tr>
+<tr>
+<td>HRD-015</td>
+<td>open</td>
+<td>Inheritance gate I8 invariants for Go scaffold (go.work +
+commons/types.go + null adapter test passes).</td>
+</tr>
+<tr>
+<td>HRD-016</td>
+<td>open</td>
+<td>REST API surface via Gin Gonic per spec §41.</td>
+</tr>
+<tr>
+<td>HRD-017</td>
+<td>open</td>
+<td>Propagate Universal §11.4.6X spec-versioning +
+submodule-catalogue-first mandates into the parent constitution.</td>
 </tr>
 </tbody>
 </table>
-<p>No other items in flight.</p>
 <h2 id="4-next-concrete-steps">§4. Next concrete steps</h2>
 <ol type="1">
-<li><strong>Validate the V3 §26.5 quickstart compose</strong> on a fresh
-laptop. Confirm Postgres + Redis + OTel collector + <code>pherald</code>
-boot cleanly, that <code>curl</code> posts a CloudEvent to
-<code>/v1/events</code>, that a Telegram delivery lands, and the diary
-appends. <strong>Open <code>HRD-008</code> for this validation
-work.</strong></li>
-<li><strong>Scaffold <code>commons</code> and
-<code>commons_messaging</code></strong> against the §11.0 type contract.
-Goal: empty implementations of <code>Channel</code>,
-<code>OutboundMessage</code>, <code>Receipt</code>,
-<code>InboundEvent</code>, <code>Branding</code>,
-<code>ChannelID</code>, <code>Subscriber</code> — plus the
-<code>null://</code> adapter (§11.14) for tests. <strong>Open
-<code>HRD-009</code>.</strong></li>
-<li><strong>Implement the Postgres + River queue layer</strong> per §5.3
-+ §16. RLS policy template + per-tenant key prefixing in Redis.
-Migrations under <code>commons_storage/migrations/000NNN_*.sql</code>
-per §9.6. <strong>Open <code>HRD-010</code>.</strong></li>
-<li><strong>First channel adapter</strong> — Telegram per §11.1. Bot API
-client behind <code>Channel</code> interface; webhook ingress with §5.5
-signature verification. <strong>Open <code>HRD-011</code>.</strong></li>
-<li><strong>Claude Code dispatcher</strong> — per §33.2 + §33.3. The
-session-resolution algorithm needs real-world validation; capture
-evidence in <code>HRD-008</code>'s end-to-end test extension.
-<strong>Open <code>HRD-012</code>.</strong></li>
+<li><strong>HRD-008 quickstart validation</strong> — On a fresh laptop
+with Podman or Docker:
+<pre><code>git clone &lt;Herald repo&gt;
+git submodule update --init
+cd containers/quickstart
+podman build -t herald/pherald:dev -f Dockerfile.pherald ../..
+cp .env.example ../../.env &amp;&amp; $EDITOR ../../.env
+podman-compose -f docker-compose.quickstart.yml up -d
+curl --retry 30 --retry-delay 2 http://localhost:24090/readyz</code></pre>
+The current <code>pherald serve</code> returns "not implemented" —
+HRD-010/HRD-011/HRD-012 must land first to make the live
+<code>curl POST /v1/events</code> succeed end-to-end. Validation reveals
+which of the spec's assumptions (port ranges, Compose syntax, OTel
+collector config, Postgres healthcheck) hold against real
+infrastructure.</li>
+<li><strong>HRD-010</strong> — wire
+<code>commons_storage/storage.go</code>'s <code>MigrationDriver</code>
+to golang-migrate; bring pgx + River + Redis client up; add integration
+tests under <code>//go:build integration</code>.</li>
+<li><strong>HRD-011</strong> — replace
+<code>commons_messaging/channels/tgram/tgram.go</code> stub with a live
+implementation against <code>gopkg.in/telebot.v3</code> or
+<code>github.com/mymmrac/telego</code>; recorded HTTP fixtures under
+<code>testdata/</code>.</li>
+<li><strong>HRD-012</strong> — replace
+<code>commons_messaging/dispatch/claude_code/claude_code.go</code>'s
+<code>Dispatch</code> stub with a real <code>claude --resume</code>
+invocation; capture session UUID; parse
+<code>&lt;&lt;&lt;HERALD-REPLY&gt;&gt;&gt;</code>.</li>
+<li><strong>HRD-016</strong> — scaffold
+<code>pherald/internal/http/</code> with Gin routes per V3 §41; wire
+<code>pherald serve</code> to mount the Gin router on
+<code>http_port</code>.</li>
+<li><strong>HRD-017</strong> — propagate Universal §11.4.6X new mandates
+(spec-versioning + submodule-catalogue-first) into the constitution
+submodule.</li>
 </ol>
-<p>After those five, the first-implementation cycle is verifiably
-complete and Herald is consumable as a submodule by a real project.</p>
 <h2 id="5-long-form-pointers">§5. Long-form pointers</h2>
 <ul>
-<li><code>docs/specs/mvp/specification.V3.md</code> — full active
-spec.</li>
+<li><code>docs/specs/mvp/specification.V3.md</code> — full active spec
+(Revision 4).</li>
 <li><code>docs/specs/mvp/specification.V3.md#30-v2-self-review-log</code>
-— every review pass (§30.1..§30.8) documented for any future
-archaeology.</li>
-<li><code>docs/guides/HERALD_CONSTITUTION.md</code> — Herald-specific
-articles §101..§106 extending Universal Constitution.</li>
+— every review pass.</li>
+<li><code>docs/guides/HERALD_CONSTITUTION.md</code> — §101..§106
+extending Universal.</li>
 <li><code>docs/guides/CONSTITUTION_INHERITANCE.md</code> —
-parent-discovery + inheritance-gate contract.</li>
-<li><code>tests/test_constitution_inheritance.sh</code> — the gate. Run
-before every commit that touches root docs.</li>
-<li><code>tests/test_constitution_inheritance_meta.sh</code> — paired
-§1.1 mutation proof.</li>
+parent-discovery + gate.</li>
+<li><code>tests/test_constitution_inheritance.sh</code> — the gate.</li>
+<li><code>containers/quickstart/</code> — HRD-008 scaffold.</li>
+<li><code>commons/types.go</code> — the §11.0 type contract
+reference.</li>
 </ul>
 </body>
 </html>

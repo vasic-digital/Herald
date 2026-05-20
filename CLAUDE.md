@@ -2,16 +2,16 @@
 
 | Field | Value |
 |---|---|
-| Revision | 2 |
+| Revision | 3 |
 | Created | 2026-05-15 |
 | Last modified | 2026-05-20 |
 | Status | active |
-| Status summary | Spec path references updated to specification.V3.md (active). All four `docs/specs/mvp/specification.md` occurrences rewritten in lockstep with V3 §23 anchor change. |
+| Status summary | "Project status" section updated to reflect that the Go scaffold (5 modules, passing unit tests, Quickstart compose) has landed. New commands documented (go build/test). The pre-implementation language replaced with implementation-r1 reality. |
 | Issues | none |
 | Issues summary | — |
-| Fixed | spec-path references updated to specification.V3.md path |
-| Fixed summary | matches V3 §23 anchor + I7 gate (anchor phrase 'comprehensive planning and implementation' unchanged so gate stays green) |
-| Continuation | — |
+| Fixed | spec-path references (r2), pre-implementation-language update (r3) |
+| Fixed summary | aligned with HRD-009/HRD-009b/HRD-013/HRD-014 landing in the same commit. |
+| Continuation | bump again when first-implementation cycle completes HRD-010..HRD-012/HRD-016 live integrations. |
 
 ## Table of contents
 
@@ -73,9 +73,30 @@ Herald is **pre-implementation**. As of this writing the repo contains:
 
 Herald does **not** ship a `constitution/` submodule of its own; the parent project provides it. See `docs/guides/CONSTITUTION_INHERITANCE.md`.
 
-There is no `go.mod`, no source code, and no build/test/lint tooling yet. When the user asks you to "add a feature" or "fix" something, first confirm whether they want you to **scaffold the project** (init the module, lay out packages) or **fill in the spec** — the answer determines whether you're writing Go or Markdown.
+**As of 2026-05-20** the Go scaffold has landed (first-implementation cycle r1). The repo now contains:
 
-Do not invent build/test commands or pretend infrastructure exists. If a command is needed but the supporting file (`go.mod`, `Makefile`, CI config) isn't present, say so and ask before scaffolding it.
+- `go.work` (gitignored locally; check in if the project wants reproducible workspaces — current convention: gitignored per spec §9.1).
+- `commons/` (L0) — `commons/types.go` with the full §11.0 Channel contract + Subscriber/CloudEventEnvelope/TraceContext/Branding/ChannelID; `commons/clock.go` Clock abstraction; `commons/uuidv7.go`; `commons/branding.go` per-flavor factory.
+- `commons_prefix/` — §8.2 3-letter prefix algorithm.
+- `commons_messaging/channels/null/` — full §11.14 `null://` sandbox adapter (working, tested).
+- `commons_messaging/channels/tgram/` — Telegram adapter SCAFFOLD (HRD-011 open).
+- `commons_messaging/dispatch/claude_code/` — Claude Code session-resolution + envelope formatter; live `claude --resume` invocation pending (HRD-012 open).
+- `commons_storage/` — 9 SQL migrations (000001..000005) embedded via `//go:embed`; pgx + River + Redis wiring pending (HRD-010 open).
+- `pherald/cmd/pherald/` — Cobra CLI; `pherald version` works end-to-end; other subcommands stubbed with HRD-NNN error pointers.
+- `containers/quickstart/` — Docker/Podman Compose + Dockerfile + otel-config + `.env.example` per §26.5 (HRD-008 open for operator validation).
+
+**Build + test:** from the repo root:
+
+```bash
+go build ./commons/... ./commons_prefix/... ./commons_messaging/... ./commons_storage/... ./pherald/...
+go test  ./commons/... ./commons_prefix/... ./commons_messaging/... ./commons_storage/...
+```
+
+Tests pass on Go 1.22+ (verified on 1.26). Workspace is configured via `go.work` listing all 5 modules.
+
+When the user asks to "add a feature" the spec is the source of truth — find the relevant §, then the relevant module + package, then the relevant HRD-NNN if one is already open. New work opens a new HRD-NNN in `docs/Issues.md` per V3 §8.3 lifecycle.
+
+Do not invent build/test commands beyond what `go test ./<module>/...` provides. Live-integration tests (Telegram bot, Claude Code session, real Postgres) require operator-supplied credentials — see `docs/CONTINUATION.md` for the live-test handoff prompt.
 
 ## Mission (from the spec)
 

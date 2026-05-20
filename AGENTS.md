@@ -2,16 +2,16 @@
 
 | Field | Value |
 |---|---|
-| Revision | 3 |
+| Revision | 4 |
 | Created | 2026-05-15 |
 | Last modified | 2026-05-20 |
 | Status | active |
-| Status summary | Spec-path references updated from specification.md → specification.V3.md (lockstep with V3 §23 anchor change). |
+| Status summary | "Project status" updated: Go scaffold landed; build+test commands documented; open HRD list embedded for agent reference. |
 | Issues | none |
 | Issues summary | — |
-| Fixed | R-14 (V2), V3-path-sync (V3 r3) |
-| Fixed summary | spec-change rule references the currently-active spec file (V3); anchor phrase 'comprehensive planning and implementation' unchanged so I7 gate stays green. |
-| Continuation | — |
+| Fixed | R-14 (V2), V3-path-sync (V3 r3), Go-scaffold-status-update (V3 r4) |
+| Fixed summary | aligned with HRD-009/HRD-009b/HRD-013/HRD-014 landing in the same commit. |
+| Continuation | bump again when first-implementation cycle completes HRD-010..HRD-012/HRD-016 live integrations. |
 
 ## Table of contents
 
@@ -64,9 +64,25 @@ Herald is **pre-implementation**. As of 2026-05-15 the repo contains:
 
 Herald **does not** ship a `constitution/` submodule of its own — see `docs/guides/CONSTITUTION_INHERITANCE.md` for the rationale and the discovery mechanism.
 
-There is no `go.mod`, no source code, and no build/lint tooling yet. When asked to "add a feature" or "fix" something, first disambiguate: **scaffold the project** (init the Go module, lay out packages) vs. **fill in the spec**? The answer determines whether you're writing Go or Markdown.
+**As of 2026-05-20** the Go scaffold landed (first-implementation cycle r1). 5 Go modules (`commons`, `commons_prefix`, `commons_messaging`, `commons_storage`, `pherald`) compile + unit tests pass. `pherald version --json` returns build info. The full §11.0 type contract is realized in `commons/types.go`. The `null://` sandbox adapter is fully working with 8 unit tests. SQL migrations 000001..000005 embedded via `//go:embed`. Docker/Podman Compose for §26.5 Quickstart shipped under `containers/quickstart/`.
 
-Never invent build/test commands. If a command is needed but the supporting file (`go.mod`, `Makefile`, CI config) isn't present, say so and confirm before scaffolding.
+Build + test from repo root:
+
+```
+go test ./commons/... ./commons_prefix/... ./commons_messaging/... ./commons_storage/...
+go build -o /tmp/pherald-dev ./pherald/cmd/pherald
+```
+
+What's NOT yet live (per `docs/Issues.md`):
+- HRD-008 operator-side Quickstart compose validation.
+- HRD-010 commons_storage live (pgx + River + Redis).
+- HRD-011 Telegram adapter live (telebot + getUpdates).
+- HRD-012 Claude Code dispatcher live (`claude --resume`).
+- HRD-016 REST API per §41 (Gin Gonic).
+
+When asked to "add a feature": find the spec section, open / claim the relevant HRD-NNN in `docs/Issues.md`, write Go + tests, ensure `go test` passes, close the HRD-NNN by migrating its row to `docs/Fixed.md` (per Universal §11.4.19 atomic-migration mandate).
+
+Never invent build / test commands beyond `go test ./<module>/...`. Live-integration tests require operator-supplied bot tokens / Claude sessions / Postgres — `docs/CONTINUATION.md` carries the handoff prompt.
 
 ### Inheritance gate (run before any commit that touches root docs or `constitution/`)
 

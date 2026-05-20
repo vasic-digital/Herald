@@ -186,7 +186,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>1</td>
+<td>2</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -202,51 +202,41 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td>Retrospective tracker established 2026-05-20 (V3 r3) for
-spec-revision work HRD-001..HRD-006 already shipped. Going forward every
-closed item migrates here from <code>Issues.md</code> per Universal
-§11.4.19 atomic-migration mandate.</td>
+<td>First-implementation cycle r1 landed: Go scaffold across 5 modules,
+null:// adapter fully working, migrations + types complete, pherald CLI
+compiles + <code>version</code> subcommand works end-to-end. Spec V3 r4
+with five new operator-mandated sections (§37–§41).</td>
 </tr>
 <tr>
 <td>Issues</td>
-<td>n/a (see <code>Issues.md</code>)</td>
+<td>see <code>Issues.md</code></td>
 </tr>
 <tr>
 <td>Issues summary</td>
-<td>—</td>
+<td>HRD-008/-010/-011/-012/-015/-016/-017 still open or
+in-progress.</td>
 </tr>
 <tr>
 <td>Fixed</td>
-<td>HRD-001..HRD-006 (six items retroactively recorded)</td>
+<td>HRD-001..HRD-007 (prior); HRD-009, HRD-009b, HRD-013, HRD-014 (this
+commit)</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
-<td>V1 MVP authoring → V2 architecture (3 revisions) → V3
-operator-product (2 revisions); ~3900 lines of spec across V1+V2+V3; all
-commits pushed to all four Herald mirrors.</td>
+<td>spec evolution V1→V3 r4 complete; Go module foundation (commons +
+commons_prefix + commons_messaging + commons_storage + pherald) landed
+with passing unit tests.</td>
 </tr>
 <tr>
 <td>Continuation</td>
-<td>regenerate <code>Fixed_Summary.md</code> whenever this file changes;
-manual until the auto-sync wrapper exists.</td>
+<td>see <code>CONTINUATION.md</code> for the live HRD-008
+quickstart-validation path.</td>
 </tr>
 </tbody>
 </table>
 <h2 id="table-of-contents">Table of contents</h2>
 <ul>
 <li><a href="#recently-fixed">Recently fixed</a></li>
-<li><a href="#hrd-001--v1-mvp-specification">HRD-001 — V1 MVP
-specification</a></li>
-<li><a href="#hrd-002--v2-r1-architecture">HRD-002 — V2 r1
-architecture</a></li>
-<li><a href="#hrd-003--v2-r2-self-review">HRD-003 — V2 r2
-self-review</a></li>
-<li><a href="#hrd-004--v2-r3-self-review">HRD-004 — V2 r3
-self-review</a></li>
-<li><a href="#hrd-005--v3-r1-operator-product-layer">HRD-005 — V3 r1
-operator-product layer</a></li>
-<li><a href="#hrd-006--v3-r2-flavor-refinement">HRD-006 — V3 r2 flavor
-refinement</a></li>
 </ul>
 <h2 id="recently-fixed">Recently fixed</h2>
 <table>
@@ -263,10 +253,67 @@ refinement</a></li>
 </thead>
 <tbody>
 <tr>
+<td>HRD-014</td>
+<td>task</td>
+<td>middle</td>
+<td>pherald CLI scaffold — Cobra root + version + 5 stubbed subcommands;
+<code>pherald version --json</code> returns canonical build info</td>
+<td>2026-05-20</td>
+<td>(this commit)</td>
+<td>spec V3 §3 + §18.2</td>
+</tr>
+<tr>
+<td>HRD-013</td>
+<td>task</td>
+<td>middle</td>
+<td>commons_messaging + null:// adapter — full §11.0 Channel contract
+impl with ring buffer + fail_rate/latency/ceiling URL params + 8-case
+unit test suite</td>
+<td>2026-05-20</td>
+<td>(this commit)</td>
+<td>spec V3 §11.14</td>
+</tr>
+<tr>
+<td>HRD-009b</td>
+<td>task</td>
+<td>low</td>
+<td>commons_prefix module — §8.2 deterministic 3-letter prefix algorithm
+with CamelCase split + collision-resolution via fnv1a32 + table-driven
+tests</td>
+<td>2026-05-20</td>
+<td>(this commit)</td>
+<td>spec V3 §8.2</td>
+</tr>
+<tr>
+<td>HRD-009</td>
+<td>task</td>
+<td>middle</td>
+<td>commons module — full §11.0 Go type contract (Channel + Capabilities
++ DeliveryEvidence + OutboundMessage + Body + Attachment + Recipient +
+Action + Priority + Receipt + InboundHandler + InboundEvent + Subscriber
++ SubscriberAlias + CloudEventEnvelope + TraceContext + Branding +
+ChannelID + PreferenceSet + …) + Clock abstraction + UUIDv7 helper +
+DefaultBranding factory</td>
+<td>2026-05-20</td>
+<td>(this commit)</td>
+<td>spec V3 §11.0 + §3.5 + §4.3 + §6.3</td>
+</tr>
+<tr>
+<td>HRD-007</td>
+<td>task</td>
+<td>middle</td>
+<td>V3 r3 cross-doc sync + tracking-doc scaffold
+(Issues/Fixed/Status/Status_Summary/Issues_Summary/Fixed_Summary/CONTINUATION)</td>
+<td>2026-05-20</td>
+<td><code>741cccd</code></td>
+<td>spec V3 §30.8</td>
+</tr>
+<tr>
 <td>HRD-006</td>
 <td>task</td>
 <td>middle</td>
-<td>V3 r2 — refine 9 flavors for richer channel interaction</td>
+<td>V3 r2 flavor refinement — 9 flavors × per-channel interaction
+tables</td>
 <td>2026-05-20</td>
 <td><code>f8b8073</code></td>
 <td>spec V3 §30.7</td>
@@ -275,7 +322,7 @@ refinement</a></li>
 <td>HRD-005</td>
 <td>task</td>
 <td>middle</td>
-<td>V3 r1 — operator-product layer (§31..§36 + §18.2 expansion)</td>
+<td>V3 r1 operator-product layer (§31..§36 + §18.2 expansion)</td>
 <td>2026-05-20</td>
 <td><code>e26a8dc</code></td>
 <td>spec V3 §30.6</td>
@@ -284,8 +331,7 @@ refinement</a></li>
 <td>HRD-004</td>
 <td>task</td>
 <td>middle</td>
-<td>V2 r3 — define remaining Go types + operational ops (workers,
-hot-reload, API paths, …)</td>
+<td>V2 r3 — Go type contract closure + operational ops detail</td>
 <td>2026-05-20</td>
 <td><code>f4ebba1</code></td>
 <td>archived V2 §30.5</td>
@@ -294,8 +340,7 @@ hot-reload, API paths, …)</td>
 <td>HRD-003</td>
 <td>task</td>
 <td>middle</td>
-<td>V2 r2 — close prose↔︎definition gaps; add operational guidance
-(quickstart, DR, retention, costs)</td>
+<td>V2 r2 — close prose↔︎definition gaps + add operational guidance</td>
 <td>2026-05-19</td>
 <td><code>9648545</code></td>
 <td>archived V2 §30.1</td>
@@ -304,8 +349,8 @@ hot-reload, API paths, …)</td>
 <td>HRD-002</td>
 <td>task</td>
 <td>middle</td>
-<td>V2 r1 — architectural authoring (CloudEvents, Watermill, OTel, RLS,
-SLSA, 9 flavors)</td>
+<td>V2 r1 — architectural authoring
+(CloudEvents/Watermill/OTel/RLS/SLSA/9 flavors)</td>
 <td>2026-05-19</td>
 <td><code>96b7cc6</code></td>
 <td>archived V2 §29</td>
@@ -317,71 +362,10 @@ SLSA, 9 flavors)</td>
 <td>V1 — initial MVP specification + Review section +
 Recommendations</td>
 <td>2026-05-19</td>
-<td><code>b421fe1</code> (and earlier)</td>
+<td><code>b421fe1</code></td>
 <td>archive V1 §"Review"</td>
 </tr>
 </tbody>
 </table>
-<h2 id="hrd-001--v1-mvp-specification">HRD-001 — V1 MVP
-specification</h2>
-<p><strong>Outcome:</strong> authored the initial Herald MVP spec
-covering Upstreams, Mission, Execution Model, Constitution Integration,
-Workable-item prefix, Technology stack, Commons + Messaging +
-Subscribers + APIs, Project Herald + System Herald + Future flavors,
-Documentation, Testing. Closing Review section with 22 findings
-(R-01..R-22) catalogued for later passes. Renamed to
-<code>specification.V1.md</code> at the V2 supersession point; preserved
-in <code>docs/specs/mvp/archive/</code>.</p>
-<h2 id="hrd-002--v2-r1-architecture">HRD-002 — V2 r1 architecture</h2>
-<p><strong>Outcome:</strong> introduced V2 superseding V1. Adopted
-CloudEvents v1.0 wire format, Watermill routing, Postgres + River queue
-(NATS opt-in), Apprise-style URL+tag channel addressing, Knock-style
-preference matrix, OpenTelemetry observability, Postgres RLS
-multi-tenancy, SLSA L3 supply-chain stack, MJML email templates,
-<code>nicksnyder/go-i18n</code> for i18n. Filled in every V1 TBD; added
-seven flavors beyond <code>pherald</code>+<code>sherald</code>
-(<code>bherald</code>, <code>dherald</code>, <code>aherald</code>,
-<code>scherald</code>, <code>iherald</code>, <code>rherald</code>,
-<code>cherald</code>).</p>
-<h2 id="hrd-003--v2-r2-self-review">HRD-003 — V2 r2 self-review</h2>
-<p><strong>Outcome:</strong> closed V1's V2-R-01..V2-R-14 — defined
-missing tables (<code>webhook_sources</code> /
-<code>channel_addresses</code> / <code>thread_refs</code> /
-<code>quarantined_messages</code>), pinned Go ≥ 1.22 + license, added
-§16.1 Data retention + GDPR, §17.1 OTel env-var table, §26.5 Operator
-quickstart, §26.6 Disaster recovery, §27.3 Cost considerations.</p>
-<h2 id="hrd-004--v2-r3-self-review">HRD-004 — V2 r3 self-review</h2>
-<p><strong>Outcome:</strong> closed V3-R-01..V3-R-12 — added remaining
-Go type definitions (<code>Subscriber</code>,
-<code>CloudEventEnvelope</code>, <code>TraceContext</code>,
-<code>Branding</code>, <code>ChannelID</code>,
-<code>PreferenceSet</code>), §9.6 Database migration tooling, §3.4
-Worker pools + SIGHUP hot-reload, §5.7 Ingress API URLs, §7.5 AI-agent
-subscribers, §8.3 Workable-item lifecycle, §11.14 <code>null://</code>
-sandbox channel, §17.4.1 Per-channel SLO budgets, §24.1 Machine-readable
-API specs, §5.4.1 Outbound idempotency, §3.5 Time/clock abstraction.</p>
-<h2 id="hrd-005--v3-r1-operator-product-layer">HRD-005 — V3 r1
-operator-product layer</h2>
-<p><strong>Outcome:</strong> authored V3 superseding V2. New top-level
-sections §31 Project integration contract, §32 Inbound processing
-pipeline (30 s poll + FIFO + 7 worker stages + 4-layer anti-spam), §33
-LLM/agent dispatch (Claude Code session-resolution +
-<code>&lt;&lt;&lt;HERALD-DISPATCH-v1&gt;&gt;&gt;</code> envelope), §34
-Reply protocol (queued→processing→result tri-stage), §35 Versioned
-reports with Git linkage, §36 Multi-format outbound attachments (.md +
-.html + .pdf + .docx). Expanded §18.2 Project Herald with
-§18.2.1..§18.2.5 Investigation-before-Fixing flow + criticality + type
-classification + attachment storage at
-<code>issues/users/attachments/&lt;WORKABLE_ITEM_ID&gt;/</code>.</p>
-<h2 id="hrd-006--v3-r2-flavor-refinement">HRD-006 — V3 r2 flavor
-refinement</h2>
-<p><strong>Outcome:</strong> refined every non-<code>pherald</code>
-flavor for richer channel interaction. §18.1.1 cross-flavor primitives
-(slash/prefix command palette, 9-emoji reaction set, interactive
-buttons, modal forms, thread/forum-topic affinity,
-capability-degradation rule). §18.2.6..§18.10.1 per-flavor
-channel-interaction tables documenting buttons / reactions / slash
-commands / modals / threads tuned to each flavor's use case. Archived V2
-to <code>docs/specs/mvp/archive/</code>.</p>
 </body>
 </html>

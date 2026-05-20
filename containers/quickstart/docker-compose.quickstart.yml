@@ -1,0 +1,111 @@
+# docker-compose.quickstart.yml — Herald V3 §26.5 operator quickstart.
+#
+# Status (HRD-008): scaffolded for operator validation. The `pherald`
+# service image (ghcr.io/vasic-digital/pherald:latest) does not exist
+# yet — operators MUST first build it locally via:
+#
+#   podman build -t herald/pherald:dev -f containers/quickstart/Dockerfile.pherald .
+#
+# (or `docker build` if Docker is preferred). The image tag below is
+# overridden to `herald/pherald:dev` so the same compose file works
+# end-to-end on a developer laptop AND against the published image
+# once the build pipeline (HRD-018-style work) is in place.
+#
+# Bring-up:
+#   1. cp containers/quickstart/.env.example .env (in repo root)
+#   2. fill in HERALD_DB_PASSWORD + HERALD_REDIS_PASSWORD + optional
+#      TELEGRAM_BOT_TOKEN/TELEGRAM_CHAT_ID
+#   3. podman-compose -f containers/quickstart/docker-compose.quickstart.yml up -d
+#   4. curl --retry 30 --retry-delay 2 --retry-connrefused \
+#          http://localhost:24090/readyz
+#   5. Send a test CloudEvent:
+#        curl -X POST http://localhost:24091/v1/events \
+#          -H "Content-Type: application/cloudevents+json" \
+#          -d '{"specversion":"1.0","id":"01931a7c-3f4e-7000-9abc-def012345678",
+#               "source":"https://example.com/quickstart",
+#               "type":"digital.vasic.herald.system.host.cpu_high",
+#               "subject":"tag:*",
+#               "data":{"host":"laptop","cpu_pct":97}}'
+#   6. Verify:
+#        podman logs herald-pherald --tail=20
+#        tail -30 docs/herald/diary/main.md
+#
+# Per spec §26.5 a successful run delivers to the configured channel
+# within ~3 s, appends a diary entry, and emits OTel traces visible at
+# http://localhost:24417 (Collector logs).
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: herald-postgres
+    environment:
+      POSTGRES_USER: herald
+      POSTGRES_PASSWORD: ${HERALD_DB_PASSWORD:?HERALD_DB_PASSWORD required in .env}
+      POSTGRES_DB: herald
+    ports:
+      - "24100:5432"   # spec §9.4 reserved port range
+    volumes:
+      - herald-pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U herald"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: herald-redis
+    command: ["redis-server", "--requirepass", "${HERALD_REDIS_PASSWORD:?HERALD_REDIS_PASSWORD required in .env}"]
+    ports:
+      - "24200:6379"   # spec §9.4
+    volumes:
+      - herald-redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "--no-auth-warning", "-a", "${HERALD_REDIS_PASSWORD}", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.115.0
+    container_name: herald-otel
+    command: ["--config=/etc/otel-config.yaml"]
+    volumes:
+      - ./otel-config.yaml:/etc/otel-config.yaml:ro
+    ports:
+      - "24417:4317"   # OTLP gRPC (spec §9.4 reserved range)
+      - "24418:4318"   # OTLP HTTP
+
+  pherald:
+    image: herald/pherald:dev
+    # Build locally from the included Dockerfile (see header comments):
+    #   podman build -t herald/pherald:dev -f containers/quickstart/Dockerfile.pherald .
+    container_name: herald-pherald
+    depends_on:
+      postgres:        { condition: service_healthy }
+      redis:           { condition: service_healthy }
+      otel-collector:  { condition: service_started }
+    environment:
+      HERALD_POSTGRES_DSN: "postgres://herald:${HERALD_DB_PASSWORD}@postgres:5432/herald?sslmode=disable"
+      HERALD_REDIS_ADDR:   "redis:6379"
+      HERALD_REDIS_USER:   "default"
+      HERALD_REDIS_PASSWORD: "${HERALD_REDIS_PASSWORD}"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4317"
+      OTEL_RESOURCE_ATTRIBUTES: "deployment.environment=quickstart,service.namespace=herald"
+      OTEL_SERVICE_NAME: "pherald"
+      # Optional — uncomment to send live Telegram messages:
+      # TELEGRAM_BOT_TOKEN: "${TELEGRAM_BOT_TOKEN}"
+      # TELEGRAM_CHAT_ID:   "${TELEGRAM_CHAT_ID}"
+    ports:
+      - "24091:24091"   # webhook ingress
+      - "24090:24090"   # admin (/livez, /readyz, /metrics, /admin/version)
+    command: ["serve"]
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:24090/readyz"]
+      interval: 10s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  herald-pg:
+  herald-redis:

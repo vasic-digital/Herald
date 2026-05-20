@@ -186,7 +186,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>1</td>
+<td>2</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -202,13 +202,14 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td>Pre-implementation. Spec complete at V3 r3. Tracking docs (Issues /
-Fixed / Status / CONTINUATION) established this commit. Next milestone:
-first-implementation cycle.</td>
+<td>First-implementation cycle r1 LANDED. Spec V3 r4 (5 new sections
+§37–§41). Five Go modules compile + tests pass. Quickstart compose
+scaffolded for operator validation. Live integrations (Postgres+River /
+Telegram / Claude Code / Gin REST) pending.</td>
 </tr>
 <tr>
 <td>Issues</td>
-<td>HRD-007 (closing this commit)</td>
+<td>HRD-008, HRD-010, HRD-011, HRD-012, HRD-015, HRD-016, HRD-017</td>
 </tr>
 <tr>
 <td>Issues summary</td>
@@ -216,7 +217,8 @@ first-implementation cycle.</td>
 </tr>
 <tr>
 <td>Fixed</td>
-<td>HRD-001..HRD-006</td>
+<td>HRD-001..HRD-007 (prior) + HRD-009/HRD-009b/HRD-013/HRD-014 (this
+commit)</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
@@ -224,9 +226,10 @@ first-implementation cycle.</td>
 </tr>
 <tr>
 <td>Continuation</td>
-<td>scaffold <code>commons</code> + <code>commons_messaging</code> +
-<code>pherald</code> shim against §11.0 type contract; verify §26.5
-quickstart compose works end-to-end.</td>
+<td>next concrete step: HRD-008 live operator-side quickstart compose
+validation (Postgres + Redis + OTel + pherald container). After that:
+HRD-010 (live Postgres + River wiring), HRD-011 (Telegram adapter),
+HRD-012 (Claude Code live), HRD-016 (REST API).</td>
 </tr>
 </tbody>
 </table>
@@ -239,71 +242,118 @@ quickstart compose works end-to-end.</td>
 <li><a href="#risk-surface">Risk surface</a></li>
 </ul>
 <h2 id="project-phase">Project phase</h2>
-<p><strong>Pre-implementation.</strong> The spec set (V1 → V2 → V3) is
-complete and stable; no Go source code, <code>go.mod</code>, build
-pipeline, or container compose stack exists yet. The next major
-milestone is the first-implementation cycle.</p>
+<p><strong>Implementation-r1.</strong> Spec V3 r4 is complete + the Go
+module foundation compiles. The remaining cycle is wiring live
+integrations and validating the §26.5 quickstart end-to-end.</p>
 <h2 id="specification">Specification</h2>
 <ul>
 <li><strong>Active spec:</strong>
-<code>docs/specs/mvp/specification.V3.md</code> (Revision 3, ~3900
+<code>docs/specs/mvp/specification.V3.md</code> (Revision 4, ~4300
 lines).</li>
 <li><strong>Archived specs:</strong> V1 + V2 in
-<code>docs/specs/mvp/archive/</code> for traceability.</li>
-<li><strong>Spec-change rule:</strong> per V3 §23 + HERALD_CONSTITUTION
-§106 + CLAUDE.md + AGENTS.md — every edit under <code>docs/specs/</code>
-triggers comprehensive planning (gate I7a/b/c).</li>
-<li><strong>Outstanding spec work:</strong> none for V3. V4 would only
-be triggered by post-implementation feedback (see §30.7.3 plus V3 r2
-metadata Continuation).</li>
+<code>docs/specs/mvp/archive/</code> (frozen).</li>
+<li><strong>New sections this cycle:</strong> §37 Tracker-doc change
+events; §38 Workable-item announcement contract; §39 Message
+presentation + Herald Canonical Template; §40 Documentation + 15 named
+test challenges; §41 REST API surface (Gin Gonic).</li>
+<li><strong>Spec-change rule:</strong> §23 + HERALD_CONSTITUTION §106 +
+I7 gate — green throughout.</li>
 </ul>
 <h2 id="implementation">Implementation</h2>
-<ul>
-<li><strong><code>commons</code></strong> (L0) — not started.</li>
-<li><strong><code>commons_messaging</code></strong> (L1) — not
-started.</li>
-<li><strong><code>commons_storage</code></strong> (L1) — not
-started.</li>
-<li><strong><code>commons_security</code></strong> (L1) — not
-started.</li>
-<li><strong><code>commons_observability</code></strong> (L1) — not
-started.</li>
-<li><strong>Flavor binaries</strong> (<code>pherald</code>,
-<code>sherald</code>, <code>bherald</code>, <code>dherald</code>,
-<code>aherald</code>, <code>scherald</code>, <code>iherald</code>,
-<code>rherald</code>, <code>cherald</code>) — not started.</li>
-<li><strong>Channel adapters</strong> — none yet; spec mandates Telegram
-+ Slack + Max + Email + Diary for V1-tier, with eight more channels
-documented for V2-tier (§11).</li>
-</ul>
+<table>
+<thead>
+<tr>
+<th>Module</th>
+<th>Status</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>commons</code> (L0)</td>
+<td>✅ landed</td>
+<td>§11.0 types + Clock + UUIDv7 + DefaultBranding; tests pass.</td>
+</tr>
+<tr>
+<td><code>commons_prefix</code></td>
+<td>✅ landed</td>
+<td>§8.2 algorithm + 5 test functions; tests pass.</td>
+</tr>
+<tr>
+<td><code>commons_messaging</code> (L1)</td>
+<td>partial</td>
+<td>null:// adapter fully working; Telegram + Claude Code stubs in
+place.</td>
+</tr>
+<tr>
+<td><code>commons_storage</code> (L1)</td>
+<td>partial</td>
+<td>9 SQL migrations embedded; pgx pool + River + Redis wiring pending
+HRD-010.</td>
+</tr>
+<tr>
+<td><code>commons_security</code> (L1)</td>
+<td>not started</td>
+<td>spec §15 ready. HRD-018 follow-up.</td>
+</tr>
+<tr>
+<td><code>commons_observability</code> (L1)</td>
+<td>not started</td>
+<td>OTel wiring per §17. HRD-019 follow-up.</td>
+</tr>
+<tr>
+<td><code>commons_diary</code> (L1)</td>
+<td>not started</td>
+<td>spec §19 — fsnotify + Pandoc-WeasyPrint sync. HRD-020
+follow-up.</td>
+</tr>
+<tr>
+<td><code>pherald</code> (CLI)</td>
+<td>partial</td>
+<td>Cobra root + version subcommand work end-to-end;
+serve/send/doctor/migrate/subscriber/deadletter stubbed with HRD
+pointers.</td>
+</tr>
+<tr>
+<td>Other flavors (sherald/bherald/…)</td>
+<td>not started</td>
+<td>scaffold once pherald end-to-end runs the quickstart compose.</td>
+</tr>
+</tbody>
+</table>
 <h2 id="operations">Operations</h2>
 <ul>
-<li><strong>Repo hygiene:</strong> main is the only branch; four-mirror
-fan-out via <code>origin</code> (GitHub + GitLab + GitFlic + GitVerse)
-is configured and proven.</li>
+<li><strong>Repo hygiene:</strong> <code>main</code> only; four-mirror
+fan-out proven across spec + Go-scaffold commits.</li>
 <li><strong>Constitution inheritance gate:</strong> 12 PASS / 0
 FAIL.</li>
-<li><strong>Submodules:</strong> none yet (<code>containers</code>
-planned per spec §9.5; SDK submodules planned per §11 once first channel
-adapter lands).</li>
+<li><strong>Submodules:</strong> none yet (<code>containers/</code> is a
+local directory in this commit; will migrate to
+<code>vasic-digital/containers</code> submodule when HRD-008 validation
+passes and the submodule is created).</li>
+<li><strong>Build / test toolchain:</strong> Go 1.22+, Pandoc 3.9,
+WeasyPrint 66, Podman 5.8 — verified locally.</li>
 </ul>
 <h2 id="risk-surface">Risk surface</h2>
 <ul>
-<li><strong>Spec-vs-implementation gap.</strong> The longer the spec
-evolves without code, the higher the risk of accidentally documenting
-something un-buildable. Mitigation: §26.5 Operator quickstart is the
-first thing to actually build and verify end-to-end; it'll surface
-invalid assumptions fast.</li>
-<li><strong>Claude Code session model assumption.</strong> V3 §33.2
-commits to a project-named-session anchor pattern that hasn't been
-validated against Claude Code in a real test. Mitigation: in HRD-008+
-scaffolding work, the Claude Code dispatcher MUST be the first
-integration with a captured-evidence end-to-end test.</li>
-<li><strong>Channel-credential rotation.</strong> V3 spec mandates
-rotation paths but no operator tooling exists. Mitigation:
-<code>&lt;flavor&gt;herald doctor</code> (§17.6) will be one of the
-first CLI subcommands implemented so operators catch credential drift
-before it bites.</li>
+<li><strong>Submodule-catalogue discovery (operator mandate
+2026-05-20).</strong> Before scaffolding more modules, Herald work MUST
+audit <code>vasic-digital</code> + <code>HelixDevelopment</code> orgs
+(GitHub + GitLab) for reusable Submodules — pending in the upcoming
+constitution-submodule mandate.</li>
+<li><strong>Versioning discipline (operator mandate
+2026-05-20).</strong> Minor changes bump secondary version, major bump
+primary. Currently we're at Revision 4 within V3; the next "minor"
+addition continues incrementing Revision; a full V4 rewrite is reserved
+for a primary-version jump.</li>
+<li><strong>Live integrations untested.</strong> HRD-008 quickstart
+compose hasn't been verified end-to-end on a fresh laptop yet — that's
+the next concrete operator-driven validation.</li>
+<li><strong>Claude Code session model.</strong> §33.2 anchor file
+pattern hasn't been validated against the live <code>claude</code>
+binary yet; HRD-012 will deliver that evidence.</li>
+<li><strong>No CI yet.</strong> No GitHub Actions / GitLab CI / etc.
+Operator runs <code>go test ./...</code> manually for now.</li>
 </ul>
 </body>
 </html>

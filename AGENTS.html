@@ -251,7 +251,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>3</td>
+<td>4</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -267,8 +267,8 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td>Spec-path references updated from specification.md →
-specification.V3.md (lockstep with V3 §23 anchor change).</td>
+<td>"Project status" updated: Go scaffold landed; build+test commands
+documented; open HRD list embedded for agent reference.</td>
 </tr>
 <tr>
 <td>Issues</td>
@@ -280,17 +280,18 @@ specification.V3.md (lockstep with V3 §23 anchor change).</td>
 </tr>
 <tr>
 <td>Fixed</td>
-<td>R-14 (V2), V3-path-sync (V3 r3)</td>
+<td>R-14 (V2), V3-path-sync (V3 r3), Go-scaffold-status-update (V3
+r4)</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
-<td>spec-change rule references the currently-active spec file (V3);
-anchor phrase 'comprehensive planning and implementation' unchanged so
-I7 gate stays green.</td>
+<td>aligned with HRD-009/HRD-009b/HRD-013/HRD-014 landing in the same
+commit.</td>
 </tr>
 <tr>
 <td>Continuation</td>
-<td>—</td>
+<td>bump again when first-implementation cycle completes
+HRD-010..HRD-012/HRD-016 live integrations.</td>
 </tr>
 </tbody>
 </table>
@@ -385,21 +386,44 @@ mutation meta-test (§1.1).</li>
 submodule of its own — see
 <code>docs/guides/CONSTITUTION_INHERITANCE.md</code> for the rationale
 and the discovery mechanism.</p>
-<p>There is no <code>go.mod</code>, no source code, and no build/lint
-tooling yet. When asked to "add a feature" or "fix" something, first
-disambiguate: <strong>scaffold the project</strong> (init the Go module,
-lay out packages) vs. <strong>fill in the spec</strong>? The answer
-determines whether you're writing Go or Markdown.</p>
-<p>Never invent build/test commands. If a command is needed but the
-supporting file (<code>go.mod</code>, <code>Makefile</code>, CI config)
-isn't present, say so and confirm before scaffolding.</p>
+<p><strong>As of 2026-05-20</strong> the Go scaffold landed
+(first-implementation cycle r1). 5 Go modules (<code>commons</code>,
+<code>commons_prefix</code>, <code>commons_messaging</code>,
+<code>commons_storage</code>, <code>pherald</code>) compile + unit tests
+pass. <code>pherald version --json</code> returns build info. The full
+§11.0 type contract is realized in <code>commons/types.go</code>. The
+<code>null://</code> sandbox adapter is fully working with 8 unit tests.
+SQL migrations 000001..000005 embedded via <code>//go:embed</code>.
+Docker/Podman Compose for §26.5 Quickstart shipped under
+<code>containers/quickstart/</code>.</p>
+<p>Build + test from repo root:</p>
+<pre><code>go test ./commons/... ./commons_prefix/... ./commons_messaging/... ./commons_storage/...
+go build -o /tmp/pherald-dev ./pherald/cmd/pherald</code></pre>
+<p>What's NOT yet live (per <code>docs/Issues.md</code>):</p>
+<ul>
+<li>HRD-008 operator-side Quickstart compose validation.</li>
+<li>HRD-010 commons_storage live (pgx + River + Redis).</li>
+<li>HRD-011 Telegram adapter live (telebot + getUpdates).</li>
+<li>HRD-012 Claude Code dispatcher live
+(<code>claude --resume</code>).</li>
+<li>HRD-016 REST API per §41 (Gin Gonic).</li>
+</ul>
+<p>When asked to "add a feature": find the spec section, open / claim
+the relevant HRD-NNN in <code>docs/Issues.md</code>, write Go + tests,
+ensure <code>go test</code> passes, close the HRD-NNN by migrating its
+row to <code>docs/Fixed.md</code> (per Universal §11.4.19
+atomic-migration mandate).</p>
+<p>Never invent build / test commands beyond
+<code>go test ./&lt;module&gt;/...</code>. Live-integration tests
+require operator-supplied bot tokens / Claude sessions / Postgres —
+<code>docs/CONTINUATION.md</code> carries the handoff prompt.</p>
 <h3
 id="inheritance-gate-run-before-any-commit-that-touches-root-docs-or-constitution">Inheritance
 gate (run before any commit that touches root docs or
 <code>constitution/</code>)</h3>
-<div class="sourceCode" id="cb2"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> tests/test_constitution_inheritance.sh        <span class="co"># the gate</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> tests/test_constitution_inheritance_meta.sh   <span class="co"># paired mutation proof (§1.1)</span></span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> tests/test_constitution_inheritance.sh        <span class="co"># the gate</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> tests/test_constitution_inheritance_meta.sh   <span class="co"># paired mutation proof (§1.1)</span></span></code></pre></div>
 <p>Both MUST return 0. If either fails, fix at root cause per
 Constitution §11.4.4 — never silently accept the FAIL.</p>
 <h3

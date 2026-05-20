@@ -1,0 +1,9 @@
+DROP TABLE IF EXISTS report_publications;
+DROP TABLE IF EXISTS email_suppressions;
+DROP TABLE IF EXISTS outbound_dedup;
+DROP TABLE IF EXISTS workable_items;
+DROP TABLE IF EXISTS dead_letters;
+DROP TABLE IF EXISTS quarantined_messages;
+DROP TABLE IF EXISTS thread_refs;
+DROP TABLE IF EXISTS inbound_messages;
+DROP TABLE IF EXISTS webhook_sources;

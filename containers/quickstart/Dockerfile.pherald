@@ -1,0 +1,53 @@
+# Dockerfile.pherald — multi-stage build per spec V3 §21.2 (reproducible
+# builds) for the Quickstart compose stack (§26.5).
+#
+# Build from the repo root so the Go workspace is visible:
+#   podman build -t herald/pherald:dev -f containers/quickstart/Dockerfile.pherald .
+# (or docker build with the same flags).
+
+# ----- Stage 1: build ---------------------------------------------------
+FROM golang:1.22-alpine AS build
+
+ENV CGO_ENABLED=0 \
+    GOFLAGS="-trimpath -mod=mod" \
+    GOTOOLCHAIN=local
+
+WORKDIR /src
+
+# Copy the whole workspace so go.work + per-module go.mod resolve.
+COPY go.work ./
+COPY commons          ./commons/
+COPY commons_messaging ./commons_messaging/
+COPY commons_prefix    ./commons_prefix/
+COPY commons_storage   ./commons_storage/
+COPY pherald          ./pherald/
+
+# Build the pherald binary with version + commit baked in.
+ARG VERSION=0.0.0-dev
+ARG COMMIT=unknown
+RUN cd pherald && go build \
+    -ldflags "-buildid= -s -w -X main.version=${VERSION} -X main.commit=${COMMIT}" \
+    -o /out/pherald ./cmd/pherald
+
+# ----- Stage 2: runtime -------------------------------------------------
+FROM alpine:3.20
+
+# Runtime deps:
+# - ca-certificates: outbound TLS to Telegram / Slack / SMTP-via-STARTTLS / etc.
+# - tzdata: PreferenceSet.quiet_hours is TZ-aware (spec §7.3).
+# - wget: used by the compose healthcheck against /readyz.
+RUN apk add --no-cache ca-certificates tzdata wget
+
+# Non-root runtime user per Universal §11.4.10 minimum-privilege.
+RUN addgroup -S herald && adduser -S -G herald -h /home/herald herald
+USER herald
+WORKDIR /home/herald
+
+COPY --from=build /out/pherald /usr/local/bin/pherald
+
+# Spec §9.4 reserved port range.
+EXPOSE 24090 24091
+
+# Default to daemon mode; operators may override with `command: send …`.
+ENTRYPOINT ["pherald"]
+CMD ["serve"]

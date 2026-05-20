@@ -2,11 +2,11 @@
 
 | Field | Value |
 |---|---|
-| Revision | 3 |
+| Revision | 4 |
 | Created | 2026-05-20 |
 | Last modified | 2026-05-20 |
 | Status | active |
-| Status summary | V3 r3 polish pass + Herald-internal cross-doc sync: parent docs (README/CLAUDE.md/AGENTS.md/HERALD_CONSTITUTION.md) updated to reference `specification.V3.md` (V2 spec-path string in §23 anchor was stale); HERALD_CONSTITUTION Notes section refreshed to reflect V1+V2 archived under `archive/`. V3 r2 architecture + flavor-interaction tables unchanged. |
+| Status summary | V3 r4 — five new operator-mandated sections (§37 tracker-doc change events, §38 workable-item announcement contract with attachment-size-aware inline vs permalink fallback, §39 message presentation + Herald Canonical Template + style rules, §40 documentation + test-tier + 15 named challenges mandate, §41 REST API surface via Gin Gonic). Per the new Universal §11.4.6X versioning rule (landing in the constitution-submodule commit immediately following this one), secondary-version bump (Revision 3 → 4) is appropriate — these are additive operator-mandated requirements, not a primary-version rewrite. |
 | Issues | none |
 | Issues summary | — |
 | Fixed | V3-R3-01..V3-R3-03 (this revision: parent-doc spec-path sync); V3-R2-01..V3-R2-09 (r2); V3-R1-01..V3-R1-14 (r1); inherits closed V2 + V1 lineage. |
@@ -150,6 +150,11 @@ The **bi-directional event fan-out** system: Herald ingests events from heteroge
 - [§34. Reply protocol (queued → processing → result)](#34-reply-protocol-queued-processing-result)
 - [§35. Reports + state-tracking documents (versioned fan-out with Git linkage)](#35-reports-state-tracking-documents-versioned-fan-out-with-git-linkage)
 - [§36. Outbound multi-format attachments (.md + .html + .pdf + .docx)](#36-outbound-multi-format-attachments-md-html-pdf-docx)
+- [§37. Tracker-doc change events (Issues / Fixed / Status / Continuation)](#37-tracker-doc-change-events-issues-fixed-status-continuation)
+- [§38. Workable-item announcement contract](#38-workable-item-announcement-contract)
+- [§39. Message presentation + template standards](#39-message-presentation-template-standards)
+- [§40. Documentation + testing completeness mandate](#40-documentation-testing-completeness-mandate)
+- [§41. REST API surface (Gin Gonic)](#41-rest-api-surface-gin-gonic)
 
 ---
 
@@ -3731,6 +3736,421 @@ If a subscriber's preference excludes a format that another subscriber on the sa
 ### 36.6 Total size limits
 
 Combined size of the four formats per attachment-bundle MUST stay under `[attachments].out_bundle_max_mib` (default 50 MiB). If a single source `.md` produces > 50 MiB of total output (rare — typically only image-heavy reports), Herald posts a single message with a link to a Herald-hosted blob carrying the full bundle.
+
+---
+
+## §37. Tracker-doc change events (Issues / Fixed / Status / Continuation)
+
+> **Operator mandate (2026-05-20):** any modification of constitution-defined tracker documents MUST fire CloudEvents that fan out to all configured channels for all subscribed receivers. Subscribers see project state evolve in real time, not on the next digest cycle.
+
+### 37.1 In-scope tracker docs
+
+Every modification under `<consuming-project>/docs/` of any of these files triggers a CloudEvent (the same list as Universal §11.4.60's eight bound classes):
+
+| Doc | Triggers event type |
+|---|---|
+| `docs/Issues.md` | `digital.vasic.herald.tracker.issues.updated` |
+| `docs/Issues_Summary.md` | `digital.vasic.herald.tracker.issues_summary.updated` |
+| `docs/Fixed.md` | `digital.vasic.herald.tracker.fixed.updated` |
+| `docs/Fixed_Summary.md` | `digital.vasic.herald.tracker.fixed_summary.updated` |
+| `docs/Status.md` | `digital.vasic.herald.tracker.status.updated` |
+| `docs/Status_Summary.md` | `digital.vasic.herald.tracker.status_summary.updated` |
+| `docs/CONTINUATION.md` | `digital.vasic.herald.tracker.continuation.updated` |
+| `docs/Reopens/<HRD-NNN>.md` | `digital.vasic.herald.tracker.reopens.updated` |
+
+Plus the high-fidelity item-level events that compose with §4.2:
+
+| Item-level event | Fired by |
+|---|---|
+| `digital.vasic.herald.project.task.opened` | Row added under `Issues.md` Open section |
+| `digital.vasic.herald.project.task.in_progress` | Row's `Status` column transitions to `in_progress` |
+| `digital.vasic.herald.project.task.blocked` | Row's `Status` transitions to `blocked` or `operator-blocked` |
+| `digital.vasic.herald.project.task.closed` | Row migrates atomically from `Issues.md` to `Fixed.md` |
+| `digital.vasic.herald.project.task.reopened` | Row migrates from `Fixed.md` back to `Issues.md` (per Universal §11.4.55) |
+| `digital.vasic.herald.project.task.reclassified` | Type or criticality column changes in place |
+
+### 37.2 Detection mechanism
+
+`<flavor>herald serve` runs an fsnotify-watched debounced (500 ms idle, 2 s ceiling) tracker-doc watcher over `<consuming-project>/docs/`. On every observed change:
+
+1. Hash the file's new content (SHA-256).
+2. Compare to `tracker_state.content_sha256` (a per-doc row in the new `tracker_state` table — schema below).
+3. If new SHA differs, parse the file (Markdown table → row diff) to detect which rows changed; emit one **doc-level** event (always) plus one **item-level** event per row delta (when the diff is parseable).
+4. Persist new SHA + `last_emitted_at`.
+
+```sql
+-- §37.2 tracker_state (added to migrations as a future 000006_tracker_state.up.sql)
+CREATE TABLE IF NOT EXISTS tracker_state (
+    tenant_id        UUID NOT NULL,
+    doc_path         TEXT NOT NULL,
+    content_sha256   BYTEA NOT NULL,
+    last_event_id    UUID,
+    last_emitted_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (tenant_id, doc_path)
+);
+ALTER TABLE tracker_state ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tracker_state FORCE ROW LEVEL SECURITY;
+CREATE POLICY ts_isolation ON tracker_state
+    USING (tenant_id = current_setting('app.tenant_id')::uuid)
+    WITH CHECK (tenant_id = current_setting('app.tenant_id')::uuid);
+```
+
+### 37.3 Fan-out
+
+Each tracker-doc event is routed via the standard §6 channel-addresses + tag-fan-out matching pipeline. By default tracker events carry the tag `tracker` so operators can scope subscribers per category:
+
+- `tracker:issues` — subscribers who want every Issues.md change (verbose).
+- `tracker:fixed` — closure announcements only.
+- `tracker:status` — high-level state changes.
+- `tracker:incidents` — Issues/Fixed entries with `Type=incident` only.
+
+Subscribers opt in via `PreferenceSet.categories.tracker_*` (spec §7.2). The default for new tenants is `tracker:fixed` enabled, others muted — so subscribers aren't flooded by every in-progress edit.
+
+### 37.4 Composition
+
+- **§11.4.60 composite always-sync** — §37 is the *event-emission* layer; §11.4.60 ensures the `.md`/`.html`/`.pdf` siblings stay in sync. They're orthogonal but complementary: §11.4.60 prevents stale renders, §37 prevents stale subscriber awareness.
+- **§35 versioned reports** — `.report.*` events are a *subset* of §37: any report doc that also lives in a tracker file gets BOTH a §37 tracker event AND a §35 report event (with shared `update_key`).
+- **§32 inbound pipeline** — §37 events are pure-outbound; they don't go through the inbound worker pipeline.
+
+---
+
+## §38. Workable-item announcement contract
+
+> **Operator mandate (2026-05-20):** when a new workable item is added, send an announcement to all subscribers with: title, short description, and attachments — inline when small enough for the channel, otherwise via direct URL to the Git host's permalink. Whenever channel-side size constraints make the inline attachment infeasible, fall back to a URL pointing at the canonical attachment under `issues/users/attachments/<HRD-NNN>/<filename>` on the project's Git remote (GitHub / GitLab / GitFlic / GitVerse).
+
+### 38.1 Announcement structure
+
+Every `digital.vasic.herald.project.task.opened` event triggers a per-subscriber announcement message containing:
+
+```
+[<flavor icon>] <criticality badge> <Type>: <HRD-NNN>  —  <Title (≤ 100 chars)>
+
+<Short description (≤ 280 chars, single paragraph)>
+
+📎 Attachments: <inline summary OR list of permalinks>
+🔗 Permalink: <Git host URL of the Issues.md row's anchor>
+👤 Opened by: <subscriber.handle> on <channel>
+🕒 <RFC 3339 timestamp>
+```
+
+The `<flavor icon>` is the flavor's emoji (📋 pherald, 🛡 sherald, 🔨 bherald, 🚀 dherald, 🔔 aherald, 🗓 scherald, 🚨 iherald, 🏷 rherald, 📜 cherald).
+
+The `<criticality badge>` is colored / emoji-coded: 🚨 critical, 🟠 high, 🟡 middle, 🟢 low.
+
+### 38.2 Attachment size policy
+
+For each attachment associated with the new workable item, Herald computes per-channel inline-feasibility:
+
+| Channel | Inline-feasible if attachment ≤ | Fallback |
+|---|---|---|
+| Telegram | 50 MiB (Bot API limit per file) | Permalink |
+| Slack | 1 GiB (workspace plan-dependent; default soft-cap 100 MiB) | Permalink |
+| Discord | 25 MiB (free tier) / 100 MiB (Nitro) — Herald uses 25 MiB | Permalink |
+| MS Teams | 10 MiB (webhook restriction) | Permalink |
+| Lark | 30 MiB | Permalink |
+| WhatsApp Cloud | 16 MiB (image) / 100 MiB (document) | Permalink |
+| Viber | 200 MiB | Permalink |
+| Email (SMTP) | `[attachments].email_inline_max_mib` (default 10 MiB) | Permalink |
+| ntfy | `X-Attach` URL only — always permalink | Permalink |
+| Gotify | extras link only — always permalink | Permalink |
+| Webhook outbound | per-receiver — defaults to permalink | Permalink |
+| Diary | always inline (filesystem-local) | n/a |
+
+**Permalink construction.** Herald reads the project's `git remote get-url origin` and derives the host's permalink format:
+
+| Host | URL pattern |
+|---|---|
+| GitHub | `https://github.com/<org>/<repo>/blob/<sha>/issues/users/attachments/<HRD-NNN>/<filename>` |
+| GitLab | `https://gitlab.com/<org>/<repo>/-/blob/<sha>/issues/users/attachments/<HRD-NNN>/<filename>` |
+| GitFlic | `https://gitflic.ru/project/<org>/<repo>/blob/<sha>/issues/users/attachments/<HRD-NNN>/<filename>` |
+| GitVerse | `https://gitverse.ru/<org>/<repo>/content/<sha>/issues/users/attachments/<HRD-NNN>/<filename>` |
+
+The `<sha>` is captured at announcement time so the URL remains valid even after subsequent commits.
+
+**Uncommitted-attachments fallback.** If the attachment hasn't been committed yet (working-tree only), the announcement includes the inline file PLUS a notice: `⚠️ Attachment not yet committed — permalink will become live once the next commit lands.` Subscribers can still receive the inline payload; the warning is for traceability.
+
+### 38.3 Multi-format bundle composition
+
+Per §36, every outbound Herald-produced attachment ships as a four-format bundle (`.md` + `.html` + `.pdf` + `.docx`). For *subscriber-uploaded* attachments (the ones at `issues/users/attachments/<HRD-NNN>/`), the multi-format expansion is **NOT** applied — those files are sent as-is in their original format (per §18.2.4). Only Herald-generated documents (investigation summaries, reports, weekly digests) get the multi-format bundle.
+
+### 38.4 Status-transition follow-up announcements
+
+Every subsequent transition (`task.in_progress` / `task.blocked` / `task.closed` / `task.reopened` / `task.reclassified`) fires a smaller follow-up announcement in the same thread (per §12 `ConversationRef`):
+
+```
+[<flavor icon>] HRD-NNN  →  <new status>  <transition reason / short note>
+🔗 <permalink>
+```
+
+Subscribers MAY mute these via `PreferenceSet.workflows.…transitions = { muted: true }`.
+
+---
+
+## §39. Message presentation + template standards
+
+> **Operator mandate (2026-05-20):** messages sent to subscribers MUST be properly designed, nicely and clearly written, organized — AND adhere to **standardized templates** with strict rules.
+
+### 39.1 Why standardize
+
+Herald sends thousands of messages a day at scale. Even tiny stylistic drift between channels (different emoji choices, different field-order, different "permalink" wording) creates cognitive friction for subscribers who scan messages in seconds. §39 fixes the templates so every flavor + channel combination renders predictably; operators can tune *content* per tenant but the *shape* is constitution-level.
+
+### 39.2 The Herald canonical template (HCT)
+
+Every outbound subscriber-facing message is composed of FIVE blocks, in this order:
+
+```
+[1] HEADER       — flavor icon + criticality badge + type + ID + title (one line ≤ 100 chars)
+[2] LEAD         — short paragraph (≤ 280 chars). One thought; one CTA implied.
+[3] DETAILS      — optional. Key:value pairs, bullet lists, code blocks (well-fenced).
+[4] ATTACHMENTS  — optional. Inline thumbnails OR permalinks (per §38.2).
+[5] FOOTER       — opened-by + timestamp + permalink + `<flavor>herald <version>` attribution.
+```
+
+When the channel supports rich messaging (Slack Block Kit, Discord embeds, Adaptive Cards), each block maps to a native rich-message element; on plain channels (SMS, ntfy text-only), blocks degrade to delimited plain text.
+
+### 39.3 Standardized template files
+
+All templates live under `commons_messaging/templates/<event_type>/<channel>.tmpl` (per §13). The directory MUST follow this structure:
+
+```
+commons_messaging/templates/
+├── _shared/
+│   ├── header.tmpl                  # HCT block 1
+│   ├── lead.tmpl                    # HCT block 2
+│   ├── details.tmpl                 # HCT block 3
+│   ├── attachments.tmpl             # HCT block 4
+│   └── footer.tmpl                  # HCT block 5
+├── digital.vasic.herald.project.task.opened/
+│   ├── tgram.md.tmpl
+│   ├── slack.json.tmpl              # Block Kit JSON
+│   ├── discord.json.tmpl            # Embed JSON
+│   ├── teams.json.tmpl              # Adaptive Card v1.5
+│   ├── email.mjml                   # MJML source
+│   ├── email.html                   # compiled MJML (committed alongside source)
+│   ├── ntfy.txt.tmpl
+│   ├── diary.md.tmpl
+│   └── meta.toml                    # per-template metadata: i18n keys, helper imports, max-length asserts
+└── digital.vasic.herald.tracker.issues.updated/
+    └── …
+```
+
+### 39.4 Mandatory template properties
+
+Each `meta.toml` declares (and Herald's CI gate `CM-TEMPLATE-CONFORMANCE`, planned, enforces):
+
+| Property | Required | Notes |
+|---|---|---|
+| `event_type` | yes | matches the parent directory |
+| `channels` | yes | array of channels the template directory covers — gate flags missing channels |
+| `i18n_keys` | yes | list of locale keys this template references; missing translations FAIL the gate |
+| `header_max_chars` | yes | hard cap on HCT block 1 — default 100; SMS-style channels override to 70 |
+| `lead_max_chars` | yes | hard cap on HCT block 2 — default 280 |
+| `body_max_chars` | yes | hard cap on full rendered body before truncation |
+| `attachment_policy` | yes | `inline | permalink | both` — composes with §38.2 size table |
+| `helpers` | no | additional Sprig / custom helpers the template needs |
+
+### 39.5 Style rules (constitution-level)
+
+Templates MUST follow these style rules (`CM-TEMPLATE-STYLE` gate, planned):
+
+1. **One emoji per block** — header may have flavor-icon + criticality-badge; otherwise emojis are atomic.
+2. **Sentence case** — no SCREAMING headlines except for `🚨 CRITICAL` badges.
+3. **Active voice** in the lead — "Build failed" not "A build has been failed by".
+4. **Past-tense in event-confirmation messages, present-tense in status-update messages** — keeps tense aligned with the event semantics.
+5. **No clipping mid-word** — body truncation always happens at a clause boundary; ellipsis (`…`) marks the cut.
+6. **i18n-safe** — no string concatenation; only `{{tr "key" .Param}}` calls.
+7. **No raw user input in HTML / shell context** — template MUST use the auto-escaping `html/template` or `text/template` per channel (spec §15.3).
+8. **Permalink wording is always "🔗 Permalink:"** — never "Link:", "URL:", "See:", etc.
+9. **Timestamps are RFC 3339 with explicit timezone** — never relative ("5 minutes ago") because diary entries lose context over time.
+10. **Universal `<flavor>herald <version>` attribution in the footer** — operators can suppress for white-label deployments via `[branding].suppress_footer=true`.
+
+### 39.6 Per-channel rendering tiers
+
+| Tier | Channels | HCT mapping |
+|---|---|---|
+| Rich (interactive) | Slack, Discord, Telegram, Teams, Lark, WhatsApp Cloud, Viber | Header → emphasised header element + criticality color; Lead → top text; Details → fields/blocks; Attachments → file attachments + previews; Footer → context block. |
+| Rich (read-only) | Email (HTML), Gotify, ntfy with X-Markdown | Same blocks, no interactive components. |
+| Plain | Email (plain), SMS-like channels, generic webhook with `format=text` | Blocks delimited by `\n\n`; emojis preserved; no rich formatting. |
+| Structured | Webhook with `format=cloudevent` | Blocks serialised as JSON fields in the CloudEvent `data` payload. |
+| Source | Diary | Markdown source — no transformation. |
+
+### 39.7 Template-evolution discipline
+
+Changes to templates follow the §23 spec-change rule when they alter the HCT block layout. Pure copy edits (typos, i18n additions, color hex tweaks) DO NOT trigger the spec-change rule — they're catalogued in `docs/changelogs/templates/` (per Universal §11.4.18 script-companion-doc parallel) and audited by the template-conformance gate.
+
+---
+
+## §40. Documentation + testing completeness mandate
+
+> **Operator mandate (2026-05-20):** everything MUST be fully documented and covered with all possible test types and challenges.
+
+### 40.1 Documentation completeness
+
+Every module, package, type, and exported function MUST carry documentation. The CI gate `CM-DOC-COVERAGE` (planned) enforces:
+
+| Surface | Required documentation |
+|---|---|
+| Every `commons*` package | Package-level `// Package <name>` doc.go OR top-of-file comment naming the spec section it implements. |
+| Every exported type | One-paragraph godoc that names purpose + invariants + spec section. |
+| Every exported function/method | godoc with parameters, return semantics, error conditions, spec section. |
+| Every SQL migration | Header comment with spec section reference + rationale + irreversibility notes (if any). |
+| Every CLI subcommand | `Short`, `Long`, per-flag `Description`; `--help` output is the source of truth for operators. |
+| Every channel adapter | `docs/channels/<channel>/setup.md` with credential acquisition steps, webhook setup, troubleshooting. |
+| Every flavor | `docs/flavors/<flavor>/<flavor>.md` with use cases, command palette, channel-interaction matrix. |
+| Every Universal Constitution composition | The package/function MUST comment which Universal §X.Y mandate it implements. |
+| Every channel adapter test fixture | `testdata/README.md` documenting recording conditions + redaction policy. |
+
+`CM-DOC-COVERAGE` is run by `go vet ./...` extension + a custom golangci-lint analyzer.
+
+### 40.2 Test-type matrix
+
+Herald MUST ship eight test tiers (per Universal §11.4.27 no-fakes-beyond-unit-tests + §11.4.39 per-feature on-device end-user validation):
+
+| Tier | Build tag | Required for | What it covers |
+|---|---|---|---|
+| **Unit** | (none) | every PR | pure-logic tests, no external services, in-memory mocks only of `commons` interfaces |
+| **Component** | `component` | every PR | one module's exported surface against its own real dependencies (e.g. `commons_storage` against a real Postgres started via testcontainers-go) |
+| **Integration** | `integration` | every PR (CI-only) | cross-module flows: `pherald send` → router → null:// adapter against real Postgres + Redis + River |
+| **Contract** | `contract` | every PR | adapter tests against recorded HTTP fixtures (go-vcr cassettes) — proves the SDK invocation is byte-stable |
+| **End-to-end (sandbox)** | `e2e_sandbox` | nightly CI | per-channel sandboxes: Telegram test bot, Slack test workspace, Email IMAP IDLE against a test mailbox |
+| **End-to-end (live)** | `e2e_live` | release-gated | live bot tokens in a dedicated test tenant; runs against the published image |
+| **Mutation** | `mutation` | every release | Universal §1.1 paired-mutation tests for every gate — anti-bluff invariant |
+| **Chaos** | `chaos` | nightly | null:// `fail_rate` + latency-injection + worker-pool starvation + Postgres connection-storm |
+
+### 40.3 Test challenges (per Universal §11.4.39 + spec §40)
+
+Beyond test tiers, Herald MUST ship **named challenges** — scenarios that exercise the boundaries of correctness:
+
+- **C-01. 30-second poll cadence enforcement** — slow upstream means `getUpdates` long-poll occasionally stalls; the safety-net timer (§32.2) MUST fire `getUpdates` exactly at the 30 s mark. Test inserts an artificial stall + asserts second invocation.
+- **C-02. FIFO under contention** — 100 inbound messages from 10 senders on one channel; assert per-sender processing order is preserved.
+- **C-03. Anti-spam thresholds** — burst of 100 similar messages from one sender; assert reputation drops + quarantine triggers after threshold; assert legitimate senders unaffected.
+- **C-04. Investigation-before-Fixing rejection path** — submit a duplicate `Bug:` for an already-fixed issue; assert LLM rejects + no new workable item; assert subscriber reply explains reason.
+- **C-05. Attachment-size threshold** — submit attachment exactly at the channel limit, +1 byte, +1 MiB; assert correct inline vs permalink fallback.
+- **C-06. Multi-format bundle determinism** — generate same source `.md` twice with `--reproducible`; assert byte-identical outputs.
+- **C-07. RLS bypass attempt** — assert that omitting `SET LOCAL app.tenant_id` in a transaction yields zero rows on every multi-tenant table (fails closed).
+- **C-08. Graceful shutdown drain** — fire 50 in-flight `Send`s, send SIGTERM, assert all 50 complete within `HERALD_SHUTDOWN_GRACE`; second SIGTERM forces immediate exit.
+- **C-09. Tracker-doc fsnotify debounce** — write to `Issues.md` 12 times within 100 ms; assert exactly ONE `…tracker.issues.updated` event fires, not 12.
+- **C-10. Idempotency replay** — POST the same CloudEvent twice with same idempotency key; assert second POST returns the cached response, NOT a duplicate fan-out.
+- **C-11. Cross-channel reply threading** — Slack thread reply → Telegram-mirror message; assert both link back to the same `logical_thread_id`.
+- **C-12. Channel-credential rotation mid-flight** — rotate Telegram bot token during a 30 s send burst; assert pending sends complete with old token, new sends use new token, no message loss.
+- **C-13. Template style-rule violation** — submit a template containing emoji in two HCT blocks; assert `CM-TEMPLATE-STYLE` gate FAILs.
+- **C-14. Investigation LLM timeout** — Claude Code session hangs > 5 min; assert Herald cancels, posts `failed` reply with reason, opens HRD-INV row as `operator-blocked`.
+- **C-15. Disaster-recovery cold-start** — destroy Postgres + Redis containers; restore from latest backup; assert dead-letters table contents survive; assert in-flight messages replayed without duplicates.
+
+### 40.4 Documentation MUST-include per file class
+
+Each file class carries a documentation responsibility:
+
+| File | Doc must include |
+|---|---|
+| `*.go` | godoc per §40.1 + spec section reference in package comment |
+| `*.sql` | header with migration number, spec section, rationale, idempotency notes |
+| `Dockerfile*` | layer-by-layer rationale + build / runtime separation explained |
+| `docker-compose*.yml` | bring-up instructions + assumed env vars + verification commands |
+| `*.tmpl` | i18n-key inventory + max-length asserts + HCT block boundaries marked with comments |
+| `tests/*.sh` | mandatory header explaining: what the gate checks, what the paired mutation does, exit code semantics |
+| `*.md` | Universal §11.4.61 metadata table + ToC (when ≥ 2 H2s) + Universal §11.4.65 export siblings |
+
+### 40.5 Composition
+
+§40 doesn't replace existing testing rules; it expands them:
+
+- Universal §11.4.27 no-fakes-beyond-unit-tests is INHERITED — V3 doesn't loosen it.
+- Universal §11.4.39 per-feature end-user validation MAPS to tier `e2e_live` here.
+- Universal §11.4.2 captured-evidence applies to every tier ≥ component (recorded outputs MUST be attached to CI artefacts).
+- Universal §1.1 paired-mutation tests are the `mutation` tier.
+
+The §40 mandate is intentionally aspirational — V3 r1 ships the spec; V3 implementation lands the test tiers progressively per the HRD-008..HRD-015 first-implementation cycle. The `CM-DOC-COVERAGE` and `CM-TEMPLATE-CONFORMANCE` gates land alongside the modules they cover.
+
+---
+
+## §41. REST API surface (Gin Gonic)
+
+> **Operator mandate (2026-05-20):** every Herald flavor — where it makes sense for that flavor — MUST expose a REST API for triggering commands that operators would otherwise issue via the CLI. The REST surface lets applications (web UIs, mobile apps, third-party orchestrators) integrate with Herald without spawning subprocess invocations. The standard framework is **Gin Gonic** (`github.com/gin-gonic/gin`).
+
+### 41.1 Which flavors expose REST
+
+| Flavor | REST? | Rationale |
+|---|---|---|
+| `pherald` (Project Herald) | ✓ yes | Highest integration surface — IDE plugins, web dashboards, AI agents call REST to open investigations, fetch workable items, post replies. |
+| `sherald` (System Herald) | ✓ yes | Monitoring stacks (Grafana / Datadog / OpsGenie integrations) push events via REST instead of synthetic webhooks. |
+| `bherald` (Build Herald) | ✓ yes | CI tools without native webhook support call REST. |
+| `dherald` (Deploy Herald) | ✓ yes | Deploy orchestrators trigger rollback / hold / promote via REST. |
+| `aherald` (Alert Herald) | ✓ yes | Alert routers post events; subscribers (or front-ends) query open-alerts state. |
+| `scherald` (Schedule Herald) | ✓ yes | Reminder UIs create / snooze / cancel reminders. |
+| `iherald` (Incident Herald) | ✓ yes | Incident-management UIs page on-call, take IC, post updates. |
+| `rherald` (Release Herald) | ✓ yes | Release dashboards. |
+| `cherald` (Compliance Herald) | ✓ yes | Audit dashboards + IR tools. |
+| Future flavors | per-flavor | Decided when each flavor is specified. |
+
+Every yes-flavor exposes `/v1/...` HTTP routes through Gin. **Flavors MAY opt out** of REST only when no realistic app/integration consumer exists — operators MUST justify the opt-out in the flavor's manual.
+
+### 41.2 Framework: Gin Gonic
+
+**Why Gin** — actively maintained (~80k stars), httprouter under the hood (so latency is ~5× lower than net/http defaults for high-fanout APIs), middleware ecosystem already covers OTel + CORS + rate-limit + recovery, idiomatic for Go developers reading Herald source. Alternatives (chi, echo, fiber) were considered; Gin wins on operator familiarity and the existing OTel + Prometheus middleware quality.
+
+**Dependency:** `github.com/gin-gonic/gin` pinned via each flavor's `go.mod`. The Gin handler hand-off into `commons_messaging.Router` keeps adapter code Gin-agnostic — only the flavor's `internal/http/` wires Gin into the router.
+
+### 41.3 Endpoint surface (common across all REST-enabled flavors)
+
+Mounted under `/v1/` per spec §5.7 (REST is the *same* ingress port — `[server].http_port`, default 24091; the HTTP surface IS the REST API plus webhooks).
+
+| Method | Path | Behaviour |
+|---|---|---|
+| `POST` | `/v1/events` | CloudEvents v1.0 ingest (binary + structured) — same as §5.7. |
+| `POST` | `/v1/send` | Convenience REST ingest (non-CloudEvents JSON body, wrapped server-side). |
+| `GET` | `/v1/events/{id}` | Idempotent replay; 200 with cached response, 409 on body-mismatch. |
+| `GET` | `/v1/items` | List workable items (paginated, filterable by `status`, `type`, `criticality`). |
+| `GET` | `/v1/items/{id}` | Single workable item with full Markdown row + linked investigation + attachments. |
+| `POST` | `/v1/items` | Open a new workable item (operator role required — alternative to `Bug:`/`Issue:` subscriber commands). |
+| `PATCH` | `/v1/items/{id}` | Update status / type / criticality. |
+| `POST` | `/v1/items/{id}/close` | Migrate row from `Issues.md` → `Fixed.md` (per §8.3). |
+| `POST` | `/v1/items/{id}/reopen` | Reverse migration (per Universal §11.4.55). |
+| `POST` | `/v1/items/{id}/attachments` | Upload an attachment (multipart) — Herald validates per §32.4 + stores at `issues/users/attachments/<HRD-NNN>/`. |
+| `GET` | `/v1/subscribers` / `POST` `/v1/subscribers` | Subscriber CRUD. |
+| `GET` | `/v1/channels` | List configured channel addresses (filtered by `enabled`/`tag`). |
+| `GET` | `/v1/deadletters` / `POST` `/v1/deadletters/{id}/replay` | Dead-letter management. |
+| `GET` | `/v1/status` | Same payload as `docs/Status_Summary.md` machine-readable JSON. |
+| `GET` | `/v1/healthz` | Public-facing health (composite of /livez + /readyz). |
+| Per-flavor | `/v1/<flavor>/...` | Flavor-specific endpoints (e.g. `/v1/incident/{id}/take-ic` on `iherald`; `/v1/build/{id}/retry` on `bherald`). |
+
+### 41.4 Authentication
+
+Reuses the §5.7 auth model:
+
+- HTTP Basic with per-tenant `ingest_token` (for simple integrations).
+- JWT bearer (`Authorization: Bearer …`) validated against JWKS in `[auth.oidc]` (for OAuth-integrated apps).
+- mTLS via reverse proxy (for high-security deployments).
+
+REST endpoints requiring operator role check claims for `roles: ["operator"]` in the JWT (or look up the API key's owning subscriber's `subscribers.roles`).
+
+### 41.5 Versioning
+
+Same as §5.7 — `/v1/` is the stable contract; breaking changes ship as `/v2/` with ≥ 6 months of `/v1/` co-existence. OpenAPI spec at `docs/api/openapi.v1.yaml` is the source of truth; CI gate `CM-OPENAPI-DRIFT` enforces handler ↔ spec parity per §24.1.
+
+### 41.6 Containerization mandate (composes with §9.5)
+
+Reinforced operator mandate (2026-05-20): every flavor binary MUST be distributed as a container image built via the `containers` Submodule (per V3 §9.5). The submodule provides:
+
+- Per-flavor `Dockerfile` (multi-stage, distroless or alpine runtime).
+- Compose / Kubernetes / Nomad manifests at the per-flavor reference deployment.
+- Reproducible-build flags (`CGO_ENABLED=0`, `GOFLAGS=-trimpath`, deterministic `-ldflags`).
+- SBOM + cosign signatures per V3 §21.
+
+Operators MAY use `containers/quickstart/Dockerfile.pherald` (shipped in this commit at HRD-008) as a *local development bridge* until the `containers` Submodule is added; once the submodule lands, the quickstart files migrate there and Herald's `containers/` directory becomes a thin pointer.
+
+### 41.7 OpenAPI generation
+
+Per §24.1, `docs/api/openapi.v1.yaml` is the source-of-truth schema. Gin-based REST handlers MUST be tagged with `openapi:"<operation_id>"` comments (custom golangci-lint analyzer `herald-openapi-tags` will enforce); the spec generator scans tags + handler signatures to keep YAML and code in lockstep. Drift triggers `CM-OPENAPI-DRIFT` gate FAIL.
+
+### 41.8 Per-app integration patterns
+
+Two recommended integration patterns documented in `docs/integrations/`:
+
+- **Embedded SDK** — apps in Go vendor the relevant Herald client (planned: `clients/go/`); other languages call REST directly. SDK generators from the OpenAPI spec are documented (TypeScript via openapi-typescript, Python via openapi-python-client).
+- **Reverse-proxy fan-out** — apps mount Herald's REST under their own `/api/herald/*` namespace, applying app-side auth before forwarding.
+
+`pherald` r1 ships REST scaffolding under `pherald/internal/http/` (planned in HRD-016 follow-up — not in this V3 r2 commit; the Go binary currently exposes only CLI surface, with HTTP wiring deferred to the implementation cycle).
 
 ---
 

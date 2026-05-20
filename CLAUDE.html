@@ -251,7 +251,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>2</td>
+<td>3</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -267,9 +267,10 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td>Spec path references updated to specification.V3.md (active). All
-four <code>docs/specs/mvp/specification.md</code> occurrences rewritten
-in lockstep with V3 §23 anchor change.</td>
+<td>"Project status" section updated to reflect that the Go scaffold (5
+modules, passing unit tests, Quickstart compose) has landed. New
+commands documented (go build/test). The pre-implementation language
+replaced with implementation-r1 reality.</td>
 </tr>
 <tr>
 <td>Issues</td>
@@ -281,16 +282,18 @@ in lockstep with V3 §23 anchor change.</td>
 </tr>
 <tr>
 <td>Fixed</td>
-<td>spec-path references updated to specification.V3.md path</td>
+<td>spec-path references (r2), pre-implementation-language update
+(r3)</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
-<td>matches V3 §23 anchor + I7 gate (anchor phrase 'comprehensive
-planning and implementation' unchanged so gate stays green)</td>
+<td>aligned with HRD-009/HRD-009b/HRD-013/HRD-014 landing in the same
+commit.</td>
 </tr>
 <tr>
 <td>Continuation</td>
-<td>—</td>
+<td>bump again when first-implementation cycle completes
+HRD-010..HRD-012/HRD-016 live integrations.</td>
 </tr>
 </tbody>
 </table>
@@ -389,16 +392,51 @@ below).</li>
 <p>Herald does <strong>not</strong> ship a <code>constitution/</code>
 submodule of its own; the parent project provides it. See
 <code>docs/guides/CONSTITUTION_INHERITANCE.md</code>.</p>
-<p>There is no <code>go.mod</code>, no source code, and no
-build/test/lint tooling yet. When the user asks you to "add a feature"
-or "fix" something, first confirm whether they want you to
-<strong>scaffold the project</strong> (init the module, lay out
-packages) or <strong>fill in the spec</strong> — the answer determines
-whether you're writing Go or Markdown.</p>
-<p>Do not invent build/test commands or pretend infrastructure exists.
-If a command is needed but the supporting file (<code>go.mod</code>,
-<code>Makefile</code>, CI config) isn't present, say so and ask before
-scaffolding it.</p>
+<p><strong>As of 2026-05-20</strong> the Go scaffold has landed
+(first-implementation cycle r1). The repo now contains:</p>
+<ul>
+<li><code>go.work</code> (gitignored locally; check in if the project
+wants reproducible workspaces — current convention: gitignored per spec
+§9.1).</li>
+<li><code>commons/</code> (L0) — <code>commons/types.go</code> with the
+full §11.0 Channel contract +
+Subscriber/CloudEventEnvelope/TraceContext/Branding/ChannelID;
+<code>commons/clock.go</code> Clock abstraction;
+<code>commons/uuidv7.go</code>; <code>commons/branding.go</code>
+per-flavor factory.</li>
+<li><code>commons_prefix/</code> — §8.2 3-letter prefix algorithm.</li>
+<li><code>commons_messaging/channels/null/</code> — full §11.14
+<code>null://</code> sandbox adapter (working, tested).</li>
+<li><code>commons_messaging/channels/tgram/</code> — Telegram adapter
+SCAFFOLD (HRD-011 open).</li>
+<li><code>commons_messaging/dispatch/claude_code/</code> — Claude Code
+session-resolution + envelope formatter; live
+<code>claude --resume</code> invocation pending (HRD-012 open).</li>
+<li><code>commons_storage/</code> — 9 SQL migrations (000001..000005)
+embedded via <code>//go:embed</code>; pgx + River + Redis wiring pending
+(HRD-010 open).</li>
+<li><code>pherald/cmd/pherald/</code> — Cobra CLI;
+<code>pherald version</code> works end-to-end; other subcommands stubbed
+with HRD-NNN error pointers.</li>
+<li><code>containers/quickstart/</code> — Docker/Podman Compose +
+Dockerfile + otel-config + <code>.env.example</code> per §26.5 (HRD-008
+open for operator validation).</li>
+</ul>
+<p><strong>Build + test:</strong> from the repo root:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> build ./commons/... ./commons_prefix/... ./commons_messaging/... ./commons_storage/... ./pherald/...</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test  ./commons/... ./commons_prefix/... ./commons_messaging/... ./commons_storage/...</span></code></pre></div>
+<p>Tests pass on Go 1.22+ (verified on 1.26). Workspace is configured
+via <code>go.work</code> listing all 5 modules.</p>
+<p>When the user asks to "add a feature" the spec is the source of truth
+— find the relevant §, then the relevant module + package, then the
+relevant HRD-NNN if one is already open. New work opens a new HRD-NNN in
+<code>docs/Issues.md</code> per V3 §8.3 lifecycle.</p>
+<p>Do not invent build/test commands beyond what
+<code>go test ./&lt;module&gt;/...</code> provides. Live-integration
+tests (Telegram bot, Claude Code session, real Postgres) require
+operator-supplied credentials — see <code>docs/CONTINUATION.md</code>
+for the live-test handoff prompt.</p>
 <h2 id="mission-from-the-spec">Mission (from the spec)</h2>
 <blockquote>
 <p>Ingesting system events and reliably fanning them out to multiple
@@ -443,9 +481,9 @@ files keeps working.</p>
 <h2
 id="inheritance-gate-run-before-any-commit-touching-root-docs">Inheritance
 gate (run before any commit touching root docs)</h2>
-<div class="sourceCode" id="cb3"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> tests/test_constitution_inheritance.sh        <span class="co"># 6 invariants (I1–I6), 9 checks</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> tests/test_constitution_inheritance_meta.sh   <span class="co"># paired §1.1 mutation proof</span></span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> tests/test_constitution_inheritance.sh        <span class="co"># 6 invariants (I1–I6), 9 checks</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> tests/test_constitution_inheritance_meta.sh   <span class="co"># paired §1.1 mutation proof</span></span></code></pre></div>
 <p>The gate inline-walks parents for
 <code>&lt;ancestor&gt;/constitution/Constitution.md</code>. I5 is split
 into I5a–d (one check per root doc that must declare parent-discovery:
