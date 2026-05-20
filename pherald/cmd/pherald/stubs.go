@@ -9,9 +9,17 @@
 package main
 
 import (
+	"context"
 	"errors"
+	"fmt"
+	"os"
+	"os/signal"
+	"runtime"
+	"syscall"
 
 	"github.com/spf13/cobra"
+
+	httpsrv "github.com/vasic-digital/herald/pherald/internal/http"
 )
 
 func newSendCmd() *cobra.Command {
@@ -65,9 +73,33 @@ func newServeCmd() *cobra.Command {
   - dispatches inbound work through the §32 7-stage Worker pipeline;
   - traps SIGTERM/SIGINT for graceful drain per §3.1.
 
-NOT YET IMPLEMENTED (HRD-010/HRD-011/HRD-012 dependencies).`,
+Foundation M3 status (2026-05-20): the Gin REST surface + middleware chain
+are live. /v1/healthz + /metrics work end-to-end. /v1/events and
+/v1/compliance return 501 with HRD-016 pointers until the Runner wiring
+lands.`,
 		RunE: func(_ *cobra.Command, _ []string) error {
-			return errors.New("pherald serve: not implemented (HRD-010/HRD-011/HRD-012)")
+			srv := httpsrv.New(httpsrv.Config{
+				Addr: fmt.Sprintf("0.0.0.0:%d", httpPort),
+				Build: httpsrv.BuildInfo{
+					Version:   version,
+					GitCommit: commit,
+					GoVersion: runtime.Version(),
+				},
+			})
+
+			// Graceful shutdown per §3.1.
+			ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+			defer stop()
+			errCh := make(chan error, 1)
+			go func() { errCh <- srv.Start() }()
+			fmt.Fprintf(os.Stderr, "pherald serve: listening on :%d\n", httpPort)
+			select {
+			case <-ctx.Done():
+				fmt.Fprintln(os.Stderr, "pherald serve: shutdown signal received, draining...")
+				return srv.Shutdown(context.Background())
+			case err := <-errCh:
+				return err
+			}
 		},
 	}
 	cmd.Flags().StringVarP(&configFile, "config", "c", "config.toml", "path to TOML config file")

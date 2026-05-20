@@ -16,3 +16,15 @@
 [submodule "containers"]
 	path = containers
 	url = git@github.com:vasic-digital/containers.git
+[submodule "middleware"]
+	path = submodules/middleware
+	url = git@github.com:vasic-digital/middleware.git
+[submodule "submodules/auth"]
+	path = submodules/auth
+	url = git@github.com:vasic-digital/auth.git
+[submodule "submodules/cache"]
+	path = submodules/cache
+	url = git@github.com:vasic-digital/cache.git
+[submodule "submodules/recovery"]
+	path = submodules/recovery
+	url = git@github.com:vasic-digital/recovery.git
