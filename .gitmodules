@@ -1,0 +1,15 @@
+[submodule "submodules/database"]
+	path = submodules/database
+	url = git@github.com:vasic-digital/database.git
+[submodule "background"]
+	path = submodules/background
+	url = git@github.com:vasic-digital/BackgroundTasks.git
+[submodule "eventbus"]
+	path = submodules/eventbus
+	url = git@github.com:vasic-digital/EventBus.git
+[submodule "submodules/observability"]
+	path = submodules/observability
+	url = git@github.com:vasic-digital/observability.git
+[submodule "submodules/config"]
+	path = submodules/config
+	url = git@github.com:vasic-digital/config.git

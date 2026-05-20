@@ -27,19 +27,27 @@ GATE="${SCRIPT_DIR}/test_constitution_inheritance.sh"
 GM="${REPO_ROOT}/.gitmodules"
 BACKUP="${REPO_ROOT}/.gitmodules.hrd080-backup"
 
+# Track whether we found a pre-existing .gitmodules so cleanup knows
+# whether to restore (yes) or remove (no, we created it).
+HAD_GM=0
+
 cleanup() {
-    if [ -f "${BACKUP}" ]; then
+    if [ "${HAD_GM}" = "1" ] && [ -f "${BACKUP}" ]; then
         mv -f "${BACKUP}" "${GM}"
-    elif [ -f "${GM}" ] && [ ! -s "${GM}" ]; then
-        # We may have created an empty .gitmodules ourselves; remove it.
-        rm -f "${GM}"
+    else
+        # We created .gitmodules ourselves; remove it entirely.
+        rm -f "${GM}" "${BACKUP}"
     fi
 }
 trap cleanup EXIT
 
-# Backup any pre-existing .gitmodules (hardlink so the move is atomic-ish).
+# Backup any pre-existing .gitmodules via COPY (NOT hardlink — a hardlink
+# shares the inode, so when the script subsequently truncates .gitmodules
+# with `cat >`, the "backup" is truncated too — corrupting the working
+# state when the trap runs `mv`).
 if [ -f "${GM}" ]; then
-    ln -f "${GM}" "${BACKUP}"
+    HAD_GM=1
+    cp -p "${GM}" "${BACKUP}"
 fi
 
 run_gate_and_capture_exit() {
