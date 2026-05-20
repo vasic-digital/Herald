@@ -38,6 +38,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"digital.vasic.cache/pkg/redis"
 	"digital.vasic.containers/pkg/compose"
@@ -147,9 +148,24 @@ func (b *QuickstartBoot) Up(ctx context.Context) error {
 		return fmt.Errorf("infra: compose up: %w", err)
 	}
 
-	// HRD-010 Task 2: open the pgx pool against the booted Postgres
-	// container and apply migrations so the schema is live before
-	// tests use the pool.
+	// HRD-010 Task 4 lifecycle fix: idempotency guard. If Up() is called
+	// twice in the same boot lifecycle and we already opened clients,
+	// short-circuit — unconditionally re-opening leaks pgx connections
+	// (no Close on the previous pool) and goroutines, AND can race the
+	// Redis healthcheck against an already-good client.
+	if b.pool != nil || b.redis != nil {
+		return nil
+	}
+
+	// Selective client opens: when the caller limited Services to a
+	// subset, only open clients for the services actually requested.
+	// Empty list = all services per Config.Services contract.
+	openPG := b.serviceRequested("postgres")
+	openRedis := b.serviceRequested("redis")
+
+	// HRD-010 Task 2 (Task 4 cleanup): open the pgx pool against the
+	// booted Postgres container and apply migrations so the schema is
+	// live before tests use the pool.
 	//
 	// Host port default (24100) matches the host-side mapping declared
 	// in quickstart/docker-compose.quickstart.yml ("24100:5432" — spec
@@ -159,37 +175,134 @@ func (b *QuickstartBoot) Up(ctx context.Context) error {
 	// is supplied via the ${HERALD_DB_PASSWORD} env var the compose
 	// file requires).
 	//
-	// All values are overridable via HERALD_PG_HOST/PORT/USER/PASSWORD/
-	// DBNAME so production wiring (typed config, secret manager) can
-	// fan in without code changes.
-	cfg := storage.ConfigForHerald(
-		envOr("HERALD_PG_HOST", "127.0.0.1"),
-		envOrInt("HERALD_PG_PORT", 24100),
-		envOr("HERALD_PG_USER", "herald"),
-		envOr("HERALD_PG_PASSWORD", os.Getenv("HERALD_DB_PASSWORD")),
-		envOr("HERALD_PG_DBNAME", "herald"),
-	)
-	pool, err := storage.Open(ctx, cfg)
-	if err != nil {
-		return fmt.Errorf("commons_infra.Up: open pgx pool: %w", err)
-	}
-	b.pool = pool
+	// Canonical env vars (aligned with quickstart/docker-compose.quickstart.yml
+	// — Task 4 standardized on these names to remove the HERALD_PG_PASSWORD
+	// chained drift Task 2 carried):
+	//   HERALD_DB_HOST, HERALD_DB_PORT, HERALD_DB_USER,
+	//   HERALD_DB_PASSWORD, HERALD_DB_NAME — Postgres.
+	//   HERALD_REDIS_ADDR, HERALD_REDIS_PASSWORD, HERALD_REDIS_DB — Redis.
+	var pool database.Database
+	if openPG {
+		cfg := storage.ConfigForHerald(
+			envOr("HERALD_DB_HOST", "127.0.0.1"),
+			envOrInt("HERALD_DB_PORT", 24100),
+			envOr("HERALD_DB_USER", "herald"),
+			envOr("HERALD_DB_PASSWORD", "herald_dev"),
+			envOr("HERALD_DB_NAME", "herald"),
+		)
+		// podman-compose does not honor compose.WithWait — Postgres can be
+		// "container Up" but still mid-`pg_ctl start` (SQLSTATE 57P03,
+		// "the database system is starting up"). Retry the connect for up
+		// to 30s before declaring the boot failed. This is post-compose-up
+		// readiness polling, not arbitrary infinite-retry — bounded by the
+		// loop budget and the caller's ctx.
+		var err error
+		const maxBootWait = 30 * time.Second
+		const pollInterval = 500 * time.Millisecond
+		deadline := time.Now().Add(maxBootWait)
+		for {
+			pool, err = storage.Open(ctx, cfg)
+			if err == nil {
+				break
+			}
+			if time.Now().After(deadline) {
+				return fmt.Errorf("commons_infra.Up: open pgx pool: %w", err)
+			}
+			select {
+			case <-ctx.Done():
+				return fmt.Errorf("commons_infra.Up: open pgx pool: %w", ctx.Err())
+			case <-time.After(pollInterval):
+			}
+		}
+		b.pool = pool
 
-	// Apply migrations so the schema is live before tests use the pool.
-	applied, err := storage.RunMigrations(ctx, pool)
-	if err != nil {
-		_ = pool.Close()
-		b.pool = nil
-		return fmt.Errorf("commons_infra.Up: run migrations: %w", err)
+		// Apply migrations so the schema is live before tests use the pool.
+		applied, err := storage.RunMigrations(ctx, pool)
+		if err != nil {
+			_ = pool.Close()
+			b.pool = nil
+			return fmt.Errorf("commons_infra.Up: run migrations: %w", err)
+		}
+		_ = applied // logged when a logger is wired
 	}
-	_ = applied // logged when a logger is wired
+
+	// HRD-010 Task 4: open the Redis client against the booted Redis
+	// container. Host port default (24200) matches the host-side
+	// mapping declared in quickstart/docker-compose.quickstart.yml
+	// ("24200:6379" — spec §9.4 reserved range, see also redis service
+	// command line which requires --requirepass). Password is supplied
+	// via the required HERALD_REDIS_PASSWORD env var the compose file
+	// declares.
+	if openRedis {
+		redisCfg := &redis.Config{
+			Addr:     envOr("HERALD_REDIS_ADDR", "127.0.0.1:24200"),
+			Password: envOr("HERALD_REDIS_PASSWORD", ""),
+			DB:       envOrInt("HERALD_REDIS_DB", 0),
+		}
+		rc := redis.New(redisCfg)
+		if err := rc.HealthCheck(ctx); err != nil {
+			// Rollback the pool we just opened so b.pool isn't left
+			// dangling on a partial-boot. Anti-bluff §107: leaking the
+			// pool here + returning an error would let a retry's
+			// idempotency guard short-circuit on a half-booted lifecycle.
+			_ = rc.Close()
+			if pool != nil {
+				_ = pool.Close()
+				b.pool = nil
+			}
+			return fmt.Errorf("commons_infra.Up: redis healthcheck: %w", err)
+		}
+		b.redis = rc
+	}
 
 	return nil
 }
 
-// Down stops + removes the compose project's containers + networks.
-// Idempotent: calling Down on an already-down project is a no-op.
+// serviceRequested reports whether the named service is included in the
+// project's boot set. The empty Services list is the "all services" sentinel
+// per Config.Services — every name returns true. Otherwise the name must
+// appear verbatim in the configured list.
+func (b *QuickstartBoot) serviceRequested(name string) bool {
+	if len(b.project.Services) == 0 {
+		return true
+	}
+	for _, s := range b.project.Services {
+		if s == name {
+			return true
+		}
+	}
+	return false
+}
+
+// Down closes any wired clients (pool, redis, queue) FIRST, then stops +
+// removes the compose project's containers + networks. Idempotent:
+// calling Down on an already-down project is a no-op.
+//
+// HRD-010 Task 4 lifecycle fix: previously Down() tore down compose but
+// left b.pool / b.redis non-nil and holding dead TCP sockets. Anti-bluff
+// §107 — a subsequent boot.Pool() in the same Go process would have
+// returned the stale (now-disconnected) handle and PASSed.
+//
+// Order: close clients FIRST (gracefully — they may still talk to the
+// containers), THEN compose-down (so pgx isn't trying to flush against
+// an already-killed Postgres at shutdown).
 func (b *QuickstartBoot) Down(ctx context.Context) error {
+	if b.pool != nil {
+		_ = b.pool.Close()
+		b.pool = nil
+	}
+	if b.redis != nil {
+		_ = b.redis.Close()
+		b.redis = nil
+	}
+	if b.queue != nil {
+		// Queue is just an interface today (queue.go). Task 5 will add
+		// real construction with a documented Close() contract; for now
+		// just clear the field so a follow-up Up() doesn't see a stale
+		// interface value.
+		b.queue = nil
+	}
+
 	if err := b.orch.Down(ctx, b.project); err != nil {
 		return fmt.Errorf("infra: compose down: %w", err)
 	}
