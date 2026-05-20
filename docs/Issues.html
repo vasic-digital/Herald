@@ -175,8 +175,25 @@
 <header id="title-block-header">
 <h1 class="title">Herald — Issues</h1>
 </header>
-<h1 id="herald--issues">Herald — Issues</h1>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#herald-issues" id="toc-herald-issues">Herald — Issues</a>
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+contents</a></li>
+<li><a href="#open" id="toc-open">Open</a></li>
+<li><a href="#in-progress" id="toc-in-progress">In progress</a></li>
+<li><a href="#blocked" id="toc-blocked">Blocked</a></li>
+<li><a href="#conventions" id="toc-conventions">Conventions</a></li>
+</ul></li>
+</ul>
+</nav>
+<h1 id="herald-issues">Herald — Issues</h1>
 <table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
 <thead>
 <tr>
 <th>Field</th>
@@ -186,7 +203,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>4</td>
+<td>5</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -203,21 +220,26 @@
 <tr>
 <td>Status summary</td>
 <td>Spec V3 r6 adds §43 Constitution-derived flavor commands + workflows
-(27 entries). HRD-029..HRD-056 opened to track each command's
+(27 entries). HRD-029..HRD-056 opened to track each command’s
 implementation. Combined with HRD-018..HRD-028 from r5, the
 constitution-flavor integration plan now spans 39 workable items rolled
-out in 4 implementation waves.</td>
+out in 4 implementation waves. r5: HRD-085..HRD-090 opened to track the
+16 stub methods in <code>commons_infra.pgxTaskRepository</code> per
+§11.4.74 catalogue-check on the upstream
+<code>digital.vasic.background.TaskRepository</code> interface.</td>
 </tr>
 <tr>
 <td>Issues</td>
 <td>HRD-008, HRD-010, HRD-011, HRD-012, HRD-015, HRD-016,
-HRD-018..HRD-028, HRD-029..HRD-056</td>
+HRD-018..HRD-028, HRD-029..HRD-056, HRD-081, HRD-085..HRD-090</td>
 </tr>
 <tr>
 <td>Issues summary</td>
-<td>45 open / in-progress workable items across quickstart validation,
-live channel integrations, REST surface, the §42 binding rollout, and
-the §43 command-catalogue implementation.</td>
+<td>52 open / in-progress workable items across quickstart validation,
+live channel integrations, REST surface, the §42 binding rollout, the
+§43 command-catalogue implementation, the §44 containers-runtime
+workaround, and the §44 queue-repository extension surface (HRD-081 was
+previously omitted from the header enumeration; r5 reincludes it).</td>
 </tr>
 <tr>
 <td>Fixed</td>
@@ -248,6 +270,16 @@ HRDs whose catalogue-check is still pending, the row records
 <code>no-match (2026-05-20)</code> — operators reviewing the
 implementation PR will re-verify.</p>
 <table>
+<colgroup>
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+</colgroup>
 <thead>
 <tr>
 <th>ID</th>
@@ -378,7 +410,7 @@ detection hook, force-push interceptor, mem-budget watcher</td>
 <td>middle</td>
 <td><code>bherald</code> CI/test bindings (§1,
 §11.4.2/.3/.4/.5/.7/.13/.14/.24/.27/.39/.43/.46/.48–.52/.67) —
-gate-result event emitters; integrates with the consuming project's CI
+gate-result event emitters; integrates with the consuming project’s CI
 workflow</td>
 <td>2026-05-20</td>
 <td>2026-05-20</td>
@@ -635,7 +667,7 @@ wrapper</td>
 <td>2026-05-20</td>
 <td>2026-05-20</td>
 <td>spec §43.2 / §11.4.36; Catalogue-Check: extend constitution
-submodule's install_upstreams.sh</td>
+submodule’s install_upstreams.sh</td>
 </tr>
 <tr>
 <td>HRD-044</td>
@@ -807,10 +839,159 @@ reimplement.</td>
 <code>commons_infra/boot.go</code> — dropped <code>WithWait</code>,
 TCP-probe used for healthcheck).</td>
 </tr>
+<tr>
+<td>HRD-085</td>
+<td>task</td>
+<td>open</td>
+<td>middle</td>
+<td>Implement single-task admin operations on
+<code>commons_infra.pgxTaskRepository</code> — <code>GetByID</code>,
+<code>Update</code>, <code>Delete</code>. Required for Requeue +
+MoveToDeadLetter call chains and operator tooling. Currently all three
+return <code>ErrUnsupported (HRD-085)</code>. Scope: read one
+BackgroundTask row by ID; full-row Update including JSONB columns; soft-
+or hard-Delete decision per §107.</td>
+<td>2026-05-20</td>
+<td>2026-05-20</td>
+<td>spec V3 §44 + upstream interface <code>TaskRepository</code> in
+<code>submodules/background/interfaces.go</code>; Catalogue-Check:
+extend
+<code>digital.vasic.background.TaskRepository@2d46dd60b2ffcb9d3b584b029b711a6fbc71b296</code>
+(Herald already implements Enqueue/Dequeue/LogEvent on the same
+interface; these three rows finish the single-task surface).</td>
+</tr>
+<tr>
+<td>HRD-086</td>
+<td>task</td>
+<td>open</td>
+<td>middle</td>
+<td>Implement worker-side running-task state mutations on
+<code>commons_infra.pgxTaskRepository</code> —
+<code>UpdateStatus</code>, <code>UpdateProgress</code>,
+<code>UpdateHeartbeat</code>, <code>SaveCheckpoint</code>. Required by
+River workers + the stuck-detector reaper. Currently all four return
+<code>ErrUnsupported (HRD-086)</code>. Scope: status transitions guarded
+by valid-state-machine check; progress as
+<code>(float64, message)</code>; heartbeat as
+<code>updated_at = now()</code> writeback; checkpoint as opaque
+<code>[]byte</code> blob persisted alongside the task row.</td>
+<td>2026-05-20</td>
+<td>2026-05-20</td>
+<td>spec V3 §44 + upstream interface <code>TaskRepository</code> in
+<code>submodules/background/interfaces.go</code>; Catalogue-Check:
+extend
+<code>digital.vasic.background.TaskRepository@2d46dd60b2ffcb9d3b584b029b711a6fbc71b296</code>
+(worker-side write surface — the hot path for long-running task progress
+reporting).</td>
+</tr>
+<tr>
+<td>HRD-087</td>
+<td>task</td>
+<td>open</td>
+<td>low</td>
+<td>Implement admin / stats / audit reads on
+<code>commons_infra.pgxTaskRepository</code> — <code>GetByStatus</code>,
+<code>GetPendingTasks</code>, <code>CountByStatus</code>,
+<code>GetTaskHistory</code>. Drives the <code>/v1/queue/*</code>
+introspection endpoints + Peek delegate. Currently all four return
+<code>ErrUnsupported (HRD-087)</code>. Scope: status-filtered paginated
+reads; pending-task slice for Peek; status-bucketed counts; per-task
+execution-history rows from the <code>task_execution_history</code>
+table.</td>
+<td>2026-05-20</td>
+<td>2026-05-20</td>
+<td>spec V3 §44 + upstream interface <code>TaskRepository</code> in
+<code>submodules/background/interfaces.go</code>; Catalogue-Check:
+extend
+<code>digital.vasic.background.TaskRepository@2d46dd60b2ffcb9d3b584b029b711a6fbc71b296</code>
+(read-only introspection — composes with HRD-016
+<code>/v1/queue/*</code> Gin handlers).</td>
+</tr>
+<tr>
+<td>HRD-088</td>
+<td>task</td>
+<td>open</td>
+<td>middle</td>
+<td>Implement queue-recovery reads on
+<code>commons_infra.pgxTaskRepository</code> —
+<code>GetStaleTasks</code>, <code>GetByWorkerID</code>. Drives the
+stuck-task reaper + worker-crash recovery loop. Currently both return
+<code>ErrUnsupported (HRD-088)</code>. Scope: stale-threshold filter
+against <code>updated_at</code>; per-worker assignment lookup for
+re-dispatch after a worker disappears.</td>
+<td>2026-05-20</td>
+<td>2026-05-20</td>
+<td>spec V3 §44 + upstream interface <code>TaskRepository</code> in
+<code>submodules/background/interfaces.go</code>; Catalogue-Check:
+extend
+<code>digital.vasic.background.TaskRepository@2d46dd60b2ffcb9d3b584b029b711a6fbc71b296</code>
+(recovery-loop surface — required before any worker is allowed to crash
+without operator intervention).</td>
+</tr>
+<tr>
+<td>HRD-089</td>
+<td>task</td>
+<td>open</td>
+<td>low</td>
+<td>Implement resource-monitor I/O on
+<code>commons_infra.pgxTaskRepository</code> —
+<code>SaveResourceSnapshot</code>, <code>GetResourceSnapshots</code>.
+Persists per-task CPU/memory/IO samples for capacity-planning +
+post-mortem. Currently both return
+<code>ErrUnsupported (HRD-089)</code>. Scope: append-only insert keyed
+by <code>(task_id, captured_at)</code>; per-task paginated read in
+reverse-chronological order. Schema target: a
+<code>task_resource_snapshots</code> table not yet in the §9.6 migration
+set — adding it is part of this HRD.</td>
+<td>2026-05-20</td>
+<td>2026-05-20</td>
+<td>spec V3 §44 + upstream interface <code>TaskRepository</code> in
+<code>submodules/background/interfaces.go</code>; Catalogue-Check:
+extend
+<code>digital.vasic.background.TaskRepository@2d46dd60b2ffcb9d3b584b029b711a6fbc71b296</code>
+(resource telemetry — composes with
+<code>digital.vasic.observability</code> OTel pipeline but is durable,
+not stream-only).</td>
+</tr>
+<tr>
+<td>HRD-090</td>
+<td>task</td>
+<td>open</td>
+<td>middle</td>
+<td>Implement dead-letter handling on
+<code>commons_infra.pgxTaskRepository</code> —
+<code>MoveToDeadLetter</code>. Required failure path when a task
+exhausts retries or fails a §107 invariant. Currently returns
+<code>ErrUnsupported (HRD-090)</code>. Scope: atomically move the
+BackgroundTask row to a <code>dead_letter_tasks</code> table with the
+failure-reason string + original-row JSONB snapshot; emit a
+<code>.queue.dead_letter</code> event via
+<code>commons_constitution</code> per §42.1. Schema target: a
+<code>dead_letter_tasks</code> table not yet in the §9.6 migration set —
+adding it is part of this HRD.</td>
+<td>2026-05-20</td>
+<td>2026-05-20</td>
+<td>spec V3 §44 + upstream interface <code>TaskRepository</code> in
+<code>submodules/background/interfaces.go</code>; Catalogue-Check:
+extend
+<code>digital.vasic.background.TaskRepository@2d46dd60b2ffcb9d3b584b029b711a6fbc71b296</code>
+(failure-terminal surface — composes with HRD-085 GetByID + HRD-018
+cherald event emission).</td>
+</tr>
 </tbody>
 </table>
 <h2 id="in-progress">In progress</h2>
 <table>
+<colgroup>
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+</colgroup>
 <thead>
 <tr>
 <th>ID</th>
