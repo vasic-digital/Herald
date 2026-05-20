@@ -2,15 +2,15 @@
 
 | Field | Value |
 |---|---|
-| Revision | 4 |
+| Revision | 5 |
 | Created | 2026-05-20 |
 | Last modified | 2026-05-20 |
 | Status | active |
-| Status summary | Foundation M1 landed: `commons_constitution` (14 files, ~2.9k LOC, all green under -race). Spec V3 → Revision 7 (§44 Foundation contract). HRD-080 closed (I6 gate refinement + paired meta-test). Next: M2 Helix-stack submodule installs + Postgres wiring. |
+| Status summary | HRD-010 commons_storage live wiring landed. §107 covenant proved its worth: E14 RLS test discovered + caught a production RLS-bypass bug (root cause: bootstrap PG user bypasses RLS regardless of FORCE). Plus prior: Foundation M1 (`commons_constitution`, 14 files, ~2.9k LOC, all green under -race); Spec V3 → Revision 7 (§44 Foundation contract); HRD-080 closed (I6 gate refinement + paired meta-test). |
 | Issues | see `Issues.md` |
-| Issues summary | HRD-008/-010/-011/-012/-015/-016/-018 (in_progress) + HRD-019..HRD-056 still open. |
-| Fixed | HRD-001..HRD-007, HRD-009, HRD-009b, HRD-013, HRD-014, HRD-017, HRD-080 (and HRD-018 partial — M1 component landed) |
-| Fixed summary | spec V1→V3 r7; Go module foundation + Foundation M1; universal §11.4.73 + §11.4.74 mandates propagated; I6 gate refined to allow Helix-stack submodules. |
+| Issues summary | HRD-008/-011/-012/-015/-016/-018 (in_progress) + HRD-019..HRD-056 + HRD-081 + HRD-085..HRD-090 still open. |
+| Fixed | HRD-001..HRD-007, HRD-009, HRD-009b, HRD-010, HRD-013, HRD-014, HRD-017, HRD-080 (and HRD-018 partial — M1 component landed) |
+| Fixed summary | spec V1→V3 r7; Go module foundation + Foundation M1/M2/M3; HRD-010 commons_storage live wiring (pgx + RLS + queue + Redis + migrate CLI); universal §11.4.73 + §11.4.74 mandates propagated; I6 gate refined to allow Helix-stack submodules. |
 | Continuation | see `CONTINUATION.md`. |
 
 ## Table of contents
@@ -21,6 +21,7 @@
 
 | ID | Type | Criticality | Title | Closed | Commit | Reference |
 |---|---|---|---|---|---|---|
+| HRD-010 | task | middle | commons_storage live wiring — pgx pool + RLS-enforcing WithTenantContext (discovered + fixed RLS-bypass bug via E14 falsifiability) + 9 migrations + background queue (digital.vasic.background bound via pgxTaskRepository) + Redis ACL (digital.vasic.cache) + pherald migrate up/status/down/validate subcommand + 3 new §107 e2e invariants (E14/E15/E16) + HRD-085..090 registered for queue-repository stubs | 2026-05-20 | (this commit) | spec V3 §9.6 + §16; Catalogue-Check: extend digital.vasic.database@<pinned> + digital.vasic.background@2d46dd60 + digital.vasic.cache@<pinned>; Models + Concurrency submodules added |
 | HRD-080 | task | low | Refine I6 inheritance-gate invariant from blanket `.gitmodules`-forbidden to "no `constitution/` entry in `.gitmodules`" — paired meta-test `test_i6_refinement_meta.sh` with 3 anti-bluff subtests. Enables Foundation M2/M3 Helix-stack submodule installs. | 2026-05-20 | (this commit) | spec V3 §44.9 |
 | HRD-017 | task | middle | Propagate Universal §11.4.73 (main-spec versioning + revision discipline) and §11.4.74 (submodule-catalogue-first discovery) into parent constitution Constitution.md + CLAUDE.md + AGENTS.md | 2026-05-20 | constitution `34a82b3` | Universal §11.4.73, §11.4.74 |
 | HRD-014 | task | middle | pherald CLI scaffold — Cobra root + version + 5 stubbed subcommands; `pherald version --json` returns canonical build info | 2026-05-20 | `e627c76` | spec V3 §3 + §18.2 |

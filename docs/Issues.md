@@ -2,14 +2,14 @@
 
 | Field | Value |
 |---|---|
-| Revision | 5 |
+| Revision | 6 |
 | Created | 2026-05-20 |
 | Last modified | 2026-05-20 |
 | Status | active |
-| Status summary | Spec V3 r6 adds §43 Constitution-derived flavor commands + workflows (27 entries). HRD-029..HRD-056 opened to track each command's implementation. Combined with HRD-018..HRD-028 from r5, the constitution-flavor integration plan now spans 39 workable items rolled out in 4 implementation waves. r5: HRD-085..HRD-090 opened to track the 16 stub methods in `commons_infra.pgxTaskRepository` per §11.4.74 catalogue-check on the upstream `digital.vasic.background.TaskRepository` interface. |
-| Issues | HRD-008, HRD-010, HRD-011, HRD-012, HRD-015, HRD-016, HRD-018..HRD-028, HRD-029..HRD-056, HRD-081, HRD-085..HRD-090 |
-| Issues summary | 52 open / in-progress workable items across quickstart validation, live channel integrations, REST surface, the §42 binding rollout, the §43 command-catalogue implementation, the §44 containers-runtime workaround, and the §44 queue-repository extension surface (HRD-081 was previously omitted from the header enumeration; r5 reincludes it). |
-| Fixed | HRD-001..HRD-007, HRD-009, HRD-009b, HRD-013, HRD-014, HRD-017 |
+| Status summary | HRD-010 closed atomically (commons_storage live wiring complete; §107 E14/E15/E16 invariants live; production RLS bypass discovered + fixed via TDD). Spec V3 r6 adds §43 Constitution-derived flavor commands + workflows (27 entries). HRD-029..HRD-056 opened to track each command's implementation. Combined with HRD-018..HRD-028 from r5, the constitution-flavor integration plan now spans 39 workable items rolled out in 4 implementation waves. r5: HRD-085..HRD-090 opened to track the 16 stub methods in `commons_infra.pgxTaskRepository` per §11.4.74 catalogue-check on the upstream `digital.vasic.background.TaskRepository` interface. |
+| Issues | HRD-008, HRD-011, HRD-012, HRD-015, HRD-016, HRD-018..HRD-028, HRD-029..HRD-056, HRD-081, HRD-085..HRD-090 |
+| Issues summary | 51 open / in-progress workable items across quickstart validation, live channel integrations, REST surface, the §42 binding rollout, the §43 command-catalogue implementation, the §44 containers-runtime workaround, and the §44 queue-repository extension surface. HRD-010 was closed in r6 (commons_storage live wiring landed). |
+| Fixed | HRD-001..HRD-007, HRD-009, HRD-009b, HRD-010, HRD-013, HRD-014, HRD-017, HRD-080 |
 | Fixed summary | see `Fixed.md`. |
 | Continuation | see `CONTINUATION.md`. |
 
@@ -26,7 +26,6 @@ Per Universal §11.4.74 every new row carries a `Catalogue-Check` line in its Re
 
 | ID | Type | Status | Criticality | Title | Opened | Last update | References |
 |---|---|---|---|---|---|---|---|
-| HRD-010 | task | open | middle | commons_storage live wiring (golang-migrate driver, pgx pool, River queue, Redis ACL) | 2026-05-20 | 2026-05-20 | spec V3 §9.6 + §16; Catalogue-Check: no-match (2026-05-20) — golang-migrate is the standard, not a vasic/Helix-owned thing |
 | HRD-011 | task | open | middle | Telegram channel adapter live integration (telebot SDK + getUpdates long-poll + webhook secret_token) | 2026-05-20 | 2026-05-20 | spec V3 §11.1; Catalogue-Check: no-match (2026-05-20) |
 | HRD-012 | task | open | middle | Claude Code dispatcher live integration (`claude --resume` + parse `<<<HERALD-REPLY>>>`) | 2026-05-20 | 2026-05-20 | spec V3 §33; Catalogue-Check: no-match (2026-05-20) |
 | HRD-015 | task | open | low | Inheritance gate I8 invariants for Go scaffold (go.work + commons/types.go + null adapter test passes) | 2026-05-20 | 2026-05-20 | spec V3 §40 + gate I7 pattern; Catalogue-Check: no-match (2026-05-20) |

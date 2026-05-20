@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>Herald — Fixed</title>
+  <title>Fixed</title>
   <style>
     /* Default styles provided by pandoc.
     ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -173,10 +173,25 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">Herald — Fixed</h1>
+<h1 class="title">Fixed</h1>
 </header>
-<h1 id="herald--fixed">Herald — Fixed</h1>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#herald-fixed" id="toc-herald-fixed">Herald — Fixed</a>
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+contents</a></li>
+<li><a href="#recently-fixed" id="toc-recently-fixed">Recently
+fixed</a></li>
+</ul></li>
+</ul>
+</nav>
+<h1 id="herald-fixed">Herald — Fixed</h1>
 <table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
 <thead>
 <tr>
 <th>Field</th>
@@ -186,7 +201,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>4</td>
+<td>5</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -202,10 +217,12 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td>Foundation M1 landed: <code>commons_constitution</code> (14 files,
-~2.9k LOC, all green under -race). Spec V3 → Revision 7 (§44 Foundation
-contract). HRD-080 closed (I6 gate refinement + paired meta-test). Next:
-M2 Helix-stack submodule installs + Postgres wiring.</td>
+<td>HRD-010 commons_storage live wiring landed. §107 covenant proved its
+worth: E14 RLS test discovered + caught a production RLS-bypass bug
+(root cause: bootstrap PG user bypasses RLS regardless of FORCE). Plus
+prior: Foundation M1 (<code>commons_constitution</code>, 14 files, ~2.9k
+LOC, all green under -race); Spec V3 → Revision 7 (§44 Foundation
+contract); HRD-080 closed (I6 gate refinement + paired meta-test).</td>
 </tr>
 <tr>
 <td>Issues</td>
@@ -213,19 +230,20 @@ M2 Helix-stack submodule installs + Postgres wiring.</td>
 </tr>
 <tr>
 <td>Issues summary</td>
-<td>HRD-008/-010/-011/-012/-015/-016/-018 (in_progress) +
-HRD-019..HRD-056 still open.</td>
+<td>HRD-008/-011/-012/-015/-016/-018 (in_progress) + HRD-019..HRD-056 +
+HRD-081 + HRD-085..HRD-090 still open.</td>
 </tr>
 <tr>
 <td>Fixed</td>
-<td>HRD-001..HRD-007, HRD-009, HRD-009b, HRD-013, HRD-014, HRD-017,
-HRD-080 (and HRD-018 partial — M1 component landed)</td>
+<td>HRD-001..HRD-007, HRD-009, HRD-009b, HRD-010, HRD-013, HRD-014,
+HRD-017, HRD-080 (and HRD-018 partial — M1 component landed)</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
-<td>spec V1→V3 r7; Go module foundation + Foundation M1; universal
-§11.4.73 + §11.4.74 mandates propagated; I6 gate refined to allow
-Helix-stack submodules.</td>
+<td>spec V1→V3 r7; Go module foundation + Foundation M1/M2/M3; HRD-010
+commons_storage live wiring (pgx + RLS + queue + Redis + migrate CLI);
+universal §11.4.73 + §11.4.74 mandates propagated; I6 gate refined to
+allow Helix-stack submodules.</td>
 </tr>
 <tr>
 <td>Continuation</td>
@@ -238,7 +256,16 @@ Helix-stack submodules.</td>
 <li><a href="#recently-fixed">Recently fixed</a></li>
 </ul>
 <h2 id="recently-fixed">Recently fixed</h2>
-<table>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+</colgroup>
 <thead>
 <tr>
 <th>ID</th>
@@ -252,12 +279,29 @@ Helix-stack submodules.</td>
 </thead>
 <tbody>
 <tr>
+<td>HRD-010</td>
+<td>task</td>
+<td>middle</td>
+<td>commons_storage live wiring — pgx pool + RLS-enforcing
+WithTenantContext (discovered + fixed RLS-bypass bug via E14
+falsifiability) + 9 migrations + background queue
+(digital.vasic.background bound via pgxTaskRepository) + Redis ACL
+(digital.vasic.cache) + pherald migrate up/status/down/validate
+subcommand + 3 new §107 e2e invariants (E14/E15/E16) + HRD-085..090
+registered for queue-repository stubs</td>
+<td>2026-05-20</td>
+<td>(this commit)</td>
+<td>spec V3 §9.6 + §16; Catalogue-Check: extend
+digital.vasic.database@<pinned> + digital.vasic.background@2d46dd60 +
+digital.vasic.cache@<pinned>; Models + Concurrency submodules added</td>
+</tr>
+<tr>
 <td>HRD-080</td>
 <td>task</td>
 <td>low</td>
 <td>Refine I6 inheritance-gate invariant from blanket
-<code>.gitmodules</code>-forbidden to "no <code>constitution/</code>
-entry in <code>.gitmodules</code>" — paired meta-test
+<code>.gitmodules</code>-forbidden to “no <code>constitution/</code>
+entry in <code>.gitmodules</code>” — paired meta-test
 <code>test_i6_refinement_meta.sh</code> with 3 anti-bluff subtests.
 Enables Foundation M2/M3 Helix-stack submodule installs.</td>
 <td>2026-05-20</td>
@@ -386,7 +430,7 @@ tables</td>
 Recommendations</td>
 <td>2026-05-19</td>
 <td><code>b421fe1</code></td>
-<td>archive V1 §"Review"</td>
+<td>archive V1 §“Review”</td>
 </tr>
 </tbody>
 </table>

@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>Herald — Status</title>
+  <title>Status</title>
   <style>
     /* Default styles provided by pandoc.
     ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -173,7 +173,7 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">Herald — Status</h1>
+<h1 class="title">Status</h1>
 </header>
 <nav id="TOC" role="doc-toc">
 <ul>
@@ -188,7 +188,10 @@ id="toc-specification">Specification</a></li>
 <li><a href="#implementation"
 id="toc-implementation">Implementation</a></li>
 <li><a href="#operations" id="toc-operations">Operations</a></li>
-<li><a href="#risk-surface" id="toc-risk-surface">Risk surface</a></li>
+<li><a href="#risk-surface" id="toc-risk-surface">Risk surface</a>
+<ul>
+<li><a href="#closed-risks" id="toc-closed-risks">Closed risks</a></li>
+</ul></li>
 </ul></li>
 </ul>
 </nav>
@@ -207,7 +210,7 @@ id="toc-implementation">Implementation</a></li>
 <tbody>
 <tr>
 <td>Revision</td>
-<td>6</td>
+<td>7</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -223,33 +226,42 @@ id="toc-implementation">Implementation</a></li>
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>Foundation M1 + M2 + M3 all landed.</strong> M1:
-<code>commons_constitution</code> (14 files, ~2.9k LOC) — Evaluator +
-Registry + 12 emit helpers + BundleHash + ModeLadder + ConstitutionStore
-+ MemoryBus + Runner + CloudEvents v1.0 adapter. M2 (commit c8eed7e):
-Postgres backends with live RLS-tenant-isolation proof. M3 (commit
-21593e6): Gin REST surface + 4 M3 submodules + LIVE
-<code>pherald serve</code> accepting HTTP on :24791. Anti-bluff regime
-now complete: e2e_bluff_hunt.sh 14/14 PASS against real services (commit
-92ecdc6); audit_antibluff.sh 14/14 PASS (was 13 — added I8 meta-test for
-§107 covenant on 2026-05-20); inheritance gate 15/15 PASS (was 12 —
-added I8a/b/c).</td>
+<td><strong>Foundation M1 + M2 + M3 all landed + HRD-010 commons_storage
+live wiring closed.</strong> M1: <code>commons_constitution</code> (14
+files, ~2.9k LOC) — Evaluator + Registry + 12 emit helpers + BundleHash
++ ModeLadder + ConstitutionStore + MemoryBus + Runner + CloudEvents v1.0
+adapter. M2 (commit c8eed7e): Postgres backends with live
+RLS-tenant-isolation proof. M3 (commit 21593e6): Gin REST surface + 4 M3
+submodules + LIVE <code>pherald serve</code> accepting HTTP on :24791.
+HRD-010 (commits 82ea82d..13cea69): pgx pool + RLS-enforcing
+WithTenantContext (discovered + fixed a production RLS-bypass bug — the
+E14 falsifiability test caught the
+bootstrap-superuser-bypasses-FORCE-RLS class of bluff before it shipped)
++ queue (digital.vasic.background bound via pgxTaskRepository) + Redis
+(digital.vasic.cache) +
+<code>pherald migrate up/status/down/validate</code> CLI +
+Models/Concurrency submodules added. Anti-bluff regime:
+e2e_bluff_hunt.sh now <strong>18/18 PASS</strong> against real services
+(was 14 — added E14/E15/E16 storage invariants in commit 13cea69);
+audit_antibluff.sh 14/14 PASS; inheritance gate 15/15 PASS.</td>
 </tr>
 <tr>
 <td>Issues</td>
-<td>HRD-008, HRD-010, HRD-011, HRD-012, HRD-015, HRD-016, HRD-018
-(in_progress), HRD-019..HRD-028, HRD-029..HRD-056, HRD-081</td>
+<td>HRD-008, HRD-011, HRD-012, HRD-015, HRD-016, HRD-018 (in_progress),
+HRD-019..HRD-028, HRD-029..HRD-056, HRD-081, HRD-085..HRD-090</td>
 </tr>
 <tr>
 <td>Issues summary</td>
-<td>see <code>Issues.md</code> — 45 open items spanning live channel
-integrations (HRD-010..012), REST surface (HRD-016), §42 constitution
-bindings (HRD-018..028), §43 command-catalogue (HRD-029..056), and
-HRD-081 (containers podman-compose adapter refinement).</td>
+<td>see <code>Issues.md</code> — 51 open items spanning live channel
+integrations (HRD-011/012), REST surface (HRD-016), §42 constitution
+bindings (HRD-018..028), §43 command-catalogue (HRD-029..056), HRD-081
+(containers podman-compose adapter refinement), and HRD-085..090
+(queue-repository stub-completion surface opened during HRD-010).</td>
 </tr>
 <tr>
 <td>Fixed</td>
-<td>HRD-001..HRD-007, HRD-009, HRD-009b, HRD-013, HRD-014, HRD-017</td>
+<td>HRD-001..HRD-007, HRD-009, HRD-009b, HRD-010, HRD-013, HRD-014,
+HRD-017, HRD-080</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
@@ -257,10 +269,10 @@ HRD-081 (containers podman-compose adapter refinement).</td>
 </tr>
 <tr>
 <td>Continuation</td>
-<td>Foundation complete; live integrations next. Priority order: HRD-008
-(operator quickstart e2e validation) → HRD-011/012 (Telegram + Claude
-Code live) → HRD-010 (commons_storage live pgx/River/Redis wiring) → §42
-constitution-binding rollout (HRD-018..028) → §43 command catalogue
+<td>HRD-010 closed; live channel integrations next. Priority order:
+HRD-008 (operator quickstart e2e validation) → HRD-011/012 (Telegram +
+Claude Code live) → HRD-085..090 (queue-repository stub completion) →
+§42 constitution-binding rollout (HRD-018..028) → §43 command catalogue
 (HRD-029..056). Each milestone followed by multi-mirror push + full
 anti-bluff verification (audit + gate + e2e bluff-hunt).</td>
 </tr>
@@ -342,9 +354,18 @@ CloudEvents v1.0 adapter; all green under
 </tr>
 <tr>
 <td><code>commons_storage</code> (L1)</td>
-<td>✅ landed (M2)</td>
-<td>9 SQL migrations embedded; pgx + RLS-tenant-isolation live (commit
-c8eed7e); River + Redis still to wire per HRD-010.</td>
+<td>✅ landed (M2 + HRD-010)</td>
+<td>9 SQL migrations embedded; pgx pool + RLS-enforcing
+WithTenantContext live (commit c8168ec); HRD-010 (commits
+82ea82d..13cea69) wired queue (digital.vasic.background →
+pgxTaskRepository) + Redis (digital.vasic.cache) + the
+<code>pherald migrate up/status/down/validate</code> CLI. The §107
+covenant proved its worth here: the E14 RLS falsifiability test caught
+(and the implementer fixed) a real production RLS-bypass bug where the
+bootstrap PG superuser silently bypassed
+<code>FORCE ROW LEVEL SECURITY</code>. HRD-085..090 opened to track the
+remaining 16 pgxTaskRepository methods returning
+<code>ErrUnsupported</code>.</td>
 </tr>
 <tr>
 <td><code>commons_infra</code></td>
@@ -378,22 +399,27 @@ FAIL</strong> (was 12; I8a/b/c added 2026-05-20 for §107 covenant).</li>
 <li><strong>Anti-bluff audit:</strong> <strong>14 PASS / 0 FAIL</strong>
 (was 13; I8 paired meta-test added).</li>
 <li><strong>CodeGraph validate:</strong> 7 PASS / 0 FAIL.</li>
-<li><strong>E2E bluff-hunt against real services:</strong> <strong>14
-PASS / 0 FAIL</strong> — builds pherald, starts real Gin server, hits
-live <code>/v1/*</code> endpoints, boots real Postgres container via
-<code>containers/</code> submodule, runs M2 RLS integration tests,
+<li><strong>E2E bluff-hunt against real services:</strong> <strong>18
+PASS / 0 FAIL</strong> (was 14; HRD-010 added E14 live-RLS-isolation +
+E15 live-queue-enqueue/dequeue + E16 live-Redis-TTL-round-trip in commit
+13cea69) — builds pherald, starts real Gin server, hits live
+<code>/v1/*</code> endpoints, boots real Postgres + Redis containers via
+<code>containers/</code> submodule, runs M2 RLS integration tests +
+HRD-010 storage tests against the live stack,
 SIGTERM-graceful-shutdowns. This is the canonical §107 evidence per
 Herald §107.</li>
-<li><strong>Submodules:</strong> 10 vendored — 9 Helix-stack capability
+<li><strong>Submodules:</strong> 12 vendored — 11 Helix-stack capability
 modules under <code>submodules/</code> (<code>auth</code>,
 <code>background</code>, <code>cache</code>, <code>config</code>,
 <code>database</code>, <code>eventbus</code>, <code>middleware</code>,
-<code>observability</code>, <code>recovery</code>) referenced via
-<code>replace</code> directives in consuming <code>go.mod</code> files,
-NOT via <code>go.work</code>; plus <code>containers/</code> (runtime
-auto-detection + on-demand container boot, consumed directly by
-Foundation tests + <code>pherald doctor</code>). All 10 carry the §11.4
-anti-bluff anchor.</li>
+<code>observability</code>, <code>recovery</code>, plus
+<code>Models</code> + <code>Concurrency</code> added during HRD-010)
+referenced via <code>replace</code> directives in consuming
+<code>go.mod</code> files, NOT via <code>go.work</code>; plus
+<code>containers/</code> (runtime auto-detection + on-demand container
+boot, consumed directly by Foundation tests +
+<code>pherald doctor</code>). All 12 carry the §11.4 anti-bluff
+anchor.</li>
 <li><strong>Build / test toolchain:</strong> Go 1.25+ (verified on 1.26
 per CLAUDE.md), Pandoc 3.9, WeasyPrint 66, Podman 5.8 — verified
 locally.</li>
@@ -421,6 +447,21 @@ point.</li>
 <li><strong>No CI yet.</strong> No GitHub Actions / GitLab CI / etc.
 Operator runs <code>scripts/e2e_bluff_hunt.sh</code> manually for now —
 that script IS the local CI surrogate.</li>
+</ul>
+<h3 id="closed-risks">Closed risks</h3>
+<ul>
+<li><strong>Production RLS-bypass bug (closed 2026-05-20 during HRD-010
+step 3, commit <code>5c1c022</code>).</strong> Until that commit,
+<code>commons_infra.WithTenantContext</code> set the tenant GUC but
+<code>ROW LEVEL SECURITY</code> was not <code>FORCE</code>d on the
+targeted tables — and the bootstrap PG user used in tests was a
+superuser, which bypasses RLS regardless. The E14 falsifiability test
+(real Postgres, cross-tenant SELECT must return EXACTLY 0 rows from the
+other tenant) caught the bluff before any live deployment. Fix: switched
+the application connection to a non-superuser role + ran
+<code>ALTER TABLE … FORCE ROW LEVEL SECURITY</code> in migration 000003.
+The §107 covenant directly prevented this from shipping; the lesson is
+“EXACT-N row count, never &gt;=N” for any isolation test.</li>
 </ul>
 </body>
 </html>
