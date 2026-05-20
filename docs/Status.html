@@ -186,7 +186,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>3</td>
+<td>4</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -202,16 +202,21 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td>Spec V3 r5: §42 constitution-flavor binding catalogue (65
-rule→flavor bindings + design from policy-as-code research) landed.
-HRD-018..HRD-028 opened for the implementation rollout.
-First-implementation cycle continues (HRD-008/-010/-011/-012/-015/-016
-still open).</td>
+<td>Foundation design (Sub-project 1) approved + locked. Three-milestone
+vertical-slice approach across M1/M2/M3. Catalogue-Check survey
+complete: <strong>9 of 12 capabilities map to existing Helix-stack
+modules</strong> (<code>digital.vasic.background</code> replaces River;
+<code>digital.vasic.eventbus</code> replaces Watermill;
+<code>digital.vasic.middleware</code>+<code>auth</code>+<code>observability</code>
+compose the Gin/JWT/OTel layer; <code>digital.vasic.database</code>
+provides pgx + migrations; <code>digital.vasic.cache</code> provides
+Redis). Bespoke parts (Evaluator + BundleHash + ModeLadder): write new
+under <code>commons_constitution</code>. M1 implementation next.</td>
 </tr>
 <tr>
 <td>Issues</td>
-<td>HRD-008, HRD-010, HRD-011, HRD-012, HRD-015, HRD-016,
-HRD-018..HRD-028</td>
+<td>HRD-008, HRD-010, HRD-011, HRD-012, HRD-015, HRD-016, HRD-018
+(in_progress), HRD-019..HRD-028, HRD-029..HRD-056</td>
 </tr>
 <tr>
 <td>Issues summary</td>
@@ -227,9 +232,13 @@ HRD-018..HRD-028</td>
 </tr>
 <tr>
 <td>Continuation</td>
-<td>first up: HRD-018 commons_constitution package (Evaluator + 12
-event-emit helpers + bundle-hash captureer + mode-ladder config).
-Catalogue-Check survey before scaffolding (per Universal §11.4.74).</td>
+<td>M1 scaffold: integrate 9 <code>digital.vasic.*</code> submodules
+under <code>submodules/</code>; write bespoke
+<code>commons_constitution</code> package (Evaluator + 12 emit helpers +
+BundleHash + ModeLadder + in-memory ConstitutionStore); verify M1 smoke
+(in-process evaluator → transition → emit → memory pubsub listener
+counts). Then M2 (Postgres + background queue) then M3 (Gin REST +
+Redis). Each milestone followed by multi-mirror push.</td>
 </tr>
 </tbody>
 </table>

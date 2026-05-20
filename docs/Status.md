@@ -2,16 +2,16 @@
 
 | Field | Value |
 |---|---|
-| Revision | 3 |
+| Revision | 4 |
 | Created | 2026-05-20 |
 | Last modified | 2026-05-20 |
 | Status | active |
-| Status summary | Spec V3 r5: §42 constitution-flavor binding catalogue (65 rule→flavor bindings + design from policy-as-code research) landed. HRD-018..HRD-028 opened for the implementation rollout. First-implementation cycle continues (HRD-008/-010/-011/-012/-015/-016 still open). |
-| Issues | HRD-008, HRD-010, HRD-011, HRD-012, HRD-015, HRD-016, HRD-018..HRD-028 |
+| Status summary | Foundation design (Sub-project 1) approved + locked. Three-milestone vertical-slice approach across M1/M2/M3. Catalogue-Check survey complete: **9 of 12 capabilities map to existing Helix-stack modules** (`digital.vasic.background` replaces River; `digital.vasic.eventbus` replaces Watermill; `digital.vasic.middleware`+`auth`+`observability` compose the Gin/JWT/OTel layer; `digital.vasic.database` provides pgx + migrations; `digital.vasic.cache` provides Redis). Bespoke parts (Evaluator + BundleHash + ModeLadder): write new under `commons_constitution`. M1 implementation next. |
+| Issues | HRD-008, HRD-010, HRD-011, HRD-012, HRD-015, HRD-016, HRD-018 (in_progress), HRD-019..HRD-028, HRD-029..HRD-056 |
 | Issues summary | see `Issues.md` |
 | Fixed | HRD-001..HRD-007, HRD-009, HRD-009b, HRD-013, HRD-014, HRD-017 |
 | Fixed summary | see `Fixed.md` |
-| Continuation | first up: HRD-018 commons_constitution package (Evaluator + 12 event-emit helpers + bundle-hash captureer + mode-ladder config). Catalogue-Check survey before scaffolding (per Universal §11.4.74). |
+| Continuation | M1 scaffold: integrate 9 `digital.vasic.*` submodules under `submodules/`; write bespoke `commons_constitution` package (Evaluator + 12 emit helpers + BundleHash + ModeLadder + in-memory ConstitutionStore); verify M1 smoke (in-process evaluator → transition → emit → memory pubsub listener counts). Then M2 (Postgres + background queue) then M3 (Gin REST + Redis). Each milestone followed by multi-mirror push. |
 
 ## Table of contents
 

@@ -323,7 +323,7 @@ external</td>
 <tr>
 <td>HRD-018</td>
 <td>task</td>
-<td>open</td>
+<td>in_progress</td>
 <td>high</td>
 <td><code>commons_constitution</code> Go package: Evaluator interface +
 12 event-class emit helpers + constitution_state + constitution_bindings
@@ -331,9 +331,20 @@ table migrations + bundle-hash captureer + mode-ladder runtime
 config</td>
 <td>2026-05-20</td>
 <td>2026-05-20</td>
-<td>spec V3 §42.1 / §42.5 step 1; Catalogue-Check: TBD — agent MUST
-survey vasic-digital + HelixDevelopment for existing
-rule-evaluation/audit modules before scaffolding</td>
+<td>spec V3 §42.1 / §42.5 step 1 + Foundation design
+<code>docs/superpowers/specs/2026-05-20-foundation-design.md</code>;
+Catalogue-Check: <strong>extend</strong> (evidence:
+<code>docs/catalogue-checks/HRD-018-foundation.md</code>, 2026-05-20).
+9/12 caps map to existing Helix-stack modules:
+River→<code>digital.vasic.background</code>;
+Watermill→<code>digital.vasic.eventbus</code>; raw
+Gin/JWT/OTel→<code>digital.vasic.middleware</code>+<code>auth</code>+<code>observability</code>;
+raw pgx→<code>digital.vasic.database</code>; raw
+redis→<code>digital.vasic.cache</code>;
+config→<code>digital.vasic.config</code>;
+recovery→<code>digital.vasic.recovery</code>. Bespoke (no-match → write
+new): Evaluator framework, BundleHash captureer, ModeLadder
+semantics.</td>
 </tr>
 <tr>
 <td>HRD-019</td>

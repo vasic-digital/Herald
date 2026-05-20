@@ -2,16 +2,16 @@
 
 | Field | Value |
 |---|---|
-| Revision | 3 |
+| Revision | 4 |
 | Created | 2026-05-20 |
 | Last modified | 2026-05-20 |
 | Status | active |
-| Status summary | Spec V3 r5 + Constitution-flavor binding catalogue (§42) landed. HRD-018..HRD-028 opened to implement the 65 rule→flavor bindings across the 9 flavors. First-implementation cycle continues. |
-| Issues | HRD-008, HRD-010, HRD-011, HRD-012, HRD-015, HRD-016, HRD-018..HRD-028 |
+| Status summary | Foundation (Sub-project 1) design approved + Catalogue-Check landed. Architectural pivot: 9 of 12 capabilities map to existing `digital.vasic.*` modules — see `catalogue-checks/HRD-018-foundation.md`. River replaced by `digital.vasic.background`. Watermill replaced by `digital.vasic.eventbus`. Gin skeleton uses `digital.vasic.middleware`+`auth`+`observability`. M1 implementation begins next. |
+| Issues | HRD-008, HRD-010, HRD-011, HRD-012, HRD-015, HRD-016, HRD-018 (in_progress), HRD-019..HRD-028, HRD-029..HRD-056 |
 | Issues summary | see `Issues.md` |
 | Fixed | HRD-001..HRD-007, HRD-009, HRD-009b, HRD-013, HRD-014, HRD-017 |
 | Fixed summary | see `Fixed.md` |
-| Continuation | This file IS the continuation pointer. Update on every non-trivial commit (per Universal §12.10). |
+| Continuation | M1 scaffold of `commons_constitution` (Evaluator + 12 emit helpers + BundleHash + ModeLadder + in-memory ConstitutionStore) composed atop the 9 Helix-stack submodules. Then M2 (Postgres + `digital.vasic.background` queue) then M3 (Gin REST + Redis cache). Each milestone closes its own end-to-end smoke. Multi-mirror push after each. After Foundation lands: codegraph integration per https://github.com/colbymchenry/codegraph for Claude Code + OpenCode + Kimi CLI + Crush + Qwen Code. Update on every non-trivial commit (per Universal §12.10). |
 
 ## Table of contents
 
