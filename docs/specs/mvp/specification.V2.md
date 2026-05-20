@@ -2,16 +2,16 @@
 
 | Field | Value |
 |---|---|
-| Revision | 2 |
+| Revision | 3 |
 | Created | 2026-05-19 |
 | Last modified | 2026-05-19 |
 | Status | active |
-| Status summary | Self-review pass V2.1: added missing Go types + 4 missing table schemas; Go ≥1.22 + license pin; OTel SDK env vars; SIGTERM grace; data retention + GDPR; operator quickstart + DR; cost considerations |
+| Status summary | V2 r3 self-review pass: defined 5 remaining undefined Go types (Subscriber/CloudEventEnvelope/TraceContext/Branding/ChannelID + PreferenceSet decoded form); added operational sections (migration tooling §9.6, worker-pool sizing §3.4, SIGHUP hot-reload §3.4, ingress API URLs §5.7, workable-item lifecycle §8.3, clock abstraction §3.5, null:// sandbox §11.14, OpenAPI/AsyncAPI references §24.1, outbound idempotency §5.4.1, per-channel SLO budgets §17.4.1, AI-agent subscribers §7.5). |
 | Issues | none |
 | Issues summary | implementation work tracked separately under `HRD-` prefix once scaffolding starts |
-| Fixed | V2-R-01..V2-R-12 (self-review findings) on top of V1 R-01..R-22 |
-| Fixed summary | self-review pass closed gaps between prose and formal definitions (types + tables + version pins); added operational guidance (quickstart, DR, retention, costs) absent from V2.0 |
-| Continuation | First-implementation cycle: spike `commons` + `commons_messaging` skeletons with `pherald` shim + Telegram adapter + Postgres+River queue; verify quickstart compose works end-to-end. |
+| Fixed | V3-R-01..V3-R-14 (this revision); V2-R-01..V2-R-12 (r2); V1 R-01..R-22 |
+| Fixed summary | r3 closed all remaining prose↔definition gaps in §11.0 type contract; added operational guidance for implementers (migrations, workers, hot-reload, API URLs, lifecycle, clock, sandbox, API specs, outbound dedup, per-channel SLOs, agent subscribers). |
+| Continuation | First-implementation cycle: spike `commons` + `commons_messaging` skeletons (Postgres+River queue + RLS migrations + Telegram adapter + null:// sandbox) — `pherald` quickstart compose verifies end-to-end. |
 
 The **bi-directional event fan-out** system: Herald ingests events from heterogeneous sources and reliably fans them out to multiple notification channels so every alert reaches the right destination without confusion, and processes inbound replies/commands back from subscribers in a structured, security-validated way.
 
@@ -26,6 +26,8 @@ The **bi-directional event fan-out** system: Herald ingests events from heteroge
   - [3.1 Single binary, two modes](#31-single-binary-two-modes)
   - [3.2 Distribution + invocation surfaces](#32-distribution-invocation-surfaces)
   - [3.3 Configuration & credentials](#33-configuration-credentials)
+  - [3.4 Worker pools, concurrency, and hot-reload](#34-worker-pools-concurrency-and-hot-reload)
+  - [3.5 Time / clock abstraction](#35-time-clock-abstraction)
 - [§4. Event model & wire format](#4-event-model-wire-format)
   - [4.1 CloudEvents v1.0 as canonical envelope](#41-cloudevents-v10-as-canonical-envelope)
   - [4.2 Herald event-type taxonomy](#42-herald-event-type-taxonomy)
@@ -35,8 +37,10 @@ The **bi-directional event fan-out** system: Herald ingests events from heteroge
   - [5.2 Internal routing (Watermill)](#52-internal-routing-watermill)
   - [5.3 Queue backend (Postgres + River default, NATS opt-in)](#53-queue-backend-postgres-river-default-nats-opt-in)
   - [5.4 Retries & dead-lettering](#54-retries-dead-lettering)
+    - [5.4.1 Outbound idempotency (channel-side composition)](#541-outbound-idempotency-channel-side-composition)
   - [5.5 Webhook ingestion](#55-webhook-ingestion)
   - [5.6 Orchestration of long-running operations (Temporal, opt-in)](#56-orchestration-of-long-running-operations-temporal-opt-in)
+  - [5.7 Ingress API URLs (HTTP surface)](#57-ingress-api-urls-http-surface)
 - [§6. Channel addressing & routing](#6-channel-addressing-routing)
   - [6.1 URL-scheme channel addresses (Apprise-style)](#61-url-scheme-channel-addresses-apprise-style)
   - [6.2 Tag-based fan-out](#62-tag-based-fan-out)
@@ -46,15 +50,18 @@ The **bi-directional event fan-out** system: Herald ingests events from heteroge
   - [7.2 Preferences (Knock-style PreferenceSet)](#72-preferences-knock-style-preferenceset)
   - [7.3 Quiet hours & throttling](#73-quiet-hours-throttling)
   - [7.4 Locale (i18n)](#74-locale-i18n)
+  - [7.5 AI-agent subscribers (distinct from human subscribers)](#75-ai-agent-subscribers-distinct-from-human-subscribers)
 - [§8. Workable-item naming prefix](#8-workable-item-naming-prefix)
   - [8.1 Static prefix `HRD-`](#81-static-prefix-hrd)
   - [8.2 Derived 3-letter prefix algorithm](#82-derived-3-letter-prefix-algorithm)
+  - [8.3 Workable-item lifecycle (`HRD-NNN` flow)](#83-workable-item-lifecycle-hrd-nnn-flow)
 - [§9. Technology stack](#9-technology-stack)
   - [9.1 Go (single-binary, multi-flavor)](#91-go-single-binary-multi-flavor)
   - [9.2 Postgres + Row-Level Security](#92-postgres-row-level-security)
   - [9.3 Redis (per-tenant ACL)](#93-redis-per-tenant-acl)
   - [9.4 Container ports (`24XXX`)](#94-container-ports-24xxx)
   - [9.5 `containers` submodule](#95-containers-submodule)
+  - [9.6 Database migration tooling](#96-database-migration-tooling)
 - [§10. Commons (architecture layers)](#10-commons-architecture-layers)
 - [§11. Channels — per-channel capabilities matrix](#11-channels-per-channel-capabilities-matrix)
   - [11.0 Channel adapter contract (Go interface + value types)](#110-channel-adapter-contract-go-interface-value-types)
@@ -71,6 +78,7 @@ The **bi-directional event fan-out** system: Herald ingests events from heteroge
   - [11.11 Generic outbound webhook](#1111-generic-outbound-webhook)
   - [11.12 Diary (Markdown + PDF + HTML)](#1112-diary-markdown-pdf-html)
   - [11.13 Feature matrix summary](#1113-feature-matrix-summary)
+  - [11.14 `null://` sandbox channel (test-only)](#1114-null-sandbox-channel-test-only)
 - [§12. Messaging flows](#12-messaging-flows)
 - [§13. Templating & message composition](#13-templating-message-composition)
 - [§14. Localization (i18n)](#14-localization-i18n)
@@ -87,6 +95,7 @@ The **bi-directional event fan-out** system: Herald ingests events from heteroge
   - [17.2 Metrics catalogue](#172-metrics-catalogue)
   - [17.3 Span model](#173-span-model)
   - [17.4 SLOs](#174-slos)
+    - [17.4.1 Per-channel SLO budgets](#1741-per-channel-slo-budgets)
   - [17.5 Health probes (livez / readyz / startupz)](#175-health-probes-livez-readyz-startupz)
   - [17.6 `doctor` CLI](#176-doctor-cli)
 - [§18. Flavors (the implementations)](#18-flavors-the-implementations)
@@ -107,6 +116,7 @@ The **bi-directional event fan-out** system: Herald ingests events from heteroge
 - [§22. Constitution integration](#22-constitution-integration)
 - [§23. Specification documents (change rule)](#23-specification-documents-change-rule)
 - [§24. Documentation](#24-documentation)
+  - [24.1 Machine-readable API specifications](#241-machine-readable-api-specifications)
 - [§25. Testing](#25-testing)
 - [§26. Operations](#26-operations)
   - [26.5 Operator quickstart (5-minute Docker Compose)](#265-operator-quickstart-5-minute-docker-compose)
@@ -299,6 +309,79 @@ otlp_endpoint = "http://otel-collector:4317"
 log_level     = "info"
 ```
 
+### 3.4 Worker pools, concurrency, and hot-reload
+
+**Worker pool sizing.** `herald serve` runs three independently-sized worker pools:
+
+| Pool | Default size | Configurable | Workload |
+|---|---|---|---|
+| HTTP ingress | `2 × NumCPU` | `[server].http_workers` | accepts inbound CloudEvents + webhook deliveries; CPU-bound on signature verification + JSON parsing |
+| Router/dispatch | `4 × NumCPU` | `[router].workers` | template render + preference filter + tag matching; mostly CPU + small Postgres lookups |
+| River channel-delivery | `8 × NumCPU` (capped at `[river].max_workers`, default 64) | `[river].workers` | I/O-bound HTTP calls to channel APIs (Telegram, Slack, …); bottlenecked by upstream rate limits |
+
+Operators tune via env vars (`HERALD_HTTP_WORKERS`, `HERALD_ROUTER_WORKERS`, `HERALD_RIVER_WORKERS`) or `config.toml`. Sizing guidance:
+
+- **Single-tenant small** (≤ 1 alert/sec): defaults (~16 workers total on a 2-vCPU host).
+- **Multi-tenant production** (~50 alerts/sec sustained): bump `[river].max_workers` to `min(256, 8 × tenants)`; tune `[postgres].max_conns` to `[router].workers + [river].workers + 4` (admin connections reserved).
+- **High-burst CI fanout** (~500 alerts/min in 10-sec spikes): rely on River's backpressure rather than over-provisioning workers; River queues durably in Postgres and drains as channels free up.
+
+**Hot-reload via SIGHUP.** `herald serve` traps `SIGHUP` and re-reads `config.toml` + `.env` + `channel_addresses` (database-backed) without dropping in-flight work. Reload is constrained to **safe-to-change** sections:
+
+| Reloadable on SIGHUP | NOT reloadable (require process restart) |
+|---|---|
+| `[channels].*` (channel addresses + tags) | `[server].http_port` / admin port |
+| `[router].workers` (resized live) | `[postgres].dsn` (connection identity) |
+| `[river].workers` / `max_workers` | `[redis].addr` |
+| `[observability].log_level` | `[observability].otlp_endpoint` (exporter identity) |
+| `[security].allowlists.*` | binary version / migrations |
+| `[rate_limits].*` (token bucket caps) | RLS policy changes (DB-side) |
+
+Reload semantics:
+
+1. Compute the diff between in-memory config and freshly-loaded config.
+2. Reject if any "NOT reloadable" key changed — log `ERROR config reload rejected: <key> requires restart`; old config remains active.
+3. For reloadable keys, apply atomically (worker pools resize via a lockless swap; channel adapters re-initialize against new addresses; rate-limit buckets refresh with new caps; in-flight work continues against the live config snapshot it captured).
+4. Emit `digital.vasic.herald.system.config.reloaded` event with the diff for audit.
+
+**No hot-reload in one-shot mode**: `herald send` reads config once at startup and exits; SIGHUP is ignored.
+
+### 3.5 Time / clock abstraction
+
+Herald never calls `time.Now()` directly outside of `commons/clock`. The clock abstraction lets tests fast-forward time (essential for quiet-hours, batching windows, retry backoff, idempotency TTLs, escalation chains).
+
+```go
+package commons // L0
+
+// Clock is the time-source abstraction. Production uses RealClock;
+// tests use FakeClock with controllable Now()/After()/NewTimer().
+type Clock interface {
+    Now() time.Time
+    Since(t time.Time) time.Duration
+    Sleep(d time.Duration)
+    After(d time.Duration) <-chan time.Time
+    NewTimer(d time.Duration) Timer
+    NewTicker(d time.Duration) Ticker
+}
+
+// RealClock wraps the stdlib time package. Used in production.
+type RealClock struct{}
+
+// FakeClock is the test implementation. Advance(d) moves the clock
+// forward by d and fires any pending timers/tickers whose deadlines
+// the advance crosses. Available in commons/clock/clocktest.
+type FakeClock struct {
+    // unexported state
+}
+
+// Default exports a process-global Clock — Herald's CLI bootstrap
+// sets it to RealClock; tests swap it in TestMain.
+var Default Clock = RealClock{}
+```
+
+Rationale: this is the same pattern that `github.com/benbjohnson/clock` popularised; `commons/clock` ships a minimal in-tree implementation rather than depending on a third-party module that has no maintainer activity since 2022. The interface surface is intentionally small — only what Herald needs.
+
+Discipline: anyone calling `time.Now()` outside `commons/clock` is a bug — the lint rule `herald-no-direct-time-now` (custom `golangci-lint` analyzer, planned) flags violations.
+
 ---
 
 ## §4. Event model & wire format
@@ -443,6 +526,30 @@ CREATE POLICY dl_isolation ON dead_letters
 - Every entry into `dead_letters` also emits a `digital.vasic.herald.delivery.dead_lettered` CloudEvent — Herald observes its own failures.
 - CLI: `<flavor>herald deadletter list | replay <id> | purge`.
 
+#### 5.4.1 Outbound idempotency (channel-side composition)
+
+The §4.3 idempotency table guards **ingress**: same event id arriving twice produces one logical delivery. It does NOT, however, guard against the case where Herald has already called `Channel.Send` once and the call's *response* was lost (network blip, container OOM, channel-API timeout). Under at-least-once semantics, the retry layer (§5.4) WILL re-call `Channel.Send` — and a naive channel adapter would re-post the message, producing visible duplicates.
+
+**Resolution**: every `Channel.Send` invocation MUST pass an **outbound-idempotency key** derived deterministically from `(tenant_id, EventID, ChannelID, ChannelAddressID)`. Adapters that support upstream idempotency (Slack `idempotency_key` extension, Stripe-style `Idempotency-Key` header on REST channels, Email `Message-ID` header) MUST forward this key. Adapters whose upstream does NOT support idempotency (raw SMTP, Telegram Bot API, Discord) MUST consult a Postgres `outbound_dedup` table inside the same River job transaction:
+
+```sql
+CREATE TABLE outbound_dedup (
+    tenant_id           UUID NOT NULL,
+    outbound_key        TEXT NOT NULL,                -- "<event_id>:<channel>:<channel_address_id>"
+    sent_at             TIMESTAMPTZ NOT NULL DEFAULT now(),
+    channel_msg_id      TEXT,                         -- adapter's Receipt.ChannelMsgID
+    expires_at          TIMESTAMPTZ NOT NULL DEFAULT (now() + interval '24 hours'),
+    PRIMARY KEY (tenant_id, outbound_key)
+);
+ALTER TABLE outbound_dedup ENABLE ROW LEVEL SECURITY;
+ALTER TABLE outbound_dedup FORCE ROW LEVEL SECURITY;
+CREATE POLICY od_isolation ON outbound_dedup
+    USING (tenant_id = current_setting('app.tenant_id')::uuid)
+    WITH CHECK (tenant_id = current_setting('app.tenant_id')::uuid);
+```
+
+The adapter wraps each send in: `INSERT ... ON CONFLICT DO NOTHING; if row already existed, return cached Receipt without re-calling upstream`. The window is short (24h) because we only need to cover the retry-storm window — far shorter than ingress idempotency.
+
 ### 5.5 Webhook ingestion
 
 Per R-16 + research Topic 8. Every webhook source registers a per-source signing secret (rotatable) in the `webhook_sources` table.
@@ -498,6 +605,40 @@ Per research Topic 7:
   - **Scheduled digest builders** with human-in-the-loop acknowledgment.
   - **Multi-channel orchestrated rollouts** (used by `dherald` / `rherald`).
 - Temporal is explicitly **not** the default — its operational footprint (separate cluster, gRPC, server upgrades) violates Herald's "lightweight CLI" ethos.
+
+### 5.7 Ingress API URLs (HTTP surface)
+
+Herald's HTTP ingress (port `24091` default per §9.4) exposes a small, stable URL surface. All paths under `/v1/` are public; everything under `/admin/` is admin-port only (port `24090`).
+
+| Method | Path | Purpose |
+|---|---|---|
+| `POST` | `/v1/events` | Canonical CloudEvents ingest (binary + structured modes). Body MUST be a CloudEvent per §4.1. |
+| `POST` | `/v1/send` | Convenience REST ingest for ad-hoc senders that don't speak CloudEvents — JSON body `{type, source, data, tags?, idempotency_key?, priority?}` is wrapped into a CloudEvent server-side. |
+| `POST` | `/webhooks/{source_id}` | Verified webhook receiver — `source_id` is a UUID matching `webhook_sources.id`; the handler enforces §5.5 signature + replay + dedup before forwarding. |
+| `GET` | `/v1/events/{id}` | Idempotent replay of a previously-accepted event (returns 200 with cached response if id matches, 409 if id matches but body differs). |
+| `GET` | `/v1/deadletters` | List dead-lettered messages (RLS-isolated to caller's tenant). |
+| `POST` | `/v1/deadletters/{id}/replay` | Replay a dead-lettered message. |
+| `GET` | `/v1/subscribers` / `POST` `/v1/subscribers` | Subscriber CRUD (operator role required). |
+| `POST` | `/v1/subscribers/{id}/forget` | GDPR right-to-erasure (§16.1). |
+| `GET` | `/v1/subscribers/{id}/export` | GDPR right-to-portability — emits JSON bundle. |
+| `GET` | `/v1/channels` | List configured channel addresses for the caller's tenant. |
+| `GET` | `/livez` | Liveness probe (admin port — §17.5). |
+| `GET` | `/readyz` | Readiness probe (admin port). |
+| `GET` | `/startupz` | Startup probe (admin port). |
+| `GET` | `/metrics` | Prometheus scrape (admin port). |
+| `GET` | `/admin/version` | Build info (commit SHA, build time, Go version). |
+| `GET` | `/admin/pprof/*` | Go runtime profiling (admin port; loopback-only by default; opt-in `[admin].pprof_external=true`). |
+
+**Auth model**:
+
+- `/v1/events` and `/v1/send` accept either (a) HTTP Basic auth with a per-tenant `ingest_token` from the `tenants` table, or (b) signed bearer token in `Authorization: Bearer <jwt>` (Herald validates against JWKS configured in `[auth.oidc]`). Self-hosted operators MAY enable mTLS via a reverse proxy.
+- `/webhooks/{source_id}` does its own signature verification (§5.5) — no token required at the HTTP layer.
+- `/v1/subscribers*` requires a JWT with operator-role claim.
+- Admin endpoints listen only on the admin port (default loopback or trusted-network only).
+
+**Versioning**: the `/v1/` prefix is the stable contract; breaking changes ship as `/v2/` with at least 6 months of `/v1/` co-existence. The OpenAPI schema (`docs/api/openapi.v1.yaml`) is the source of truth — `<flavor>herald openapi` prints the embedded spec.
+
+**Rate limits**: per-tenant token bucket (§16, default 1000 req/min per tenant on `/v1/events`); per-IP secondary bucket for unauthenticated webhook receivers (default 60 req/min/IP).
 
 ---
 
@@ -666,6 +807,52 @@ Per research Topic 6 (notification-platforms): **`nicksnyder/go-i18n` v2** with 
 - Per-channel templates can override (emoji-heavy Telegram template vs sober email template, both for the same locale).
 - Initial locales for V2: `en-US`, `sr-Latn-RS`, `ru-RU`. Additional locales as community contributes them.
 
+### 7.5 AI-agent subscribers (distinct from human subscribers)
+
+Herald is explicitly a target for AI CLI agent invocation (per §3.2). Agents are a fundamentally different kind of subscriber from humans: they invoke far more frequently, they don't sleep, they don't have quiet hours, and their failure modes (runaway loop, infinite retry, prompt-injection-driven misuse) need stronger throttling. V2 models them as a first-class subscriber kind.
+
+**Schema extension** to `subscribers`:
+
+- `kind` column (enum: `human` | `agent` | `service`). Default `human`. Indexes added on `(tenant_id, kind)`.
+- `agent` rows MUST carry a `metadata.agent_token_id` pointing at a row in `agent_tokens` (separate table, encrypted), used as the auth credential when the agent calls `/v1/send`.
+- `agent` rows MUST carry `metadata.parent_subscriber_id` (the human operator who created the agent) so audit + GDPR right-to-erasure cascades correctly.
+
+```sql
+CREATE TABLE agent_tokens (
+    id               UUID PRIMARY KEY DEFAULT uuidv7(),
+    tenant_id        UUID NOT NULL,
+    subscriber_id    UUID NOT NULL REFERENCES subscribers(id) ON DELETE CASCADE,
+    token_hash       BYTEA NOT NULL,                  -- argon2id of the bearer token
+    name             TEXT NOT NULL,                   -- "claude-code-laptop", "build-bot-prod"
+    created_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
+    last_used_at     TIMESTAMPTZ,
+    expires_at       TIMESTAMPTZ,                     -- nullable = no expiry
+    revoked_at       TIMESTAMPTZ,
+    rate_limit_per_min INTEGER NOT NULL DEFAULT 60,   -- default 60 req/min per token
+    UNIQUE (tenant_id, name)
+);
+ALTER TABLE agent_tokens ENABLE ROW LEVEL SECURITY;
+ALTER TABLE agent_tokens FORCE ROW LEVEL SECURITY;
+CREATE POLICY at_isolation ON agent_tokens
+    USING (tenant_id = current_setting('app.tenant_id')::uuid)
+    WITH CHECK (tenant_id = current_setting('app.tenant_id')::uuid);
+```
+
+**Default throttling** (operator-overridable per token):
+
+| Limit | Default | Burst | Notes |
+|---|---|---|---|
+| `/v1/send` requests | 60 req/min/token | 10 | per the rate_limit_per_min column |
+| `/v1/events` requests | 30 req/min/token | 5 | tighter because CloudEvents body is unbounded |
+| Outbound deliveries per token per min | 120 | 20 | a single agent CAN'T flood a tenant's channels |
+| Quarantine threshold | 3 consecutive rejected sends → token disabled for 30 min | — | auto-cool-down to prevent prompt-injection loops |
+
+**Audit + observability**: every agent send emits a span with `herald.subscriber.kind="agent"` and `herald.agent.token_id`; dashboards split agent vs human traffic by default. The `cherald` flavor (per §18.10) flags suspicious agent patterns (sudden volume spike, off-hours bursts) as compliance events.
+
+**Quiet hours**: ignored for `kind=agent` by default — agents are expected to send during off-hours. Operator MAY opt-in to per-token quiet hours via `agent_tokens.metadata.quiet_hours`.
+
+**Revocation**: `<flavor>herald subscriber agent-token revoke <name>` zeroes the row's `revoked_at` and invalidates the token immediately (Redis cache TTL 30 s for token validity).
+
 ---
 
 ## §8. Workable-item naming prefix
@@ -689,6 +876,98 @@ Per R-17 — when a consuming project does NOT define its own workable-item pref
 7. **Persistence**: the lock file is committed so the mapping is stable across machines and regenerations.
 
 No mature Go library exists for 3-letter abbreviation generation (the only Go prior art `Defacto2/releaser/initialism` is a curated lookup table, not a generator); Herald ships its own.
+
+### 8.3 Workable-item lifecycle (`HRD-NNN` flow)
+
+A workable item moves through this lifecycle across `pherald`'s subscriber-command handlers and the `docs/` tracker files (per Universal §11.4.12 + §11.4.53):
+
+```
+┌────────────────┐
+│ Subscriber DM  │  e.g. "Bug: telemetry pipe drops every hour"
+│  to pherald    │
+└───────┬────────┘
+        │ (security validation §15; allowlist verified)
+        v
+┌────────────────┐
+│  Command       │  parser identifies "Bug:" → opens new item
+│  parsed (§15.3)│
+└───────┬────────┘
+        │
+        v
+┌─────────────────────────────────────────────────────┐
+│  Item allocation                                    │
+│   • prefix = "HRD-" (or derived 3-letter via §8.2)  │
+│   • next sequence number from `workable_items` table│
+│   • full id = "HRD-042"                             │
+└───────┬─────────────────────────────────────────────┘
+        │
+        v
+┌─────────────────────────────────────────────────────┐
+│  Append row to `docs/Issues.md`                     │
+│   | HRD-042 | Bug   | open    | <subscriber>        │
+│   |          | <date>| <one-line summary>           │
+│  (per §11.4.12 Issues format)                       │
+└───────┬─────────────────────────────────────────────┘
+        │
+        v
+┌─────────────────────────────────────────────────────┐
+│  Emit `digital.vasic.herald.project.task.opened`    │
+│   event with the new HRD-NNN id                     │
+└───────┬─────────────────────────────────────────────┘
+        │
+        v
+┌─────────────────────────────────────────────────────┐
+│  Diary append (§19)                                 │
+└───────┬─────────────────────────────────────────────┘
+        │
+        v
+┌─────────────────────────────────────────────────────┐
+│  ACK back to the subscriber on the original channel │
+│   (reply in-thread) — "Tracked as HRD-042."         │
+└───────┬─────────────────────────────────────────────┘
+        │
+        :
+        : ... time passes, subscriber sends commands ...
+        :
+        v
+┌─────────────────────────────────────────────────────┐
+│  Resolution: "Done: HRD-042" or "Resolve: HRD-042"  │
+│   (operator role required)                          │
+│  → mark `Issues.md` row as resolved                 │
+│  → atomic migration to `Fixed.md` (per §11.4.19)    │
+│  → emit `…project.task.closed`                      │
+│  → ACK in original thread                           │
+└─────────────────────────────────────────────────────┘
+```
+
+**`workable_items` schema** (lightweight pointer table — the canonical record lives in the Markdown files for human edit-ability per Universal §6):
+
+```sql
+CREATE TABLE workable_items (
+    tenant_id    UUID NOT NULL,
+    item_id      TEXT NOT NULL,                    -- "HRD-042"
+    prefix       TEXT NOT NULL,                    -- "HRD"
+    sequence     INTEGER NOT NULL,                 -- 42
+    item_type    TEXT NOT NULL,                    -- 'bug' | 'issue' | 'query' | 'request' | 'question'
+    status       TEXT NOT NULL,                    -- 'open' | 'in_progress' | 'blocked' | 'resolved' | 'wont_fix'
+    opened_by    UUID,                             -- subscriber id
+    opened_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+    resolved_at  TIMESTAMPTZ,
+    source_thread JSONB,                           -- ConversationRef serialised
+    PRIMARY KEY (tenant_id, item_id),
+    UNIQUE (tenant_id, prefix, sequence)
+);
+CREATE INDEX wi_status_idx ON workable_items (tenant_id, status) WHERE status <> 'resolved';
+ALTER TABLE workable_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE workable_items FORCE ROW LEVEL SECURITY;
+CREATE POLICY wi_isolation ON workable_items
+    USING (tenant_id = current_setting('app.tenant_id')::uuid)
+    WITH CHECK (tenant_id = current_setting('app.tenant_id')::uuid);
+```
+
+**Sequence allocation**: a per-tenant Postgres advisory lock around `MAX(sequence) + 1` inside the transaction; safe under concurrent `Bug:` commands. For high-volume tenants, a per-prefix sequence is preallocated in batches (default batch size 100) cached in Redis to avoid contention.
+
+**Reopening**: `Reopen: HRD-042` (operator role) reverses the migration: row moves back to `Issues.md`, `status='in_progress'`, `resolved_at` cleared, history preserved in `docs/Reopens/HRD-042.md` per Universal §11.4.55.
 
 ---
 
@@ -756,6 +1035,54 @@ Reserved sub-blocks:
 ### 9.5 `containers` submodule
 
 The full Docker/Podman Compose stack is provided by [`vasic-digital/containers`](https://github.com/vasic-digital/containers) as a Git submodule (per R-12, the owned-submodule set in `HERALD_CONSTITUTION.md` will be updated in the PR that introduces the submodule). All container names MUST start with prefix `herald`.
+
+### 9.6 Database migration tooling
+
+Herald uses [`golang-migrate/migrate`](https://github.com/golang-migrate/migrate) (the de-facto standard Go migration tool) embedded as a library inside `commons_storage`. Rationale: `golang-migrate` is binary-distributable AND embeddable, supports `up`/`down`, file checksums (drift detection), `schema_migrations` table version locking, and ships idempotent migrations.
+
+**File layout** (`commons_storage/migrations/`):
+
+```
+commons_storage/migrations/
+├── 000001_init_core.up.sql        # tenants, roles, encryption keys
+├── 000001_init_core.down.sql
+├── 000002_idempotency_keys.up.sql
+├── 000002_idempotency_keys.down.sql
+├── 000003_subscribers.up.sql      # subscribers + subscriber_aliases (§7.1)
+├── 000003_subscribers.down.sql
+├── 000004_channel_addresses.up.sql       # §6
+├── 000004_channel_addresses.down.sql
+├── 000005_webhook_sources.up.sql         # §5.5
+├── 000005_webhook_sources.down.sql
+├── 000006_thread_refs.up.sql             # §12
+├── 000006_thread_refs.down.sql
+├── 000007_quarantined_messages.up.sql    # §15.2
+├── 000007_quarantined_messages.down.sql
+├── 000008_dead_letters.up.sql            # §5.4
+├── 000008_dead_letters.down.sql
+├── 000009_email_suppressions.up.sql      # §11.9
+├── 000009_email_suppressions.down.sql
+├── 000010_river_jobs.up.sql              # River queue schema (managed by river/cmd/river)
+├── 000010_river_jobs.down.sql
+└── 000011_rls_policies.up.sql            # FORCE RLS on every multi-tenant table
+```
+
+**Numbering**: zero-padded 6-digit sequence (`000001..000999` reserved for V2 baseline; `001000..` reserved for V3+). Down migrations MUST exist for every up migration so `<flavor>herald migrate down -n 1` is always safe.
+
+**Runtime contract:**
+
+- `<flavor>herald migrate up [--steps N]` — apply pending migrations forward.
+- `<flavor>herald migrate down --steps N` — rollback N migrations (gated behind interactive confirmation unless `--yes`).
+- `<flavor>herald migrate status` — show current version + pending count.
+- `<flavor>herald migrate force <version>` — recovery only; sets the version without running migrations (operator MUST verify manually).
+- `<flavor>herald migrate validate` — checksum every applied migration against the source files; fails if drift detected.
+
+**Roles** (per §16):
+
+- `herald_migrator` — `BYPASSRLS`, owns schema, runs DDL. Only used by `migrate` subcommand.
+- `herald_app` — runtime role; cannot run DDL.
+
+**Forward compatibility** (per §26.3): migrations MUST be backward-compatible for **two minor versions** so rolling restarts during a deploy don't break the running fleet. Practical patterns: add nullable columns first, backfill, then add NOT NULL; never drop a column the previous binary version still reads; never rename a column — add the new one, dual-write, then drop the old in a later release.
 
 ---
 
@@ -925,9 +1252,121 @@ type InboundEvent struct {
     Thread          *ConversationRef
     Raw             map[string]any         // adapter-specific raw payload (for diary)
 }
+
+// Subscriber is the in-memory projection of one row from `subscribers`
+// (§7.1) plus all linked `subscriber_aliases` for the resolved channel.
+// Pointer fields are nullable; consumers MUST nil-check before use.
+type Subscriber struct {
+    ID           uuid.UUID
+    TenantID     uuid.UUID
+    Handle       string             // empty if not operator-mapped
+    DisplayName  string
+    Locale       string             // BCP-47, e.g. "en-US", "sr-Latn-RS"
+    Timezone     string             // IANA, e.g. "Europe/Belgrade"
+    Roles        []string           // e.g. ["operator","ic","reader"]
+    Metadata     map[string]any     // free-form per-subscriber data
+    Aliases      []SubscriberAlias  // all channels this human is reachable on
+    Preferences  *PreferenceSet     // see §7.2; nil ⇒ tenant defaults apply
+}
+
+// SubscriberAlias is one row from `subscriber_aliases`.
+type SubscriberAlias struct {
+    Channel       string             // "tgram", "slack", "mailto", ...
+    ChannelUserID string             // chat_id, U0xxx, email address, ...
+    VerifiedAt    *time.Time         // nil ⇒ operator-mapped (not self-verified)
+    LastSeenAt    *time.Time
+}
+
+// CloudEventEnvelope is Herald's typed projection of a CloudEvents v1.0
+// payload. SDK type used at the boundaries is cloudevents.Event from
+// github.com/cloudevents/sdk-go/v2 — this struct is the in-process
+// canonical form after parsing/validation.
+type CloudEventEnvelope struct {
+    SpecVersion       string                 // "1.0"
+    ID                string                 // UUIDv7 (natural ordering)
+    Source            string                 // URI
+    Type              string                 // reverse-DNS, e.g. "digital.vasic.herald.ci.failed"
+    Time              time.Time              // RFC 3339
+    Subject           string                 // tag:/channel:/empty
+    DataContentType   string                 // e.g. "application/json"
+    Data              []byte                 // opaque payload
+    Extensions        map[string]string      // heraldtenant, heraldidempotencykey, heraldpriority, ...
+}
+
+// TraceContext carries OpenTelemetry trace propagation across Herald
+// boundaries (HTTP ingress → router → River job → channel adapter).
+// Stored alongside messages so spans link correctly even when a job
+// runs asynchronously minutes after the originating request returned.
+type TraceContext struct {
+    TraceID    string  // 32-hex chars (W3C Trace Context)
+    SpanID     string  // 16-hex chars (the parent span at handoff)
+    TraceFlags byte    // sampling flags (W3C)
+    TraceState string  // vendor-specific (W3C tracestate header)
+    Baggage    string  // W3C baggage header value
+}
+
+// Branding is the per-flavor visual identity (§6.3 reference).
+// One Branding is constructed per flavor binary at startup and threaded
+// through OutboundMessage so adapters render channel-specific bling.
+type Branding struct {
+    AppName        string  // "Project Herald", "System Herald", ...
+    BinaryName     string  // "pherald", "sherald", ...
+    IconURL        string  // for rich embeds (Slack auth user, Discord author, ...)
+    AccentColorHex string  // "#2C7BE5" — used as Slack attachment color, Discord embed color, Adaptive Card accent
+    DefaultFooter  string  // "Sent by pherald 1.0 · github.com/vasic-digital/Herald"
+}
+
+// ChannelID is the canonical channel identifier. It MUST match the
+// scheme used in `channel_addresses.address_url` and in the URL
+// scheme registered by the adapter (e.g. "tgram", "slack", "mailto").
+type ChannelID string
+
+const (
+    ChannelTelegram ChannelID = "tgram"
+    ChannelMax      ChannelID = "max"
+    ChannelSlack    ChannelID = "slack"
+    ChannelDiscord  ChannelID = "discord"
+    ChannelTeams    ChannelID = "teams"
+    ChannelLark     ChannelID = "lark"
+    ChannelWhatsApp ChannelID = "whatsapp"
+    ChannelViber    ChannelID = "viber"
+    ChannelEmail    ChannelID = "mailto"
+    ChannelNtfy     ChannelID = "ntfy"
+    ChannelGotify   ChannelID = "gotify"
+    ChannelWebhook  ChannelID = "webhook"
+    ChannelDiary    ChannelID = "diary"
+    ChannelNull     ChannelID = "null"  // §11.14 sandbox/no-op adapter for tests
+)
+
+// PreferenceSet is a typed view of the per-subscriber preferences JSON
+// stored in `subscribers.metadata.preferences` (§7.2). See §7.2 for the
+// JSON shape; this is the Go decoded form.
+type PreferenceSet struct {
+    Categories  map[string]CategoryPref   // category_id → pref
+    Workflows   map[string]WorkflowPref   // CloudEvents type → pref
+    QuietHours  *QuietHours               // nil ⇒ no quiet hours configured
+    ChannelData map[ChannelID]any         // provider-specific routing data
+}
+
+type CategoryPref struct {
+    Channels []ChannelID
+    Muted    bool
+}
+
+type WorkflowPref struct {
+    Channels []ChannelID  // may be empty (= use Category default)
+    Muted    bool
+}
+
+type QuietHours struct {
+    TZ                string    // IANA TZ
+    Start             string    // "HH:MM" 24h
+    End               string    // "HH:MM" 24h
+    ExemptCategories  []string  // categories that override quiet hours
+}
 ```
 
-These types live in `commons/types.go`. Every adapter under `commons_messaging/channels/<name>` consumes them; no adapter is allowed to invent its own equivalent (the contract is the contract). Additional helpers in `commons/cloudevents.go`, `commons/branding.go`, `commons/trace.go`.
+These types live in `commons/types.go` and `commons/preferences.go`. Every adapter under `commons_messaging/channels/<name>` consumes them; no adapter is allowed to invent its own equivalent (the contract is the contract). Additional helpers in `commons/cloudevents.go` (CloudEventEnvelope ⇄ cloudevents.Event), `commons/branding.go` (per-flavor Branding factory), `commons/trace.go` (TraceContext propagation), `commons/uuidv7.go` (UUIDv7 generator).
 
 ### 11.1 Telegram
 
@@ -1095,6 +1534,48 @@ See §19 for full schema and sync strategy.
 | Gotify | ✓ | extras.client::display | ✓ | — | extras actions | bearer token | Routed |
 | Webhook | ✓ | CloudEvent JSON | embedded | n/a | n/a | HMAC | Accepted/Routed |
 | Diary | ✓ | source format | path-refs | logical via parent ref | n/a | local FS | n/a (always-on) |
+| `null://` | ✓ | ✓ | ✓ (counted only) | ✓ | ✓ (recorded) | n/a | configured ceiling |
+
+### 11.14 `null://` sandbox channel (test-only)
+
+The `null://` adapter is the in-process equivalent of `/dev/null` with full instrumentation. It implements the entire `Channel` interface but performs no I/O — every `Send` call records the `OutboundMessage` to an in-memory ring buffer (configurable size; default 1000), increments per-tag counters, and returns the configured `DeliveryEvidence` ceiling.
+
+**Use cases:**
+
+- **Unit tests** for `commons_messaging` routing: assert that a given event with a given preference set produces the expected fan-out without touching any real channel.
+- **Load tests**: route traffic through `null://` to measure router/queue throughput without hitting upstream rate limits.
+- **Quickstart / training**: operators can send test events to confirm routing logic before adding real channel credentials.
+- **Chaos testing**: configure `null://` to return `error` for X% of sends to exercise retry / dead-letter paths.
+
+**URL grammar:**
+
+```
+null://[?seed=<int>&fail_rate=<0..1>&latency_ms=<int>&ceiling=<Accepted|Routed|Delivered|Read>&tags=<csv>]
+```
+
+Examples:
+
+- `null://?tags=test` — happy path, instant, returns `Routed`.
+- `null://?fail_rate=0.1&tags=chaos` — 10% of sends return transient error (exercises retry).
+- `null://?latency_ms=500&ceiling=Delivered&tags=load` — adds 500 ms artificial latency, claims `Delivered` ceiling.
+
+**Inspector API** (test-only HTTP endpoint, mounted when `[testing].null_inspector=true`):
+
+| Method | Path | Purpose |
+|---|---|---|
+| `GET` | `/admin/null/messages` | Recent ring-buffer contents (last N OutboundMessages). |
+| `GET` | `/admin/null/stats` | Per-tag counters + send/fail tally. |
+| `POST` | `/admin/null/clear` | Empty the ring buffer + reset stats. |
+| `POST` | `/admin/null/inject` | Inject a synthetic inbound message (test the inbound path without a real subscriber). |
+
+`null://` MUST NOT be enabled in production deployments — the operator gate `CM-NULL-CHANNEL-DISABLED-IN-PROD` (planned) verifies that `null://` is absent from `channel_addresses` when `[herald].environment=production`. Operators that need null behaviour in prod (e.g., feature-flagged channels) use the `[channel_address].enabled=false` toggle instead.
+
+**Channel adapter test fixtures pattern.** Every `commons_messaging/channels/<name>/` package SHOULD ship:
+
+- `testdata/` — recorded HTTP request/response pairs (`go-vcr`-compatible cassettes).
+- `<name>_test.go` — unit tests against `testdata/` (no network).
+- `<name>_integration_test.go` (build tag `integration`) — runs against the channel's sandbox/test mode (Telegram test bot, Slack workspace `T0000` test team, etc.).
+- `<name>_e2e_test.go` (build tag `e2e`) — only runs in nightly CI against real credentials in a dedicated test tenant.
 
 ---
 
@@ -1430,6 +1911,28 @@ V2 published SLOs (per-tenant rolling 30-day):
 | Delivery success rate (excluding 4xx from upstream channels) | 99.5% |
 | Dead-letter rate | < 0.1% |
 | Doctor-CLI checks (SPF/DKIM/DMARC, DB ping, Redis ping) | run every 5 min, alert on 3 consecutive fail |
+
+#### 17.4.1 Per-channel SLO budgets
+
+The aggregate SLO table above can hide bad behaviour on one channel behind good behaviour on another. V2 also commits to **per-channel SLO budgets** — error budgets tracked independently so a single misbehaving adapter or upstream incident is visible immediately:
+
+| Channel | Delivery success target | p95 latency target (ingest → upstream `accepted`) | Notes |
+|---|---|---|---|
+| Telegram | 99.5% | < 2 s | Telegram Bot API is famously reliable; alert if budget burn > 2× expected. |
+| Slack | 99.5% | < 3 s | `chat.postMessage` rate-limited per workspace; back off cleanly. |
+| Discord | 99.0% | < 3 s | Webhook rate limits are aggressive; expect retries. |
+| MS Teams | 98.0% | < 5 s | Incoming-webhook backend has visible jitter. |
+| Lark | 99.0% | < 4 s | |
+| Max | 99.0% | < 4 s | Subject to network reachability from non-RU operator regions. |
+| Email (SMTP self-hosted) | 95.0% | < 30 s | Includes DNS + greylist + tarpit latency. |
+| Email (ESP — Resend/Postmark/SendGrid) | 99.5% | < 5 s | ESP carries the deliverability risk; Herald sees `Accepted` quickly. |
+| WhatsApp (Cloud API) | 99.0% | < 3 s | Conversation-window restrictions can drop messages outside 24h windows. |
+| Viber | 98.0% | < 5 s | Hand-rolled REST client; expect rougher edges. |
+| ntfy / Gotify | 99.5% | < 2 s | Self-hosted = operator's own infra. |
+| Webhook (generic outbound) | depends on operator's endpoint | < operator's deadline | Tracked but no Herald-side target. |
+| Diary | 99.99% | < 100 ms | Local file system + Pandoc batching; outliers indicate disk pressure. |
+
+Per-channel burn-rate alerts (multi-window, multi-burn-rate per Google SRE Workbook): page on **2-hour 14× burn** AND **6-hour 6× burn** simultaneously crossed; warn on either alone. Alerts route through the same Herald pipeline that any other event uses — Herald-monitoring-Herald MUST work, but operators are advised to also run a separate stand-by notifier for the case where Herald itself is the failure.
 
 ### 17.5 Health probes (livez / readyz / startupz)
 
@@ -1941,8 +2444,30 @@ Inheritance-gate invariant **I7a–c** enforces presence of this anchor in `CLAU
 - `docs/channels/<channel>/` — per-channel setup guide (credentials, webhooks, signing).
 - `docs/operations/` — deployment + doctor + backups + upgrades.
 - `docs/security/` — credential handling, signing keys, secret rotation.
+- `docs/api/` — machine-readable API specifications (see §24.1).
+- `docs/migration/` — operator guides for migrating from other notification stacks (Apprise, Gotify, Mattermost-bridge, etc.).
 
 We MUST have **mandatory documentation up to the smallest details**: full user guides, manuals, diagrams, schemes in all major formats (Markdown source + PDF + HTML siblings per §11.4.61 + §11.4.65) and other relevant materials.
+
+### 24.1 Machine-readable API specifications
+
+Herald ships its own API contracts as machine-readable schemas so client tooling (SDK generators, mock servers, schema-validating proxies, API gateways) doesn't have to reverse-engineer them.
+
+| Spec | Location | Format | Generated by |
+|---|---|---|---|
+| HTTP ingress (`/v1/events`, `/v1/send`, `/v1/subscribers`, `/v1/deadletters`, `/v1/channels`) | `docs/api/openapi.v1.yaml` | OpenAPI 3.1 | hand-authored from the canonical Go handler signatures in `commons_http/*`; CI gate `CM-OPENAPI-DRIFT` (planned) verifies handler↔spec parity. |
+| Webhook ingest (signed, per-source) | `docs/api/openapi.v1.yaml` (sub-tree under `/webhooks/`) | OpenAPI 3.1 | same source as above. |
+| Event taxonomy (`digital.vasic.herald.*` event types per §4.2) | `docs/api/asyncapi.v1.yaml` | AsyncAPI 2.6 | machine-generated from `commons/events.go` event-type registry. |
+| Channel adapter Go interface (§11.0) | `commons/types.go` | Go source | the source IS the spec; `pkg.go.dev` rendering is the human view. |
+| Database schema | `commons_storage/migrations/*.sql` | PostgreSQL DDL | the migration files ARE the schema spec; `<flavor>herald schema dump` exports current state. |
+
+CLI helpers:
+
+- `<flavor>herald openapi` — print the embedded OpenAPI spec (so operators don't need the repo).
+- `<flavor>herald asyncapi` — same for AsyncAPI.
+- `<flavor>herald schema dump [--format=sql|markdown]` — emit current DB schema.
+
+**Documentation cross-link rule** (§11.4.59 + §11.4.61 composed): every change to a `commons_http/` handler MUST update `docs/api/openapi.v1.yaml`, MUST add an entry to `docs/changelogs/`, MUST regenerate `docs/api/openapi.v1.html` (rendered via Redoc or stoplight-elements at build time). Drift is a release blocker.
 
 ---
 
@@ -2296,9 +2821,46 @@ These findings were noted but require their own focused pass:
 
 The pass was a single-author read-through immediately following V2 r1 authoring, focused on internal consistency (prose ↔ formal definitions), operational completeness (can someone deploy this?), and compliance gaps (GDPR, license, version pinning). Findings rated High when a downstream reader would file a bug, Medium when a future implementer would have to invent a missing detail, Low for stylistic. Only High + Medium findings were applied.
 
-### 30.4 Audit trail
+### 30.4 Audit trail (r2)
 
 - Pre-review commit: V2 r1 at `96b7cc6`.
-- This commit: V2 r2 (one logical commit covering V2-R-01..V2-R-14).
+- r2 commit: `9648545` (one logical commit covering V2-R-01..V2-R-14).
 - Inheritance gate before and after: 12 PASS / 0 FAIL. Meta-test: ✓.
 - All four Herald mirrors targeted on push.
+
+### 30.5 V3 review log (r3, this revision)
+
+A second self-review pass following r2. Targeted a *different cut* than r1→r2: where r1→r2 closed missing tables and added operational content, r2→r3 closes the second-layer Go types (referenced by §11.0 but not defined) and adds the implementer-grade operational detail that turns "we have a spec" into "we have a buildable spec".
+
+#### 30.5.1 Gaps closed (applied this revision)
+
+- **V3-R-01. Remaining undefined Go types in §11.0.** `Subscriber`, `CloudEventEnvelope`, `TraceContext`, `Branding` (as Go struct, cross-ref §6.3), `ChannelID` (typed string constants), `SubscriberAlias`, `PreferenceSet`/`CategoryPref`/`WorkflowPref`/`QuietHours` (Go-decoded forms of the JSON in §7.2) — all referenced by `OutboundMessage` / `InboundEvent` but never defined. **Applied:** all defined in §11.0 with package + file home pins (`commons/types.go`, `commons/preferences.go`, etc.). Closes the "Channel interface compiles in isolation" gap.
+- **V3-R-02. Database migration tooling unspecified.** §26.3 mentioned `<flavor>herald migrate` but never named the tool, file layout, or numbering scheme. **Applied:** new **§9.6** picks `golang-migrate/migrate` (embedded), specifies the `commons_storage/migrations/000001_..._up.sql` layout, the runtime contract (`migrate up/down/status/force/validate`), the role split (`herald_migrator` BYPASSRLS vs `herald_app`), and the forward-compatibility rule (two minor versions).
+- **V3-R-03. Worker-pool sizing absent.** No guidance on how many concurrent workers Herald runs. **Applied:** new **§3.4** specifies three independently-sized pools (HTTP ingress, router/dispatch, River channel-delivery) with defaults keyed off `NumCPU`, env-var overrides, and sizing guidance by deployment tier (small / multi-tenant / high-burst).
+- **V3-R-04. SIGHUP hot-reload semantics missing.** `<flavor>herald serve` long-running but no way to refresh config without restart. **Applied:** new **§3.4** specifies SIGHUP trap, the safe-to-change vs requires-restart partition (channels/router-workers/log-level/allowlists vs ports/DSN/RLS-policies), the diff-and-validate cycle, and the `digital.vasic.herald.system.config.reloaded` audit event.
+- **V3-R-05. Ingress HTTP URL paths never enumerated.** Operators couldn't write reverse-proxy / API-gateway rules without reading the source. **Applied:** new **§5.7** tabulates every `/v1/*` and `/webhooks/*` and `/livez/readyz/startupz/metrics/admin/*` endpoint with method + auth mode, plus the rate-limit defaults and the `/v1/` versioning policy.
+- **V3-R-06. Workable-item lifecycle missing.** §8 defined the prefix algorithm but never explained how an `HRD-NNN` actually moves from `Bug:` command → `Issues.md` row → `Fixed.md` resolution. **Applied:** new **§8.3** with full lifecycle ASCII flow, the `workable_items` schema (lightweight pointer table — canonical record stays in Markdown per Universal §6 human-edit-ability), per-tenant advisory-lock sequence allocation, and the reopen flow that composes with Universal §11.4.55 Reopens.md history.
+- **V3-R-07. `null://` sandbox channel undocumented.** No first-class way to test routing without hitting real channels. **Applied:** new **§11.14** specifies the URL grammar (`null://?fail_rate=...&latency_ms=...&ceiling=...`), the in-memory ring buffer, the `/admin/null/*` inspector API, the per-environment gate (`CM-NULL-CHANNEL-DISABLED-IN-PROD`), and a recommended test-fixtures pattern for every `commons_messaging/channels/<name>/` package.
+- **V3-R-08. Time / clock abstraction missing.** `time.Now()` called directly anywhere makes tests of quiet hours, batching, backoff, TTLs unreliable. **Applied:** new **§3.5** with the `commons/clock` interface (RealClock + FakeClock), the `Default` package-global variable swap pattern, and the `golangci-lint` rule `herald-no-direct-time-now` that fails compilation if anyone calls `time.Now()` outside `commons/clock`.
+- **V3-R-09. Machine-readable API specs not committed.** Spec referenced `<flavor>herald openapi` without describing where the specs live. **Applied:** new **§24.1** specifies `docs/api/openapi.v1.yaml` (OpenAPI 3.1, hand-authored from Go handler signatures, with `CM-OPENAPI-DRIFT` parity gate) and `docs/api/asyncapi.v1.yaml` (AsyncAPI 2.6, machine-generated from `commons/events.go`); also lists the CLI helpers (`openapi`, `asyncapi`, `schema dump`).
+- **V3-R-10. Outbound idempotency unspecified.** §4.3 covered ingress idempotency but not the case where the channel send itself succeeds-but-loses-response and gets retried. **Applied:** new **§5.4.1** with the `(tenant_id, event_id, channel, channel_address_id)` outbound key, the `outbound_dedup` table (24h TTL — narrower than ingress 7d), and the rule that adapters supporting upstream idempotency (Slack/Stripe-style/Email Message-ID) MUST forward the key while those that don't (raw SMTP/Telegram/Discord) MUST consult `outbound_dedup` in the same River-job transaction.
+- **V3-R-11. Per-channel SLO budgets missing.** §17.4 aggregate SLOs hid one bad channel behind good channels. **Applied:** new **§17.4.1** publishes per-channel success and p95-latency targets for each of the 12 channels with a multi-window / multi-burn-rate alert rule (Google SRE Workbook pattern: 2h/14× AND 6h/6× = page; either alone = warn).
+- **V3-R-12. AI-agent subscribers conflated with humans.** Spec assumes "subscriber" without distinguishing the runaway-loop risk of agents. **Applied:** new **§7.5** introduces a `subscribers.kind` enum (`human`/`agent`/`service`), the `agent_tokens` table (argon2id-hashed bearer with per-token rate limit + expiry + revocation), the default throttles (60 req/min/token, 3-strike auto-cool-down at 30min), the audit-span attribute (`herald.subscriber.kind="agent"` + `herald.agent.token_id`), and the rule that quiet-hours are ignored for agents by default.
+
+#### 30.5.2 Deferred (out of scope for r3)
+
+- **V3-R-13. Migration-from-existing-systems operator guide.** Mentioned briefly in §24 doc layout but no actual content for migrating from Apprise/Gotify/Mattermost-bridge/etc. Deferred — needs its own dedicated `docs/migration/` content cycle.
+- **V3-R-14. Multi-region / global deployments.** What if one tenant spans regions? Out-of-scope; treated as schema-per-tenant + region-pinned operator concern; will resurface when first cross-region customer appears.
+
+#### 30.5.3 Method
+
+Same as r2: single-author read-through immediately following r2 commit, focused on three categories — (a) prose↔formal-definition gaps in the type contract layer that §11.0 introduced, (b) operational completeness for an implementer who hasn't read the constitution, (c) correctness boundaries (outbound dedup composition, agent throttling) the architecture document needs to nail down before code lands. Findings rated as before; only High + Medium applied this round.
+
+#### 30.5.4 Audit trail (r3)
+
+- Pre-review commit: V2 r2 at `9648545`.
+- r3 commit: covered V3-R-01..V3-R-12 in one logical commit on top of r2.
+- Inheritance gate before and after: 12 PASS / 0 FAIL. Meta-test: ✓.
+- All four Herald mirrors targeted on push.
+
+Statistical context: r1→r2 added ~33 KB to the Markdown source closing 14 findings. r2→r3 closed 12 findings — the curve is flattening, which is the expected pattern (the easier high-leverage gaps go first). A fourth pass would likely yield only stylistic findings; the next high-value pass should come *after* first-implementation cycle surfaces real-world spec gaps that desk-review alone can't find.
