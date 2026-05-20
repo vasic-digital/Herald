@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>Herald — MVP Specification V2 (superseded)</title>
+  <title>Herald — Specification V3</title>
   <style>
     /* Default styles provided by pandoc.
     ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -238,10 +238,9 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">Herald — MVP Specification V2 (superseded)</h1>
+<h1 class="title">Herald — Specification V3</h1>
 </header>
-<h1 id="herald--mvp-specification-v2-superseded">Herald — MVP
-Specification V2 (superseded)</h1>
+<h1 id="herald--specification-v3">Herald — Specification V3</h1>
 <table>
 <thead>
 <tr>
@@ -252,11 +251,11 @@ Specification V2 (superseded)</h1>
 <tbody>
 <tr>
 <td>Revision</td>
-<td>4</td>
+<td>1</td>
 </tr>
 <tr>
 <td>Created</td>
-<td>2026-05-19</td>
+<td>2026-05-20</td>
 </tr>
 <tr>
 <td>Last modified</td>
@@ -264,17 +263,19 @@ Specification V2 (superseded)</h1>
 </tr>
 <tr>
 <td>Status</td>
-<td>superseded</td>
+<td>active</td>
 </tr>
 <tr>
 <td>Status summary</td>
-<td>Superseded by <a
-href="specification.V3.md"><code>specification.V3.md</code></a> on
-2026-05-20. V2's three revisions (r1–r3) closed the architectural gaps
-surfaced by V1's Review; V3 layers the operator-product story on top:
-full project-integration contract, inbound processing pipeline (workers
-+ 30s poll + anti-spam), Claude Code LLM dispatch, tri-stage reply
-protocol, and refinements across every flavor.</td>
+<td>V3 r1 supersedes V2. Adds §31 project-integration contract, §32
+inbound processing pipeline (30s poll + FIFO + worker stages +
+anti-spam), §33 LLM/agent dispatch (Claude Code session resolution), §34
+tri-stage reply protocol (queued→processing→result), §35
+versioned-report fan-out with Git linkage, §36 outbound multi-format
+attachment bundles (Markdown + HTML + PDF + DOCX). Expanded §18.2
+Project Herald with Investigation-before-Fixing flow + criticality +
+type classification + attachment storage at
+<code>issues/users/attachments/WORKABLE_ITEM_ID/</code>.</td>
 </tr>
 <tr>
 <td>Issues</td>
@@ -282,25 +283,30 @@ protocol, and refinements across every flavor.</td>
 </tr>
 <tr>
 <td>Issues summary</td>
-<td>—</td>
+<td>First-implementation work tracked under <code>HRD-</code> prefix; V3
+is the version consuming projects integrate against.</td>
 </tr>
 <tr>
 <td>Fixed</td>
-<td>V2-R-01..V2-R-14 (r2), V3-R-01..V3-R-12 (r3) — both carried into V3
-unchanged.</td>
+<td>V3-R1-01..V3-R1-14 (this revision); inherits closed:
+V2-R-01..V2-R-14 (V2 r2), V3-R-01..V3-R-12 (V2 r3), V1 R-01..R-22.</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
-<td>V2 stays as the historical reference for the architectural baseline;
-V3 builds on it.</td>
+<td>Delivers the operator-product story V2 deferred: explicit
+consuming-project contract, full inbound-message lifecycle, first-class
+Claude Code integration with project-named session resolution, tri-stage
+user-visible reply protocol, versioned reports re-publish with Git
+commit link, multi-format outbound attachments
+(.md/.html/.pdf/.docx).</td>
 </tr>
 <tr>
 <td>Continuation</td>
-<td>See <a
-href="specification.V3.md"><code>specification.V3.md</code></a> —
-first-implementation cycle now targets the V3 set: project-integration
-contract, inbound pipeline, LLM dispatch, reply protocol, refined
-flavors.</td>
+<td>V3 r2 (planned, same workstream): refine all flavor sections (§18.x)
+for richer per-channel interaction (interactive buttons, modals,
+reactions, slash commands, command discovery via <code>/help</code>). V3
+r3 (planned): polish + re-export V1+V2+V3 + commit + push
+EVERYTHING.</td>
 </tr>
 </tbody>
 </table>
@@ -478,7 +484,19 @@ implementations)</a>
 <li><a href="#181-common-flavor-contract">18.1 Common flavor
 contract</a></li>
 <li><a href="#182-project-herald-pherald">18.2 Project Herald
-(<code>pherald</code>)</a></li>
+(<code>pherald</code>)</a>
+<ul>
+<li><a href="#1821-investigation-before-fixing-flow">18.2.1
+Investigation-before-Fixing flow</a></li>
+<li><a href="#1822-criticality-determination">18.2.2 Criticality
+determination</a></li>
+<li><a href="#1823-type-classification-universal-11416-mapping">18.2.3
+Type classification (Universal §11.4.16 mapping)</a></li>
+<li><a href="#1824-attachment-validation-storage">18.2.4 Attachment
+validation + storage</a></li>
+<li><a href="#1825-claude-code-project-session-integration">18.2.5
+Claude Code project-session integration</a></li>
+</ul></li>
 <li><a href="#183-system-herald-sherald">18.3 System Herald
 (<code>sherald</code>)</a></li>
 <li><a href="#184-build-herald-bherald">18.4 Build Herald
@@ -523,8 +541,32 @@ Operator quickstart (5-minute Docker Compose)</a></li>
 </ul></li>
 <li><a href="#28-notes-open-questions">§28. Notes &amp; open
 questions</a></li>
-<li><a href="#29-changelog-v1-v2">§29. Changelog (V1 → V2)</a></li>
-<li><a href="#30-v2-self-review-log">§30. V2 self-review log</a></li>
+<li><a href="#29-changelog">§29. Changelog</a>
+<ul>
+<li><a href="#291-v1-v2-changes-2026-05-19">29.1 V1 → V2 changes
+(2026-05-19)</a></li>
+<li><a href="#292-v2-v3-changes-2026-05-20">29.2 V2 → V3 changes
+(2026-05-20)</a></li>
+</ul></li>
+<li><a href="#30-v2-self-review-log">§30. V2 self-review log</a>
+<ul>
+<li><a href="#306-v3-r1-review-log-this-revision">30.6 V3 r1 review log
+(this revision)</a></li>
+</ul></li>
+<li><a href="#31-project-integration-contract">§31. Project integration
+contract</a></li>
+<li><a href="#32-inbound-processing-pipeline">§32. Inbound processing
+pipeline</a></li>
+<li><a href="#33-llm-agent-dispatch">§33. LLM / agent dispatch</a></li>
+<li><a href="#34-reply-protocol-queued-processing-result">§34. Reply
+protocol (queued → processing → result)</a></li>
+<li><a
+href="#35-reports-state-tracking-documents-versioned-fan-out-with-git-linkage">§35.
+Reports + state-tracking documents (versioned fan-out with Git
+linkage)</a></li>
+<li><a
+href="#36-outbound-multi-format-attachments-md-html-pdf-docx">§36.
+Outbound multi-format attachments (.md + .html + .pdf + .docx)</a></li>
 </ul>
 <hr />
 <h2 id="1-upstreams">§1. Upstreams</h2>
@@ -3802,6 +3844,204 @@ timestamp.</li>
 consuming project hasn't set one, the algorithm runs over the project
 name (from <code>package.json</code>, <code>go.mod</code>,
 <code>pyproject.toml</code>, or the git remote name).</p>
+<h4 id="1821-investigation-before-fixing-flow">18.2.1
+Investigation-before-Fixing flow</h4>
+<p>When a subscriber reports a <code>Bug:</code> / <code>Issue:</code> /
+<code>Implementation:</code> request, <code>pherald</code> MUST first
+create an <strong>Investigation workable item</strong> (type
+<code>investigation</code>, status <code>investigating</code>) before
+committing to a final bug/task row. This guards against runaway
+LLM-generated workable items that turn out to be duplicates,
+out-of-scope, or non-reproducible.</p>
+<p>The full sequence (composes §32 inbound pipeline + §33 LLM dispatch +
+§8.3 lifecycle):</p>
+<pre><code>1. Subscriber DMs:  &quot;Bug: telemetry pipe drops every hour&quot;
+                                │
+                                ▼
+2. §32 pipeline accepts + classifies → type=bug, criticality=middle
+                                │
+                                ▼  Reply A (queued)  →  &quot;📨 Received. Queued as #INB-abc12.&quot;
+3. pherald allocates HRD-INV-NN as an investigation item:
+       INSERT workable_items (type=&#39;investigation&#39;, status=&#39;investigating&#39;,
+                              parent_request=&lt;inbound_msg_id&gt;, criticality=&#39;middle&#39;)
+       Write row to docs/Issues.md with type=&#39;investigation&#39;
+                                │
+                                ▼  Reply B (processing)  →  &quot;⏳ Investigating as HRD-INV-007…&quot;
+4. §33 dispatcher invokes Claude Code with the §33.3 prompt envelope.
+   Claude Code analyzes:
+     - Reproduces locally? (where: &lt;project&gt; session, working dir)
+     - Identifies affected code paths.
+     - Classifies root-cause area.
+     - Estimates effort + dependencies.
+   Returns &lt;&lt;&lt;HERALD-REPLY&gt;&gt;&gt; JSON.
+                                │
+                                ▼
+5. pherald reads outcome:
+   • validated → allocate HRD-NNN final bug item, link parent_investigation=HRD-INV-007,
+                 close investigation as &quot;validated&quot;, emit task.opened event,
+                 attach Claude&#39;s investigation summary as multi-format bundle (§36).
+   • needs_more_info → keep investigation open, ask subscriber follow-ups in Reply C.
+   • rejected (duplicate/out-of-scope/known) → close investigation with reason,
+                                                no final item, Reply C explains.
+   • cannot reproduce → keep investigation open with &quot;operator-blocked&quot;
+                        status per Universal §11.4.21, page operator-on-call.
+                                │
+                                ▼  Reply C (final)
+                                   &quot;✅ Created HRD-042 (bug, criticality=middle).&quot;
+                                   &quot;   Investigation: HRD-INV-007 (validated).&quot;
+                                   &quot;   Affected: pherald/internal/telemetry.go:142&quot;
+                                   &quot;   Repo: github.com/&lt;org&gt;/&lt;project&gt;/blob/&lt;sha&gt;/Issues.md&quot;
+                                   [+ multi-format attachment bundle per §36]</code></pre>
+<p><strong>Persistence</strong>: every investigation has its own file
+under <code>docs/Investigations/&lt;HRD-INV-NNN&gt;.md</code> carrying
+the Claude-Code dispatch transcript + classification metadata + the
+validation decision. Composes with Universal §11.4.55 (Reopens-history)
+for the case where a previously-rejected investigation is reopened.</p>
+<h4 id="1822-criticality-determination">18.2.2 Criticality
+determination</h4>
+<p>Criticality is set in <code>inbound_messages.classification</code> by
+the §32.6 classifier and stored on the investigation + final workable
+items. Levels match Universal item-type vocabulary:</p>
+<table>
+<thead>
+<tr>
+<th>Level</th>
+<th>Triggers</th>
+<th>SLA replies</th>
+<th>SLA investigation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>critical</code></td>
+<td>explicit <code>critical:</code> prefix, OR LLM keyword-confidence ≥
+0.85 on outage/data-loss/security-breach terms, OR sender has
+<code>oncall</code> role and message arrives during the configured
+incident window</td>
+<td>Reply A ≤ 30 s, Reply B ≤ 2 min, Reply C ≤ 5 min</td>
+<td>&lt; 1 h</td>
+</tr>
+<tr>
+<td><code>high</code></td>
+<td>explicit <code>high:</code>, OR LLM 0.7–0.85</td>
+<td>A ≤ 1 min, B ≤ 5 min, C ≤ 30 min</td>
+<td>&lt; 4 h</td>
+</tr>
+<tr>
+<td><code>middle</code></td>
+<td>default for
+<code>bug</code>/<code>issue</code>/<code>task</code></td>
+<td>A ≤ 5 s, B ≤ 5 min, C ≤ 2 h</td>
+<td>&lt; 24 h</td>
+</tr>
+<tr>
+<td><code>low</code></td>
+<td>explicit <code>low:</code> or <code>nice-to-have:</code></td>
+<td>A ≤ 5 s, B ≤ 30 min, C ≤ 24 h</td>
+<td>&lt; 1 week</td>
+</tr>
+</tbody>
+</table>
+<p>Operators MAY override mid-flight:
+<code>Override: HRD-042 criticality=critical</code> re-dispatches to LLM
+with the new SLA and re-pages affected <code>oncall</code> tags.</p>
+<h4 id="1823-type-classification-universal-11416-mapping">18.2.3 Type
+classification (Universal §11.4.16 mapping)</h4>
+<p>Inbound type tokens map to Universal §11.4.16 item types one-to-one.
+The classifier emits the exact Universal vocabulary so downstream
+<code>Issues.md</code> rows pass §11.4.16-PARITY gate without
+translation. Full mapping in §32.6.</p>
+<p>When an inbound is ambiguous (e.g.,
+<code>Hey, the build keeps failing</code> — no prefix), the
+classifier:</p>
+<ol type="1">
+<li>Runs the deterministic keyword pass first (verbs like
+<em>fails</em>, <em>broken</em>, <em>crashed</em> → tentative
+<code>bug</code>).</li>
+<li>If confidence &lt; 0.7, escalates to LLM for type-only dispatch
+(§33.3 prompt envelope, <code>task=classify-only</code>).</li>
+<li>If LLM confidence still &lt; 0.7, replies
+<code>❓ Could you tag this as Bug: / Issue: / Task: / Query: / …?</code>
+and stages the message as <code>needs-classification</code> (NOT
+processed further).</li>
+</ol>
+<h4 id="1824-attachment-validation--storage">18.2.4 Attachment
+validation + storage</h4>
+<p>Subscriber-supplied attachments referenced by an inbound
+investigation/bug/task MUST follow this storage convention (mandatory,
+per the user's V3 requirement):</p>
+<pre><code>&lt;consuming-project-root&gt;/
+└── issues/
+    └── users/
+        └── attachments/
+            └── HRD-042/                      ← WORKABLE_ITEM_ID directory
+                ├── 01_stack-trace.log       ← original filename, prefixed with arrival order
+                ├── 02_screenshot.png
+                └── 03_repro-script.sh</code></pre>
+<p>Where <code>HRD-042</code> is the canonical workable-item ID. For
+investigations the directory is named after the investigation ID
+(<code>HRD-INV-007/</code>); on transition to a final workable item,
+files are moved to the final ID's directory and
+<code>HRD-INV-007/</code> becomes an empty placeholder kept for audit
+(Universal §11.4.55).</p>
+<p>The investigation/bug <code>Issues.md</code> row carries a
+<code>Attachments:</code> column referencing the directory. Multi-format
+attachment generation (§36) does NOT apply to inbound user attachments —
+they are stored as-is in their original format. (§36 multi-format is for
+OUTBOUND attachments Herald itself produces.)</p>
+<p><strong>Pre-storage validation pipeline</strong> (per §32.4):</p>
+<ol type="1">
+<li>Each attachment downloaded into a sandbox directory (configurable;
+default <code>/tmp/herald-staging/&lt;random&gt;/</code>).</li>
+<li>ClamAV scan (if configured) — quarantine on hit.</li>
+<li>Magic-byte + MIME match — reject mismatched.</li>
+<li>Extension allowlist — reject <code>.exe</code>, <code>.dll</code>,
+<code>.so</code>, <code>.dylib</code>, <code>.bat</code>,
+<code>.cmd</code>, <code>.ps1</code>, <code>.scr</code>,
+<code>.jar</code>, <code>.class</code> by default.</li>
+<li>Per-file size cap (<code>[attachments].in_max_mib</code>, default 25
+MiB).</li>
+<li>Per-message total cap (<code>[attachments].in_total_max_mib</code>,
+default 100 MiB).</li>
+<li>If all pass → move to
+<code>issues/users/attachments/&lt;WORKABLE_ITEM_ID&gt;/</code>.</li>
+<li>If any fail → record reason in <code>quarantined_messages</code>, do
+NOT move to canonical path, Reply C cites the validation error.</li>
+</ol>
+<p>The <code>attachments_index.md</code> file inside each
+WORKABLE_ITEM_ID directory documents:</p>
+<div class="sourceCode" id="cb31"><pre
+class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu"># Attachments for HRD-042</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Order <span class="pp">|</span> Filename <span class="pp">|</span> MIME <span class="pp">|</span> Size (B) <span class="pp">|</span> SHA-256 <span class="pp">|</span> Uploaded by <span class="pp">|</span> Uploaded at <span class="pp">|</span> Notes <span class="pp">|</span></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a><span class="pp">|---|---|---|---|---|---|---|---|</span></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 01 <span class="pp">|</span> stack-trace.log <span class="pp">|</span> text/plain <span class="pp">|</span> 12_348 <span class="pp">|</span> <span class="dt">&lt;</span><span class="kw">hex</span><span class="dt">&gt;</span> <span class="pp">|</span> alice@tgram:42 <span class="pp">|</span> 2026-05-20T18<span class="sc">:30:</span>12Z <span class="pp">|</span> repro context <span class="pp">|</span></span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 02 <span class="pp">|</span> screenshot.png <span class="pp">|</span> image/png <span class="pp">|</span> 348_551 <span class="pp">|</span> <span class="dt">&lt;</span><span class="kw">hex</span><span class="dt">&gt;</span> <span class="pp">|</span> alice@tgram:42 <span class="pp">|</span> 2026-05-20T18<span class="sc">:30:</span>14Z <span class="pp">|</span> UI state <span class="pp">|</span></span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 03 <span class="pp">|</span> repro-script.sh <span class="pp">|</span> text/x-shellscript <span class="pp">|</span> 1_204 <span class="pp">|</span> <span class="dt">&lt;</span><span class="kw">hex</span><span class="dt">&gt;</span> <span class="pp">|</span> alice@tgram:42 <span class="pp">|</span> 2026-05-20T18<span class="sc">:30:</span>17Z <span class="pp">|</span> runs in 10 s <span class="pp">|</span></span></code></pre></div>
+<p>The index file IS the source of truth for "what's attached to this
+workable item" — Herald regenerates it on every attachment add/remove
+(per §11.4.61 freshness rules; if the index drifts from the directory
+contents, the §32 validator FAILs with
+<code>attachment_index_drift</code>).</p>
+<h4 id="1825-claude-code-project-session-integration">18.2.5 Claude Code
+project-session integration</h4>
+<p>Per §33.2 the Claude Code session for the consuming project is
+anchored at
+<code>&lt;consuming-project&gt;/.herald/claude-code/sessions/&lt;project_name&gt;.session</code>.
+For Project Herald specifically:</p>
+<ul>
+<li>The <code>[herald].project_name</code> config value (e.g.
+<code>ATMOSphere</code>) drives the anchor name.</li>
+<li>Each invocation runs
+<code>claude --resume &lt;UUID&gt; --print "&lt;§33.3 envelope&gt;"</code>
+with <code>cwd=&lt;consuming-project-root&gt;</code>.</li>
+<li>The session anchor is read-only to Herald; manual deletion resets
+the session (operators MAY want this when Claude's context degrades —
+e.g. after a long-running incident produces a noisy session).</li>
+<li>The flavor binary refuses to start if
+<code>[herald].project_name</code> is empty (Claude Code dispatch is
+non-optional in V3 r1).</li>
+</ul>
 <h3 id="183-system-herald-sherald">18.3 System Herald
 (<code>sherald</code>)</h3>
 <p><strong>Focus</strong>: OS/host/service health and security. Designed
@@ -4148,22 +4388,22 @@ directory</strong>:</p>
 <code>[herald].diary_root</code> in <code>config.toml</code>.</li>
 </ul>
 <h3 id="192-schema-markdown">19.2 Schema (Markdown)</h3>
-<div class="sourceCode" id="cb29"><pre
-class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">## 2026-05-19T18:30:00Z · pherald · digital.vasic.herald.ci.failed</span></span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Field <span class="pp">|</span> Value <span class="pp">|</span></span>
-<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a><span class="pp">|---|---|</span></span>
-<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Tenant <span class="pp">|</span> <span class="in">`00000000-…-0001`</span> <span class="pp">|</span></span>
-<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Event ID <span class="pp">|</span> <span class="in">`01931a7c-…-5678`</span> <span class="pp">|</span></span>
-<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Source <span class="pp">|</span> <span class="in">`github.com/vasic-digital/Herald/actions/runs/4231`</span> <span class="pp">|</span></span>
-<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Channels <span class="pp">|</span> tgram (delivered), slack (delivered), email (queued) <span class="pp">|</span></span>
-<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a>**Body:**</span>
-<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a><span class="at">&gt; Build pao u </span><span class="in">`main`</span><span class="at">: 3/5 testova nije prošlo. Pogledaj log:</span></span>
-<span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a><span class="at">&gt; https://github.com/vasic-digital/Herald/actions/runs/4231</span></span>
-<span id="cb29-14"><a href="#cb29-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb29-15"><a href="#cb29-15" aria-hidden="true" tabindex="-1"></a>**Subscribers reached:** alice (tgram + slack), bob (email).</span></code></pre></div>
+<div class="sourceCode" id="cb32"><pre
+class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">## 2026-05-19T18:30:00Z · pherald · digital.vasic.herald.ci.failed</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Field <span class="pp">|</span> Value <span class="pp">|</span></span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a><span class="pp">|---|---|</span></span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Tenant <span class="pp">|</span> <span class="in">`00000000-…-0001`</span> <span class="pp">|</span></span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Event ID <span class="pp">|</span> <span class="in">`01931a7c-…-5678`</span> <span class="pp">|</span></span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Source <span class="pp">|</span> <span class="in">`github.com/vasic-digital/Herald/actions/runs/4231`</span> <span class="pp">|</span></span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Channels <span class="pp">|</span> tgram (delivered), slack (delivered), email (queued) <span class="pp">|</span></span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a>**Body:**</span>
+<span id="cb32-11"><a href="#cb32-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-12"><a href="#cb32-12" aria-hidden="true" tabindex="-1"></a><span class="at">&gt; Build pao u </span><span class="in">`main`</span><span class="at">: 3/5 testova nije prošlo. Pogledaj log:</span></span>
+<span id="cb32-13"><a href="#cb32-13" aria-hidden="true" tabindex="-1"></a><span class="at">&gt; https://github.com/vasic-digital/Herald/actions/runs/4231</span></span>
+<span id="cb32-14"><a href="#cb32-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-15"><a href="#cb32-15" aria-hidden="true" tabindex="-1"></a>**Subscribers reached:** alice (tgram + slack), bob (email).</span></code></pre></div>
 <h3 id="193-sync-strategy-per-r-03">19.3 Sync strategy (per R-03)</h3>
 <ul>
 <li><strong>Pandoc</strong> (Markdown → HTML5) +
@@ -4209,17 +4449,17 @@ subprocess + manifest (deferred to V2.1)</h3>
 <p>Spec'd now, implementation deferred. Herald discovers external
 channel binaries through a manifest file
 (<code>heraldchannel.yaml</code>):</p>
-<div class="sourceCode" id="cb30"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">name</span><span class="kw">:</span><span class="at"> my-custom-channel</span></span>
-<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="fu">exec</span><span class="kw">:</span><span class="at"> /usr/local/lib/herald/channels/my-channel</span></span>
-<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="fu">supports</span><span class="kw">:</span></span>
-<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> text</span></span>
-<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> markdown</span></span>
-<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> attachments</span></span>
-<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a><span class="fu">env</span><span class="kw">:</span></span>
-<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">required</span><span class="kw">:</span></span>
-<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> MY_CHANNEL_TOKEN</span></span>
-<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a><span class="fu">protocol_version</span><span class="kw">:</span><span class="at"> </span><span class="dv">1</span></span></code></pre></div>
+<div class="sourceCode" id="cb33"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="fu">name</span><span class="kw">:</span><span class="at"> my-custom-channel</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="fu">exec</span><span class="kw">:</span><span class="at"> /usr/local/lib/herald/channels/my-channel</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a><span class="fu">supports</span><span class="kw">:</span></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> text</span></span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> markdown</span></span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> attachments</span></span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a><span class="fu">env</span><span class="kw">:</span></span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">required</span><span class="kw">:</span></span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> MY_CHANNEL_TOKEN</span></span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a><span class="fu">protocol_version</span><span class="kw">:</span><span class="at"> </span><span class="dv">1</span></span></code></pre></div>
 <p>Communication: stdin/stdout NDJSON with versioned envelope. No
 in-process linkage — adapters can be written in any language, sandboxed
 with OS tooling. Mirrors Apprise / Mattermost / git
@@ -4553,93 +4793,93 @@ quickstart (5-minute Docker Compose)</h3>
 <p>Goal: a working <code>pherald</code> ingesting one webhook and
 fanning out to Telegram + Email in five minutes on a fresh laptop. This
 is the canonical "hello world" deployment.</p>
-<div class="sourceCode" id="cb31"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co"># docker-compose.quickstart.yml — referenced from containers/quickstart/</span></span>
-<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="fu">version</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;3.8&quot;</span></span>
-<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a><span class="fu">services</span><span class="kw">:</span></span>
-<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">postgres</span><span class="kw">:</span></span>
-<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> postgres:16-alpine</span></span>
-<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">container_name</span><span class="kw">:</span><span class="at"> herald-postgres</span></span>
-<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">environment</span><span class="kw">:</span></span>
-<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">POSTGRES_USER</span><span class="kw">:</span><span class="at"> herald</span></span>
-<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">POSTGRES_PASSWORD</span><span class="kw">:</span><span class="at"> ${HERALD_DB_PASSWORD}</span></span>
-<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">POSTGRES_DB</span><span class="kw">:</span><span class="at"> herald</span></span>
-<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span></span>
-<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;24100:5432&quot;</span></span>
-<span id="cb31-13"><a href="#cb31-13" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span></span>
-<span id="cb31-14"><a href="#cb31-14" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> herald-pg:/var/lib/postgresql/data</span></span>
-<span id="cb31-15"><a href="#cb31-15" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">healthcheck</span><span class="kw">:</span></span>
-<span id="cb31-16"><a href="#cb31-16" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">test</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;CMD-SHELL&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;pg_isready -U herald&quot;</span><span class="kw">]</span></span>
-<span id="cb31-17"><a href="#cb31-17" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">interval</span><span class="kw">:</span><span class="at"> 5s</span></span>
-<span id="cb31-18"><a href="#cb31-18" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">redis</span><span class="kw">:</span></span>
-<span id="cb31-19"><a href="#cb31-19" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> redis:7-alpine</span></span>
-<span id="cb31-20"><a href="#cb31-20" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">container_name</span><span class="kw">:</span><span class="at"> herald-redis</span></span>
-<span id="cb31-21"><a href="#cb31-21" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">command</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;redis-server&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;--requirepass&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;${HERALD_REDIS_PASSWORD}&quot;</span><span class="kw">]</span></span>
-<span id="cb31-22"><a href="#cb31-22" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span></span>
-<span id="cb31-23"><a href="#cb31-23" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;24200:6379&quot;</span></span>
-<span id="cb31-24"><a href="#cb31-24" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span></span>
-<span id="cb31-25"><a href="#cb31-25" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> herald-redis:/data</span></span>
-<span id="cb31-26"><a href="#cb31-26" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">otel-collector</span><span class="kw">:</span></span>
-<span id="cb31-27"><a href="#cb31-27" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> otel/opentelemetry-collector-contrib:latest</span></span>
-<span id="cb31-28"><a href="#cb31-28" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">container_name</span><span class="kw">:</span><span class="at"> herald-otel</span></span>
-<span id="cb31-29"><a href="#cb31-29" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">command</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;--config=/etc/otel-config.yaml&quot;</span><span class="kw">]</span></span>
-<span id="cb31-30"><a href="#cb31-30" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span></span>
-<span id="cb31-31"><a href="#cb31-31" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> ./otel-config.yaml:/etc/otel-config.yaml:ro</span></span>
-<span id="cb31-32"><a href="#cb31-32" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span></span>
-<span id="cb31-33"><a href="#cb31-33" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;24417:4317&quot;</span></span>
-<span id="cb31-34"><a href="#cb31-34" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">pherald</span><span class="kw">:</span></span>
-<span id="cb31-35"><a href="#cb31-35" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> ghcr.io/vasic-digital/pherald:latest</span></span>
-<span id="cb31-36"><a href="#cb31-36" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">container_name</span><span class="kw">:</span><span class="at"> herald-pherald</span></span>
-<span id="cb31-37"><a href="#cb31-37" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">depends_on</span><span class="kw">:</span></span>
-<span id="cb31-38"><a href="#cb31-38" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">postgres</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">condition</span><span class="kw">:</span><span class="at"> service_healthy </span><span class="kw">}</span></span>
-<span id="cb31-39"><a href="#cb31-39" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">redis</span><span class="kw">:</span><span class="at">    </span><span class="kw">{</span><span class="at"> </span><span class="fu">condition</span><span class="kw">:</span><span class="at"> service_started </span><span class="kw">}</span></span>
-<span id="cb31-40"><a href="#cb31-40" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">environment</span><span class="kw">:</span></span>
-<span id="cb31-41"><a href="#cb31-41" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">HERALD_POSTGRES_DSN</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;postgres://herald:${HERALD_DB_PASSWORD}@postgres:5432/herald?sslmode=disable&quot;</span></span>
-<span id="cb31-42"><a href="#cb31-42" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">HERALD_REDIS_ADDR</span><span class="kw">:</span><span class="at">   </span><span class="st">&quot;redis:6379&quot;</span></span>
-<span id="cb31-43"><a href="#cb31-43" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">HERALD_REDIS_USER</span><span class="kw">:</span><span class="at">   </span><span class="st">&quot;default&quot;</span></span>
-<span id="cb31-44"><a href="#cb31-44" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">HERALD_REDIS_PASSWORD</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;${HERALD_REDIS_PASSWORD}&quot;</span></span>
-<span id="cb31-45"><a href="#cb31-45" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">OTEL_EXPORTER_OTLP_ENDPOINT</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;http://otel-collector:4317&quot;</span></span>
-<span id="cb31-46"><a href="#cb31-46" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">OTEL_RESOURCE_ATTRIBUTES</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;deployment.environment=quickstart&quot;</span></span>
-<span id="cb31-47"><a href="#cb31-47" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">TELEGRAM_BOT_TOKEN</span><span class="kw">:</span><span class="at">  </span><span class="st">&quot;${TELEGRAM_BOT_TOKEN}&quot;</span></span>
-<span id="cb31-48"><a href="#cb31-48" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">TELEGRAM_CHAT_ID</span><span class="kw">:</span><span class="at">    </span><span class="st">&quot;${TELEGRAM_CHAT_ID}&quot;</span></span>
-<span id="cb31-49"><a href="#cb31-49" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span></span>
-<span id="cb31-50"><a href="#cb31-50" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;24091:24091&quot;</span><span class="co">   # webhook ingress</span></span>
-<span id="cb31-51"><a href="#cb31-51" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;24090:24090&quot;</span><span class="co">   # admin (/livez, /readyz, /metrics)</span></span>
-<span id="cb31-52"><a href="#cb31-52" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">command</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;serve&quot;</span><span class="kw">]</span></span>
-<span id="cb31-53"><a href="#cb31-53" aria-hidden="true" tabindex="-1"></a><span class="fu">volumes</span><span class="kw">:</span></span>
-<span id="cb31-54"><a href="#cb31-54" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">herald-pg</span><span class="kw">:</span></span>
-<span id="cb31-55"><a href="#cb31-55" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">herald-redis</span><span class="kw">:</span></span></code></pre></div>
+<div class="sourceCode" id="cb34"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co"># docker-compose.quickstart.yml — referenced from containers/quickstart/</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="fu">version</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;3.8&quot;</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a><span class="fu">services</span><span class="kw">:</span></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">postgres</span><span class="kw">:</span></span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> postgres:16-alpine</span></span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">container_name</span><span class="kw">:</span><span class="at"> herald-postgres</span></span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">environment</span><span class="kw">:</span></span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">POSTGRES_USER</span><span class="kw">:</span><span class="at"> herald</span></span>
+<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">POSTGRES_PASSWORD</span><span class="kw">:</span><span class="at"> ${HERALD_DB_PASSWORD}</span></span>
+<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">POSTGRES_DB</span><span class="kw">:</span><span class="at"> herald</span></span>
+<span id="cb34-11"><a href="#cb34-11" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span></span>
+<span id="cb34-12"><a href="#cb34-12" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;24100:5432&quot;</span></span>
+<span id="cb34-13"><a href="#cb34-13" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span></span>
+<span id="cb34-14"><a href="#cb34-14" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> herald-pg:/var/lib/postgresql/data</span></span>
+<span id="cb34-15"><a href="#cb34-15" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">healthcheck</span><span class="kw">:</span></span>
+<span id="cb34-16"><a href="#cb34-16" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">test</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;CMD-SHELL&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;pg_isready -U herald&quot;</span><span class="kw">]</span></span>
+<span id="cb34-17"><a href="#cb34-17" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">interval</span><span class="kw">:</span><span class="at"> 5s</span></span>
+<span id="cb34-18"><a href="#cb34-18" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">redis</span><span class="kw">:</span></span>
+<span id="cb34-19"><a href="#cb34-19" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> redis:7-alpine</span></span>
+<span id="cb34-20"><a href="#cb34-20" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">container_name</span><span class="kw">:</span><span class="at"> herald-redis</span></span>
+<span id="cb34-21"><a href="#cb34-21" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">command</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;redis-server&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;--requirepass&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;${HERALD_REDIS_PASSWORD}&quot;</span><span class="kw">]</span></span>
+<span id="cb34-22"><a href="#cb34-22" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span></span>
+<span id="cb34-23"><a href="#cb34-23" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;24200:6379&quot;</span></span>
+<span id="cb34-24"><a href="#cb34-24" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span></span>
+<span id="cb34-25"><a href="#cb34-25" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> herald-redis:/data</span></span>
+<span id="cb34-26"><a href="#cb34-26" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">otel-collector</span><span class="kw">:</span></span>
+<span id="cb34-27"><a href="#cb34-27" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> otel/opentelemetry-collector-contrib:latest</span></span>
+<span id="cb34-28"><a href="#cb34-28" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">container_name</span><span class="kw">:</span><span class="at"> herald-otel</span></span>
+<span id="cb34-29"><a href="#cb34-29" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">command</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;--config=/etc/otel-config.yaml&quot;</span><span class="kw">]</span></span>
+<span id="cb34-30"><a href="#cb34-30" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span></span>
+<span id="cb34-31"><a href="#cb34-31" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> ./otel-config.yaml:/etc/otel-config.yaml:ro</span></span>
+<span id="cb34-32"><a href="#cb34-32" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span></span>
+<span id="cb34-33"><a href="#cb34-33" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;24417:4317&quot;</span></span>
+<span id="cb34-34"><a href="#cb34-34" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">pherald</span><span class="kw">:</span></span>
+<span id="cb34-35"><a href="#cb34-35" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> ghcr.io/vasic-digital/pherald:latest</span></span>
+<span id="cb34-36"><a href="#cb34-36" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">container_name</span><span class="kw">:</span><span class="at"> herald-pherald</span></span>
+<span id="cb34-37"><a href="#cb34-37" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">depends_on</span><span class="kw">:</span></span>
+<span id="cb34-38"><a href="#cb34-38" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">postgres</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">condition</span><span class="kw">:</span><span class="at"> service_healthy </span><span class="kw">}</span></span>
+<span id="cb34-39"><a href="#cb34-39" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">redis</span><span class="kw">:</span><span class="at">    </span><span class="kw">{</span><span class="at"> </span><span class="fu">condition</span><span class="kw">:</span><span class="at"> service_started </span><span class="kw">}</span></span>
+<span id="cb34-40"><a href="#cb34-40" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">environment</span><span class="kw">:</span></span>
+<span id="cb34-41"><a href="#cb34-41" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">HERALD_POSTGRES_DSN</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;postgres://herald:${HERALD_DB_PASSWORD}@postgres:5432/herald?sslmode=disable&quot;</span></span>
+<span id="cb34-42"><a href="#cb34-42" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">HERALD_REDIS_ADDR</span><span class="kw">:</span><span class="at">   </span><span class="st">&quot;redis:6379&quot;</span></span>
+<span id="cb34-43"><a href="#cb34-43" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">HERALD_REDIS_USER</span><span class="kw">:</span><span class="at">   </span><span class="st">&quot;default&quot;</span></span>
+<span id="cb34-44"><a href="#cb34-44" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">HERALD_REDIS_PASSWORD</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;${HERALD_REDIS_PASSWORD}&quot;</span></span>
+<span id="cb34-45"><a href="#cb34-45" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">OTEL_EXPORTER_OTLP_ENDPOINT</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;http://otel-collector:4317&quot;</span></span>
+<span id="cb34-46"><a href="#cb34-46" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">OTEL_RESOURCE_ATTRIBUTES</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;deployment.environment=quickstart&quot;</span></span>
+<span id="cb34-47"><a href="#cb34-47" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">TELEGRAM_BOT_TOKEN</span><span class="kw">:</span><span class="at">  </span><span class="st">&quot;${TELEGRAM_BOT_TOKEN}&quot;</span></span>
+<span id="cb34-48"><a href="#cb34-48" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">TELEGRAM_CHAT_ID</span><span class="kw">:</span><span class="at">    </span><span class="st">&quot;${TELEGRAM_CHAT_ID}&quot;</span></span>
+<span id="cb34-49"><a href="#cb34-49" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span></span>
+<span id="cb34-50"><a href="#cb34-50" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;24091:24091&quot;</span><span class="co">   # webhook ingress</span></span>
+<span id="cb34-51"><a href="#cb34-51" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;24090:24090&quot;</span><span class="co">   # admin (/livez, /readyz, /metrics)</span></span>
+<span id="cb34-52"><a href="#cb34-52" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">command</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;serve&quot;</span><span class="kw">]</span></span>
+<span id="cb34-53"><a href="#cb34-53" aria-hidden="true" tabindex="-1"></a><span class="fu">volumes</span><span class="kw">:</span></span>
+<span id="cb34-54"><a href="#cb34-54" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">herald-pg</span><span class="kw">:</span></span>
+<span id="cb34-55"><a href="#cb34-55" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">herald-redis</span><span class="kw">:</span></span></code></pre></div>
 <p>Steps:</p>
-<div class="sourceCode" id="cb32"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Clone Herald + containers submodule</span></span>
-<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone git@github.com:vasic-digital/Herald.git <span class="kw">&amp;&amp;</span> <span class="bu">cd</span> Herald</span>
-<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> submodule update <span class="at">--init</span></span>
-<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Copy &amp; fill the example .env</span></span>
-<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> .env.example .env</span>
-<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a><span class="va">$EDITOR</span> .env   <span class="co"># set HERALD_DB_PASSWORD, HERALD_REDIS_PASSWORD, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID</span></span>
-<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Boot</span></span>
-<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> compose <span class="at">-f</span> containers/quickstart/docker-compose.quickstart.yml up <span class="at">-d</span></span>
-<span id="cb32-11"><a href="#cb32-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb32-12"><a href="#cb32-12" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Wait for ready</span></span>
-<span id="cb32-13"><a href="#cb32-13" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">--retry</span> 30 <span class="at">--retry-delay</span> 2 <span class="at">--retry-connrefused</span> http://localhost:24090/readyz</span>
-<span id="cb32-14"><a href="#cb32-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb32-15"><a href="#cb32-15" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. Send a test event</span></span>
-<span id="cb32-16"><a href="#cb32-16" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-X</span> POST http://localhost:24091/v1/events <span class="dt">\</span></span>
-<span id="cb32-17"><a href="#cb32-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">-H</span> <span class="st">&quot;Content-Type: application/cloudevents+json&quot;</span> <span class="dt">\</span></span>
-<span id="cb32-18"><a href="#cb32-18" aria-hidden="true" tabindex="-1"></a>  <span class="at">-d</span> <span class="st">&#39;{</span></span>
-<span id="cb32-19"><a href="#cb32-19" aria-hidden="true" tabindex="-1"></a><span class="st">    &quot;specversion&quot;:&quot;1.0&quot;,</span></span>
-<span id="cb32-20"><a href="#cb32-20" aria-hidden="true" tabindex="-1"></a><span class="st">    &quot;id&quot;:&quot;01931a7c-3f4e-7000-9abc-def012345678&quot;,</span></span>
-<span id="cb32-21"><a href="#cb32-21" aria-hidden="true" tabindex="-1"></a><span class="st">    &quot;source&quot;:&quot;https://example.com/quickstart&quot;,</span></span>
-<span id="cb32-22"><a href="#cb32-22" aria-hidden="true" tabindex="-1"></a><span class="st">    &quot;type&quot;:&quot;digital.vasic.herald.system.host.cpu_high&quot;,</span></span>
-<span id="cb32-23"><a href="#cb32-23" aria-hidden="true" tabindex="-1"></a><span class="st">    &quot;subject&quot;:&quot;tag:*&quot;,</span></span>
-<span id="cb32-24"><a href="#cb32-24" aria-hidden="true" tabindex="-1"></a><span class="st">    &quot;data&quot;:{&quot;host&quot;:&quot;laptop&quot;,&quot;cpu_pct&quot;:97}</span></span>
-<span id="cb32-25"><a href="#cb32-25" aria-hidden="true" tabindex="-1"></a><span class="st">  }&#39;</span></span>
-<span id="cb32-26"><a href="#cb32-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb32-27"><a href="#cb32-27" aria-hidden="true" tabindex="-1"></a><span class="co"># 6. Verify</span></span>
-<span id="cb32-28"><a href="#cb32-28" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> logs herald-pherald <span class="at">--tail</span><span class="op">=</span>20</span>
-<span id="cb32-29"><a href="#cb32-29" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> docs/herald/diary/main.md <span class="kw">|</span> <span class="fu">tail</span> <span class="at">-30</span></span></code></pre></div>
+<div class="sourceCode" id="cb35"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Clone Herald + containers submodule</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone git@github.com:vasic-digital/Herald.git <span class="kw">&amp;&amp;</span> <span class="bu">cd</span> Herald</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> submodule update <span class="at">--init</span></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Copy &amp; fill the example .env</span></span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> .env.example .env</span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a><span class="va">$EDITOR</span> .env   <span class="co"># set HERALD_DB_PASSWORD, HERALD_REDIS_PASSWORD, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID</span></span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Boot</span></span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> compose <span class="at">-f</span> containers/quickstart/docker-compose.quickstart.yml up <span class="at">-d</span></span>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-12"><a href="#cb35-12" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Wait for ready</span></span>
+<span id="cb35-13"><a href="#cb35-13" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">--retry</span> 30 <span class="at">--retry-delay</span> 2 <span class="at">--retry-connrefused</span> http://localhost:24090/readyz</span>
+<span id="cb35-14"><a href="#cb35-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-15"><a href="#cb35-15" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. Send a test event</span></span>
+<span id="cb35-16"><a href="#cb35-16" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-X</span> POST http://localhost:24091/v1/events <span class="dt">\</span></span>
+<span id="cb35-17"><a href="#cb35-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">-H</span> <span class="st">&quot;Content-Type: application/cloudevents+json&quot;</span> <span class="dt">\</span></span>
+<span id="cb35-18"><a href="#cb35-18" aria-hidden="true" tabindex="-1"></a>  <span class="at">-d</span> <span class="st">&#39;{</span></span>
+<span id="cb35-19"><a href="#cb35-19" aria-hidden="true" tabindex="-1"></a><span class="st">    &quot;specversion&quot;:&quot;1.0&quot;,</span></span>
+<span id="cb35-20"><a href="#cb35-20" aria-hidden="true" tabindex="-1"></a><span class="st">    &quot;id&quot;:&quot;01931a7c-3f4e-7000-9abc-def012345678&quot;,</span></span>
+<span id="cb35-21"><a href="#cb35-21" aria-hidden="true" tabindex="-1"></a><span class="st">    &quot;source&quot;:&quot;https://example.com/quickstart&quot;,</span></span>
+<span id="cb35-22"><a href="#cb35-22" aria-hidden="true" tabindex="-1"></a><span class="st">    &quot;type&quot;:&quot;digital.vasic.herald.system.host.cpu_high&quot;,</span></span>
+<span id="cb35-23"><a href="#cb35-23" aria-hidden="true" tabindex="-1"></a><span class="st">    &quot;subject&quot;:&quot;tag:*&quot;,</span></span>
+<span id="cb35-24"><a href="#cb35-24" aria-hidden="true" tabindex="-1"></a><span class="st">    &quot;data&quot;:{&quot;host&quot;:&quot;laptop&quot;,&quot;cpu_pct&quot;:97}</span></span>
+<span id="cb35-25"><a href="#cb35-25" aria-hidden="true" tabindex="-1"></a><span class="st">  }&#39;</span></span>
+<span id="cb35-26"><a href="#cb35-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-27"><a href="#cb35-27" aria-hidden="true" tabindex="-1"></a><span class="co"># 6. Verify</span></span>
+<span id="cb35-28"><a href="#cb35-28" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> logs herald-pherald <span class="at">--tail</span><span class="op">=</span>20</span>
+<span id="cb35-29"><a href="#cb35-29" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> docs/herald/diary/main.md <span class="kw">|</span> <span class="fu">tail</span> <span class="at">-30</span></span></code></pre></div>
 <p>A successful run delivers a Telegram message to the configured chat
 within ~3 seconds, appends a diary entry, and emits OTel traces visible
 at <code>http://localhost:24417</code> (Collector logs).</p>
@@ -5087,7 +5327,9 @@ needs operator-level tuning per deployment to avoid runaway invocation;
 default suggested 60 messages/minute per agent token.</li>
 </ul>
 <hr />
-<h2 id="29-changelog-v1--v2">§29. Changelog (V1 → V2)</h2>
+<h2 id="29-changelog">§29. Changelog</h2>
+<h3 id="291-v1--v2-changes-2026-05-19">29.1 V1 → V2 changes
+(2026-05-19)</h3>
 <p><strong>V1 → V2 changes (2026-05-19):</strong></p>
 <ul>
 <li><strong>Renamed</strong> <code>specification.md</code> →
@@ -5156,6 +5398,1200 @@ folded into the V2 body or marked applied/deferred in §27.2. V1's full
 Review remains in <code>specification.V1.md</code> for
 traceability.</li>
 </ul>
+<p><strong>V2 r2 → r3 (within V2 lifecycle, all detailed in
+§30):</strong> added §11.0 Go type contract for the Channel interface,
+defined <code>webhook_sources</code> / <code>channel_addresses</code> /
+<code>thread_refs</code> / <code>quarantined_messages</code> schemas,
+pinned Go ≥ 1.22 + license, added §16.1 Data retention &amp; GDPR, §17.1
+OpenTelemetry env-var table, §26.5 Operator quickstart, §26.6 Disaster
+recovery, §27.3 Cost considerations. R3 added the remaining undefined
+types (<code>Subscriber</code>, <code>CloudEventEnvelope</code>,
+<code>TraceContext</code>, <code>Branding</code>,
+<code>ChannelID</code>, <code>PreferenceSet</code>), §9.6 Database
+migration tooling, §3.4 Worker pools + SIGHUP hot-reload, §5.7 Ingress
+API URLs, §7.5 AI-agent subscribers, §8.3 Workable-item lifecycle,
+§11.14 <code>null://</code> sandbox channel, §17.4.1 Per-channel SLO
+budgets, §24.1 Machine-readable API specs, §5.4.1 Outbound idempotency,
+§3.5 Time/clock abstraction.</p>
+<h3 id="292-v2--v3-changes-2026-05-20">29.2 V2 → V3 changes
+(2026-05-20)</h3>
+<ul>
+<li><strong>Created</strong> <code>specification.V3.md</code> (this
+document). <code>specification.V2.md</code> marked
+<code>Status=superseded</code> and kept as historical record alongside
+<code>specification.V1.md</code>. V1 + V2 + V3 stack constitutes the
+spec evolution chain.</li>
+<li><strong>NEW top-level sections</strong> (no V2 counterpart):
+<ul>
+<li><strong>§31 Project integration contract</strong> — explicit
+contract for what a consuming project provides + what Herald provides in
+return; composition with eight named Universal Constitution mandates
+(§11.4.12, .15, .16, .21, .32, .44, .55, .59, .60, .61, .65);
+project-side <code>config.toml</code> template; mandatory
+<code>test_project_integration.sh</code> audit gate.</li>
+<li><strong>§32 Inbound processing pipeline</strong> — full lifecycle
+from <code>channel.Subscribe</code> to diary append. 30 s polling
+cadence mandate (per-channel mechanic table). FIFO ordering per
+<code>(tenant, channel_address)</code> via Postgres advisory locks.
+Seven Worker stages (validation → safety → anti-spam → classification →
+dispatch → materialization → reply). <code>inbound_messages</code>
+schema. Anti-spam at four layers (per-sender rate, burst detection,
+reputation, channel-level frequency).</li>
+<li><strong>§33 LLM/agent dispatch</strong> — Claude Code as first
+integration. <code>resolve_session(project_name)</code> algorithm
+anchored at
+<code>&lt;consuming-project&gt;/.herald/claude-code/sessions/&lt;project&gt;.session</code>.
+Structured <code>&lt;&lt;&lt;HERALD-DISPATCH-v1&gt;&gt;&gt;</code>
+request envelope. JSON <code>&lt;&lt;&lt;HERALD-REPLY&gt;&gt;&gt;</code>
+response schema (outcome enum, summary, details, affected_paths,
+reproduction_steps, estimated_effort, workable_item_proposed,
+follow_up_questions). Pluggable <code>Dispatcher</code> interface — V3
+r1 ships only <code>claude-code</code>; spec hooks for
+OpenCode/Aider/Gemini/Cursor/Managed Agents.</li>
+<li><strong>§34 Reply protocol</strong> — three mandatory replies per
+inbound message: (A) queued ack with quoted original ≤ 5 s, (B)
+processing-started ≤ 5 s of dispatch (edit-in-place where channel
+supports), (C) final result within criticality SLA. Failure replies
+carry precise reason + diagnostics. Per-channel quote/edit matrix for
+all 13 channels. Operator-tunable verbosity
+(<code>minimal | normal | verbose</code>).</li>
+<li><strong>§35 Versioned reports + Git linkage</strong> — report-aware
+event types (<code>.report.created/.updated/.archived</code>) with
+<code>update_key</code> for correlation. Per-channel update mechanic
+(edit-in-place vs re-post). Git commit SHA + URL + diff URL embedded in
+fan-out. <code>report_publications</code> schema with
+<code>(content_sha256, git_commit_sha)</code> dedup. Uncommitted-changes
+warning.</li>
+<li><strong>§36 Outbound multi-format attachments</strong> — every
+Herald-produced attachment ships in four formats (<code>.md</code> +
+<code>.html</code> + <code>.pdf</code> + <code>.docx</code>) so
+subscribers pick their preferred. Pandoc generation pipeline with
+<code>--reproducible</code> flag. Cache at
+<code>&lt;diary_root&gt;/.herald/format-cache/&lt;sha256&gt;/</code>.
+Per-channel delivery rules + per-subscriber
+<code>PreferenceSet.attachment_formats</code> overrides. Bundle size cap
+(default 50 MiB).</li>
+</ul></li>
+<li><strong>Expanded §18.2 Project Herald</strong> with the full
+<strong>Investigation-before-Fixing flow</strong> (§18.2.1): every
+bug/issue/implementation request first creates a
+<code>HRD-INV-NNN</code> investigation item; LLM (§33) analyzes
+reproducibility + affected paths + effort; only validated investigations
+promote to final workable items. Adds §18.2.2 criticality determination
+table (with explicit SLA windows per level), §18.2.3 Universal §11.4.16
+type-classification mapping, §18.2.4 attachment storage at
+<code>issues/users/attachments/&lt;WORKABLE_ITEM_ID&gt;/</code> with
+<code>attachments_index.md</code> source-of-truth file, §18.2.5 Claude
+Code project-session integration (anchor file at
+<code>.herald/claude-code/sessions/&lt;project&gt;.session</code>).</li>
+<li><strong><code>§29</code> retitled</strong> "Changelog" (was
+"Changelog (V1 → V2)") so V1→V2 / V2→V3 / future changelogs accumulate
+under one logical section.</li>
+</ul>
+<p>V2 sections that V3 does NOT change (still authoritative — V3 just
+extends): §1–§28 architectural baseline, §11.0 channel contract types,
+all flavor sections §18.3–§18.11 (refinement scheduled for V3 r2 per the
+metadata <code>Continuation</code> row).</p>
+<hr />
+<h2 id="31-project-integration-contract">§31. Project integration
+contract</h2>
+<blockquote>
+<p><strong>First-version focus.</strong> §31 makes Herald a load-bearing
+piece of any consuming project that already follows the Helix Universal
+Constitution. The contract is symmetric: the consuming project gets a
+fully-instrumented event-to-channel pipeline; Herald gets a discoverable
+place to live and the constitution's rules to operate under.</p>
+</blockquote>
+<h3 id="311-where-herald-lives-in-a-consuming-project">31.1 Where Herald
+lives in a consuming project</h3>
+<p>Herald is consumed as a Git submodule. Conventional path:</p>
+<pre><code>&lt;consuming-project&gt;/
+├── constitution/                     # Helix Universal Constitution (also a submodule)
+├── herald/                           # this repo, as submodule
+│   ├── pherald/cmd/pherald/main.go   # built per §21
+│   ├── sherald/cmd/sherald/main.go
+│   └── …
+├── containers/                       # docker/podman compose (also a submodule)
+└── docs/
+    ├── Issues.md
+    ├── Issues_Summary.md
+    ├── Fixed.md
+    ├── Fixed_Summary.md
+    ├── CONTINUATION.md
+    ├── Status.md
+    └── herald/
+        └── diary/main.{md,html,pdf,docx}</code></pre>
+<p>The consuming project's CI invokes
+<code>&lt;flavor&gt;herald send</code> from build steps and runs
+<code>&lt;flavor&gt;herald serve</code> as a daemon (Docker Compose /
+Kubernetes). Subscribers DM the configured bots; Herald processes those
+inbound messages, opens workable items, and replies in-thread.</p>
+<h3 id="312-mandatory-integration-points">31.2 Mandatory integration
+points</h3>
+<p>A consuming project that adopts Herald MUST:</p>
+<ol type="1">
+<li><strong>Add Herald as a Git submodule</strong> at
+<code>&lt;consuming-project&gt;/herald/</code>. Run
+<code>install_upstreams.sh</code> per Universal §11.4.36.</li>
+<li><strong>Register Herald in the
+<code>Owned-submodule set</code></strong> of the project's
+<code>Constitution.md</code> extension (per Universal §4 /
+§11.4.28).</li>
+<li><strong>Pin the Herald version</strong> via submodule SHA. Bumps
+follow Universal §11.4.32 (post-pull validation).</li>
+<li><strong>Provide credentials</strong> via <code>.env</code> +
+shell-exported variables (per §3.3). <code>.env</code> is git-ignored;
+<code>.env.example</code> is committed and templates every variable
+Herald needs.</li>
+<li><strong>Wire the channel addresses</strong> by populating
+<code>channel_addresses</code> (per §6) with the project's bot tokens /
+webhook URLs. Tags follow project conventions — common defaults:
+<code>prod</code>, <code>staging</code>, <code>oncall</code>,
+<code>audit</code>, <code>compliance</code>.</li>
+<li><strong>Mount the diary path</strong> so
+<code>&lt;consuming-project&gt;/docs/herald/diary/main.{md,html,pdf,docx}</code>
+is writable by Herald (per §19).</li>
+<li><strong>Honor the spec-change rule</strong> — any change to
+<code>&lt;consuming-project&gt;/herald/docs/specs/</code> triggers
+comprehensive planning per Universal §11.4 + Herald Constitution §106
+(read order documented in <code>CLAUDE.md</code>).</li>
+<li><strong>Add Herald CI hooks</strong> — at minimum, post-commit hook
+calling
+<code>&lt;flavor&gt;herald send --type digital.vasic.herald.ci.commit.pushed …</code>
+and CI-build webhook configured per §5.5.</li>
+</ol>
+<h3 id="313-event-type-registration">31.3 Event-type registration</h3>
+<p>The consuming project MAY introduce its own event subtree under
+<code>digital.vasic.herald.&lt;project_subtree&gt;.*</code> and register
+the schema in the AsyncAPI spec (§24.1). The schema MUST be committed in
+<code>&lt;consuming-project&gt;/herald/docs/api/asyncapi.&lt;project&gt;.yaml</code>.
+Herald validates inbound events against the schema and rejects malformed
+payloads with HTTP 422 + a per-channel error reply.</p>
+<h3 id="314-composition-with-existing-constitution-mandates">31.4
+Composition with existing constitution mandates</h3>
+<table>
+<thead>
+<tr>
+<th>Universal mandate</th>
+<th>Herald V3 contribution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>§11.4.12 Auto-generated docs sync</td>
+<td>Herald emits events on every Issues / Issues_Summary / Fixed /
+Fixed_Summary / Status / Status_Summary change so subscribers get
+real-time visibility.</td>
+</tr>
+<tr>
+<td>§11.4.15 Item-status tracking</td>
+<td>Status transitions trigger
+<code>digital.vasic.herald.project.task.*</code> events.</td>
+</tr>
+<tr>
+<td>§11.4.16 Item-type tracking</td>
+<td>Type classifier (§32.4) maps inbound
+<code>Bug:</code>/<code>Issue:</code>/<code>Task:</code>/<code>Implementation:</code>
+commands to the correct item type.</td>
+</tr>
+<tr>
+<td>§11.4.21 Operator-blocked status</td>
+<td>When a workable item enters <code>operator-blocked</code>, Herald
+fan-outs to the configured <code>oncall</code> tag with the
+unblock-question payload.</td>
+</tr>
+<tr>
+<td>§11.4.32 Post-Constitution-Pull validation</td>
+<td>Herald's submodule bumps are validated against the constitution;
+Herald's gate (<code>tests/test_constitution_inheritance.sh</code>) is
+part of that validation.</td>
+</tr>
+<tr>
+<td>§11.4.44 Document Revision Header</td>
+<td>Herald respects §11.4.61 superseding format (table) when reading
+project docs.</td>
+</tr>
+<tr>
+<td>§11.4.55 Reopens-history</td>
+<td>Reopen flow (§8.3) writes to
+<code>docs/Reopens/&lt;HRD-NNN&gt;.md</code>.</td>
+</tr>
+<tr>
+<td>§11.4.59 README always-sync</td>
+<td>Herald reports README out-of-sync as an event
+(<code>digital.vasic.herald.compliance.doc.stale</code>).</td>
+</tr>
+<tr>
+<td>§11.4.60 Documentation composite covenant</td>
+<td>Herald's diary + multi-format exports per §36 satisfy the composite
+gate.</td>
+</tr>
+<tr>
+<td>§11.4.61 Markdown metadata + ToC</td>
+<td>Herald's diary follows the canonical metadata table; every diary
+entry carries Revision + Last modified per §19.</td>
+</tr>
+<tr>
+<td>§11.4.65 Universal Markdown export</td>
+<td>§36 multi-format pipeline is the implementation of this mandate at
+attachment-time.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="315-project-side-configuration-template">31.5 Project-side
+configuration template</h3>
+<div class="sourceCode" id="cb37"><pre
+class="sourceCode toml"><code class="sourceCode toml"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="co"># &lt;consuming-project&gt;/herald/config.toml — committed (no secrets)</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="kw">[herald]</span></span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a><span class="dt">flavor</span>       <span class="op">=</span> <span class="st">&quot;pherald&quot;</span></span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a><span class="dt">project_name</span> <span class="op">=</span> <span class="st">&quot;ATMOSphere&quot;</span>                    <span class="co"># used for Claude Code session resolution (§33.2)</span></span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a><span class="dt">tenant_id</span>    <span class="op">=</span> <span class="st">&quot;00000000-0000-0000-0000-000000000001&quot;</span></span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a><span class="dt">diary_root</span>   <span class="op">=</span> <span class="st">&quot;&quot;</span>                              <span class="co"># blank → parent-walk discovery (§19.1)</span></span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a><span class="dt">admin_port</span>   <span class="op">=</span> <span class="dv">24090</span></span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a><span class="dt">http_port</span>    <span class="op">=</span> <span class="dv">24091</span></span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a><span class="kw">[ingest]</span></span>
+<span id="cb37-11"><a href="#cb37-11" aria-hidden="true" tabindex="-1"></a><span class="dt">poll_interval_seconds</span> <span class="op">=</span> <span class="dv">30</span>                     <span class="co"># §32.2 — mandatory 30s cadence</span></span>
+<span id="cb37-12"><a href="#cb37-12" aria-hidden="true" tabindex="-1"></a><span class="dt">fifo_strict</span>           <span class="op">=</span> <span class="cn">true</span>                   <span class="co"># §32.3 strict FIFO</span></span>
+<span id="cb37-13"><a href="#cb37-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-14"><a href="#cb37-14" aria-hidden="true" tabindex="-1"></a><span class="kw">[security]</span></span>
+<span id="cb37-15"><a href="#cb37-15" aria-hidden="true" tabindex="-1"></a><span class="dt">spam_max_per_minute_per_sender</span> <span class="op">=</span> <span class="dv">10</span>           <span class="co"># §32.5 anti-spam thresholds</span></span>
+<span id="cb37-16"><a href="#cb37-16" aria-hidden="true" tabindex="-1"></a><span class="dt">spam_max_per_hour_per_sender</span>   <span class="op">=</span> <span class="dv">100</span></span>
+<span id="cb37-17"><a href="#cb37-17" aria-hidden="true" tabindex="-1"></a><span class="dt">quarantine_unknown_sender</span>      <span class="op">=</span> <span class="cn">true</span></span>
+<span id="cb37-18"><a href="#cb37-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-19"><a href="#cb37-19" aria-hidden="true" tabindex="-1"></a><span class="kw">[llm]</span></span>
+<span id="cb37-20"><a href="#cb37-20" aria-hidden="true" tabindex="-1"></a><span class="dt">default_agent</span>      <span class="op">=</span> <span class="st">&quot;claude-code&quot;</span>             <span class="co"># §33.1 default dispatch target</span></span>
+<span id="cb37-21"><a href="#cb37-21" aria-hidden="true" tabindex="-1"></a><span class="dt">claude_code_binary</span> <span class="op">=</span> <span class="st">&quot;claude&quot;</span>                  <span class="co"># path / name on PATH</span></span>
+<span id="cb37-22"><a href="#cb37-22" aria-hidden="true" tabindex="-1"></a><span class="dt">session_strategy</span>   <span class="op">=</span> <span class="st">&quot;project-cwd&quot;</span>             <span class="co"># §33.2 strategy enum</span></span>
+<span id="cb37-23"><a href="#cb37-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-24"><a href="#cb37-24" aria-hidden="true" tabindex="-1"></a><span class="kw">[attachments]</span></span>
+<span id="cb37-25"><a href="#cb37-25" aria-hidden="true" tabindex="-1"></a><span class="dt">out_format_set</span>     <span class="op">=</span> <span class="op">[</span><span class="st">&quot;md&quot;</span><span class="op">,</span> <span class="st">&quot;html&quot;</span><span class="op">,</span> <span class="st">&quot;pdf&quot;</span><span class="op">,</span> <span class="st">&quot;docx&quot;</span><span class="op">]</span>  <span class="co"># §36 multi-format default</span></span>
+<span id="cb37-26"><a href="#cb37-26" aria-hidden="true" tabindex="-1"></a><span class="dt">in_storage_root</span>    <span class="op">=</span> <span class="st">&quot;issues/users/attachments&quot;</span>     <span class="co"># §18.2 inbound attachment path</span></span>
+<span id="cb37-27"><a href="#cb37-27" aria-hidden="true" tabindex="-1"></a><span class="dt">in_max_mib</span>         <span class="op">=</span> <span class="dv">25</span></span>
+<span id="cb37-28"><a href="#cb37-28" aria-hidden="true" tabindex="-1"></a><span class="dt">in_total_max_mib</span>   <span class="op">=</span> <span class="dv">100</span></span></code></pre></div>
+<h3 id="316-project-audit-gate">31.6 Project audit gate</h3>
+<p><code>&lt;consuming-project&gt;/herald/tests/test_project_integration.sh</code>
+(planned) asserts:</p>
+<ul>
+<li><code>constitution/</code> submodule discoverable via
+parent-walk.</li>
+<li><code>containers/</code> submodule present and version-pinned.</li>
+<li><code>.env.example</code> committed; <code>.env</code>
+git-ignored.</li>
+<li><code>channel_addresses</code> table non-empty for the project's
+default tenant.</li>
+<li>Project's <code>Owned-submodule set</code> lists
+<code>herald/</code> and <code>containers/</code>.</li>
+<li>Diary path exists and is writable.</li>
+<li><code>pherald doctor</code> exits zero.</li>
+</ul>
+<p>Paired §1.1 mutation: rename <code>.env</code> to track-ed — gate
+FAILs.</p>
+<hr />
+<h2 id="32-inbound-processing-pipeline">§32. Inbound processing
+pipeline</h2>
+<h3 id="321-pipeline-overview">32.1 Pipeline overview</h3>
+<p>Every message a subscriber sends back into Herald (DM reply, channel
+mention, email reply with Herald's <code>Message-ID</code> in
+<code>In-Reply-To</code>, ntfy poll) enters the <strong>inbound
+queue</strong> for sequential processing by Workers. The pipeline is
+FIFO per tenant per channel-address, with explicit anti-spam,
+multi-stage validation, and three user-visible reply checkpoints
+(§34).</p>
+<pre><code>┌──────────────────────────────────────────────────────────────────────────┐
+│  channel adapter Subscribe() loop                                        │
+│     ↓                                                                    │
+│  InboundEvent → ingress dedup (§4.3) → enqueue `inbound_messages` table  │
+│     ↓                                                                    │
+│  ┌────────────────────────────────────────────────────────────────────┐  │
+│  │  Inbound Worker (River queue, 30s tick OR LISTEN/NOTIFY)           │  │
+│  │  pulls 1 item at a time per tenant per channel (FIFO):             │  │
+│  │                                                                    │  │
+│  │  Stage 1: Validation (§32.3) → reply: queued ack (quote orig)      │  │
+│  │  Stage 2: Safety/anti-malware (§32.4)                              │  │
+│  │  Stage 3: Anti-spam check (§32.5)                                  │  │
+│  │  Stage 4: Classification (§32.6) → type + criticality              │  │
+│  │  Stage 5: Dispatch to LLM/agent (§33) → reply: processing-started  │  │
+│  │  Stage 6: Materialize side-effects (open workable item, …)         │  │
+│  │  Stage 7: Reply with final result (§34) → workable item ID, links  │  │
+│  └────────────────────────────────────────────────────────────────────┘  │
+│     ↓                                                                    │
+│  diary append (§19); OTel span closed                                    │
+└──────────────────────────────────────────────────────────────────────────┘</code></pre>
+<h3 id="322-polling-cadence-30-s-mandate">32.2 Polling cadence (30 s
+mandate)</h3>
+<p>Every flavor's Subscribe loop MUST check upstream for new messages
+<strong>at least every 30 seconds</strong>. Upstream-specific
+implementation:</p>
+<table>
+<thead>
+<tr>
+<th>Channel</th>
+<th>Mechanism</th>
+<th>Effective check rate</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Telegram</td>
+<td>Bot API <code>getUpdates</code> long-poll (timeout 25 s)</td>
+<td>continuous, but a 30 s safety-net timer also fires
+<code>getUpdates</code> if the long-poll thread stalled</td>
+</tr>
+<tr>
+<td>Slack</td>
+<td>Socket Mode (WebSocket) OR Events API webhook</td>
+<td>continuous on Socket Mode; 30 s timer as keepalive ping</td>
+</tr>
+<tr>
+<td>Discord</td>
+<td>Gateway WebSocket</td>
+<td>continuous; 30 s timer asserts heartbeat OK</td>
+</tr>
+<tr>
+<td>MS Teams</td>
+<td>Bot Framework activity webhook</td>
+<td>webhook-driven; 30 s timer asserts subscription validity</td>
+</tr>
+<tr>
+<td>Lark</td>
+<td>Event subscription webhook</td>
+<td>same</td>
+</tr>
+<tr>
+<td>WhatsApp Cloud</td>
+<td>Webhook</td>
+<td>same</td>
+</tr>
+<tr>
+<td>Viber</td>
+<td>Webhook</td>
+<td>same</td>
+</tr>
+<tr>
+<td>Email</td>
+<td>IMAP IDLE preferred; fall back to 30 s IMAP poll</td>
+<td>IDLE = continuous; non-IDLE = 30 s</td>
+</tr>
+<tr>
+<td>ntfy</td>
+<td>WebSocket/SSE</td>
+<td>continuous</td>
+</tr>
+<tr>
+<td>Gotify</td>
+<td>WebSocket</td>
+<td>continuous</td>
+</tr>
+<tr>
+<td>Max</td>
+<td>Bot API poll</td>
+<td>30 s</td>
+</tr>
+</tbody>
+</table>
+<p>Configurable via <code>[ingest].poll_interval_seconds</code> (default
+30); operators MAY tighten to 10 s for high-volume tenants but MUST NOT
+loosen beyond 60 s without operator-explicit override
+(<code>--allow-slow-poll</code>).</p>
+<h3 id="323-fifo-order--worker-selection">32.3 FIFO order + Worker
+selection</h3>
+<p>Inbound items are queued in <code>inbound_messages</code> with
+<code>enqueued_at</code> timestamp + UUIDv7 id. The River queue is
+partitioned by <code>(tenant_id, channel_address_id)</code> so:</p>
+<ul>
+<li>Multiple senders on the same channel are processed in strict arrival
+order.</li>
+<li>Different channels for the same tenant run in parallel.</li>
+<li>Different tenants run in parallel.</li>
+</ul>
+<p>Schema:</p>
+<div class="sourceCode" id="cb39"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> inbound_messages (</span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">id</span>                  UUID <span class="kw">PRIMARY</span> <span class="kw">KEY</span> <span class="kw">DEFAULT</span> uuidv7(),</span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>    tenant_id           UUID <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>    channel             TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>    channel_address_id  UUID <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">REFERENCES</span> channel_addresses(<span class="kw">id</span>),</span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a>    sender_channel_user_id TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a>    received_at         TIMESTAMPTZ <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> now(),</span>
+<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a>    cloudevent_jsonb    JSONB <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb39-9"><a href="#cb39-9" aria-hidden="true" tabindex="-1"></a>    attachments_jsonb   JSONB <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="st">&#39;[]&#39;</span>:<span class="ch">:jsonb</span>,</span>
+<span id="cb39-10"><a href="#cb39-10" aria-hidden="true" tabindex="-1"></a>    stage               TEXT <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="st">&#39;queued&#39;</span>,     <span class="co">-- queued|validating|safety|anti_spam|classifying|dispatched|completed|failed</span></span>
+<span id="cb39-11"><a href="#cb39-11" aria-hidden="true" tabindex="-1"></a>    stage_started_at    TIMESTAMPTZ <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> now(),</span>
+<span id="cb39-12"><a href="#cb39-12" aria-hidden="true" tabindex="-1"></a>    classification      JSONB,                              <span class="co">-- type+criticality+confidence</span></span>
+<span id="cb39-13"><a href="#cb39-13" aria-hidden="true" tabindex="-1"></a>    workable_item_id    TEXT,                               <span class="co">-- after successful materialization</span></span>
+<span id="cb39-14"><a href="#cb39-14" aria-hidden="true" tabindex="-1"></a>    last_reply_at       TIMESTAMPTZ,</span>
+<span id="cb39-15"><a href="#cb39-15" aria-hidden="true" tabindex="-1"></a>    failure_reason      TEXT,</span>
+<span id="cb39-16"><a href="#cb39-16" aria-hidden="true" tabindex="-1"></a>    failure_details     JSONB</span>
+<span id="cb39-17"><a href="#cb39-17" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb39-18"><a href="#cb39-18" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> inbound_fifo_idx <span class="kw">ON</span> inbound_messages (tenant_id, channel_address_id, received_at)</span>
+<span id="cb39-19"><a href="#cb39-19" aria-hidden="true" tabindex="-1"></a>    <span class="kw">WHERE</span> stage <span class="kw">NOT</span> <span class="kw">IN</span> (<span class="st">&#39;completed&#39;</span>, <span class="st">&#39;failed&#39;</span>);</span>
+<span id="cb39-20"><a href="#cb39-20" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> inbound_messages <span class="kw">ENABLE</span> <span class="kw">ROW</span> <span class="kw">LEVEL</span> SECURITY;</span>
+<span id="cb39-21"><a href="#cb39-21" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> inbound_messages <span class="kw">FORCE</span> <span class="kw">ROW</span> <span class="kw">LEVEL</span> SECURITY;</span>
+<span id="cb39-22"><a href="#cb39-22" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> POLICY inb_isolation <span class="kw">ON</span> inbound_messages</span>
+<span id="cb39-23"><a href="#cb39-23" aria-hidden="true" tabindex="-1"></a>    <span class="kw">USING</span> (tenant_id <span class="op">=</span> current_setting(<span class="st">&#39;app.tenant_id&#39;</span>):<span class="ch">:uuid</span>)</span>
+<span id="cb39-24"><a href="#cb39-24" aria-hidden="true" tabindex="-1"></a>    <span class="kw">WITH</span> <span class="kw">CHECK</span> (tenant_id <span class="op">=</span> current_setting(<span class="st">&#39;app.tenant_id&#39;</span>):<span class="ch">:uuid</span>);</span></code></pre></div>
+<p>The Worker holds a per-<code>(tenant_id, channel_address_id)</code>
+advisory lock for the duration of one item's pipeline so strict FIFO is
+preserved across the seven stages.</p>
+<h3 id="324-stages-12-validation--safety">32.4 Stages 1–2: validation +
+safety</h3>
+<p><strong>Stage 1: Validation.</strong> Asserts:</p>
+<ul>
+<li>CloudEvents <code>id</code> is unique within idempotency window
+(§4.3 hit/miss).</li>
+<li><code>sender_channel_user_id</code> matches an entry in
+<code>subscriber_aliases</code> OR is allowlisted as a verified webhook
+source.</li>
+<li>Message body is well-formed UTF-8 ≤ 8 KiB per command + ≤ 256 KiB
+total.</li>
+<li>Attachments declared in <code>attachments_jsonb</code> MUST be
+retrievable from the source channel and MUST be ≤
+<code>[attachments].in_max_mib</code> each (default 25 MiB) and ≤
+<code>[attachments].in_total_max_mib</code> total (default 100
+MiB).</li>
+</ul>
+<p>Failure → reply with precise reason (§34.4), stage =
+<code>failed</code>, NO further processing.</p>
+<p><strong>Stage 2: Safety / anti-malware.</strong> Each attachment is
+scanned:</p>
+<ul>
+<li>ClamAV (when <code>commons_security.clamav.enabled=true</code> and
+the daemon is reachable) — definitive engine.</li>
+<li>Magic-byte type check vs declared MIME (rejects MIME spoofing).</li>
+<li>Filename allowlist by extension (default:
+<code>.txt .md .json .yaml .yml .csv .pdf .docx .html .png .jpg .jpeg .webp .gif .log .zip .tar.gz</code>).</li>
+<li>Optional: per-tenant additional scanner (configurable hook command
+receives the file path, returns 0 = clean, non-zero = quarantine).</li>
+</ul>
+<p>Inbound text body is scanned for:</p>
+<ul>
+<li>URL allowlist / blocklist per tenant.</li>
+<li>Prompt-injection markers (heuristics — short list of known patterns:
+<code>Ignore previous instructions</code>, <code>BEGIN SYSTEM</code>,
+<code>&lt;|im_start|&gt;</code>, etc.). Hit → quarantine, NOT
+auto-reject (operator review).</li>
+</ul>
+<p>Failure → reply with reason, stage = <code>failed</code>, attachment
+quarantined to <code>quarantined_messages.attachments_jsonb</code>.</p>
+<h3 id="325-stage-3-anti-spam">32.5 Stage 3: anti-spam</h3>
+<p>Spam prevention is layered:</p>
+<ol type="1">
+<li><strong>Per-sender rate limits</strong> (configurable per tenant via
+<code>[security].spam_max_*</code>):
+<ul>
+<li><code>spam_max_per_minute_per_sender</code> (default 10)</li>
+<li><code>spam_max_per_hour_per_sender</code> (default 100)</li>
+<li><code>spam_max_per_day_per_sender</code> (default 500) Exceeded →
+message accepted, but reply downgraded to
+<code>429 Too Many Requests</code> with the cooldown window.</li>
+</ul></li>
+<li><strong>Burst detection</strong> — a sender that posts &gt; N
+similar messages (Levenshtein distance &lt; 5%) within window T is
+throttled; if pattern continues, sender enters quarantine.</li>
+<li><strong>Sender reputation</strong> —
+per-<code>(tenant, sender_channel_user_id)</code> score in Redis
+(<code>t:&lt;id&gt;:rep:&lt;sender&gt;</code> integer), incremented on
+successful interaction, decremented on validation/safety failures.
+Negative score → mandatory operator review before processing.</li>
+<li><strong>Channel-level frequency</strong> — if
+<code>channel_addresses[address_id]</code> receives &gt; rate_floor
+messages/minute from distinct senders, channel-wide soft rate-limit
+kicks in.</li>
+<li><strong>Known-bot allowlist</strong> — agent tokens (§7.5) bypass
+per-minute limits but obey per-hour caps.</li>
+</ol>
+<p>All spam decisions logged to <code>spam_audit</code> (Redis stream,
+7-day retention) for tuning.</p>
+<h3 id="326-stage-4-classification">32.6 Stage 4: classification</h3>
+<p>The classifier (running as a Watermill handler in
+<code>commons_messaging</code>) determines:</p>
+<p><strong>Item type</strong> (per Universal §11.4.16 + Project Herald
+subscriber-command vocabulary):</p>
+<table>
+<thead>
+<tr>
+<th>Inbound trigger</th>
+<th>Type</th>
+<th>Maps to</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Bug:</code> / <code>Issue:</code> /
+<code>Issue: &lt;prose&gt;</code></td>
+<td><code>bug</code></td>
+<td><code>docs/Issues.md</code> row +
+<code>digital.vasic.herald.project.task.opened</code></td>
+</tr>
+<tr>
+<td><code>Task:</code></td>
+<td><code>task</code></td>
+<td>same docs flow, different type column</td>
+</tr>
+<tr>
+<td><code>Implementation:</code> / <code>Implement:</code> /
+<code>Feature:</code></td>
+<td><code>implementation</code></td>
+<td>same</td>
+</tr>
+<tr>
+<td><code>Query:</code> / <code>Question:</code> / <code>Q:</code> /
+<code>?</code></td>
+<td><code>query</code></td>
+<td>LLM-only path (no workable item — research/info request)</td>
+</tr>
+<tr>
+<td><code>Request:</code> / <code>Req:</code></td>
+<td><code>request</code></td>
+<td>LLM-routed; outcome may produce a workable item if approved</td>
+</tr>
+<tr>
+<td><code>Investigation:</code> / <code>Investigate:</code></td>
+<td><code>investigation</code></td>
+<td>intermediate state (§32.7)</td>
+</tr>
+<tr>
+<td><code>Status:</code></td>
+<td><code>status_request</code></td>
+<td>reply with current state from <code>docs/Status.md</code></td>
+</tr>
+<tr>
+<td><code>Continue:</code></td>
+<td><code>continuation_request</code></td>
+<td>reply with <code>docs/CONTINUATION.md</code> pointer</td>
+</tr>
+<tr>
+<td><code>Done:</code> / <code>Resolve:</code> (operator role only)</td>
+<td><code>closure</code></td>
+<td>close workable item, migrate Issues→Fixed</td>
+</tr>
+<tr>
+<td><code>Reopen:</code> (operator role only)</td>
+<td><code>reopen</code></td>
+<td>per Universal §11.4.55 reopen flow</td>
+</tr>
+<tr>
+<td><code>Ack:</code> / <code>Silence:</code> /
+<code>Snooze:</code></td>
+<td><code>ops_command</code></td>
+<td>per-flavor ops handlers</td>
+</tr>
+<tr>
+<td><code>Spec:</code></td>
+<td><code>spec_change_request</code></td>
+<td>gated by §23 spec-change rule</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Criticality</strong> (independent of type; required for
+<code>bug</code>, <code>issue</code>, <code>task</code>,
+<code>implementation</code>, <code>investigation</code>):</p>
+<table>
+<thead>
+<tr>
+<th>Level</th>
+<th>Trigger</th>
+<th>SLA</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>critical</code></td>
+<td>explicit <code>critical:</code> prefix in subject line, OR LLM
+classifier confidence ≥ 0.85 on production-outage keywords</td>
+<td>acknowledge within 5 min; first investigation within 1 h</td>
+</tr>
+<tr>
+<td><code>high</code></td>
+<td>explicit <code>high:</code> OR LLM 0.7–0.85</td>
+<td>within 30 min; investigation within 4 h</td>
+</tr>
+<tr>
+<td><code>middle</code></td>
+<td>default</td>
+<td>within 2 h; investigation within 24 h</td>
+</tr>
+<tr>
+<td><code>low</code></td>
+<td>explicit <code>low:</code> or <code>nice-to-have:</code></td>
+<td>within 24 h; investigation within 1 week</td>
+</tr>
+</tbody>
+</table>
+<p>The classifier itself is <strong>deterministic-first</strong>
+(keyword/regex), falling back to LLM (§33) only when the deterministic
+step returns ambiguous. Operators MAY override classifications via
+<code>Override: HRD-NNN type=task criticality=high</code>.</p>
+<h3 id="327-stage-5-investigation-before-fixing-intermediate-state">32.7
+Stage 5: Investigation-before-Fixing intermediate state</h3>
+<p>When a <code>bug</code> / <code>issue</code> /
+<code>implementation</code> arrives, Herald first creates an
+<strong>Investigation workable item</strong> (type
+<code>investigation</code>, status <code>investigating</code>), NOT the
+final bug/task row. The investigation:</p>
+<ol type="1">
+<li>Stores in <code>workable_items</code> table with type
+<code>investigation</code> and <code>parent_request</code> referencing
+the inbound message id.</li>
+<li>Dispatches to the LLM (§33) for <strong>reproducibility
+analysis</strong> — can the LLM identify the affected code path?
+Reproduce locally? Estimate effort?</li>
+<li>Stores LLM findings as a comment in
+<code>docs/Investigations/&lt;HRD-NNN&gt;.md</code>.</li>
+</ol>
+<p>Once investigation concludes:</p>
+<ul>
+<li><strong>Validated</strong> → Herald creates the <em>final</em>
+<code>bug</code> / <code>task</code> / <code>implementation</code>
+workable item, atomically migrates the investigation row to
+"investigation completed" status, links the new item via
+<code>parent_investigation</code>.</li>
+<li><strong>Cannot reproduce / not actionable</strong> → investigation
+row stays; replies with reason + asks for more info; subscriber's
+follow-up reply re-runs the investigation.</li>
+<li><strong>Rejected (out of scope / duplicate / known)</strong> →
+investigation closed with that reason; no final item created.</li>
+</ul>
+<p>The investigation gate is a strong guard against runaway
+LLM-generated workable items.</p>
+<h3 id="328-spam-audit--observability">32.8 Spam audit +
+observability</h3>
+<p>Per §17.2 the inbound pipeline emits:</p>
+<ul>
+<li><code>herald_inbound_received_total{tenant,channel,outcome}</code> —
+<code>outcome</code> ∈
+<code>enqueued | rejected_validation | quarantined_safety | rate_limited | classified | dispatched | completed | failed</code>.</li>
+<li><code>herald_inbound_stage_duration_seconds{stage}</code>
+histogram.</li>
+<li><code>herald_inbound_classification{type,criticality,confidence_bucket}</code>
+counter.</li>
+<li><code>herald_spam_block_total{tenant,reason}</code> counter.</li>
+<li>Span name <code>herald.inbound.process</code> with child spans per
+stage.</li>
+</ul>
+<hr />
+<h2 id="33-llm--agent-dispatch">§33. LLM / agent dispatch</h2>
+<h3 id="331-first-target-claude-code">33.1 First target: Claude
+Code</h3>
+<p>V3's first LLM dispatch target is <strong>Claude Code</strong> (the
+Anthropic CLI). The dispatcher lives in
+<code>commons_messaging/dispatch/claude_code/</code>.</p>
+<p>Design constraints:</p>
+<ul>
+<li>Claude Code sessions are scoped to a <strong>working
+directory</strong>, not a freestanding "name". V3 introduces a
+<strong>project-named session resolution algorithm</strong> (§33.2) that
+maps the consuming project's name to a stable working-directory
+anchor.</li>
+<li>The CLI is invoked in <strong>non-interactive batch mode</strong>
+for each request:
+<code>claude --resume &lt;session&gt; --print "&lt;prompt&gt;"</code>.</li>
+<li>Background invocation: Herald spawns the CLI in a separate process
+group with timeout (default 5 min); stdout is collected; non-zero exit
+becomes a <code>failed</code> stage with reason recorded.</li>
+<li>Concurrency: per-project session is single-writer (one in-flight
+Claude Code invocation at a time). Multiple inbound requests for the
+same project queue behind each other (River job priority preserves
+arrival order).</li>
+</ul>
+<h3 id="332-session-resolution-algorithm">33.2 Session resolution
+algorithm</h3>
+<p>For project named <code>ATMOSphere</code>:</p>
+<pre><code>function resolve_session(project_name) -&gt; session_id:
+    1. compute working_dir = config[herald.session_workdir]
+       (default: &lt;consuming-project-root&gt; discovered via parent-walk)
+    2. compute session_anchor_path = working_dir/.herald/claude-code/sessions/&lt;project_name&gt;.session
+    3. if session_anchor_path exists AND contains a session UUID
+         AND `claude --resume &lt;uuid&gt; --print &quot;ping&quot;` returns 0:
+          → return that UUID
+    4. else:
+          spawn `claude --print &quot;Initializing Herald session for project: &lt;project_name&gt;&quot;` 
+          in working_dir
+          capture the new session UUID emitted by Claude Code stdout
+          write UUID to session_anchor_path
+          → return new UUID</code></pre>
+<p>The <code>.herald/claude-code/sessions/</code> directory is
+<code>.gitignore</code>'d. Session anchors persist across Herald
+restarts. Operators can manually reset by deleting the anchor file (next
+dispatch will create a fresh session).</p>
+<h3 id="333-request-envelope">33.3 Request envelope</h3>
+<p>Every dispatch sends a structured prompt:</p>
+<pre><code>&lt;&lt;&lt;HERALD-DISPATCH-v1&gt;&gt;&gt;
+Project:        &lt;project_name&gt;
+Inbound ID:     &lt;UUIDv7&gt;
+Sender:         &lt;channel&gt;:&lt;subscriber.handle&gt; (verified: yes|no, roles: [operator|reader|…])
+Channel:        &lt;ChannelID&gt;
+Received at:    &lt;RFC 3339&gt;
+Classification: type=&lt;type&gt; criticality=&lt;level&gt; confidence=&lt;0.0-1.0&gt;
+Conversation:   &lt;thread-of-quoted-replies, full chain bottom-to-top&gt;
+Attachments:    [&lt;name&gt;:&lt;mime&gt;:&lt;size_bytes&gt;, …]
+
+User message:
+
+&lt;verbatim user text&gt;
+
+────────────────────────────────────────────────────────────
+HERALD TASK (run in background along with mainstream work):
+
+&lt;task verb derived from classification&gt;:
+- For `bug`/`issue`/`investigation`: reproduce + identify affected code paths +
+  classify root-cause area + propose validation steps.
+- For `query`/`question`: research + answer; cite project docs if relevant;
+  short answers preferred (subscribers see this directly).
+- For `request`/`implementation`: scope effort + propose approach + flag prerequisites
+  + estimate workable-item dependencies.
+- For `spec_change_request`: invoke Herald Constitution §106 spec-change rule.
+
+Reply with a JSON object on a single line, prefixed with `&lt;&lt;&lt;HERALD-REPLY&gt;&gt;&gt;`:
+
+{
+  &quot;outcome&quot;: &quot;validated&quot;|&quot;rejected&quot;|&quot;needs_more_info&quot;|&quot;answered&quot;,
+  &quot;summary&quot;: &quot;&lt;short summary for the subscriber&gt;&quot;,
+  &quot;details&quot;: &quot;&lt;longer markdown body for the diary&gt;&quot;,
+  &quot;affected_paths&quot;: [&quot;&lt;file&gt;:&lt;line&gt;&quot;, …],          // optional
+  &quot;reproduction_steps&quot;: [&quot;…&quot;, …],                    // for bug/investigation
+  &quot;estimated_effort&quot;: &quot;S|M|L|XL&quot;,                    // for request/implementation
+  &quot;workable_item_proposed&quot;: {                        // optional
+    &quot;type&quot;: &quot;bug|task|implementation|investigation&quot;,
+    &quot;criticality&quot;: &quot;critical|high|middle|low&quot;,
+    &quot;title&quot;: &quot;…&quot;,
+    &quot;labels&quot;: [&quot;…&quot;]
+  },
+  &quot;follow_up_questions&quot;: [&quot;…&quot;]                       // when outcome=needs_more_info
+}
+
+DO NOT modify project files unless the subscriber explicitly asked you to.
+DO NOT commit. DO NOT push.
+&lt;&lt;&lt;END-HERALD-DISPATCH&gt;&gt;&gt;</code></pre>
+<p>Herald parses the <code>&lt;&lt;&lt;HERALD-REPLY&gt;&gt;&gt;</code>
+JSON line out of Claude Code's stdout, validates against the response
+schema, and proceeds to Stage 6 materialization.</p>
+<h3 id="334-materialization-stage-6">33.4 Materialization (Stage 6)</h3>
+<p>Based on the <code>outcome</code> and
+<code>workable_item_proposed</code>:</p>
+<ul>
+<li><code>validated</code> + workable_item_proposed → allocate next
+<code>HRD-NNN</code>, write to <code>docs/Issues.md</code> + emit
+<code>digital.vasic.herald.project.task.opened</code> (per §8.3
+lifecycle) + link investigation parent (§32.7).</li>
+<li><code>answered</code> (query/question) → no workable item; the reply
+IS the answer.</li>
+<li><code>needs_more_info</code> → no workable item; reply asks
+subscriber for clarifications listed in
+<code>follow_up_questions</code>.</li>
+<li><code>rejected</code> → no workable item; reply states rejection
+reason.</li>
+</ul>
+<h3 id="335-other-llmagent-targets-spec-hooks-v3-implementation">33.5
+Other LLM/agent targets (spec hooks, V3+ implementation)</h3>
+<p>The dispatcher interface is provider-agnostic:</p>
+<div class="sourceCode" id="cb42"><pre
+class="sourceCode go"><code class="sourceCode go"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Dispatcher <span class="kw">interface</span> <span class="op">{</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>    Name<span class="op">()</span> <span class="dt">string</span></span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>    Capabilities<span class="op">()</span> DispatcherCapabilities</span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>    Dispatch<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> req DispatchRequest<span class="op">)</span> <span class="op">(</span>DispatchResponse<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>V3 ships only <code>claude-code</code> dispatcher. Spec hooks
+reserved for:</p>
+<ul>
+<li><code>opencode</code> — same CLI pattern.</li>
+<li><code>aider</code> — file-modifying dispatcher (extra safety gates
+required; not enabled by default).</li>
+<li><code>gemini-cli</code> — when GA.</li>
+<li><code>cursor-cli</code> — pending product availability.</li>
+<li><code>agentic-claude-api</code> — direct Anthropic API (Managed
+Agents) for hosted deployments where a CLI isn't desirable.</li>
+</ul>
+<p>Operators select per-tenant via <code>[llm].default_agent</code>;
+per-classification-type override via <code>[llm.routing]</code>
+table.</p>
+<hr />
+<h2 id="34-reply-protocol-queued--processing--result">§34. Reply
+protocol (queued → processing → result)</h2>
+<p>Every inbound message MUST receive <strong>three replies</strong>
+unless the inbound itself was rejected at Stage 1 (in which case one
+reply explaining the rejection).</p>
+<h3 id="341-reply-a--queued-ack">34.1 Reply A — Queued ack</h3>
+<p>Within ≤ 5 s of receipt:</p>
+<ul>
+<li>Quote the original message (per-channel thread mechanic per §12
+<code>ConversationRef</code>).</li>
+<li>Body:
+<code>📨 Received. Queued as #INB-&lt;short-id&gt;. I'll process this momentarily.</code></li>
+<li>Carries <code>Herald-Reply-Stage: queued</code> extension header for
+adapters that support custom headers.</li>
+</ul>
+<h3 id="342-reply-b--processing-started">34.2 Reply B — Processing
+started</h3>
+<p>Within ≤ 5 s of Stage 5 dispatch:</p>
+<ul>
+<li>Quote the original (same thread).</li>
+<li>Body:
+<code>⏳ Processing as &lt;classification.type&gt; (priority: &lt;criticality&gt;). Investigating…</code></li>
+<li>Edit-in-place where the channel supports it (Telegram
+<code>editMessageText</code>, Slack <code>chat.update</code>, Discord
+webhook edit); otherwise post a new message in the thread.</li>
+</ul>
+<h3 id="343-reply-c--final-result">34.3 Reply C — Final result</h3>
+<p>Within the SLA window for the classified criticality (§32.6):</p>
+<ul>
+<li>Quote the original (same thread).</li>
+<li>Body varies by outcome:
+<ul>
+<li><strong>Validated + workable item created</strong>:<br />
+<code>✅ Created HRD-042 (bug, criticality=high). Investigation summary attached. Link: &lt;Issues.md row anchor&gt;. Repo: &lt;git URL&gt;</code><br />
+With multi-format attachment bundle per §36 containing the investigation
+summary.</li>
+<li><strong>Answered (query)</strong>:<br />
+<code>💡 &lt;answer&gt;</code><br />
+With cited documents attached as multi-format if relevant.</li>
+<li><strong>Needs more info</strong>:<br />
+<code>❓ Need more detail: 1) &lt;question&gt;  2) &lt;question&gt;</code></li>
+<li><strong>Rejected</strong>:<br />
+<code>🚫 &lt;reason&gt;. &lt;suggested next step&gt;.</code></li>
+</ul></li>
+</ul>
+<h3 id="344-failure-replies">34.4 Failure replies</h3>
+<p>If validation, safety, anti-spam, or classification fails:</p>
+<ul>
+<li>Quote the original message.</li>
+<li>Body:
+<code>❌ &lt;stage&gt;: &lt;precise reason&gt;. Details: &lt;link-to-diary-entry-with-stack-trace&gt;.</code></li>
+<li>Body MUST contain the exact rejection cause (not "internal error" —
+anti-bluff per Universal §11.4).</li>
+<li>Stage = <code>failed</code> in <code>inbound_messages</code>;
+original receipt is preserved.</li>
+</ul>
+<p>Examples:</p>
+<ul>
+<li><code>❌ validation: attachment 'malware.exe' exceeds size limit (30 MiB &gt; 25 MiB max). Details: …</code></li>
+<li><code>❌ safety: attachment 'invoice.pdf' triggered ClamAV signature 'EICAR-Test-File'. Quarantined. Details: …</code></li>
+<li><code>❌ anti-spam: rate limit (12 msg/min) exceeded. Cooldown until &lt;RFC 3339 UTC&gt;. Details: …</code></li>
+<li><code>❌ classification: ambiguous type. Suggested prefixes: 'Bug:', 'Query:', 'Request:'. Details: …</code></li>
+</ul>
+<h3 id="345-per-channel-quotingedit-in-place-matrix">34.5 Per-channel
+quoting/edit-in-place matrix</h3>
+<table>
+<thead>
+<tr>
+<th>Channel</th>
+<th>Quote original</th>
+<th>Edit-in-place (B → C)</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Telegram</td>
+<td><code>reply_to_message_id</code></td>
+<td><code>editMessageText</code> ✓</td>
+<td>Reply B edited into Reply C if same message id</td>
+</tr>
+<tr>
+<td>Slack</td>
+<td><code>thread_ts</code> (parent ts)</td>
+<td><code>chat.update</code> ✓</td>
+<td>edits the queued ack</td>
+</tr>
+<tr>
+<td>Discord</td>
+<td><code>?thread_id=</code> + <code>webhook?wait=true</code></td>
+<td>webhook edit ✓</td>
+<td>requires bot token for non-webhook edit</td>
+</tr>
+<tr>
+<td>MS Teams</td>
+<td>message reference</td>
+<td>Adaptive Card refresh ✗ (per-message replacement only)</td>
+<td>post new message in conversation</td>
+</tr>
+<tr>
+<td>Lark</td>
+<td>reply API</td>
+<td>message edit ✓</td>
+<td></td>
+</tr>
+<tr>
+<td>WhatsApp Cloud</td>
+<td><code>context.message_id</code></td>
+<td>not supported</td>
+<td>post new message</td>
+</tr>
+<tr>
+<td>Viber</td>
+<td><code>tracking_data</code> thread</td>
+<td>not supported</td>
+<td>post new message</td>
+</tr>
+<tr>
+<td>Email</td>
+<td><code>In-Reply-To</code> + <code>References</code> headers</td>
+<td>not supported</td>
+<td>post new message in thread</td>
+</tr>
+<tr>
+<td>ntfy</td>
+<td>not natively threaded</td>
+<td>not supported</td>
+<td>new message with <code>X-Tag: same-as-original</code></td>
+</tr>
+<tr>
+<td>Diary</td>
+<td>parent-id anchor</td>
+<td>append + cross-link</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>When edit-in-place is unavailable, Herald posts a NEW message and
+Reply B+C are distinct.</p>
+<h3 id="346-configurable-verbosity">34.6 Configurable verbosity</h3>
+<p>Operators MAY tune reply verbosity per tenant via
+<code>[replies].verbosity = minimal | normal | verbose</code>:</p>
+<ul>
+<li><code>minimal</code> — only Reply A (queued ack) + Reply C (final
+result); no Reply B.</li>
+<li><code>normal</code> (default) — A + B + C as described.</li>
+<li><code>verbose</code> — A + B + C + per-stage progress (Stage 3 done,
+Stage 4 done, …).</li>
+</ul>
+<hr />
+<h2
+id="35-reports--state-tracking-documents-versioned-fan-out-with-git-linkage">§35.
+Reports + state-tracking documents (versioned fan-out with Git
+linkage)</h2>
+<p>Some events carry <strong>reports that change over time</strong> —
+security-scan summaries, build-status digests, weekly project digests,
+compliance reports. When a report's source document changes, Herald MUST
+re-publish to subscribers with the updated file attached + a link to the
+Git commit that introduced the change.</p>
+<h3 id="351-report-aware-event-types">35.1 Report-aware event types</h3>
+<p>CloudEvents types under <code>digital.vasic.herald.report.*</code>
+are special:</p>
+<ul>
+<li><code>.report.updated</code> — content changed since last
+publish.</li>
+<li><code>.report.created</code> — first publish.</li>
+<li><code>.report.archived</code> — no longer being maintained.</li>
+</ul>
+<p>Each carries an <code>update_key</code> extension attribute (stable
+identifier for the report) so Herald can correlate updates with previous
+deliveries.</p>
+<h3 id="352-update-mechanic-per-channel">35.2 Update mechanic per
+channel</h3>
+<p>When a <code>.report.updated</code> event arrives:</p>
+<table>
+<thead>
+<tr>
+<th>Channel</th>
+<th>Mechanism</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Telegram</td>
+<td>Send new message in the channel with the updated file attached +
+caption
+<code>Updated: &lt;git short-sha&gt; — &lt;commit message subject&gt;</code>.
+If channel supports <code>editMessageMedia</code> for original messages,
+edit in place; otherwise re-post.</td>
+</tr>
+<tr>
+<td>Slack</td>
+<td>Edit original message via <code>chat.update</code> (using
+<code>channel_msg_id</code> from <code>report_publications</code>
+table); attach new file via <code>files.upload</code> and
+reference.</td>
+</tr>
+<tr>
+<td>Discord</td>
+<td>Edit webhook message; attach updated file.</td>
+</tr>
+<tr>
+<td>Teams</td>
+<td>Post new Adaptive Card with <code>previousVersionRef</code>; old
+card is left in place (no edit-in-place reliable).</td>
+</tr>
+<tr>
+<td>Email</td>
+<td>New message with
+<code>In-Reply-To: &lt;previous-Message-ID&gt;</code> +
+<code>References</code> chain; full updated attachment bundle.</td>
+</tr>
+<tr>
+<td>Diary</td>
+<td>Append new entry referencing previous; the report file at
+<code>docs/herald/reports/&lt;update_key&gt;/main.md</code> (and
+siblings) is the source of truth (overwritten on each update).</td>
+</tr>
+</tbody>
+</table>
+<h3 id="353-git-linkage">35.3 Git linkage</h3>
+<p>If the report's source <code>.md</code> is committed in the consuming
+project's repo, Herald includes:</p>
+<ul>
+<li><code>git_commit_sha</code> — short SHA from
+<code>git log -1 --pretty=format:%h &lt;file&gt;</code> at publish
+time.</li>
+<li><code>git_commit_url</code> — derived from
+<code>git remote get-url origin</code> + the commit SHA, formatted for
+the host (GitHub blob URL, GitLab blob URL, GitFlic/GitVerse
+equivalents).</li>
+<li><code>git_diff_url</code> — URL to the diff against the previous
+publish's commit SHA.</li>
+</ul>
+<p>If the source <code>.md</code> is NOT committed yet (working-tree
+only), Herald posts with a warning:
+<code>⚠️ This report has uncommitted changes — link will become live once the change is committed.</code></p>
+<h3 id="354-persistence">35.4 Persistence</h3>
+<div class="sourceCode" id="cb43"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> report_publications (</span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">id</span>                  UUID <span class="kw">PRIMARY</span> <span class="kw">KEY</span> <span class="kw">DEFAULT</span> uuidv7(),</span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>    tenant_id           UUID <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>    update_key          TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>,                   <span class="co">-- stable identifier for the report</span></span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>    channel             TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a>    channel_address_id  UUID <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">REFERENCES</span> channel_addresses(<span class="kw">id</span>),</span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a>    channel_msg_id      TEXT,                            <span class="co">-- so we can edit-in-place on next update</span></span>
+<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a>    content_sha256      BYTEA <span class="kw">NOT</span> <span class="kw">NULL</span>,                  <span class="co">-- of the source .md</span></span>
+<span id="cb43-9"><a href="#cb43-9" aria-hidden="true" tabindex="-1"></a>    git_commit_sha      TEXT,                            <span class="co">-- nullable for uncommitted</span></span>
+<span id="cb43-10"><a href="#cb43-10" aria-hidden="true" tabindex="-1"></a>    published_at        TIMESTAMPTZ <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> now(),</span>
+<span id="cb43-11"><a href="#cb43-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">UNIQUE</span> (tenant_id, update_key, channel, channel_address_id)</span>
+<span id="cb43-12"><a href="#cb43-12" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb43-13"><a href="#cb43-13" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> report_publications <span class="kw">ENABLE</span> <span class="kw">ROW</span> <span class="kw">LEVEL</span> SECURITY;</span>
+<span id="cb43-14"><a href="#cb43-14" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> report_publications <span class="kw">FORCE</span> <span class="kw">ROW</span> <span class="kw">LEVEL</span> SECURITY;</span>
+<span id="cb43-15"><a href="#cb43-15" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> POLICY rp_isolation <span class="kw">ON</span> report_publications</span>
+<span id="cb43-16"><a href="#cb43-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">USING</span> (tenant_id <span class="op">=</span> current_setting(<span class="st">&#39;app.tenant_id&#39;</span>):<span class="ch">:uuid</span>)</span>
+<span id="cb43-17"><a href="#cb43-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">WITH</span> <span class="kw">CHECK</span> (tenant_id <span class="op">=</span> current_setting(<span class="st">&#39;app.tenant_id&#39;</span>):<span class="ch">:uuid</span>);</span></code></pre></div>
+<p>The <code>(content_sha256, git_commit_sha)</code> pair is the dedup
+key: if a re-publish event arrives but the source <code>.md</code> is
+byte-identical AND the commit SHA is the same, Herald skips the publish
+(logs <code>digital.vasic.herald.report.noop</code>).</p>
+<hr />
+<h2 id="36-outbound-multi-format-attachments-md--html--pdf--docx">§36.
+Outbound multi-format attachments (.md + .html + .pdf + .docx)</h2>
+<p>Every report, technical-documentation page, or research material that
+Herald sends as a subscriber-visible attachment MUST be attached in
+<strong>four formats</strong> so subscribers can pick the one they
+prefer for their use case.</p>
+<h3 id="361-format-set">36.1 Format set</h3>
+<p>Default
+<code>[attachments].out_format_set = ["md", "html", "pdf", "docx"]</code>.
+Per-channel overrides allowed via channel-address query param
+<code>format_set=md,pdf</code> (e.g. for bandwidth-constrained ntfy
+push).</p>
+<h3 id="362-generation-pipeline">36.2 Generation pipeline</h3>
+<p>For each source <code>.md</code> file Herald wants to attach:</p>
+<pre><code>source.md   (canonical, source of truth)
+    ↓
+pandoc -f gfm -t html5 -s -o source.html
+    ↓
+pandoc -f gfm --pdf-engine=weasyprint -o source.pdf
+    ↓
+pandoc -f gfm -o source.docx</code></pre>
+<p><code>docx</code> generation requires Pandoc (already a dependency
+for HTML/PDF per §11.4.65); no extra runtime needed. WeasyPrint stays
+the PDF engine.</p>
+<h3 id="363-pre-generation-caching">36.3 Pre-generation caching</h3>
+<p>Generation is deterministic — given the same source <code>.md</code>,
+the outputs are byte-stable (modulo PDF embedded timestamps, mitigated
+via Pandoc <code>--reproducible</code> flag in V3 r1).</p>
+<p>Cache at
+<code>&lt;diary_root&gt;/.herald/format-cache/&lt;sha256-of-md&gt;/{source.md, source.html, source.pdf, source.docx, manifest.json}</code>.
+Cache hit avoids regeneration.</p>
+<h3 id="364-per-channel-delivery-rules">36.4 Per-channel delivery
+rules</h3>
+<table>
+<thead>
+<tr>
+<th>Channel</th>
+<th>Delivery</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Telegram</td>
+<td>Four <code>sendDocument</code> calls in sequence (Telegram's bot API
+has no native "file group"); the order is <code>.md</code>,
+<code>.html</code>, <code>.pdf</code>, <code>.docx</code> so the
+most-readable preview surfaces first.</td>
+</tr>
+<tr>
+<td>Slack</td>
+<td>Single <code>files.upload_v2</code> with all four files referenced
+in one message; preview thumbnail = PDF.</td>
+</tr>
+<tr>
+<td>Discord</td>
+<td>Multiple file attachments on one webhook message (up to 10 per
+message; we use 4); embed shows PDF preview.</td>
+</tr>
+<tr>
+<td>MS Teams</td>
+<td>Adaptive Card with four <code>Action.OpenUrl</code> links to
+per-format URLs in a Herald-hosted blob (channel doesn't support
+multi-file attachment natively).</td>
+</tr>
+<tr>
+<td>Lark</td>
+<td>Multi-file upload in one message.</td>
+</tr>
+<tr>
+<td>WhatsApp Cloud</td>
+<td>One message per file (WA Business doesn't support multi-attachment
+messages).</td>
+</tr>
+<tr>
+<td>Viber</td>
+<td>Carousel of links.</td>
+</tr>
+<tr>
+<td>Email</td>
+<td>One MIME multipart message with four <code>application/...</code>
+parts, each <code>Content-Disposition: attachment</code> and
+<code>filename="report.&lt;ext&gt;"</code>.</td>
+</tr>
+<tr>
+<td>ntfy</td>
+<td>Posts the <code>.md</code> inline; the other three via
+<code>X-Attach</code> URLs to Herald-hosted blobs.</td>
+</tr>
+<tr>
+<td>Gotify</td>
+<td>Same as ntfy.</td>
+</tr>
+<tr>
+<td>Webhook (outbound)</td>
+<td>CloudEvents payload with four <code>data_base64</code> entries OR
+four URLs depending on <code>attachment_mode</code> query param.</td>
+</tr>
+<tr>
+<td>Diary</td>
+<td>All four written to
+<code>docs/herald/diary/attachments/&lt;message_id&gt;/</code> and
+referenced from the diary entry.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="365-format-set-override-per-subscriber">36.5 Format-set override
+per subscriber</h3>
+<p>Subscribers MAY express format preferences via
+<code>PreferenceSet.metadata.attachment_formats</code> (per §7.2):</p>
+<pre class="jsonc"><code>{
+  &quot;attachment_formats&quot;: [&quot;md&quot;, &quot;pdf&quot;]    // only these two; skip html + docx
+}</code></pre>
+<p>If a subscriber's preference excludes a format that another
+subscriber on the same channel-address wants, Herald sends the union (or
+the channel's max bundle if multi-attachment is supported). On channels
+that allow only one attachment per message (WhatsApp, Viber), Herald
+sends per-subscriber DM with that subscriber's preferred format.</p>
+<h3 id="366-total-size-limits">36.6 Total size limits</h3>
+<p>Combined size of the four formats per attachment-bundle MUST stay
+under <code>[attachments].out_bundle_max_mib</code> (default 50 MiB). If
+a single source <code>.md</code> produces &gt; 50 MiB of total output
+(rare — typically only image-heavy reports), Herald posts a single
+message with a link to a Herald-hosted blob carrying the full
+bundle.</p>
 <hr />
 <h2 id="30-v2-self-review-log">§30. V2 self-review log</h2>
 <blockquote>
@@ -5445,5 +6881,118 @@ which is the expected pattern (the easier high-leverage gaps go first).
 A fourth pass would likely yield only stylistic findings; the next
 high-value pass should come <em>after</em> first-implementation cycle
 surfaces real-world spec gaps that desk-review alone can't find.</p>
+<h3 id="306-v3-r1-review-log-this-revision">30.6 V3 r1 review log (this
+revision)</h3>
+<p>This is <strong>not</strong> a desk-review of V2 — it is a
+<em>requirements-driven</em> expansion. V2 was architecturally complete;
+V3 r1 adds the operator-product story the user described in their V3
+brief (project integration, inbound pipeline, LLM dispatch, reply
+protocol, versioned reports, multi-format attachments) and folds in the
+<strong>explicit project-side requirements</strong> the user introduced
+during V3 authoring: 30 s poll cadence, FIFO inbound queue, anti-spam,
+Investigation-before-Fixing, Claude Code project-named session,
+<code>issues/users/attachments/WORKABLE_ITEM_ID/</code>, multi-format
+outbound attachments (<code>.md</code> + <code>.html</code> +
+<code>.pdf</code> + <code>.docx</code>).</p>
+<h4 id="3061-findings-applied-v3-r1-nn">30.6.1 Findings applied
+(V3-R1-NN)</h4>
+<ul>
+<li><strong>V3-R1-01. Project integration contract was
+implicit.</strong> Spec assumed a consuming project existed; never
+specified the contract. Applied: <strong>§31</strong> with 6-point
+integration checklist, configuration template, and
+<code>test_project_integration.sh</code> audit gate composing with 11
+Universal Constitution mandates.</li>
+<li><strong>V3-R1-02. Inbound pipeline had no defined cadence.</strong>
+§3 mentioned "daemon mode listens" but no polling rule. Applied:
+<strong>§32.2</strong> mandates ≤ 30 s upstream check rate; per-channel
+table maps to underlying mechanism (long-poll vs Socket Mode vs Gateway
+vs webhook vs IMAP IDLE).</li>
+<li><strong>V3-R1-03. No FIFO guarantee for inbound processing.</strong>
+V2 mentioned River queue but no per-tenant per-channel ordering rule.
+Applied: <strong>§32.3</strong> specifies
+advisory-lock-per-<code>(tenant_id, channel_address_id)</code> to
+guarantee strict arrival order.</li>
+<li><strong>V3-R1-04. Anti-spam unspecified.</strong> Spec referenced
+"security validation" but no anti-spam layer. Applied:
+<strong>§32.5</strong> with four-layer anti-spam (per-sender rate /
+burst detection / reputation / channel frequency);
+<code>spam_audit</code> Redis stream for tuning.</li>
+<li><strong>V3-R1-05. Investigation-before-Fixing pattern
+missing.</strong> Spec went straight from "Bug:" command to workable
+item. Applied: <strong>§18.2.1</strong> mandates intermediate
+investigation item (<code>HRD-INV-NNN</code>); LLM analyzes
+reproducibility before final item is allocated; rejects
+duplicates/out-of-scope/non-reproducible.</li>
+<li><strong>V3-R1-06. LLM/agent dispatch had no concrete first
+integration.</strong> V2 left LLM dispatch as future work. Applied:
+<strong>§33</strong> wires Claude Code as the V3 r1 default:
+<code>resolve_session(project_name)</code> algorithm,
+<code>&lt;&lt;&lt;HERALD-DISPATCH-v1&gt;&gt;&gt;</code> envelope, JSON
+reply schema, pluggable <code>Dispatcher</code> interface.</li>
+<li><strong>V3-R1-07. Claude Code session was assumed to support
+<code>--session-name</code>.</strong> It doesn't. Applied:
+<strong>§33.2</strong> documents the gap and specifies the resolution
+algorithm using the project-name as an anchor-file key, with
+<code>--resume &lt;UUID&gt;</code> as the actual CLI invocation.</li>
+<li><strong>V3-R1-08. Reply protocol was single-shot.</strong> V2 said
+"Herald replies" without staging. Applied: <strong>§34</strong>
+specifies three replies (queued / processing / result) with per-channel
+edit-in-place mechanics, criticality-driven SLAs, and verbose error
+reporting that complies with Universal §11.4 anti-bluff.</li>
+<li><strong>V3-R1-09. Reports vs one-off messages were
+conflated.</strong> V2 had no separate semantic for documents that
+change over time. Applied: <strong>§35</strong> introduces report-aware
+event types, <code>report_publications</code> dedup table, Git commit
+SHA + URL + diff URL embedding, edit-in-place where supported.</li>
+<li><strong>V3-R1-10. Outbound attachments were single-format.</strong>
+V2 sent the rendered file in whatever format the channel preferred.
+Applied: <strong>§36</strong> mandates four-format bundle
+(<code>.md</code> + <code>.html</code> + <code>.pdf</code> +
+<code>.docx</code>) so subscribers choose. Pandoc generation pipeline
+(already a dependency) + cache + per-channel delivery rules.</li>
+<li><strong>V3-R1-11. Attachment storage path for user uploads was
+implicit.</strong> V2 said "validate and store" without naming the path.
+Applied: <strong>§18.2.4</strong> mandates
+<code>issues/users/attachments/&lt;WORKABLE_ITEM_ID&gt;/</code> with
+<code>attachments_index.md</code> as source-of-truth + 8-step validation
+pipeline (download → ClamAV → MIME → extension → size-per-file →
+size-total → move-on-pass → quarantine-on-fail).</li>
+<li><strong>V3-R1-12. Criticality classification had no SLA
+mapping.</strong> V2 had a 4-level scale but no concrete SLA per level.
+Applied: <strong>§18.2.2</strong> table maps each criticality to
+specific Reply A/B/C SLA windows + investigation deadline.</li>
+</ul>
+<h4 id="3062-deferred-to-v3-r2-the-users-follow-up-scope">30.6.2
+Deferred to V3 r2 (the user's follow-up scope)</h4>
+<ul>
+<li><strong>V3-R1-13. Other flavors (§18.3–§18.10) not yet refined for
+richer channel interaction.</strong>
+sherald/bherald/dherald/aherald/scherald/iherald/rherald/cherald still
+carry V2 subscriber-command vocabulary. V3 r2 will add: interactive
+buttons (Slack Block Kit action buttons / Telegram inline-keyboard
+callbacks / Discord components / Teams Adaptive Card actions),
+reaction-based ack/silence, slash-command discovery via
+<code>/help</code>, per-flavor command palettes.</li>
+<li><strong>V3-R1-14. Full re-export of V1+V2+V3 + push
+EVERYTHING.</strong> Deferred to V3 r3 as the final polish/release
+pass.</li>
+</ul>
+<h4 id="3063-audit-trail-r3--v3-r1">30.6.3 Audit trail (r3 → V3 r1)</h4>
+<ul>
+<li>Pre-V3 commit: V2 r3 at <code>f4ebba1</code>.</li>
+<li>V3 r1 commit: covers V3-R1-01..V3-R1-12 in one logical commit on top
+of V2 r3.</li>
+<li>Inheritance gate before and after: 12 PASS / 0 FAIL. Meta-test:
+✓.</li>
+<li>All four Herald mirrors targeted on push.</li>
+<li>V2 metadata bumped to <code>Status=superseded</code>; V2 re-exported
+to keep §11.4.65 invariant green.</li>
+</ul>
+<p>Statistical context: V1 was 594 lines; V2 r1 was 1745 lines (+1151);
+V2 r3 was ~3000 lines (+1255); V3 r1 adds another ~1100 lines. The spec
+has grown by ~5× in two days of iteration — about half of that is the V3
+first-version requirements (§31–§36 + §18.2 expansion), the rest was
+architectural maturity in V2's three revisions.</p>
 </body>
 </html>

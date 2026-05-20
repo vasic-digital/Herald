@@ -1,17 +1,17 @@
-# Herald — MVP Specification V2 (superseded)
+# Herald — Specification V3
 
 | Field | Value |
 |---|---|
-| Revision | 4 |
-| Created | 2026-05-19 |
+| Revision | 1 |
+| Created | 2026-05-20 |
 | Last modified | 2026-05-20 |
-| Status | superseded |
-| Status summary | Superseded by [`specification.V3.md`](specification.V3.md) on 2026-05-20. V2's three revisions (r1–r3) closed the architectural gaps surfaced by V1's Review; V3 layers the operator-product story on top: full project-integration contract, inbound processing pipeline (workers + 30s poll + anti-spam), Claude Code LLM dispatch, tri-stage reply protocol, and refinements across every flavor. |
+| Status | active |
+| Status summary | V3 r1 supersedes V2. Adds §31 project-integration contract, §32 inbound processing pipeline (30s poll + FIFO + worker stages + anti-spam), §33 LLM/agent dispatch (Claude Code session resolution), §34 tri-stage reply protocol (queued→processing→result), §35 versioned-report fan-out with Git linkage, §36 outbound multi-format attachment bundles (Markdown + HTML + PDF + DOCX). Expanded §18.2 Project Herald with Investigation-before-Fixing flow + criticality + type classification + attachment storage at `issues/users/attachments/WORKABLE_ITEM_ID/`. |
 | Issues | none |
-| Issues summary | — |
-| Fixed | V2-R-01..V2-R-14 (r2), V3-R-01..V3-R-12 (r3) — both carried into V3 unchanged. |
-| Fixed summary | V2 stays as the historical reference for the architectural baseline; V3 builds on it. |
-| Continuation | See [`specification.V3.md`](specification.V3.md) — first-implementation cycle now targets the V3 set: project-integration contract, inbound pipeline, LLM dispatch, reply protocol, refined flavors. |
+| Issues summary | First-implementation work tracked under `HRD-` prefix; V3 is the version consuming projects integrate against. |
+| Fixed | V3-R1-01..V3-R1-14 (this revision); inherits closed: V2-R-01..V2-R-14 (V2 r2), V3-R-01..V3-R-12 (V2 r3), V1 R-01..R-22. |
+| Fixed summary | Delivers the operator-product story V2 deferred: explicit consuming-project contract, full inbound-message lifecycle, first-class Claude Code integration with project-named session resolution, tri-stage user-visible reply protocol, versioned reports re-publish with Git commit link, multi-format outbound attachments (.md/.html/.pdf/.docx). |
+| Continuation | V3 r2 (planned, same workstream): refine all flavor sections (§18.x) for richer per-channel interaction (interactive buttons, modals, reactions, slash commands, command discovery via `/help`). V3 r3 (planned): polish + re-export V1+V2+V3 + commit + push EVERYTHING. |
 
 The **bi-directional event fan-out** system: Herald ingests events from heterogeneous sources and reliably fans them out to multiple notification channels so every alert reaches the right destination without confusion, and processes inbound replies/commands back from subscribers in a structured, security-validated way.
 
@@ -101,6 +101,11 @@ The **bi-directional event fan-out** system: Herald ingests events from heteroge
 - [§18. Flavors (the implementations)](#18-flavors-the-implementations)
   - [18.1 Common flavor contract](#181-common-flavor-contract)
   - [18.2 Project Herald (`pherald`)](#182-project-herald-pherald)
+    - [18.2.1 Investigation-before-Fixing flow](#1821-investigation-before-fixing-flow)
+    - [18.2.2 Criticality determination](#1822-criticality-determination)
+    - [18.2.3 Type classification (Universal §11.4.16 mapping)](#1823-type-classification-universal-11416-mapping)
+    - [18.2.4 Attachment validation + storage](#1824-attachment-validation-storage)
+    - [18.2.5 Claude Code project-session integration](#1825-claude-code-project-session-integration)
   - [18.3 System Herald (`sherald`)](#183-system-herald-sherald)
   - [18.4 Build Herald (`bherald`)](#184-build-herald-bherald)
   - [18.5 Deploy Herald (`dherald`)](#185-deploy-herald-dherald)
@@ -124,8 +129,17 @@ The **bi-directional event fan-out** system: Herald ingests events from heteroge
 - [§27. Roadmap](#27-roadmap)
   - [27.3 Cost considerations](#273-cost-considerations)
 - [§28. Notes & open questions](#28-notes-open-questions)
-- [§29. Changelog (V1 → V2)](#29-changelog-v1-v2)
+- [§29. Changelog](#29-changelog)
+  - [29.1 V1 → V2 changes (2026-05-19)](#291-v1-v2-changes-2026-05-19)
+  - [29.2 V2 → V3 changes (2026-05-20)](#292-v2-v3-changes-2026-05-20)
 - [§30. V2 self-review log](#30-v2-self-review-log)
+  - [30.6 V3 r1 review log (this revision)](#306-v3-r1-review-log-this-revision)
+- [§31. Project integration contract](#31-project-integration-contract)
+- [§32. Inbound processing pipeline](#32-inbound-processing-pipeline)
+- [§33. LLM / agent dispatch](#33-llm-agent-dispatch)
+- [§34. Reply protocol (queued → processing → result)](#34-reply-protocol-queued-processing-result)
+- [§35. Reports + state-tracking documents (versioned fan-out with Git linkage)](#35-reports-state-tracking-documents-versioned-fan-out-with-git-linkage)
+- [§36. Outbound multi-format attachments (.md + .html + .pdf + .docx)](#36-outbound-multi-format-attachments-md-html-pdf-docx)
 
 ---
 
@@ -2008,6 +2022,130 @@ Every flavor binary MUST:
 
 **Derived workable-item prefix** (per §8.2): if the consuming project hasn't set one, the algorithm runs over the project name (from `package.json`, `go.mod`, `pyproject.toml`, or the git remote name).
 
+#### 18.2.1 Investigation-before-Fixing flow
+
+When a subscriber reports a `Bug:` / `Issue:` / `Implementation:` request, `pherald` MUST first create an **Investigation workable item** (type `investigation`, status `investigating`) before committing to a final bug/task row. This guards against runaway LLM-generated workable items that turn out to be duplicates, out-of-scope, or non-reproducible.
+
+The full sequence (composes §32 inbound pipeline + §33 LLM dispatch + §8.3 lifecycle):
+
+```
+1. Subscriber DMs:  "Bug: telemetry pipe drops every hour"
+                                │
+                                ▼
+2. §32 pipeline accepts + classifies → type=bug, criticality=middle
+                                │
+                                ▼  Reply A (queued)  →  "📨 Received. Queued as #INB-abc12."
+3. pherald allocates HRD-INV-NN as an investigation item:
+       INSERT workable_items (type='investigation', status='investigating',
+                              parent_request=<inbound_msg_id>, criticality='middle')
+       Write row to docs/Issues.md with type='investigation'
+                                │
+                                ▼  Reply B (processing)  →  "⏳ Investigating as HRD-INV-007…"
+4. §33 dispatcher invokes Claude Code with the §33.3 prompt envelope.
+   Claude Code analyzes:
+     - Reproduces locally? (where: <project> session, working dir)
+     - Identifies affected code paths.
+     - Classifies root-cause area.
+     - Estimates effort + dependencies.
+   Returns <<<HERALD-REPLY>>> JSON.
+                                │
+                                ▼
+5. pherald reads outcome:
+   • validated → allocate HRD-NNN final bug item, link parent_investigation=HRD-INV-007,
+                 close investigation as "validated", emit task.opened event,
+                 attach Claude's investigation summary as multi-format bundle (§36).
+   • needs_more_info → keep investigation open, ask subscriber follow-ups in Reply C.
+   • rejected (duplicate/out-of-scope/known) → close investigation with reason,
+                                                no final item, Reply C explains.
+   • cannot reproduce → keep investigation open with "operator-blocked"
+                        status per Universal §11.4.21, page operator-on-call.
+                                │
+                                ▼  Reply C (final)
+                                   "✅ Created HRD-042 (bug, criticality=middle)."
+                                   "   Investigation: HRD-INV-007 (validated)."
+                                   "   Affected: pherald/internal/telemetry.go:142"
+                                   "   Repo: github.com/<org>/<project>/blob/<sha>/Issues.md"
+                                   [+ multi-format attachment bundle per §36]
+```
+
+**Persistence**: every investigation has its own file under `docs/Investigations/<HRD-INV-NNN>.md` carrying the Claude-Code dispatch transcript + classification metadata + the validation decision. Composes with Universal §11.4.55 (Reopens-history) for the case where a previously-rejected investigation is reopened.
+
+#### 18.2.2 Criticality determination
+
+Criticality is set in `inbound_messages.classification` by the §32.6 classifier and stored on the investigation + final workable items. Levels match Universal item-type vocabulary:
+
+| Level | Triggers | SLA replies | SLA investigation |
+|---|---|---|---|
+| `critical` | explicit `critical:` prefix, OR LLM keyword-confidence ≥ 0.85 on outage/data-loss/security-breach terms, OR sender has `oncall` role and message arrives during the configured incident window | Reply A ≤ 30 s, Reply B ≤ 2 min, Reply C ≤ 5 min | < 1 h |
+| `high` | explicit `high:`, OR LLM 0.7–0.85 | A ≤ 1 min, B ≤ 5 min, C ≤ 30 min | < 4 h |
+| `middle` | default for `bug`/`issue`/`task` | A ≤ 5 s, B ≤ 5 min, C ≤ 2 h | < 24 h |
+| `low` | explicit `low:` or `nice-to-have:` | A ≤ 5 s, B ≤ 30 min, C ≤ 24 h | < 1 week |
+
+Operators MAY override mid-flight: `Override: HRD-042 criticality=critical` re-dispatches to LLM with the new SLA and re-pages affected `oncall` tags.
+
+#### 18.2.3 Type classification (Universal §11.4.16 mapping)
+
+Inbound type tokens map to Universal §11.4.16 item types one-to-one. The classifier emits the exact Universal vocabulary so downstream `Issues.md` rows pass §11.4.16-PARITY gate without translation. Full mapping in §32.6.
+
+When an inbound is ambiguous (e.g., `Hey, the build keeps failing` — no prefix), the classifier:
+
+1. Runs the deterministic keyword pass first (verbs like *fails*, *broken*, *crashed* → tentative `bug`).
+2. If confidence < 0.7, escalates to LLM for type-only dispatch (§33.3 prompt envelope, `task=classify-only`).
+3. If LLM confidence still < 0.7, replies `❓ Could you tag this as Bug: / Issue: / Task: / Query: / …?` and stages the message as `needs-classification` (NOT processed further).
+
+#### 18.2.4 Attachment validation + storage
+
+Subscriber-supplied attachments referenced by an inbound investigation/bug/task MUST follow this storage convention (mandatory, per the user's V3 requirement):
+
+```
+<consuming-project-root>/
+└── issues/
+    └── users/
+        └── attachments/
+            └── HRD-042/                      ← WORKABLE_ITEM_ID directory
+                ├── 01_stack-trace.log       ← original filename, prefixed with arrival order
+                ├── 02_screenshot.png
+                └── 03_repro-script.sh
+```
+
+Where `HRD-042` is the canonical workable-item ID. For investigations the directory is named after the investigation ID (`HRD-INV-007/`); on transition to a final workable item, files are moved to the final ID's directory and `HRD-INV-007/` becomes an empty placeholder kept for audit (Universal §11.4.55).
+
+The investigation/bug `Issues.md` row carries a `Attachments:` column referencing the directory. Multi-format attachment generation (§36) does NOT apply to inbound user attachments — they are stored as-is in their original format. (§36 multi-format is for OUTBOUND attachments Herald itself produces.)
+
+**Pre-storage validation pipeline** (per §32.4):
+
+1. Each attachment downloaded into a sandbox directory (configurable; default `/tmp/herald-staging/<random>/`).
+2. ClamAV scan (if configured) — quarantine on hit.
+3. Magic-byte + MIME match — reject mismatched.
+4. Extension allowlist — reject `.exe`, `.dll`, `.so`, `.dylib`, `.bat`, `.cmd`, `.ps1`, `.scr`, `.jar`, `.class` by default.
+5. Per-file size cap (`[attachments].in_max_mib`, default 25 MiB).
+6. Per-message total cap (`[attachments].in_total_max_mib`, default 100 MiB).
+7. If all pass → move to `issues/users/attachments/<WORKABLE_ITEM_ID>/`.
+8. If any fail → record reason in `quarantined_messages`, do NOT move to canonical path, Reply C cites the validation error.
+
+The `attachments_index.md` file inside each WORKABLE_ITEM_ID directory documents:
+
+```markdown
+# Attachments for HRD-042
+
+| Order | Filename | MIME | Size (B) | SHA-256 | Uploaded by | Uploaded at | Notes |
+|---|---|---|---|---|---|---|---|
+| 01 | stack-trace.log | text/plain | 12_348 | <hex> | alice@tgram:42 | 2026-05-20T18:30:12Z | repro context |
+| 02 | screenshot.png | image/png | 348_551 | <hex> | alice@tgram:42 | 2026-05-20T18:30:14Z | UI state |
+| 03 | repro-script.sh | text/x-shellscript | 1_204 | <hex> | alice@tgram:42 | 2026-05-20T18:30:17Z | runs in 10 s |
+```
+
+The index file IS the source of truth for "what's attached to this workable item" — Herald regenerates it on every attachment add/remove (per §11.4.61 freshness rules; if the index drifts from the directory contents, the §32 validator FAILs with `attachment_index_drift`).
+
+#### 18.2.5 Claude Code project-session integration
+
+Per §33.2 the Claude Code session for the consuming project is anchored at `<consuming-project>/.herald/claude-code/sessions/<project_name>.session`. For Project Herald specifically:
+
+- The `[herald].project_name` config value (e.g. `ATMOSphere`) drives the anchor name.
+- Each invocation runs `claude --resume <UUID> --print "<§33.3 envelope>"` with `cwd=<consuming-project-root>`.
+- The session anchor is read-only to Herald; manual deletion resets the session (operators MAY want this when Claude's context degrades — e.g. after a long-running incident produces a noisy session).
+- The flavor binary refuses to start if `[herald].project_name` is empty (Claude Code dispatch is non-optional in V3 r1).
+
 ### 18.3 System Herald (`sherald`)
 
 **Focus**: OS/host/service health and security. Designed for systems-administration teams + on-call rotation.
@@ -2756,7 +2894,9 @@ Order-of-magnitude indicative pricing as of 2026-Q2 (operators MUST re-verify at
 
 ---
 
-## §29. Changelog (V1 → V2)
+## §29. Changelog
+
+### 29.1 V1 → V2 changes (2026-05-19)
 
 **V1 → V2 changes (2026-05-19):**
 
@@ -2785,6 +2925,655 @@ Order-of-magnitude indicative pricing as of 2026-Q2 (operators MUST re-verify at
 - **Per-channel feature matrix** (§11.13) — every channel now has documented V1-minimum, V2-advanced, out-of-scope tiers + delivery-evidence ceiling.
 - **Email deep dive** (§11.9) — DKIM signing (RFC 6376) + RFC 8058 one-click unsubscribe + DSN bounce parsing + suppression list + `doctor email` DNS verification, addressing Gmail/Yahoo 2024 sender requirements.
 - **Removed** the V1 Review section — its findings are folded into the V2 body or marked applied/deferred in §27.2. V1's full Review remains in `specification.V1.md` for traceability.
+
+**V2 r2 → r3 (within V2 lifecycle, all detailed in §30):** added §11.0 Go type contract for the Channel interface, defined `webhook_sources` / `channel_addresses` / `thread_refs` / `quarantined_messages` schemas, pinned Go ≥ 1.22 + license, added §16.1 Data retention & GDPR, §17.1 OpenTelemetry env-var table, §26.5 Operator quickstart, §26.6 Disaster recovery, §27.3 Cost considerations. R3 added the remaining undefined types (`Subscriber`, `CloudEventEnvelope`, `TraceContext`, `Branding`, `ChannelID`, `PreferenceSet`), §9.6 Database migration tooling, §3.4 Worker pools + SIGHUP hot-reload, §5.7 Ingress API URLs, §7.5 AI-agent subscribers, §8.3 Workable-item lifecycle, §11.14 `null://` sandbox channel, §17.4.1 Per-channel SLO budgets, §24.1 Machine-readable API specs, §5.4.1 Outbound idempotency, §3.5 Time/clock abstraction.
+
+### 29.2 V2 → V3 changes (2026-05-20)
+
+- **Created** `specification.V3.md` (this document). `specification.V2.md` marked `Status=superseded` and kept as historical record alongside `specification.V1.md`. V1 + V2 + V3 stack constitutes the spec evolution chain.
+- **NEW top-level sections** (no V2 counterpart):
+  - **§31 Project integration contract** — explicit contract for what a consuming project provides + what Herald provides in return; composition with eight named Universal Constitution mandates (§11.4.12, .15, .16, .21, .32, .44, .55, .59, .60, .61, .65); project-side `config.toml` template; mandatory `test_project_integration.sh` audit gate.
+  - **§32 Inbound processing pipeline** — full lifecycle from `channel.Subscribe` to diary append. 30 s polling cadence mandate (per-channel mechanic table). FIFO ordering per `(tenant, channel_address)` via Postgres advisory locks. Seven Worker stages (validation → safety → anti-spam → classification → dispatch → materialization → reply). `inbound_messages` schema. Anti-spam at four layers (per-sender rate, burst detection, reputation, channel-level frequency).
+  - **§33 LLM/agent dispatch** — Claude Code as first integration. `resolve_session(project_name)` algorithm anchored at `<consuming-project>/.herald/claude-code/sessions/<project>.session`. Structured `<<<HERALD-DISPATCH-v1>>>` request envelope. JSON `<<<HERALD-REPLY>>>` response schema (outcome enum, summary, details, affected_paths, reproduction_steps, estimated_effort, workable_item_proposed, follow_up_questions). Pluggable `Dispatcher` interface — V3 r1 ships only `claude-code`; spec hooks for OpenCode/Aider/Gemini/Cursor/Managed Agents.
+  - **§34 Reply protocol** — three mandatory replies per inbound message: (A) queued ack with quoted original ≤ 5 s, (B) processing-started ≤ 5 s of dispatch (edit-in-place where channel supports), (C) final result within criticality SLA. Failure replies carry precise reason + diagnostics. Per-channel quote/edit matrix for all 13 channels. Operator-tunable verbosity (`minimal | normal | verbose`).
+  - **§35 Versioned reports + Git linkage** — report-aware event types (`.report.created/.updated/.archived`) with `update_key` for correlation. Per-channel update mechanic (edit-in-place vs re-post). Git commit SHA + URL + diff URL embedded in fan-out. `report_publications` schema with `(content_sha256, git_commit_sha)` dedup. Uncommitted-changes warning.
+  - **§36 Outbound multi-format attachments** — every Herald-produced attachment ships in four formats (`.md` + `.html` + `.pdf` + `.docx`) so subscribers pick their preferred. Pandoc generation pipeline with `--reproducible` flag. Cache at `<diary_root>/.herald/format-cache/<sha256>/`. Per-channel delivery rules + per-subscriber `PreferenceSet.attachment_formats` overrides. Bundle size cap (default 50 MiB).
+- **Expanded §18.2 Project Herald** with the full **Investigation-before-Fixing flow** (§18.2.1): every bug/issue/implementation request first creates a `HRD-INV-NNN` investigation item; LLM (§33) analyzes reproducibility + affected paths + effort; only validated investigations promote to final workable items. Adds §18.2.2 criticality determination table (with explicit SLA windows per level), §18.2.3 Universal §11.4.16 type-classification mapping, §18.2.4 attachment storage at `issues/users/attachments/<WORKABLE_ITEM_ID>/` with `attachments_index.md` source-of-truth file, §18.2.5 Claude Code project-session integration (anchor file at `.herald/claude-code/sessions/<project>.session`).
+- **`§29` retitled** "Changelog" (was "Changelog (V1 → V2)") so V1→V2 / V2→V3 / future changelogs accumulate under one logical section.
+
+V2 sections that V3 does NOT change (still authoritative — V3 just extends): §1–§28 architectural baseline, §11.0 channel contract types, all flavor sections §18.3–§18.11 (refinement scheduled for V3 r2 per the metadata `Continuation` row).
+
+---
+
+## §31. Project integration contract
+
+> **First-version focus.** §31 makes Herald a load-bearing piece of any consuming project that already follows the Helix Universal Constitution. The contract is symmetric: the consuming project gets a fully-instrumented event-to-channel pipeline; Herald gets a discoverable place to live and the constitution's rules to operate under.
+
+### 31.1 Where Herald lives in a consuming project
+
+Herald is consumed as a Git submodule. Conventional path:
+
+```
+<consuming-project>/
+├── constitution/                     # Helix Universal Constitution (also a submodule)
+├── herald/                           # this repo, as submodule
+│   ├── pherald/cmd/pherald/main.go   # built per §21
+│   ├── sherald/cmd/sherald/main.go
+│   └── …
+├── containers/                       # docker/podman compose (also a submodule)
+└── docs/
+    ├── Issues.md
+    ├── Issues_Summary.md
+    ├── Fixed.md
+    ├── Fixed_Summary.md
+    ├── CONTINUATION.md
+    ├── Status.md
+    └── herald/
+        └── diary/main.{md,html,pdf,docx}
+```
+
+The consuming project's CI invokes `<flavor>herald send` from build steps and runs `<flavor>herald serve` as a daemon (Docker Compose / Kubernetes). Subscribers DM the configured bots; Herald processes those inbound messages, opens workable items, and replies in-thread.
+
+### 31.2 Mandatory integration points
+
+A consuming project that adopts Herald MUST:
+
+1. **Add Herald as a Git submodule** at `<consuming-project>/herald/`. Run `install_upstreams.sh` per Universal §11.4.36.
+2. **Register Herald in the `Owned-submodule set`** of the project's `Constitution.md` extension (per Universal §4 / §11.4.28).
+3. **Pin the Herald version** via submodule SHA. Bumps follow Universal §11.4.32 (post-pull validation).
+4. **Provide credentials** via `.env` + shell-exported variables (per §3.3). `.env` is git-ignored; `.env.example` is committed and templates every variable Herald needs.
+5. **Wire the channel addresses** by populating `channel_addresses` (per §6) with the project's bot tokens / webhook URLs. Tags follow project conventions — common defaults: `prod`, `staging`, `oncall`, `audit`, `compliance`.
+6. **Mount the diary path** so `<consuming-project>/docs/herald/diary/main.{md,html,pdf,docx}` is writable by Herald (per §19).
+7. **Honor the spec-change rule** — any change to `<consuming-project>/herald/docs/specs/` triggers comprehensive planning per Universal §11.4 + Herald Constitution §106 (read order documented in `CLAUDE.md`).
+8. **Add Herald CI hooks** — at minimum, post-commit hook calling `<flavor>herald send --type digital.vasic.herald.ci.commit.pushed …` and CI-build webhook configured per §5.5.
+
+### 31.3 Event-type registration
+
+The consuming project MAY introduce its own event subtree under `digital.vasic.herald.<project_subtree>.*` and register the schema in the AsyncAPI spec (§24.1). The schema MUST be committed in `<consuming-project>/herald/docs/api/asyncapi.<project>.yaml`. Herald validates inbound events against the schema and rejects malformed payloads with HTTP 422 + a per-channel error reply.
+
+### 31.4 Composition with existing constitution mandates
+
+| Universal mandate | Herald V3 contribution |
+|---|---|
+| §11.4.12 Auto-generated docs sync | Herald emits events on every Issues / Issues_Summary / Fixed / Fixed_Summary / Status / Status_Summary change so subscribers get real-time visibility. |
+| §11.4.15 Item-status tracking | Status transitions trigger `digital.vasic.herald.project.task.*` events. |
+| §11.4.16 Item-type tracking | Type classifier (§32.4) maps inbound `Bug:`/`Issue:`/`Task:`/`Implementation:` commands to the correct item type. |
+| §11.4.21 Operator-blocked status | When a workable item enters `operator-blocked`, Herald fan-outs to the configured `oncall` tag with the unblock-question payload. |
+| §11.4.32 Post-Constitution-Pull validation | Herald's submodule bumps are validated against the constitution; Herald's gate (`tests/test_constitution_inheritance.sh`) is part of that validation. |
+| §11.4.44 Document Revision Header | Herald respects §11.4.61 superseding format (table) when reading project docs. |
+| §11.4.55 Reopens-history | Reopen flow (§8.3) writes to `docs/Reopens/<HRD-NNN>.md`. |
+| §11.4.59 README always-sync | Herald reports README out-of-sync as an event (`digital.vasic.herald.compliance.doc.stale`). |
+| §11.4.60 Documentation composite covenant | Herald's diary + multi-format exports per §36 satisfy the composite gate. |
+| §11.4.61 Markdown metadata + ToC | Herald's diary follows the canonical metadata table; every diary entry carries Revision + Last modified per §19. |
+| §11.4.65 Universal Markdown export | §36 multi-format pipeline is the implementation of this mandate at attachment-time. |
+
+### 31.5 Project-side configuration template
+
+```toml
+# <consuming-project>/herald/config.toml — committed (no secrets)
+[herald]
+flavor       = "pherald"
+project_name = "ATMOSphere"                    # used for Claude Code session resolution (§33.2)
+tenant_id    = "00000000-0000-0000-0000-000000000001"
+diary_root   = ""                              # blank → parent-walk discovery (§19.1)
+admin_port   = 24090
+http_port    = 24091
+
+[ingest]
+poll_interval_seconds = 30                     # §32.2 — mandatory 30s cadence
+fifo_strict           = true                   # §32.3 strict FIFO
+
+[security]
+spam_max_per_minute_per_sender = 10           # §32.5 anti-spam thresholds
+spam_max_per_hour_per_sender   = 100
+quarantine_unknown_sender      = true
+
+[llm]
+default_agent      = "claude-code"             # §33.1 default dispatch target
+claude_code_binary = "claude"                  # path / name on PATH
+session_strategy   = "project-cwd"             # §33.2 strategy enum
+
+[attachments]
+out_format_set     = ["md", "html", "pdf", "docx"]  # §36 multi-format default
+in_storage_root    = "issues/users/attachments"     # §18.2 inbound attachment path
+in_max_mib         = 25
+in_total_max_mib   = 100
+```
+
+### 31.6 Project audit gate
+
+`<consuming-project>/herald/tests/test_project_integration.sh` (planned) asserts:
+
+- `constitution/` submodule discoverable via parent-walk.
+- `containers/` submodule present and version-pinned.
+- `.env.example` committed; `.env` git-ignored.
+- `channel_addresses` table non-empty for the project's default tenant.
+- Project's `Owned-submodule set` lists `herald/` and `containers/`.
+- Diary path exists and is writable.
+- `pherald doctor` exits zero.
+
+Paired §1.1 mutation: rename `.env` to track-ed — gate FAILs.
+
+---
+
+## §32. Inbound processing pipeline
+
+### 32.1 Pipeline overview
+
+Every message a subscriber sends back into Herald (DM reply, channel mention, email reply with Herald's `Message-ID` in `In-Reply-To`, ntfy poll) enters the **inbound queue** for sequential processing by Workers. The pipeline is FIFO per tenant per channel-address, with explicit anti-spam, multi-stage validation, and three user-visible reply checkpoints (§34).
+
+```
+┌──────────────────────────────────────────────────────────────────────────┐
+│  channel adapter Subscribe() loop                                        │
+│     ↓                                                                    │
+│  InboundEvent → ingress dedup (§4.3) → enqueue `inbound_messages` table  │
+│     ↓                                                                    │
+│  ┌────────────────────────────────────────────────────────────────────┐  │
+│  │  Inbound Worker (River queue, 30s tick OR LISTEN/NOTIFY)           │  │
+│  │  pulls 1 item at a time per tenant per channel (FIFO):             │  │
+│  │                                                                    │  │
+│  │  Stage 1: Validation (§32.3) → reply: queued ack (quote orig)      │  │
+│  │  Stage 2: Safety/anti-malware (§32.4)                              │  │
+│  │  Stage 3: Anti-spam check (§32.5)                                  │  │
+│  │  Stage 4: Classification (§32.6) → type + criticality              │  │
+│  │  Stage 5: Dispatch to LLM/agent (§33) → reply: processing-started  │  │
+│  │  Stage 6: Materialize side-effects (open workable item, …)         │  │
+│  │  Stage 7: Reply with final result (§34) → workable item ID, links  │  │
+│  └────────────────────────────────────────────────────────────────────┘  │
+│     ↓                                                                    │
+│  diary append (§19); OTel span closed                                    │
+└──────────────────────────────────────────────────────────────────────────┘
+```
+
+### 32.2 Polling cadence (30 s mandate)
+
+Every flavor's Subscribe loop MUST check upstream for new messages **at least every 30 seconds**. Upstream-specific implementation:
+
+| Channel | Mechanism | Effective check rate |
+|---|---|---|
+| Telegram | Bot API `getUpdates` long-poll (timeout 25 s) | continuous, but a 30 s safety-net timer also fires `getUpdates` if the long-poll thread stalled |
+| Slack | Socket Mode (WebSocket) OR Events API webhook | continuous on Socket Mode; 30 s timer as keepalive ping |
+| Discord | Gateway WebSocket | continuous; 30 s timer asserts heartbeat OK |
+| MS Teams | Bot Framework activity webhook | webhook-driven; 30 s timer asserts subscription validity |
+| Lark | Event subscription webhook | same |
+| WhatsApp Cloud | Webhook | same |
+| Viber | Webhook | same |
+| Email | IMAP IDLE preferred; fall back to 30 s IMAP poll | IDLE = continuous; non-IDLE = 30 s |
+| ntfy | WebSocket/SSE | continuous |
+| Gotify | WebSocket | continuous |
+| Max | Bot API poll | 30 s |
+
+Configurable via `[ingest].poll_interval_seconds` (default 30); operators MAY tighten to 10 s for high-volume tenants but MUST NOT loosen beyond 60 s without operator-explicit override (`--allow-slow-poll`).
+
+### 32.3 FIFO order + Worker selection
+
+Inbound items are queued in `inbound_messages` with `enqueued_at` timestamp + UUIDv7 id. The River queue is partitioned by `(tenant_id, channel_address_id)` so:
+
+- Multiple senders on the same channel are processed in strict arrival order.
+- Different channels for the same tenant run in parallel.
+- Different tenants run in parallel.
+
+Schema:
+
+```sql
+CREATE TABLE inbound_messages (
+    id                  UUID PRIMARY KEY DEFAULT uuidv7(),
+    tenant_id           UUID NOT NULL,
+    channel             TEXT NOT NULL,
+    channel_address_id  UUID NOT NULL REFERENCES channel_addresses(id),
+    sender_channel_user_id TEXT NOT NULL,
+    received_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
+    cloudevent_jsonb    JSONB NOT NULL,
+    attachments_jsonb   JSONB NOT NULL DEFAULT '[]'::jsonb,
+    stage               TEXT NOT NULL DEFAULT 'queued',     -- queued|validating|safety|anti_spam|classifying|dispatched|completed|failed
+    stage_started_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+    classification      JSONB,                              -- type+criticality+confidence
+    workable_item_id    TEXT,                               -- after successful materialization
+    last_reply_at       TIMESTAMPTZ,
+    failure_reason      TEXT,
+    failure_details     JSONB
+);
+CREATE INDEX inbound_fifo_idx ON inbound_messages (tenant_id, channel_address_id, received_at)
+    WHERE stage NOT IN ('completed', 'failed');
+ALTER TABLE inbound_messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE inbound_messages FORCE ROW LEVEL SECURITY;
+CREATE POLICY inb_isolation ON inbound_messages
+    USING (tenant_id = current_setting('app.tenant_id')::uuid)
+    WITH CHECK (tenant_id = current_setting('app.tenant_id')::uuid);
+```
+
+The Worker holds a per-`(tenant_id, channel_address_id)` advisory lock for the duration of one item's pipeline so strict FIFO is preserved across the seven stages.
+
+### 32.4 Stages 1–2: validation + safety
+
+**Stage 1: Validation.** Asserts:
+
+- CloudEvents `id` is unique within idempotency window (§4.3 hit/miss).
+- `sender_channel_user_id` matches an entry in `subscriber_aliases` OR is allowlisted as a verified webhook source.
+- Message body is well-formed UTF-8 ≤ 8 KiB per command + ≤ 256 KiB total.
+- Attachments declared in `attachments_jsonb` MUST be retrievable from the source channel and MUST be ≤ `[attachments].in_max_mib` each (default 25 MiB) and ≤ `[attachments].in_total_max_mib` total (default 100 MiB).
+
+Failure → reply with precise reason (§34.4), stage = `failed`, NO further processing.
+
+**Stage 2: Safety / anti-malware.** Each attachment is scanned:
+
+- ClamAV (when `commons_security.clamav.enabled=true` and the daemon is reachable) — definitive engine.
+- Magic-byte type check vs declared MIME (rejects MIME spoofing).
+- Filename allowlist by extension (default: `.txt .md .json .yaml .yml .csv .pdf .docx .html .png .jpg .jpeg .webp .gif .log .zip .tar.gz`).
+- Optional: per-tenant additional scanner (configurable hook command receives the file path, returns 0 = clean, non-zero = quarantine).
+
+Inbound text body is scanned for:
+
+- URL allowlist / blocklist per tenant.
+- Prompt-injection markers (heuristics — short list of known patterns: `Ignore previous instructions`, `BEGIN SYSTEM`, `<|im_start|>`, etc.). Hit → quarantine, NOT auto-reject (operator review).
+
+Failure → reply with reason, stage = `failed`, attachment quarantined to `quarantined_messages.attachments_jsonb`.
+
+### 32.5 Stage 3: anti-spam
+
+Spam prevention is layered:
+
+1. **Per-sender rate limits** (configurable per tenant via `[security].spam_max_*`):
+   - `spam_max_per_minute_per_sender` (default 10)
+   - `spam_max_per_hour_per_sender` (default 100)
+   - `spam_max_per_day_per_sender` (default 500)
+   Exceeded → message accepted, but reply downgraded to `429 Too Many Requests` with the cooldown window.
+2. **Burst detection** — a sender that posts > N similar messages (Levenshtein distance < 5%) within window T is throttled; if pattern continues, sender enters quarantine.
+3. **Sender reputation** — per-`(tenant, sender_channel_user_id)` score in Redis (`t:<id>:rep:<sender>` integer), incremented on successful interaction, decremented on validation/safety failures. Negative score → mandatory operator review before processing.
+4. **Channel-level frequency** — if `channel_addresses[address_id]` receives > rate_floor messages/minute from distinct senders, channel-wide soft rate-limit kicks in.
+5. **Known-bot allowlist** — agent tokens (§7.5) bypass per-minute limits but obey per-hour caps.
+
+All spam decisions logged to `spam_audit` (Redis stream, 7-day retention) for tuning.
+
+### 32.6 Stage 4: classification
+
+The classifier (running as a Watermill handler in `commons_messaging`) determines:
+
+**Item type** (per Universal §11.4.16 + Project Herald subscriber-command vocabulary):
+
+| Inbound trigger | Type | Maps to |
+|---|---|---|
+| `Bug:` / `Issue:` / `Issue: <prose>` | `bug` | `docs/Issues.md` row + `digital.vasic.herald.project.task.opened` |
+| `Task:` | `task` | same docs flow, different type column |
+| `Implementation:` / `Implement:` / `Feature:` | `implementation` | same |
+| `Query:` / `Question:` / `Q:` / `?` | `query` | LLM-only path (no workable item — research/info request) |
+| `Request:` / `Req:` | `request` | LLM-routed; outcome may produce a workable item if approved |
+| `Investigation:` / `Investigate:` | `investigation` | intermediate state (§32.7) |
+| `Status:` | `status_request` | reply with current state from `docs/Status.md` |
+| `Continue:` | `continuation_request` | reply with `docs/CONTINUATION.md` pointer |
+| `Done:` / `Resolve:` (operator role only) | `closure` | close workable item, migrate Issues→Fixed |
+| `Reopen:` (operator role only) | `reopen` | per Universal §11.4.55 reopen flow |
+| `Ack:` / `Silence:` / `Snooze:` | `ops_command` | per-flavor ops handlers |
+| `Spec:` | `spec_change_request` | gated by §23 spec-change rule |
+
+**Criticality** (independent of type; required for `bug`, `issue`, `task`, `implementation`, `investigation`):
+
+| Level | Trigger | SLA |
+|---|---|---|
+| `critical` | explicit `critical:` prefix in subject line, OR LLM classifier confidence ≥ 0.85 on production-outage keywords | acknowledge within 5 min; first investigation within 1 h |
+| `high` | explicit `high:` OR LLM 0.7–0.85 | within 30 min; investigation within 4 h |
+| `middle` | default | within 2 h; investigation within 24 h |
+| `low` | explicit `low:` or `nice-to-have:` | within 24 h; investigation within 1 week |
+
+The classifier itself is **deterministic-first** (keyword/regex), falling back to LLM (§33) only when the deterministic step returns ambiguous. Operators MAY override classifications via `Override: HRD-NNN type=task criticality=high`.
+
+### 32.7 Stage 5: Investigation-before-Fixing intermediate state
+
+When a `bug` / `issue` / `implementation` arrives, Herald first creates an **Investigation workable item** (type `investigation`, status `investigating`), NOT the final bug/task row. The investigation:
+
+1. Stores in `workable_items` table with type `investigation` and `parent_request` referencing the inbound message id.
+2. Dispatches to the LLM (§33) for **reproducibility analysis** — can the LLM identify the affected code path? Reproduce locally? Estimate effort?
+3. Stores LLM findings as a comment in `docs/Investigations/<HRD-NNN>.md`.
+
+Once investigation concludes:
+
+- **Validated** → Herald creates the *final* `bug` / `task` / `implementation` workable item, atomically migrates the investigation row to "investigation completed" status, links the new item via `parent_investigation`.
+- **Cannot reproduce / not actionable** → investigation row stays; replies with reason + asks for more info; subscriber's follow-up reply re-runs the investigation.
+- **Rejected (out of scope / duplicate / known)** → investigation closed with that reason; no final item created.
+
+The investigation gate is a strong guard against runaway LLM-generated workable items.
+
+### 32.8 Spam audit + observability
+
+Per §17.2 the inbound pipeline emits:
+
+- `herald_inbound_received_total{tenant,channel,outcome}` — `outcome` ∈ `enqueued | rejected_validation | quarantined_safety | rate_limited | classified | dispatched | completed | failed`.
+- `herald_inbound_stage_duration_seconds{stage}` histogram.
+- `herald_inbound_classification{type,criticality,confidence_bucket}` counter.
+- `herald_spam_block_total{tenant,reason}` counter.
+- Span name `herald.inbound.process` with child spans per stage.
+
+---
+
+## §33. LLM / agent dispatch
+
+### 33.1 First target: Claude Code
+
+V3's first LLM dispatch target is **Claude Code** (the Anthropic CLI). The dispatcher lives in `commons_messaging/dispatch/claude_code/`.
+
+Design constraints:
+
+- Claude Code sessions are scoped to a **working directory**, not a freestanding "name". V3 introduces a **project-named session resolution algorithm** (§33.2) that maps the consuming project's name to a stable working-directory anchor.
+- The CLI is invoked in **non-interactive batch mode** for each request: `claude --resume <session> --print "<prompt>"`.
+- Background invocation: Herald spawns the CLI in a separate process group with timeout (default 5 min); stdout is collected; non-zero exit becomes a `failed` stage with reason recorded.
+- Concurrency: per-project session is single-writer (one in-flight Claude Code invocation at a time). Multiple inbound requests for the same project queue behind each other (River job priority preserves arrival order).
+
+### 33.2 Session resolution algorithm
+
+For project named `ATMOSphere`:
+
+```
+function resolve_session(project_name) -> session_id:
+    1. compute working_dir = config[herald.session_workdir]
+       (default: <consuming-project-root> discovered via parent-walk)
+    2. compute session_anchor_path = working_dir/.herald/claude-code/sessions/<project_name>.session
+    3. if session_anchor_path exists AND contains a session UUID
+         AND `claude --resume <uuid> --print "ping"` returns 0:
+          → return that UUID
+    4. else:
+          spawn `claude --print "Initializing Herald session for project: <project_name>"` 
+          in working_dir
+          capture the new session UUID emitted by Claude Code stdout
+          write UUID to session_anchor_path
+          → return new UUID
+```
+
+The `.herald/claude-code/sessions/` directory is `.gitignore`'d. Session anchors persist across Herald restarts. Operators can manually reset by deleting the anchor file (next dispatch will create a fresh session).
+
+### 33.3 Request envelope
+
+Every dispatch sends a structured prompt:
+
+```
+<<<HERALD-DISPATCH-v1>>>
+Project:        <project_name>
+Inbound ID:     <UUIDv7>
+Sender:         <channel>:<subscriber.handle> (verified: yes|no, roles: [operator|reader|…])
+Channel:        <ChannelID>
+Received at:    <RFC 3339>
+Classification: type=<type> criticality=<level> confidence=<0.0-1.0>
+Conversation:   <thread-of-quoted-replies, full chain bottom-to-top>
+Attachments:    [<name>:<mime>:<size_bytes>, …]
+
+User message:
+
+<verbatim user text>
+
+────────────────────────────────────────────────────────────
+HERALD TASK (run in background along with mainstream work):
+
+<task verb derived from classification>:
+- For `bug`/`issue`/`investigation`: reproduce + identify affected code paths +
+  classify root-cause area + propose validation steps.
+- For `query`/`question`: research + answer; cite project docs if relevant;
+  short answers preferred (subscribers see this directly).
+- For `request`/`implementation`: scope effort + propose approach + flag prerequisites
+  + estimate workable-item dependencies.
+- For `spec_change_request`: invoke Herald Constitution §106 spec-change rule.
+
+Reply with a JSON object on a single line, prefixed with `<<<HERALD-REPLY>>>`:
+
+{
+  "outcome": "validated"|"rejected"|"needs_more_info"|"answered",
+  "summary": "<short summary for the subscriber>",
+  "details": "<longer markdown body for the diary>",
+  "affected_paths": ["<file>:<line>", …],          // optional
+  "reproduction_steps": ["…", …],                    // for bug/investigation
+  "estimated_effort": "S|M|L|XL",                    // for request/implementation
+  "workable_item_proposed": {                        // optional
+    "type": "bug|task|implementation|investigation",
+    "criticality": "critical|high|middle|low",
+    "title": "…",
+    "labels": ["…"]
+  },
+  "follow_up_questions": ["…"]                       // when outcome=needs_more_info
+}
+
+DO NOT modify project files unless the subscriber explicitly asked you to.
+DO NOT commit. DO NOT push.
+<<<END-HERALD-DISPATCH>>>
+```
+
+Herald parses the `<<<HERALD-REPLY>>>` JSON line out of Claude Code's stdout, validates against the response schema, and proceeds to Stage 6 materialization.
+
+### 33.4 Materialization (Stage 6)
+
+Based on the `outcome` and `workable_item_proposed`:
+
+- `validated` + workable_item_proposed → allocate next `HRD-NNN`, write to `docs/Issues.md` + emit `digital.vasic.herald.project.task.opened` (per §8.3 lifecycle) + link investigation parent (§32.7).
+- `answered` (query/question) → no workable item; the reply IS the answer.
+- `needs_more_info` → no workable item; reply asks subscriber for clarifications listed in `follow_up_questions`.
+- `rejected` → no workable item; reply states rejection reason.
+
+### 33.5 Other LLM/agent targets (spec hooks, V3+ implementation)
+
+The dispatcher interface is provider-agnostic:
+
+```go
+type Dispatcher interface {
+    Name() string
+    Capabilities() DispatcherCapabilities
+    Dispatch(ctx context.Context, req DispatchRequest) (DispatchResponse, error)
+}
+```
+
+V3 ships only `claude-code` dispatcher. Spec hooks reserved for:
+
+- `opencode` — same CLI pattern.
+- `aider` — file-modifying dispatcher (extra safety gates required; not enabled by default).
+- `gemini-cli` — when GA.
+- `cursor-cli` — pending product availability.
+- `agentic-claude-api` — direct Anthropic API (Managed Agents) for hosted deployments where a CLI isn't desirable.
+
+Operators select per-tenant via `[llm].default_agent`; per-classification-type override via `[llm.routing]` table.
+
+---
+
+## §34. Reply protocol (queued → processing → result)
+
+Every inbound message MUST receive **three replies** unless the inbound itself was rejected at Stage 1 (in which case one reply explaining the rejection).
+
+### 34.1 Reply A — Queued ack
+
+Within ≤ 5 s of receipt:
+
+- Quote the original message (per-channel thread mechanic per §12 `ConversationRef`).
+- Body: `📨 Received. Queued as #INB-<short-id>. I'll process this momentarily.`
+- Carries `Herald-Reply-Stage: queued` extension header for adapters that support custom headers.
+
+### 34.2 Reply B — Processing started
+
+Within ≤ 5 s of Stage 5 dispatch:
+
+- Quote the original (same thread).
+- Body: `⏳ Processing as <classification.type> (priority: <criticality>). Investigating…`
+- Edit-in-place where the channel supports it (Telegram `editMessageText`, Slack `chat.update`, Discord webhook edit); otherwise post a new message in the thread.
+
+### 34.3 Reply C — Final result
+
+Within the SLA window for the classified criticality (§32.6):
+
+- Quote the original (same thread).
+- Body varies by outcome:
+  - **Validated + workable item created**:  
+    `✅ Created HRD-042 (bug, criticality=high). Investigation summary attached. Link: <Issues.md row anchor>. Repo: <git URL>`  
+    With multi-format attachment bundle per §36 containing the investigation summary.
+  - **Answered (query)**:  
+    `💡 <answer>`  
+    With cited documents attached as multi-format if relevant.
+  - **Needs more info**:  
+    `❓ Need more detail: 1) <question>  2) <question>`
+  - **Rejected**:  
+    `🚫 <reason>. <suggested next step>.`
+
+### 34.4 Failure replies
+
+If validation, safety, anti-spam, or classification fails:
+
+- Quote the original message.
+- Body: `❌ <stage>: <precise reason>. Details: <link-to-diary-entry-with-stack-trace>.`
+- Body MUST contain the exact rejection cause (not "internal error" — anti-bluff per Universal §11.4).
+- Stage = `failed` in `inbound_messages`; original receipt is preserved.
+
+Examples:
+
+- `❌ validation: attachment 'malware.exe' exceeds size limit (30 MiB > 25 MiB max). Details: …`
+- `❌ safety: attachment 'invoice.pdf' triggered ClamAV signature 'EICAR-Test-File'. Quarantined. Details: …`
+- `❌ anti-spam: rate limit (12 msg/min) exceeded. Cooldown until <RFC 3339 UTC>. Details: …`
+- `❌ classification: ambiguous type. Suggested prefixes: 'Bug:', 'Query:', 'Request:'. Details: …`
+
+### 34.5 Per-channel quoting/edit-in-place matrix
+
+| Channel | Quote original | Edit-in-place (B → C) | Notes |
+|---|---|---|---|
+| Telegram | `reply_to_message_id` | `editMessageText` ✓ | Reply B edited into Reply C if same message id |
+| Slack | `thread_ts` (parent ts) | `chat.update` ✓ | edits the queued ack |
+| Discord | `?thread_id=` + `webhook?wait=true` | webhook edit ✓ | requires bot token for non-webhook edit |
+| MS Teams | message reference | Adaptive Card refresh ✗ (per-message replacement only) | post new message in conversation |
+| Lark | reply API | message edit ✓ | |
+| WhatsApp Cloud | `context.message_id` | not supported | post new message |
+| Viber | `tracking_data` thread | not supported | post new message |
+| Email | `In-Reply-To` + `References` headers | not supported | post new message in thread |
+| ntfy | not natively threaded | not supported | new message with `X-Tag: same-as-original` |
+| Diary | parent-id anchor | append + cross-link | |
+
+When edit-in-place is unavailable, Herald posts a NEW message and Reply B+C are distinct.
+
+### 34.6 Configurable verbosity
+
+Operators MAY tune reply verbosity per tenant via `[replies].verbosity = minimal | normal | verbose`:
+
+- `minimal` — only Reply A (queued ack) + Reply C (final result); no Reply B.
+- `normal` (default) — A + B + C as described.
+- `verbose` — A + B + C + per-stage progress (Stage 3 done, Stage 4 done, …).
+
+---
+
+## §35. Reports + state-tracking documents (versioned fan-out with Git linkage)
+
+Some events carry **reports that change over time** — security-scan summaries, build-status digests, weekly project digests, compliance reports. When a report's source document changes, Herald MUST re-publish to subscribers with the updated file attached + a link to the Git commit that introduced the change.
+
+### 35.1 Report-aware event types
+
+CloudEvents types under `digital.vasic.herald.report.*` are special:
+
+- `.report.updated` — content changed since last publish.
+- `.report.created` — first publish.
+- `.report.archived` — no longer being maintained.
+
+Each carries an `update_key` extension attribute (stable identifier for the report) so Herald can correlate updates with previous deliveries.
+
+### 35.2 Update mechanic per channel
+
+When a `.report.updated` event arrives:
+
+| Channel | Mechanism |
+|---|---|
+| Telegram | Send new message in the channel with the updated file attached + caption `Updated: <git short-sha> — <commit message subject>`. If channel supports `editMessageMedia` for original messages, edit in place; otherwise re-post. |
+| Slack | Edit original message via `chat.update` (using `channel_msg_id` from `report_publications` table); attach new file via `files.upload` and reference. |
+| Discord | Edit webhook message; attach updated file. |
+| Teams | Post new Adaptive Card with `previousVersionRef`; old card is left in place (no edit-in-place reliable). |
+| Email | New message with `In-Reply-To: <previous-Message-ID>` + `References` chain; full updated attachment bundle. |
+| Diary | Append new entry referencing previous; the report file at `docs/herald/reports/<update_key>/main.md` (and siblings) is the source of truth (overwritten on each update). |
+
+### 35.3 Git linkage
+
+If the report's source `.md` is committed in the consuming project's repo, Herald includes:
+
+- `git_commit_sha` — short SHA from `git log -1 --pretty=format:%h <file>` at publish time.
+- `git_commit_url` — derived from `git remote get-url origin` + the commit SHA, formatted for the host (GitHub blob URL, GitLab blob URL, GitFlic/GitVerse equivalents).
+- `git_diff_url` — URL to the diff against the previous publish's commit SHA.
+
+If the source `.md` is NOT committed yet (working-tree only), Herald posts with a warning: `⚠️ This report has uncommitted changes — link will become live once the change is committed.`
+
+### 35.4 Persistence
+
+```sql
+CREATE TABLE report_publications (
+    id                  UUID PRIMARY KEY DEFAULT uuidv7(),
+    tenant_id           UUID NOT NULL,
+    update_key          TEXT NOT NULL,                   -- stable identifier for the report
+    channel             TEXT NOT NULL,
+    channel_address_id  UUID NOT NULL REFERENCES channel_addresses(id),
+    channel_msg_id      TEXT,                            -- so we can edit-in-place on next update
+    content_sha256      BYTEA NOT NULL,                  -- of the source .md
+    git_commit_sha      TEXT,                            -- nullable for uncommitted
+    published_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (tenant_id, update_key, channel, channel_address_id)
+);
+ALTER TABLE report_publications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE report_publications FORCE ROW LEVEL SECURITY;
+CREATE POLICY rp_isolation ON report_publications
+    USING (tenant_id = current_setting('app.tenant_id')::uuid)
+    WITH CHECK (tenant_id = current_setting('app.tenant_id')::uuid);
+```
+
+The `(content_sha256, git_commit_sha)` pair is the dedup key: if a re-publish event arrives but the source `.md` is byte-identical AND the commit SHA is the same, Herald skips the publish (logs `digital.vasic.herald.report.noop`).
+
+---
+
+## §36. Outbound multi-format attachments (.md + .html + .pdf + .docx)
+
+Every report, technical-documentation page, or research material that Herald sends as a subscriber-visible attachment MUST be attached in **four formats** so subscribers can pick the one they prefer for their use case.
+
+### 36.1 Format set
+
+Default `[attachments].out_format_set = ["md", "html", "pdf", "docx"]`. Per-channel overrides allowed via channel-address query param `format_set=md,pdf` (e.g. for bandwidth-constrained ntfy push).
+
+### 36.2 Generation pipeline
+
+For each source `.md` file Herald wants to attach:
+
+```
+source.md   (canonical, source of truth)
+    ↓
+pandoc -f gfm -t html5 -s -o source.html
+    ↓
+pandoc -f gfm --pdf-engine=weasyprint -o source.pdf
+    ↓
+pandoc -f gfm -o source.docx
+```
+
+`docx` generation requires Pandoc (already a dependency for HTML/PDF per §11.4.65); no extra runtime needed. WeasyPrint stays the PDF engine.
+
+### 36.3 Pre-generation caching
+
+Generation is deterministic — given the same source `.md`, the outputs are byte-stable (modulo PDF embedded timestamps, mitigated via Pandoc `--reproducible` flag in V3 r1).
+
+Cache at `<diary_root>/.herald/format-cache/<sha256-of-md>/{source.md, source.html, source.pdf, source.docx, manifest.json}`. Cache hit avoids regeneration.
+
+### 36.4 Per-channel delivery rules
+
+| Channel | Delivery |
+|---|---|
+| Telegram | Four `sendDocument` calls in sequence (Telegram's bot API has no native "file group"); the order is `.md`, `.html`, `.pdf`, `.docx` so the most-readable preview surfaces first. |
+| Slack | Single `files.upload_v2` with all four files referenced in one message; preview thumbnail = PDF. |
+| Discord | Multiple file attachments on one webhook message (up to 10 per message; we use 4); embed shows PDF preview. |
+| MS Teams | Adaptive Card with four `Action.OpenUrl` links to per-format URLs in a Herald-hosted blob (channel doesn't support multi-file attachment natively). |
+| Lark | Multi-file upload in one message. |
+| WhatsApp Cloud | One message per file (WA Business doesn't support multi-attachment messages). |
+| Viber | Carousel of links. |
+| Email | One MIME multipart message with four `application/...` parts, each `Content-Disposition: attachment` and `filename="report.<ext>"`. |
+| ntfy | Posts the `.md` inline; the other three via `X-Attach` URLs to Herald-hosted blobs. |
+| Gotify | Same as ntfy. |
+| Webhook (outbound) | CloudEvents payload with four `data_base64` entries OR four URLs depending on `attachment_mode` query param. |
+| Diary | All four written to `docs/herald/diary/attachments/<message_id>/` and referenced from the diary entry. |
+
+### 36.5 Format-set override per subscriber
+
+Subscribers MAY express format preferences via `PreferenceSet.metadata.attachment_formats` (per §7.2):
+
+```jsonc
+{
+  "attachment_formats": ["md", "pdf"]    // only these two; skip html + docx
+}
+```
+
+If a subscriber's preference excludes a format that another subscriber on the same channel-address wants, Herald sends the union (or the channel's max bundle if multi-attachment is supported). On channels that allow only one attachment per message (WhatsApp, Viber), Herald sends per-subscriber DM with that subscriber's preferred format.
+
+### 36.6 Total size limits
+
+Combined size of the four formats per attachment-bundle MUST stay under `[attachments].out_bundle_max_mib` (default 50 MiB). If a single source `.md` produces > 50 MiB of total output (rare — typically only image-heavy reports), Herald posts a single message with a link to a Herald-hosted blob carrying the full bundle.
 
 ---
 
@@ -2864,3 +3653,37 @@ Same as r2: single-author read-through immediately following r2 commit, focused 
 - All four Herald mirrors targeted on push.
 
 Statistical context: r1→r2 added ~33 KB to the Markdown source closing 14 findings. r2→r3 closed 12 findings — the curve is flattening, which is the expected pattern (the easier high-leverage gaps go first). A fourth pass would likely yield only stylistic findings; the next high-value pass should come *after* first-implementation cycle surfaces real-world spec gaps that desk-review alone can't find.
+
+### 30.6 V3 r1 review log (this revision)
+
+This is **not** a desk-review of V2 — it is a *requirements-driven* expansion. V2 was architecturally complete; V3 r1 adds the operator-product story the user described in their V3 brief (project integration, inbound pipeline, LLM dispatch, reply protocol, versioned reports, multi-format attachments) and folds in the **explicit project-side requirements** the user introduced during V3 authoring: 30 s poll cadence, FIFO inbound queue, anti-spam, Investigation-before-Fixing, Claude Code project-named session, `issues/users/attachments/WORKABLE_ITEM_ID/`, multi-format outbound attachments (`.md` + `.html` + `.pdf` + `.docx`).
+
+#### 30.6.1 Findings applied (V3-R1-NN)
+
+- **V3-R1-01. Project integration contract was implicit.** Spec assumed a consuming project existed; never specified the contract. Applied: **§31** with 6-point integration checklist, configuration template, and `test_project_integration.sh` audit gate composing with 11 Universal Constitution mandates.
+- **V3-R1-02. Inbound pipeline had no defined cadence.** §3 mentioned "daemon mode listens" but no polling rule. Applied: **§32.2** mandates ≤ 30 s upstream check rate; per-channel table maps to underlying mechanism (long-poll vs Socket Mode vs Gateway vs webhook vs IMAP IDLE).
+- **V3-R1-03. No FIFO guarantee for inbound processing.** V2 mentioned River queue but no per-tenant per-channel ordering rule. Applied: **§32.3** specifies advisory-lock-per-`(tenant_id, channel_address_id)` to guarantee strict arrival order.
+- **V3-R1-04. Anti-spam unspecified.** Spec referenced "security validation" but no anti-spam layer. Applied: **§32.5** with four-layer anti-spam (per-sender rate / burst detection / reputation / channel frequency); `spam_audit` Redis stream for tuning.
+- **V3-R1-05. Investigation-before-Fixing pattern missing.** Spec went straight from "Bug:" command to workable item. Applied: **§18.2.1** mandates intermediate investigation item (`HRD-INV-NNN`); LLM analyzes reproducibility before final item is allocated; rejects duplicates/out-of-scope/non-reproducible.
+- **V3-R1-06. LLM/agent dispatch had no concrete first integration.** V2 left LLM dispatch as future work. Applied: **§33** wires Claude Code as the V3 r1 default: `resolve_session(project_name)` algorithm, `<<<HERALD-DISPATCH-v1>>>` envelope, JSON reply schema, pluggable `Dispatcher` interface.
+- **V3-R1-07. Claude Code session was assumed to support `--session-name`.** It doesn't. Applied: **§33.2** documents the gap and specifies the resolution algorithm using the project-name as an anchor-file key, with `--resume <UUID>` as the actual CLI invocation.
+- **V3-R1-08. Reply protocol was single-shot.** V2 said "Herald replies" without staging. Applied: **§34** specifies three replies (queued / processing / result) with per-channel edit-in-place mechanics, criticality-driven SLAs, and verbose error reporting that complies with Universal §11.4 anti-bluff.
+- **V3-R1-09. Reports vs one-off messages were conflated.** V2 had no separate semantic for documents that change over time. Applied: **§35** introduces report-aware event types, `report_publications` dedup table, Git commit SHA + URL + diff URL embedding, edit-in-place where supported.
+- **V3-R1-10. Outbound attachments were single-format.** V2 sent the rendered file in whatever format the channel preferred. Applied: **§36** mandates four-format bundle (`.md` + `.html` + `.pdf` + `.docx`) so subscribers choose. Pandoc generation pipeline (already a dependency) + cache + per-channel delivery rules.
+- **V3-R1-11. Attachment storage path for user uploads was implicit.** V2 said "validate and store" without naming the path. Applied: **§18.2.4** mandates `issues/users/attachments/<WORKABLE_ITEM_ID>/` with `attachments_index.md` as source-of-truth + 8-step validation pipeline (download → ClamAV → MIME → extension → size-per-file → size-total → move-on-pass → quarantine-on-fail).
+- **V3-R1-12. Criticality classification had no SLA mapping.** V2 had a 4-level scale but no concrete SLA per level. Applied: **§18.2.2** table maps each criticality to specific Reply A/B/C SLA windows + investigation deadline.
+
+#### 30.6.2 Deferred to V3 r2 (the user's follow-up scope)
+
+- **V3-R1-13. Other flavors (§18.3–§18.10) not yet refined for richer channel interaction.** sherald/bherald/dherald/aherald/scherald/iherald/rherald/cherald still carry V2 subscriber-command vocabulary. V3 r2 will add: interactive buttons (Slack Block Kit action buttons / Telegram inline-keyboard callbacks / Discord components / Teams Adaptive Card actions), reaction-based ack/silence, slash-command discovery via `/help`, per-flavor command palettes.
+- **V3-R1-14. Full re-export of V1+V2+V3 + push EVERYTHING.** Deferred to V3 r3 as the final polish/release pass.
+
+#### 30.6.3 Audit trail (r3 → V3 r1)
+
+- Pre-V3 commit: V2 r3 at `f4ebba1`.
+- V3 r1 commit: covers V3-R1-01..V3-R1-12 in one logical commit on top of V2 r3.
+- Inheritance gate before and after: 12 PASS / 0 FAIL. Meta-test: ✓.
+- All four Herald mirrors targeted on push.
+- V2 metadata bumped to `Status=superseded`; V2 re-exported to keep §11.4.65 invariant green.
+
+Statistical context: V1 was 594 lines; V2 r1 was 1745 lines (+1151); V2 r3 was ~3000 lines (+1255); V3 r1 adds another ~1100 lines. The spec has grown by ~5× in two days of iteration — about half of that is the V3 first-version requirements (§31–§36 + §18.2 expansion), the rest was architectural maturity in V2's three revisions.
