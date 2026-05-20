@@ -175,6 +175,33 @@ func applyMigration(ctx context.Context, database db.Database, m migration.Migra
 	return nil
 }
 
+// CurrentVersion returns the highest migration version recorded in the
+// `schema_migrations` tracking table written by RunMigrations / applyMigration.
+// Returns 0 when the table is empty OR does not yet exist (i.e. no migration
+// has ever run against this database). Used by `pherald migrate status`.
+//
+// Anti-bluff note: this query is read-only and does NOT create the tracking
+// table — that's RunMigrations' job. If `status` is invoked against a fresh
+// database the table is absent, pgx returns SQLSTATE 42P01 (undefined_table),
+// and we translate that to ver=0 rather than surfacing a confusing error.
+func CurrentVersion(ctx context.Context, database db.Database) (int, error) {
+	var ver int
+	err := database.QueryRow(
+		ctx,
+		`SELECT COALESCE(MAX(version), 0) FROM schema_migrations`,
+	).Scan(&ver)
+	if err != nil {
+		// Fresh database: tracking table doesn't exist yet → version 0.
+		if strings.Contains(err.Error(), "schema_migrations") &&
+			(strings.Contains(err.Error(), "does not exist") ||
+				strings.Contains(err.Error(), "42P01")) {
+			return 0, nil
+		}
+		return 0, fmt.Errorf("commons_storage: CurrentVersion: query: %w", err)
+	}
+	return ver, nil
+}
+
 // ErrMigrationBundleEmpty signals no migrations were found (probably a
 // build-tag misconfiguration).
 var ErrMigrationBundleEmpty = errors.New("commons_storage: migration bundle is empty")

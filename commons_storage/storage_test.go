@@ -51,6 +51,84 @@ func TestMigrationsFS_ContainsExpectedFiles(t *testing.T) {
 	}
 }
 
+// TestParseDSN verifies the URL-form parser used by `pherald migrate`.
+// Anti-bluff: every case asserts user-visible state on the returned
+// *postgres.Config rather than just "no error returned".
+func TestParseDSN(t *testing.T) {
+	t.Run("happy_path", func(t *testing.T) {
+		cfg, err := ParseDSN("postgres://herald:secret@127.0.0.1:24100/herald")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if cfg.Host != "127.0.0.1" {
+			t.Errorf("Host = %q, want 127.0.0.1", cfg.Host)
+		}
+		if cfg.Port != 24100 {
+			t.Errorf("Port = %d, want 24100", cfg.Port)
+		}
+		if cfg.User != "herald" {
+			t.Errorf("User = %q, want herald", cfg.User)
+		}
+		if cfg.Password != "secret" {
+			t.Errorf("Password = %q, want secret", cfg.Password)
+		}
+		if cfg.DBName != "herald" {
+			t.Errorf("DBName = %q, want herald", cfg.DBName)
+		}
+		if cfg.SSLMode != "disable" {
+			t.Errorf("SSLMode = %q, want disable (default)", cfg.SSLMode)
+		}
+	})
+	t.Run("postgresql_scheme", func(t *testing.T) {
+		cfg, err := ParseDSN("postgresql://u:p@h:5432/d")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if cfg.DBName != "d" {
+			t.Errorf("DBName = %q, want d", cfg.DBName)
+		}
+	})
+	t.Run("sslmode_override", func(t *testing.T) {
+		cfg, err := ParseDSN("postgres://u:p@h:5432/d?sslmode=require")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if cfg.SSLMode != "require" {
+			t.Errorf("SSLMode = %q, want require", cfg.SSLMode)
+		}
+	})
+	t.Run("default_port", func(t *testing.T) {
+		cfg, err := ParseDSN("postgres://u:p@h/d")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if cfg.Port != 5432 {
+			t.Errorf("Port = %d, want 5432 (default)", cfg.Port)
+		}
+	})
+	t.Run("empty_rejected", func(t *testing.T) {
+		_, err := ParseDSN("")
+		if err == nil {
+			t.Fatal("expected error for empty DSN")
+		}
+	})
+	t.Run("bad_scheme_rejected", func(t *testing.T) {
+		_, err := ParseDSN("mysql://u:p@h:3306/d")
+		if err == nil {
+			t.Fatal("expected error for non-postgres scheme")
+		}
+		if !strings.Contains(err.Error(), "unsupported scheme") {
+			t.Errorf("error should mention unsupported scheme, got %v", err)
+		}
+	})
+	t.Run("bad_port_rejected", func(t *testing.T) {
+		_, err := ParseDSN("postgres://u:p@h:notaport/d")
+		if err == nil {
+			t.Fatal("expected error for non-numeric port")
+		}
+	})
+}
+
 func TestMigrationsFS_NoUnexpectedFiles(t *testing.T) {
 	mFS := MigrationsFS()
 	count := 0

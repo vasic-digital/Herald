@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
+	"strconv"
 
 	db "digital.vasic.database/pkg/database"
 	"digital.vasic.database/pkg/postgres"
@@ -54,6 +56,45 @@ func ConfigForHerald(host string, port int, user, password, dbName string) *post
 	cfg.SSLMode = "disable"
 	cfg.ApplicationName = "herald"
 	return cfg
+}
+
+// ParseDSN converts a `postgres://user:pass@host:port/dbname[?sslmode=...]`
+// URL into the typed *postgres.Config the rest of commons_storage consumes.
+// Used by the `pherald migrate` subcommand so operators can supply a single
+// HERALD_PG_DSN env var instead of five typed knobs.
+//
+// Only the `sslmode` query parameter is honoured (mapped to cfg.SSLMode);
+// other parameters are silently ignored — add explicit handling here when
+// a real need arrives rather than guessing semantics.
+func ParseDSN(dsn string) (*postgres.Config, error) {
+	if dsn == "" {
+		return nil, errors.New("commons_storage: ParseDSN: empty DSN")
+	}
+	u, err := url.Parse(dsn)
+	if err != nil {
+		return nil, fmt.Errorf("commons_storage: ParseDSN: parse url: %w", err)
+	}
+	if u.Scheme != "postgres" && u.Scheme != "postgresql" {
+		return nil, fmt.Errorf("commons_storage: ParseDSN: unsupported scheme %q (want postgres:// or postgresql://)", u.Scheme)
+	}
+	port := 5432
+	if p := u.Port(); p != "" {
+		n, perr := strconv.Atoi(p)
+		if perr != nil || n <= 0 || n > 65535 {
+			return nil, fmt.Errorf("commons_storage: ParseDSN: invalid port %q", p)
+		}
+		port = n
+	}
+	pass, _ := u.User.Password()
+	dbName := u.Path
+	if len(dbName) > 0 && dbName[0] == '/' {
+		dbName = dbName[1:]
+	}
+	cfg := ConfigForHerald(u.Hostname(), port, u.User.Username(), pass, dbName)
+	if sslmode := u.Query().Get("sslmode"); sslmode != "" {
+		cfg.SSLMode = sslmode
+	}
+	return cfg, nil
 }
 
 // WithTenantContext executes fn inside a transaction with

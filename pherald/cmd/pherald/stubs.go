@@ -133,34 +133,6 @@ NOT YET IMPLEMENTED (HRD-010 / HRD-011 dependencies).`,
 	return cmd
 }
 
-func newMigrateCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "migrate",
-		Short: "Apply / rollback / inspect database migrations (spec §9.6)",
-	}
-	cmd.AddCommand(&cobra.Command{
-		Use:   "up",
-		Short: "apply pending migrations forward",
-		RunE:  func(_ *cobra.Command, _ []string) error { return errors.New("pherald migrate up: not implemented (HRD-010)") },
-	})
-	cmd.AddCommand(&cobra.Command{
-		Use:   "down",
-		Short: "rollback N migrations (default 1)",
-		RunE:  func(_ *cobra.Command, _ []string) error { return errors.New("pherald migrate down: not implemented (HRD-010)") },
-	})
-	cmd.AddCommand(&cobra.Command{
-		Use:   "status",
-		Short: "show current version + pending count",
-		RunE:  func(_ *cobra.Command, _ []string) error { return errors.New("pherald migrate status: not implemented (HRD-010)") },
-	})
-	cmd.AddCommand(&cobra.Command{
-		Use:   "validate",
-		Short: "checksum every applied migration against the source files",
-		RunE:  func(_ *cobra.Command, _ []string) error { return errors.New("pherald migrate validate: not implemented (HRD-010)") },
-	})
-	return cmd
-}
-
 func newSubscriberCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "subscriber",
