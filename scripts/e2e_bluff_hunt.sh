@@ -11,7 +11,7 @@
 # "compiles and tests green" but doesn't work for the user will FAIL
 # at least one assertion here.
 #
-# Fifteen invariants (each is the "captured-evidence" for one feature
+# Eighteen invariants (each is the "captured-evidence" for one feature
 # class per §11.4.5 + §11.4.69):
 #
 #   E1.  pherald binary builds (compile-level — necessary, not sufficient).
@@ -30,10 +30,13 @@
 # Optional (run when podman-machine is up + DOCKER_HOST is set):
 #   E13. Quickstart compose Postgres boots + migrations apply + RLS
 #        isolation proven via the M2 Postgres integration tests.
+#   E14. commons_storage RLS tenant-isolation round-trip (HRD-010 Wave 1).
+#   E15. commons_infra queue enqueue/dequeue round-trip against live PG.
+#   E16. commons_infra redis TTL round-trip against live Redis.
 #
-# Exit 0 only when E1..E12 (plus E13 if attempted) all pass. Failure
-# prints the offending invariant so the operator knows EXACTLY which
-# feature is bluffing.
+# Exit 0 only when E1..E12 (plus E13..E16 if attempted) all pass.
+# Failure prints the offending invariant so the operator knows EXACTLY
+# which feature is bluffing.
 
 set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -197,6 +200,26 @@ if [ -n "${DOCKER_HOST:-}" ] || podman info >/dev/null 2>&1; then
     fi
 else
     echo "SKIP  E13 — no container runtime (closed-set reason: hardware_not_present)"
+fi
+
+# ----------------------------------------------------------------------
+# E14-E16: HRD-010 commons_storage live wiring (Wave 1 evidence).
+# Requires container runtime (docker or podman). Skip-with-reason if
+# absent per §11.4.3. Tests already implemented:
+#   E14: commons_storage/storage_integration_test.go (RLS isolation)
+#   E15: commons_infra/clients_integration_test.go (queue enqueue/dequeue)
+#   E16: commons_infra/clients_integration_test.go (redis TTL)
+echo ""
+echo "== E14-E16: HRD-010 commons_storage live integration =="
+if command -v docker >/dev/null 2>&1 || command -v podman >/dev/null 2>&1; then
+    check "E14 commons_storage RLS tenant-isolation round-trip (live PG)" \
+        "go test ./commons_storage/ -tags=integration -run TestRLS_TenantIsolation_RoundTrip -count=1 -timeout=180s"
+    check "E15 commons_infra queue enqueue/dequeue round-trip (live PG)" \
+        "go test ./commons_infra/ -tags=integration -run TestUp_PopulatesQueue_EnqueueDequeueRoundTrip -count=1 -timeout=180s"
+    check "E16 commons_infra redis TTL round-trip (live Redis)" \
+        "go test ./commons_infra/ -tags=integration -run TestUp_PopulatesRedis_TTLRoundTrip -count=1 -timeout=180s"
+else
+    echo "SKIP  E14-E16 (no docker/podman on PATH — §11.4.3 explicit SKIP-with-reason)"
 fi
 
 # ----------------------------------------------------------------------
