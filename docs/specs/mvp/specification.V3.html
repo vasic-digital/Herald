@@ -251,7 +251,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>1</td>
+<td>2</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -267,15 +267,15 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td>V3 r1 supersedes V2. Adds §31 project-integration contract, §32
-inbound processing pipeline (30s poll + FIFO + worker stages +
-anti-spam), §33 LLM/agent dispatch (Claude Code session resolution), §34
-tri-stage reply protocol (queued→processing→result), §35
-versioned-report fan-out with Git linkage, §36 outbound multi-format
-attachment bundles (Markdown + HTML + PDF + DOCX). Expanded §18.2
-Project Herald with Investigation-before-Fixing flow + criticality +
-type classification + attachment storage at
-<code>issues/users/attachments/WORKABLE_ITEM_ID/</code>.</td>
+<td>V3 r2 (this revision) refines all nine flavors for richer
+per-channel interaction: §18.1.1 common interaction primitives
+(slash/prefix command palette, reaction-based quick ops, interactive
+buttons, modal forms, thread/forum-topic affinity, capability
+degradation),
+§18.2.6/§18.3.1/§18.4.1/§18.5.1/§18.6.1/§18.7.1/§18.8.1/§18.9.1/§18.10.1
+per-flavor channel-interaction tables. V3 r1 architecture (§31 project
+contract, §32 inbound pipeline, §33 LLM dispatch, §34 reply protocol,
+§35 versioned reports, §36 multi-format attachments) unchanged.</td>
 </tr>
 <tr>
 <td>Issues</td>
@@ -288,25 +288,24 @@ is the version consuming projects integrate against.</td>
 </tr>
 <tr>
 <td>Fixed</td>
-<td>V3-R1-01..V3-R1-14 (this revision); inherits closed:
-V2-R-01..V2-R-14 (V2 r2), V3-R-01..V3-R-12 (V2 r3), V1 R-01..R-22.</td>
+<td>V3-R2-01..V3-R2-09 (this revision: nine flavors' channel-interaction
+surfaces + cross-flavor primitives); V3-R1-01..V3-R1-14 (V3 r1);
+inherits closed: V2-R-01..V2-R-14 (V2 r2), V3-R-01..V3-R-12 (V2 r3), V1
+R-01..R-22.</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
-<td>Delivers the operator-product story V2 deferred: explicit
-consuming-project contract, full inbound-message lifecycle, first-class
-Claude Code integration with project-named session resolution, tri-stage
-user-visible reply protocol, versioned reports re-publish with Git
-commit link, multi-format outbound attachments
-(.md/.html/.pdf/.docx).</td>
+<td>r2 fills the "how do subscribers actually interact with each flavor"
+gap r1 left open. Every flavor now has documented buttons / reactions /
+slash commands / modals / threads tuned to its use case, with explicit
+cross-flavor primitives in §18.1.1 so subscribers learn one mental
+model.</td>
 </tr>
 <tr>
 <td>Continuation</td>
-<td>V3 r2 (planned, same workstream): refine all flavor sections (§18.x)
-for richer per-channel interaction (interactive buttons, modals,
-reactions, slash commands, command discovery via <code>/help</code>). V3
-r3 (planned): polish + re-export V1+V2+V3 + commit + push
-EVERYTHING.</td>
+<td>V3 r3 (next, same workstream): polish pass + full re-export of
+V1+V2+V3 (+ touched parent-project docs if any) + push EVERYTHING to all
+four Herald mirrors and constitution mirrors.</td>
 </tr>
 </tbody>
 </table>
@@ -483,6 +482,9 @@ implementations)</a>
 <ul>
 <li><a href="#181-common-flavor-contract">18.1 Common flavor
 contract</a></li>
+<li><a
+href="#1811-common-channel-interaction-primitives-cross-flavor">18.1.1
+Common channel-interaction primitives (cross-flavor)</a></li>
 <li><a href="#182-project-herald-pherald">18.2 Project Herald
 (<code>pherald</code>)</a>
 <ul>
@@ -496,23 +498,57 @@ Type classification (Universal §11.4.16 mapping)</a></li>
 validation + storage</a></li>
 <li><a href="#1825-claude-code-project-session-integration">18.2.5
 Claude Code project-session integration</a></li>
+<li><a href="#1826-channel-interactions">18.2.6 Channel
+interactions</a></li>
 </ul></li>
 <li><a href="#183-system-herald-sherald">18.3 System Herald
-(<code>sherald</code>)</a></li>
+(<code>sherald</code>)</a>
+<ul>
+<li><a href="#1831-channel-interactions">18.3.1 Channel
+interactions</a></li>
+</ul></li>
 <li><a href="#184-build-herald-bherald">18.4 Build Herald
-(<code>bherald</code>)</a></li>
+(<code>bherald</code>)</a>
+<ul>
+<li><a href="#1841-channel-interactions">18.4.1 Channel
+interactions</a></li>
+</ul></li>
 <li><a href="#185-deploy-herald-dherald">18.5 Deploy Herald
-(<code>dherald</code>)</a></li>
+(<code>dherald</code>)</a>
+<ul>
+<li><a href="#1851-channel-interactions">18.5.1 Channel
+interactions</a></li>
+</ul></li>
 <li><a href="#186-alert-herald-aherald">18.6 Alert Herald
-(<code>aherald</code>)</a></li>
+(<code>aherald</code>)</a>
+<ul>
+<li><a href="#1861-channel-interactions">18.6.1 Channel
+interactions</a></li>
+</ul></li>
 <li><a href="#187-schedule-herald-scherald">18.7 Schedule Herald
-(<code>scherald</code>)</a></li>
+(<code>scherald</code>)</a>
+<ul>
+<li><a href="#1871-channel-interactions">18.7.1 Channel
+interactions</a></li>
+</ul></li>
 <li><a href="#188-incident-herald-iherald">18.8 Incident Herald
-(<code>iherald</code>)</a></li>
+(<code>iherald</code>)</a>
+<ul>
+<li><a href="#1881-channel-interactions">18.8.1 Channel
+interactions</a></li>
+</ul></li>
 <li><a href="#189-release-herald-rherald">18.9 Release Herald
-(<code>rherald</code>)</a></li>
+(<code>rherald</code>)</a>
+<ul>
+<li><a href="#1891-channel-interactions">18.9.1 Channel
+interactions</a></li>
+</ul></li>
 <li><a href="#1810-compliance-herald-cherald">18.10 Compliance Herald
-(<code>cherald</code>)</a></li>
+(<code>cherald</code>)</a>
+<ul>
+<li><a href="#18101-channel-interactions">18.10.1 Channel
+interactions</a></li>
+</ul></li>
 <li><a href="#1811-future-flavors">18.11 Future flavors</a></li>
 </ul></li>
 <li><a href="#19-diary">§19. Diary</a></li>
@@ -3761,6 +3797,178 @@ icon, accent color).</li>
 <li>Ship its own user manual under
 <code>docs/flavors/&lt;flavor&gt;/</code>.</li>
 </ul>
+<h3 id="1811-common-channel-interaction-primitives-cross-flavor">18.1.1
+Common channel-interaction primitives (cross-flavor)</h3>
+<p>Every flavor inherits these interaction primitives from
+<code>commons_messaging</code> so subscribers learn one mental model and
+apply it across channels and flavors. Per-flavor extensions are
+documented in each flavor's "Channel interactions" sub-section.</p>
+<p><strong>Slash / prefix commands</strong> — available on every channel
+that supports them, with text-prefix fallback for channels that
+don't:</p>
+<table>
+<thead>
+<tr>
+<th>Token</th>
+<th>Behaviour</th>
+<th>Slack/Discord native</th>
+<th>Text-prefix fallback</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/help</code></td>
+<td>List the flavor's command palette + quick-action buttons</td>
+<td>slash command</td>
+<td><code>Help:</code> prefix</td>
+</tr>
+<tr>
+<td><code>/status</code></td>
+<td>Snapshot of current state (open items, queue depth, channel
+health)</td>
+<td>slash command</td>
+<td><code>Status:</code> prefix</td>
+</tr>
+<tr>
+<td><code>/whoami</code></td>
+<td>Echo the subscriber's resolved identity, roles, locale, prefs</td>
+<td>slash command</td>
+<td><code>Whoami:</code> prefix</td>
+</tr>
+<tr>
+<td><code>/silence &lt;duration&gt;</code></td>
+<td>Mute notifications for the calling subscriber for the given
+duration</td>
+<td>slash command</td>
+<td><code>Silence: &lt;duration&gt;</code> prefix</td>
+</tr>
+<tr>
+<td><code>/unsilence</code></td>
+<td>Cancel a silence</td>
+<td>slash command</td>
+<td><code>Unsilence:</code> prefix</td>
+</tr>
+<tr>
+<td><code>/subscribe &lt;category&gt;</code></td>
+<td>Opt the calling subscriber into a category</td>
+<td>slash command</td>
+<td><code>Subscribe: &lt;category&gt;</code> prefix</td>
+</tr>
+<tr>
+<td><code>/unsubscribe &lt;category&gt;</code></td>
+<td>Opt out</td>
+<td>slash command</td>
+<td><code>Unsubscribe: &lt;category&gt;</code> prefix</td>
+</tr>
+<tr>
+<td><code>/prefs</code></td>
+<td>Open a modal/form to edit <code>PreferenceSet</code> (channels
+supporting modals); otherwise return current prefs as JSON</td>
+<td>slash command + modal</td>
+<td><code>Prefs:</code> prefix returns JSON only</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Reaction-based quick ops</strong> — for channels that support
+emoji reactions (Slack, Discord, Telegram, Lark). Adding a reaction to a
+Herald message triggers the action; removing the reaction undoes it
+where the action is reversible.</p>
+<table>
+<thead>
+<tr>
+<th>Emoji</th>
+<th>Action</th>
+<th>Reversible</th>
+<th>Required role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>👍 / 👌</td>
+<td>Ack (acknowledge — silences re-fires for the alert fingerprint for
+the default window)</td>
+<td>yes</td>
+<td>reader+</td>
+</tr>
+<tr>
+<td>🔇</td>
+<td>Silence for the configured default duration
+(<code>[interactions].default_silence</code>, default 1 h)</td>
+<td>yes</td>
+<td>reader+</td>
+</tr>
+<tr>
+<td>✅</td>
+<td>Resolve (closes the workable item or marks the alert resolved)</td>
+<td>no</td>
+<td>operator</td>
+</tr>
+<tr>
+<td>🚨</td>
+<td>Escalate (bumps criticality up one level and re-pages)</td>
+<td>no</td>
+<td>operator</td>
+</tr>
+<tr>
+<td>🔁</td>
+<td>Reopen (only on resolved items)</td>
+<td>no</td>
+<td>operator</td>
+</tr>
+<tr>
+<td>🐛</td>
+<td>Reclassify as <code>bug</code></td>
+<td>yes</td>
+<td>operator</td>
+</tr>
+<tr>
+<td>📋</td>
+<td>Reclassify as <code>task</code></td>
+<td>yes</td>
+<td>operator</td>
+</tr>
+<tr>
+<td>❓</td>
+<td>Reclassify as <code>query</code></td>
+<td>yes</td>
+<td>operator</td>
+</tr>
+<tr>
+<td>🗑️</td>
+<td>Mark as spam → moves to <code>quarantined_messages</code> for
+operator review</td>
+<td>yes</td>
+<td>operator</td>
+</tr>
+</tbody>
+</table>
+<p>Reactions emit
+<code>digital.vasic.herald.reply.reaction_applied</code> CloudEvents so
+the diary + audit trail capture every interaction.</p>
+<p><strong>Interactive button actions</strong> — for channels that
+support clickable buttons (Slack Block Kit <code>actions</code>, Discord
+components, Telegram inline keyboards with <code>callback_data</code>,
+Teams Adaptive Card <code>Action.OpenUrl</code> /
+<code>Action.Execute</code>). Herald renders a per-flavor button palette
+on every "actionable" message; clicks call back through the channel's
+webhook to Herald's <code>/v1/interactions/&lt;channel&gt;</code>
+endpoint.</p>
+<p><strong>Modal forms</strong> — for Slack (<code>views.open</code>)
+and Discord (modal interactions), Herald can request structured input
+(e.g., "what's the reproduction steps for HRD-042?") instead of
+free-form chat. Falls back to a multi-message conversation on channels
+without modal support.</p>
+<p><strong>Thread / forum-topic affinity</strong> — incident-style
+flavors (<code>iherald</code>, <code>aherald</code>) pin all related
+messages to one thread / Telegram forum topic / Slack thread / Discord
+forum-channel post, so the conversation is self-contained for postmortem
+readers. Composes with §12 <code>ConversationRef</code> + §35 versioned
+reports.</p>
+<p><strong>Capability degradation</strong> — if a channel doesn't
+support a primitive, Herald MUST degrade gracefully (text instructions
+instead of buttons, etc.) — never silently drop the interaction. The
+§11.0 <code>Capabilities</code> struct declares per-channel support; the
+router consults it before rendering.</p>
 <h3 id="182-project-herald-pherald">18.2 Project Herald
 (<code>pherald</code>)</h3>
 <p><strong>Focus</strong>: Software-project development lifecycle.
@@ -4042,6 +4250,62 @@ e.g. after a long-running incident produces a noisy session).</li>
 <code>[herald].project_name</code> is empty (Claude Code dispatch is
 non-optional in V3 r1).</li>
 </ul>
+<h4 id="1826-channel-interactions">18.2.6 Channel interactions</h4>
+<p>In addition to the §18.1.1 cross-flavor primitives,
+<code>pherald</code> ships these flavor-specific interactive
+surfaces:</p>
+<table>
+<thead>
+<tr>
+<th>Surface</th>
+<th>Channels</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/investigate &lt;HRD-NNN&gt;</code> slash command</td>
+<td>Slack, Discord, Telegram</td>
+<td>Re-runs the investigation phase for an existing item (useful after
+the subscriber adds more attachments to the thread).</td>
+</tr>
+<tr>
+<td><code>/promote &lt;HRD-INV-NNN&gt;</code> slash command</td>
+<td>Slack, Discord</td>
+<td>Operator-only — force-promotes an investigation to a final workable
+item without waiting for LLM validation.</td>
+</tr>
+<tr>
+<td><code>/reject &lt;HRD-INV-NNN&gt; &lt;reason&gt;</code> slash
+command</td>
+<td>Slack, Discord</td>
+<td>Operator-only — closes an investigation with a documented
+reason.</td>
+</tr>
+<tr>
+<td><code>Investigation summary modal</code></td>
+<td>Slack <code>views.open</code>, Discord modal</td>
+<td>When a subscriber clicks "Add reproduction steps" on Reply B, opens
+a structured modal asking for: repro steps, expected vs actual,
+environment, attachments.</td>
+</tr>
+<tr>
+<td>Investigation status buttons</td>
+<td>Slack Block Kit <code>actions</code>, Telegram inline keyboard,
+Discord buttons</td>
+<td>On Reply C of an investigation: <code>[Validate]</code>
+<code>[Reject]</code> <code>[Need more info]</code>
+<code>[Reassign]</code>.</td>
+</tr>
+<tr>
+<td>Workable-item card</td>
+<td>All channels with rich messaging</td>
+<td>A pinned card with workable item summary + criticality badge +
+assignee + status — refreshed via §35 versioned-report mechanic on every
+status change.</td>
+</tr>
+</tbody>
+</table>
 <h3 id="183-system-herald-sherald">18.3 System Herald
 (<code>sherald</code>)</h3>
 <p><strong>Focus</strong>: OS/host/service health and security. Designed
@@ -4092,6 +4356,61 @@ this alert type.</li>
 <p><strong>Integrations</strong>: <code>sherald</code> is often paired
 with <code>aherald</code> and <code>iherald</code> — the three flavors
 share the <code>commons_alert</code> package.</p>
+<h4 id="1831-channel-interactions">18.3.1 Channel interactions</h4>
+<table>
+<thead>
+<tr>
+<th>Surface</th>
+<th>Channels</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Quick-action buttons on every alert</td>
+<td>Slack, Discord, Telegram, Teams</td>
+<td><code>[Ack]</code> <code>[Silence 1h]</code>
+<code>[Silence 24h]</code> <code>[Resolve]</code> <code>[Runbook]</code>
+<code>[Escalate]</code></td>
+</tr>
+<tr>
+<td>🔇 reaction</td>
+<td>Slack, Discord, Telegram, Lark</td>
+<td>One-tap silence for the alert's fingerprint for the default window
+(1 h) — most-common-action wins the easiest UX.</td>
+</tr>
+<tr>
+<td><code>/silence-similar</code> slash command</td>
+<td>Slack, Discord</td>
+<td>Silences not just the current fingerprint but every alert sharing
+the same <code>service</code> label + severity.</td>
+</tr>
+<tr>
+<td><code>/runbook &lt;fingerprint&gt;</code> slash command</td>
+<td>Slack, Discord, Telegram</td>
+<td>Posts the runbook URL inline (saves operators from
+copy-pasting).</td>
+</tr>
+<tr>
+<td>Service-health card</td>
+<td>All rich channels</td>
+<td>Per-service status card with last-N alerts, MTTR, current open count
+— refreshed via §35 versioned-report mechanic.</td>
+</tr>
+<tr>
+<td>Slack <code>views.open</code> modal</td>
+<td>Slack</td>
+<td>Triggered by <code>[Silence custom…]</code> button — modal asks for
+duration + reason + scope (just fingerprint vs whole service).</td>
+</tr>
+<tr>
+<td>Forum-topic per service</td>
+<td>Telegram (forum group)</td>
+<td>Each service gets its own forum topic; all alerts for that service
+land there → less noise in the main channel.</td>
+</tr>
+</tbody>
+</table>
 <h3 id="184-build-herald-bherald">18.4 Build Herald
 (<code>bherald</code>)</h3>
 <p><strong>Focus</strong>: CI/CD build lifecycle events. Designed for
@@ -4133,6 +4452,56 @@ grants permission).</li>
 <li><code>Triage: &lt;finding&gt;</code> — mark a security finding for
 review.</li>
 </ul>
+<h4 id="1841-channel-interactions">18.4.1 Channel interactions</h4>
+<table>
+<thead>
+<tr>
+<th>Surface</th>
+<th>Channels</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>[Retry]</code> <code>[Open logs]</code> <code>[Blame]</code>
+buttons</td>
+<td>Slack, Discord, Telegram, Teams</td>
+<td>Posted alongside every failed-build message; one-click access to the
+most common follow-ups.</td>
+</tr>
+<tr>
+<td><code>[Snooze flaky 1d]</code> <code>[Snooze flaky forever]</code>
+buttons</td>
+<td>Slack, Discord</td>
+<td>Posted on flaky-test events to throttle noise without needing prefix
+commands.</td>
+</tr>
+<tr>
+<td>`/triage <finding-id> {accepted</td>
+<td>wont-fix</td>
+<td>false-positive}` slash command</td>
+</tr>
+<tr>
+<td>🐛 reaction</td>
+<td>Slack, Discord, Telegram</td>
+<td>Promotes a failed-build event into a <code>pherald</code> bug
+investigation (<code>HRD-INV-NNN</code>) — one-emoji cross-flavor
+handoff.</td>
+</tr>
+<tr>
+<td>Coverage delta card</td>
+<td>Slack, Discord, Teams</td>
+<td>Posted on every PR's CI completion; shows new-vs-base coverage +
+which files dropped + jump-to-blame.</td>
+</tr>
+<tr>
+<td>Build digest forum topic</td>
+<td>Telegram (forum group)</td>
+<td>All build events for the same branch land in one topic;
+auto-archives on branch deletion.</td>
+</tr>
+</tbody>
+</table>
 <h3 id="185-deploy-herald-dherald">18.5 Deploy Herald
 (<code>dherald</code>)</h3>
 <p><strong>Focus</strong>: Release / deployment / rollout events.</p>
@@ -4170,6 +4539,56 @@ by elevated privilege).</li>
 </ul>
 <p><strong>Composes with <code>rherald</code></strong> for the full
 release pipeline.</p>
+<h4 id="1851-channel-interactions">18.5.1 Channel interactions</h4>
+<table>
+<thead>
+<tr>
+<th>Surface</th>
+<th>Channels</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>[Rollback]</code> <code>[Promote canary]</code>
+<code>[Hold env]</code> <code>[Open dashboard]</code> buttons</td>
+<td>Slack, Discord, Telegram, Teams</td>
+<td>Posted on every deploy event with elevated-role check before
+execution. Confirmation modal required for <code>Rollback</code> and
+<code>Hold env</code> (destructive).</td>
+</tr>
+<tr>
+<td>🚨 reaction on a deploy event</td>
+<td>Slack, Discord</td>
+<td>Pages the on-call engineer + freezes further deploys to that env
+(one-emoji shortcut for "rollback in progress").</td>
+</tr>
+<tr>
+<td><code>/promote &lt;deploy_id&gt;</code> slash command</td>
+<td>Slack, Discord</td>
+<td>Promotes a canary to full rollout (operator role required).</td>
+</tr>
+<tr>
+<td><code>/hold &lt;env&gt; &lt;duration&gt; [reason]</code> slash
+command</td>
+<td>Slack, Discord</td>
+<td>Freezes deploys to an env; bidirectional sync to deploy tool.</td>
+</tr>
+<tr>
+<td>Environment status card</td>
+<td>All rich channels</td>
+<td>One card per env (dev / staging / canary / prod) with current
+version + last deploy + health-check status — refreshed via §35
+versioned-report mechanic on every event.</td>
+</tr>
+<tr>
+<td>Slack <code>views.open</code> modal</td>
+<td>Slack</td>
+<td><code>[Rollback]</code> button opens modal asking for: target
+version, scope (full vs canary), reason, on-call notify list.</td>
+</tr>
+</tbody>
+</table>
 <h3 id="186-alert-herald-aherald">18.6 Alert Herald
 (<code>aherald</code>)</h3>
 <p><strong>Focus</strong>: Monitoring-alert routing. Sits between alert
@@ -4205,6 +4624,68 @@ time-based escalation chains.</li>
 (same as <code>sherald</code>).</li>
 <li><code>Escalate:</code> — bump severity, route to on-call.</li>
 </ul>
+<h4 id="1861-channel-interactions">18.6.1 Channel interactions</h4>
+<table>
+<thead>
+<tr>
+<th>Surface</th>
+<th>Channels</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>[Ack]</code> <code>[Silence 1h]</code>
+<code>[Silence 4h]</code> <code>[Resolve]</code> <code>[Escalate]</code>
+buttons</td>
+<td>Slack, Discord, Telegram, Teams</td>
+<td>Posted on every alert; one-click. <code>[Ack]</code> carries an
+implicit time-window (acknowledgement claim lasts for the alert's
+<code>escalation_window</code>, default 15 min — if not resolved by
+then, alert re-fires and escalation re-engages).</td>
+</tr>
+<tr>
+<td>👍/🔇/🚨 reactions</td>
+<td>Slack, Discord, Telegram, Lark</td>
+<td>Cross-flavor primitives (per §18.1.1) wired to
+ack/silence/escalate.</td>
+</tr>
+<tr>
+<td><code>/aherald group &lt;service&gt;</code> slash command</td>
+<td>Slack, Discord</td>
+<td>Shows the current grouping for a service: which alerts are collapsed
+into which digest.</td>
+</tr>
+<tr>
+<td><code>/aherald inhibit &lt;parent&gt; &lt;child&gt;</code> slash
+command</td>
+<td>Slack, Discord</td>
+<td>Operator-only — creates a runtime inhibition rule without editing
+Alertmanager config (synced back via API).</td>
+</tr>
+<tr>
+<td>Alert digest card</td>
+<td>All rich channels</td>
+<td>Refreshed via §35 versioned-report mechanic — shows currently-firing
+group with member-alert chips; each chip is clickable for
+drill-down.</td>
+</tr>
+<tr>
+<td>Telegram inline-keyboard "expand" button</td>
+<td>Telegram</td>
+<td>Collapses long alert descriptions; one-tap to expand. Avoids hitting
+Telegram's message-length limit on big alert payloads.</td>
+</tr>
+<tr>
+<td>Email reply-by-keyword</td>
+<td>Email</td>
+<td>Subscribers may reply <code>ack</code>, <code>silence 4h</code>,
+<code>resolve</code>, <code>escalate</code> in the email body; Herald
+parses keywords + applies the action even without buttons (email is
+button-less).</td>
+</tr>
+</tbody>
+</table>
 <h3 id="187-schedule-herald-scherald">18.7 Schedule Herald
 (<code>scherald</code>)</h3>
 <p><strong>Focus</strong>: Scheduled jobs + recurring notifications
@@ -4241,6 +4722,57 @@ installed).</li>
 <li><code>Remind me: &lt;prose&gt;</code> — parse and create a one-shot
 reminder.</li>
 </ul>
+<h4 id="1871-channel-interactions">18.7.1 Channel interactions</h4>
+<table>
+<thead>
+<tr>
+<th>Surface</th>
+<th>Channels</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>[Snooze 1h]</code> <code>[Snooze 1d]</code>
+<code>[Snooze custom]</code> <code>[Cancel]</code> buttons</td>
+<td>Slack, Discord, Telegram, Teams</td>
+<td>One-click on every reminder. <code>[Snooze custom]</code> opens a
+modal (Slack/Discord) or DM-prompt fallback for duration entry.</td>
+</tr>
+<tr>
+<td><code>/remind &lt;subject&gt; in &lt;duration&gt;</code> slash
+command</td>
+<td>Slack, Discord, Telegram</td>
+<td>Native cross-platform reminder creation; parses
+<code>&lt;duration&gt;</code> permissively (<code>5m</code>,
+<code>2 hours</code>, <code>tomorrow 9am</code>,
+<code>next Mon 14:00 UTC</code>).</td>
+</tr>
+<tr>
+<td>`/digest &lt;daily</td>
+<td>weekly</td>
+<td>monthly&gt;` slash command</td>
+</tr>
+<tr>
+<td>🔁 reaction on a reminder</td>
+<td>Slack, Discord, Telegram</td>
+<td>Re-schedules for the same delta from now (e.g., subscriber gets
+reminder at 10:00, clicks 🔁 at 10:30 → next reminder at 11:00).</td>
+</tr>
+<tr>
+<td>Digest "[I read this]" reaction button</td>
+<td>Slack, Discord, Teams</td>
+<td>Tracks readership; in subsequent digests Herald can deprioritise
+sections fewer subscribers read (closes feedback loop).</td>
+</tr>
+<tr>
+<td>Forum-topic per recurring series</td>
+<td>Telegram (forum group)</td>
+<td>Each weekly project digest gets its own forum topic so readers can
+subscribe per series, not per channel.</td>
+</tr>
+</tbody>
+</table>
 <h3 id="188-incident-herald-iherald">18.8 Incident Herald
 (<code>iherald</code>)</h3>
 <p><strong>Focus</strong>: Incident lifecycle — declare, escalate,
@@ -4276,6 +4808,71 @@ secondary → wait 10 min → page manager.</li>
 <li><code>Update: &lt;prose&gt;</code> — post a public update.</li>
 <li><code>Resolve:</code> — close the incident.</li>
 </ul>
+<h4 id="1881-channel-interactions">18.8.1 Channel interactions</h4>
+<table>
+<thead>
+<tr>
+<th>Surface</th>
+<th>Channels</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Incident command room</td>
+<td>Slack thread / Discord forum-channel post / Telegram forum-topic /
+Teams channel</td>
+<td>Every incident gets a dedicated <strong>command room</strong> — all
+updates, page-out logs, IC handoffs, action items, and resolution land
+in one place. Auto-archived 30 days post-resolution.</td>
+</tr>
+<tr>
+<td><code>[Take IC]</code> <code>[Page sec]</code>
+<code>[Open runbook]</code> <code>[Update]</code> <code>[Resolve]</code>
+buttons</td>
+<td>Slack, Discord, Telegram, Teams</td>
+<td>Posted on every incident.opened. <code>[Take IC]</code> is a
+single-tap takeover (atomic compare-and-swap on
+<code>incidents.commander_id</code>).</td>
+</tr>
+<tr>
+<td><code>[Acknowledge page]</code> button</td>
+<td>Slack, Discord, Telegram, Teams, <strong>Email</strong>,
+<strong>WhatsApp</strong></td>
+<td>Posted on every page-out — the engineer's ack short-circuits the
+5/10-min escalation. Email implementation uses a one-click signed URL
+(Universal §11.4.10 credentials never tracked → URL signed with
+<code>[interactions].ack_signing_key</code>).</td>
+</tr>
+<tr>
+<td><code>/ic &lt;handle&gt;</code> slash command</td>
+<td>Slack, Discord</td>
+<td>Assign IC role to another subscriber; both parties get a DM
+confirming the handoff.</td>
+</tr>
+<tr>
+<td><code>/postmortem</code> slash command</td>
+<td>Slack, Discord</td>
+<td>Generates a postmortem template (using §36 multi-format export)
+seeded with the incident timeline pulled from
+<code>incident_events</code> table; opens a Slack modal / Discord thread
+for in-place authoring.</td>
+</tr>
+<tr>
+<td>Status-update reaction kbd</td>
+<td>Slack</td>
+<td>Authoring an update in the command room uses Slack's native message
+composer; a <code>[Post as public status]</code> button publishes the
+message to subscribers outside the command room.</td>
+</tr>
+<tr>
+<td>Real-time timer</td>
+<td>All rich channels</td>
+<td>Refreshed via §35 versioned-report mechanic every 60 s — shows
+time-since-open, time-since-last-update, time-to-postmortem-due.</td>
+</tr>
+</tbody>
+</table>
 <h3 id="189-release-herald-rherald">18.9 Release Herald
 (<code>rherald</code>)</h3>
 <p><strong>Focus</strong>: Release lifecycle — tags, changelogs,
@@ -4307,6 +4904,64 @@ event triggers deploy pipeline notification chain.</p>
 <li><code>Approve: &lt;dep_update&gt;</code> — approve a Renovate PR via
 authorised channel.</li>
 </ul>
+<h4 id="1891-channel-interactions">18.9.1 Channel interactions</h4>
+<table>
+<thead>
+<tr>
+<th>Surface</th>
+<th>Channels</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Release card</td>
+<td>All rich channels</td>
+<td>One pinned card per release tag with version, SBOM checksum,
+signed-provenance link, changelog excerpt, breaking-changes flag.
+Refreshed via §35 versioned-report mechanic on every related event.</td>
+</tr>
+<tr>
+<td><code>[Promote to staging]</code> <code>[Promote to prod]</code>
+<code>[Hold]</code> <code>[Open changelog]</code> buttons</td>
+<td>Slack, Discord, Telegram, Teams</td>
+<td>One-click promotion path; <code>[Promote to prod]</code> requires a
+Slack modal confirmation with <code>release_note_signoff</code> field
+(recorded in audit log per §11.4.10).</td>
+</tr>
+<tr>
+<td><code>[Approve]</code> <code>[Reject]</code> <code>[Defer 7d]</code>
+buttons</td>
+<td>Slack, Discord, Telegram</td>
+<td>Posted on every dependency-update event (Renovate / Dependabot PR).
+Approval routes back to the source via PR-comment API.</td>
+</tr>
+<tr>
+<td><code>/cve &lt;CVE-id&gt;</code> slash command</td>
+<td>Slack, Discord</td>
+<td>Returns CVSS score + affected versions in the project + remediation
+guidance.</td>
+</tr>
+<tr>
+<td><code>/release-notes</code> slash command</td>
+<td>Slack, Discord, Telegram</td>
+<td>Generates a §36 multi-format release notes bundle from
+<code>docs/changelogs/</code> since last tag.</td>
+</tr>
+<tr>
+<td>Compliance badge reactions</td>
+<td>Slack, Discord</td>
+<td>Operator reactions ✅ / ❌ on SBOM/SLSA-provenance events drive
+<code>cherald</code> triage queue.</td>
+</tr>
+<tr>
+<td>Breaking-changes thread</td>
+<td>Slack thread / Telegram forum-topic</td>
+<td>Each release with <code>breaking_changes=true</code> opens a thread
+for migration-question Q&amp;A; auto-archive 30 days post-release.</td>
+</tr>
+</tbody>
+</table>
 <h3 id="1810-compliance-herald-cherald">18.10 Compliance Herald
 (<code>cherald</code>)</h3>
 <p><strong>Focus</strong>: Audit + compliance + governance events. For
@@ -4345,6 +5000,73 @@ supports).</li>
 <p><strong>Constitution composition</strong>: <code>cherald</code>
 events plug into the parent project's Constitution §11.4.10 (credentials
 never tracked) and §11.4.18 (audit-log discipline).</p>
+<h4 id="18101-channel-interactions">18.10.1 Channel interactions</h4>
+<table>
+<thead>
+<tr>
+<th>Surface</th>
+<th>Channels</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Restricted audience by default</td>
+<td>Slack private channel, Discord role-gated channel, Telegram private
+group, Teams private team</td>
+<td>All <code>cherald</code> channel addresses default to
+<code>restricted=true</code> in <code>channel_addresses.metadata</code>;
+messages are <em>not</em> visible to unprivileged subscribers regardless
+of category.</td>
+</tr>
+<tr>
+<td><code>[Acknowledge violation]</code>
+<code>[Mark false-positive]</code> <code>[Open ticket]</code>
+buttons</td>
+<td>Slack, Discord, Teams</td>
+<td>Posted on every policy-violation event. <code>[Open ticket]</code>
+cross-flavor handoff into <code>pherald</code> (creates an investigation
+in the security workable-items track).</td>
+</tr>
+<tr>
+<td><code>/audit &lt;subscriber-id&gt;</code> slash command</td>
+<td>Slack (operator-only)</td>
+<td>Returns the audit trail for the named subscriber — every event they
+touched in the last N days. Operator-gated; emits a
+<code>digital.vasic.herald.compliance.audit.review</code> event so
+audits-of-audits are themselves audited.</td>
+</tr>
+<tr>
+<td>🔒 reaction</td>
+<td>Slack, Discord (operator-only)</td>
+<td>Marks an event as <code>sensitive</code>; subsequent re-publish
+suppresses message body in non-restricted channels, leaving only the
+event ID + "details in restricted channel" pointer.</td>
+</tr>
+<tr>
+<td>Compliance digest modal</td>
+<td>Slack <code>views.open</code></td>
+<td>Quarterly review modal lists overdue access-reviews + expiring certs
++ license issues in a single composable form for the compliance
+officer's sign-off.</td>
+</tr>
+<tr>
+<td>Email-as-system-of-record</td>
+<td>Email</td>
+<td>Every <code>cherald</code> event is <em>also</em> emailed (per the
+§35 versioned-report mechanic) so the immutable mail archive is the
+legal-grade backup; subscribers reply with <code>keep</code> /
+<code>ignore</code> keywords to drive triage.</td>
+</tr>
+<tr>
+<td>Forum-topic per compliance domain</td>
+<td>Telegram (forum group)</td>
+<td>One topic per domain (SOC2 / HIPAA / PCI-DSS / GDPR /
+internal-policy) so auditors can scope their review by clicking one
+topic.</td>
+</tr>
+</tbody>
+</table>
 <h3 id="1811-future-flavors">18.11 Future flavors</h3>
 <p>Identified candidates (NOT in V2 scope; documented to lock-in
 event-subtree namespaces):</p>
@@ -6994,5 +7716,126 @@ V2 r3 was ~3000 lines (+1255); V3 r1 adds another ~1100 lines. The spec
 has grown by ~5× in two days of iteration — about half of that is the V3
 first-version requirements (§31–§36 + §18.2 expansion), the rest was
 architectural maturity in V2's three revisions.</p>
+<h3 id="307-v3-r2-review-log-this-revision">30.7 V3 r2 review log (this
+revision)</h3>
+<p>V3 r1 specified the operator-product architecture but left every
+non-<code>pherald</code> flavor at V2's text-prefix command vocabulary.
+V3 r2 closes that gap by adding <strong>per-flavor channel-interaction
+surfaces</strong> — slash commands, reaction-based quick ops,
+interactive buttons, modal forms, threads/forum-topics — so subscribers
+can interact with each flavor through the channel's native UI
+affordances.</p>
+<h4 id="3071-findings-applied-v3-r2-nn">30.7.1 Findings applied
+(V3-R2-NN)</h4>
+<ul>
+<li><strong>V3-R2-01. No cross-flavor interaction primitives.</strong>
+Each flavor invented its own button labels and slash commands →
+cognitive load for multi-flavor deployments. Applied:
+<strong>§18.1.1</strong> establishes universal primitives every flavor
+inherits — <code>/help</code> / <code>/status</code> /
+<code>/whoami</code> / <code>/silence</code> / <code>/subscribe</code>
+slash commands with text-prefix fallback, 9-emoji reaction set wired to
+ack/silence/resolve/escalate/reopen/reclassify/spam, interactive-button
+conventions, modal-form patterns, thread/forum-topic affinity,
+capability-degradation rule.</li>
+<li><strong>V3-R2-02. <code>pherald</code> had no quick-action UI for
+investigation triage.</strong> Applied: <strong>§18.2.6</strong> adds
+<code>/investigate</code>, <code>/promote</code>, <code>/reject</code>
+slash commands; investigation-summary modal (Slack
+<code>views.open</code> / Discord modal); status-action buttons
+(<code>[Validate]</code> <code>[Reject]</code>
+<code>[Need more info]</code> <code>[Reassign]</code>); pinned
+workable-item card refreshed via §35.</li>
+<li><strong>V3-R2-03. <code>sherald</code> quick-silence pattern
+undocumented.</strong> Applied: <strong>§18.3.1</strong> adds
+<code>[Ack]</code> / <code>[Silence 1h]</code> /
+<code>[Silence 24h]</code> / <code>[Resolve]</code> /
+<code>[Runbook]</code> / <code>[Escalate]</code> buttons; one-tap 🔇
+silence; <code>/silence-similar</code> for same-service grouping;
+per-service forum topic on Telegram.</li>
+<li><strong>V3-R2-04. <code>bherald</code> had no PR/build cross-flavor
+handoff.</strong> Applied: <strong>§18.4.1</strong> introduces 🐛
+reaction → promotes failed-build to <code>pherald</code> bug
+investigation (single-emoji cross-flavor handoff); <code>[Retry]</code>
+/ <code>[Snooze flaky]</code> buttons; <code>/triage</code> slash for
+security-scan decisions; coverage-delta card; per-branch build digest
+forum topic.</li>
+<li><strong>V3-R2-05. <code>dherald</code> lacked confirmation flow for
+destructive ops.</strong> Applied: <strong>§18.5.1</strong> mandates
+Slack modal with <code>release_note_signoff</code> field on
+<code>[Rollback]</code> and <code>[Hold env]</code>;
+<code>[Promote canary]</code> button; environment status card;
+<code>[Page on-call]</code> 🚨 reaction freezes deploys to env.</li>
+<li><strong>V3-R2-06. <code>aherald</code> did not specify per-channel
+ack semantics.</strong> Applied: <strong>§18.6.1</strong> documents
+<code>[Ack]</code> carrying an implicit <code>escalation_window</code>
+timer; <code>/aherald group</code> and <code>/aherald inhibit</code>
+slash commands; Email reply-by-keyword (button-less channel still gets
+ack/silence/resolve/escalate via parsed keywords); Telegram
+inline-keyboard expand button avoids message-length limits.</li>
+<li><strong>V3-R2-07. <code>scherald</code> reminders had no snooze
+UX.</strong> Applied: <strong>§18.7.1</strong> adds
+<code>[Snooze 1h]</code> / <code>[Snooze 1d]</code> /
+<code>[Snooze custom]</code> / <code>[Cancel]</code> buttons;
+<code>/remind &lt;subject&gt; in &lt;duration&gt;</code> with permissive
+duration parser; <code>/digest &lt;daily|weekly|monthly&gt;</code>
+on-demand digest; 🔁 reaction re-schedules with the same delta; "[I read
+this]" reaction feeds digest-section deprioritisation.</li>
+<li><strong>V3-R2-08. <code>iherald</code> lacked a "command room"
+pattern.</strong> Applied: <strong>§18.8.1</strong> introduces incident
+command room (Slack thread / Discord forum-channel post / Telegram
+forum-topic / Teams channel); <code>[Take IC]</code> atomic
+compare-and-swap on <code>incidents.commander_id</code>;
+<code>[Acknowledge page]</code> button works on Email + WhatsApp via
+signed URLs; <code>/postmortem</code> slash generates §36 multi-format
+template seeded from <code>incident_events</code>; real-time timer card
+refreshed every 60 s.</li>
+<li><strong>V3-R2-09. <code>rherald</code>/<code>cherald</code> had no
+compliance-grade UX.</strong> Applied: <strong>§18.9.1</strong> adds
+release card + <code>[Promote to staging/prod]</code> /
+<code>[Hold]</code> buttons with Slack modal confirmation requiring
+<code>release_note_signoff</code> field; dependency-update
+<code>[Approve]</code> / <code>[Reject]</code> /
+<code>[Defer 7d]</code>; <code>/cve</code> and
+<code>/release-notes</code> slash commands; ✅/❌ operator reactions
+drive <code>cherald</code> triage queue; breaking-changes thread.
+<strong>§18.10.1</strong> mandates restricted-by-default channels for
+<code>cherald</code>; <code>[Acknowledge violation]</code> /
+<code>[Mark false-positive]</code> / <code>[Open ticket]</code>
+(cross-flavor handoff to <code>pherald</code>); operator-only
+<code>/audit &lt;subscriber-id&gt;</code> (which itself emits a
+<code>compliance.audit.review</code> event — audits-of-audits are
+audited); 🔒 reaction marks events sensitive; email-as-system-of-record
+with <code>keep</code>/<code>ignore</code> keyword triage; one forum
+topic per compliance domain.</li>
+</ul>
+<h4 id="3072-audit-trail-r2">30.7.2 Audit trail (r2)</h4>
+<ul>
+<li>Pre-review commit: V3 r1 at <code>e26a8dc</code>.</li>
+<li>r2 commit: covers V3-R2-01..V3-R2-09 in one logical commit on top of
+V3 r1.</li>
+<li>Inheritance gate before and after: 12 PASS / 0 FAIL.</li>
+<li>All four Herald mirrors targeted on push.</li>
+<li>V2 untouched in r2 (already at Status=superseded from r1
+commit).</li>
+</ul>
+<h4 id="3073-what-remains-for-r3">30.7.3 What remains for r3</h4>
+<ul>
+<li><strong>V3-R3-01. Full re-export of V1 + V2 + V3</strong> to keep
+§11.4.65 universal-export invariant green across the full spec set.</li>
+<li><strong>V3-R3-02. Polish pass</strong> — minor refinements surfaced
+during r2 authoring (e.g., the §31 mandatory-integration list and the
+§18.x.1 channel-interaction tables share an implicit "every channel
+supports degradation" assumption that should be explicit; the Roadmap
+§27.1 table doesn't yet mention the V3 additions).</li>
+<li><strong>V3-R3-03. Touch test on parent-project docs</strong> — check
+whether
+<code>README.md</code>/<code>CLAUDE.md</code>/<code>AGENTS.md</code>/<code>HERALD_CONSTITUTION.md</code>
+reference the old <code>specification.md</code> path and need
+redirection to V3.</li>
+<li><strong>Final commit + push EVERYTHING</strong> to all 4 Herald
+mirrors (plus constitution mirrors if any constitution edit is
+needed).</li>
+</ul>
 </body>
 </html>

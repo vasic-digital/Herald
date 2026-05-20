@@ -2,16 +2,16 @@
 
 | Field | Value |
 |---|---|
-| Revision | 1 |
+| Revision | 2 |
 | Created | 2026-05-20 |
 | Last modified | 2026-05-20 |
 | Status | active |
-| Status summary | V3 r1 supersedes V2. Adds §31 project-integration contract, §32 inbound processing pipeline (30s poll + FIFO + worker stages + anti-spam), §33 LLM/agent dispatch (Claude Code session resolution), §34 tri-stage reply protocol (queued→processing→result), §35 versioned-report fan-out with Git linkage, §36 outbound multi-format attachment bundles (Markdown + HTML + PDF + DOCX). Expanded §18.2 Project Herald with Investigation-before-Fixing flow + criticality + type classification + attachment storage at `issues/users/attachments/WORKABLE_ITEM_ID/`. |
+| Status summary | V3 r2 (this revision) refines all nine flavors for richer per-channel interaction: §18.1.1 common interaction primitives (slash/prefix command palette, reaction-based quick ops, interactive buttons, modal forms, thread/forum-topic affinity, capability degradation), §18.2.6/§18.3.1/§18.4.1/§18.5.1/§18.6.1/§18.7.1/§18.8.1/§18.9.1/§18.10.1 per-flavor channel-interaction tables. V3 r1 architecture (§31 project contract, §32 inbound pipeline, §33 LLM dispatch, §34 reply protocol, §35 versioned reports, §36 multi-format attachments) unchanged. |
 | Issues | none |
 | Issues summary | First-implementation work tracked under `HRD-` prefix; V3 is the version consuming projects integrate against. |
-| Fixed | V3-R1-01..V3-R1-14 (this revision); inherits closed: V2-R-01..V2-R-14 (V2 r2), V3-R-01..V3-R-12 (V2 r3), V1 R-01..R-22. |
-| Fixed summary | Delivers the operator-product story V2 deferred: explicit consuming-project contract, full inbound-message lifecycle, first-class Claude Code integration with project-named session resolution, tri-stage user-visible reply protocol, versioned reports re-publish with Git commit link, multi-format outbound attachments (.md/.html/.pdf/.docx). |
-| Continuation | V3 r2 (planned, same workstream): refine all flavor sections (§18.x) for richer per-channel interaction (interactive buttons, modals, reactions, slash commands, command discovery via `/help`). V3 r3 (planned): polish + re-export V1+V2+V3 + commit + push EVERYTHING. |
+| Fixed | V3-R2-01..V3-R2-09 (this revision: nine flavors' channel-interaction surfaces + cross-flavor primitives); V3-R1-01..V3-R1-14 (V3 r1); inherits closed: V2-R-01..V2-R-14 (V2 r2), V3-R-01..V3-R-12 (V2 r3), V1 R-01..R-22. |
+| Fixed summary | r2 fills the "how do subscribers actually interact with each flavor" gap r1 left open. Every flavor now has documented buttons / reactions / slash commands / modals / threads tuned to its use case, with explicit cross-flavor primitives in §18.1.1 so subscribers learn one mental model. |
+| Continuation | V3 r3 (next, same workstream): polish pass + full re-export of V1+V2+V3 (+ touched parent-project docs if any) + push EVERYTHING to all four Herald mirrors and constitution mirrors. |
 
 The **bi-directional event fan-out** system: Herald ingests events from heterogeneous sources and reliably fans them out to multiple notification channels so every alert reaches the right destination without confusion, and processes inbound replies/commands back from subscribers in a structured, security-validated way.
 
@@ -100,20 +100,30 @@ The **bi-directional event fan-out** system: Herald ingests events from heteroge
   - [17.6 `doctor` CLI](#176-doctor-cli)
 - [§18. Flavors (the implementations)](#18-flavors-the-implementations)
   - [18.1 Common flavor contract](#181-common-flavor-contract)
+  - [18.1.1 Common channel-interaction primitives (cross-flavor)](#1811-common-channel-interaction-primitives-cross-flavor)
   - [18.2 Project Herald (`pherald`)](#182-project-herald-pherald)
     - [18.2.1 Investigation-before-Fixing flow](#1821-investigation-before-fixing-flow)
     - [18.2.2 Criticality determination](#1822-criticality-determination)
     - [18.2.3 Type classification (Universal §11.4.16 mapping)](#1823-type-classification-universal-11416-mapping)
     - [18.2.4 Attachment validation + storage](#1824-attachment-validation-storage)
     - [18.2.5 Claude Code project-session integration](#1825-claude-code-project-session-integration)
+    - [18.2.6 Channel interactions](#1826-channel-interactions)
   - [18.3 System Herald (`sherald`)](#183-system-herald-sherald)
+    - [18.3.1 Channel interactions](#1831-channel-interactions)
   - [18.4 Build Herald (`bherald`)](#184-build-herald-bherald)
+    - [18.4.1 Channel interactions](#1841-channel-interactions)
   - [18.5 Deploy Herald (`dherald`)](#185-deploy-herald-dherald)
+    - [18.5.1 Channel interactions](#1851-channel-interactions)
   - [18.6 Alert Herald (`aherald`)](#186-alert-herald-aherald)
+    - [18.6.1 Channel interactions](#1861-channel-interactions)
   - [18.7 Schedule Herald (`scherald`)](#187-schedule-herald-scherald)
+    - [18.7.1 Channel interactions](#1871-channel-interactions)
   - [18.8 Incident Herald (`iherald`)](#188-incident-herald-iherald)
+    - [18.8.1 Channel interactions](#1881-channel-interactions)
   - [18.9 Release Herald (`rherald`)](#189-release-herald-rherald)
+    - [18.9.1 Channel interactions](#1891-channel-interactions)
   - [18.10 Compliance Herald (`cherald`)](#1810-compliance-herald-cherald)
+    - [18.10.1 Channel interactions](#18101-channel-interactions)
   - [18.11 Future flavors](#1811-future-flavors)
 - [§19. Diary](#19-diary)
 - [§20. Extensibility](#20-extensibility)
@@ -1987,6 +1997,47 @@ Every flavor binary MUST:
 - Provide a flavor-specific `HeraldBranding` (app name, icon, accent color).
 - Ship its own user manual under `docs/flavors/<flavor>/`.
 
+### 18.1.1 Common channel-interaction primitives (cross-flavor)
+
+Every flavor inherits these interaction primitives from `commons_messaging` so subscribers learn one mental model and apply it across channels and flavors. Per-flavor extensions are documented in each flavor's "Channel interactions" sub-section.
+
+**Slash / prefix commands** — available on every channel that supports them, with text-prefix fallback for channels that don't:
+
+| Token | Behaviour | Slack/Discord native | Text-prefix fallback |
+|---|---|---|---|
+| `/help` | List the flavor's command palette + quick-action buttons | slash command | `Help:` prefix |
+| `/status` | Snapshot of current state (open items, queue depth, channel health) | slash command | `Status:` prefix |
+| `/whoami` | Echo the subscriber's resolved identity, roles, locale, prefs | slash command | `Whoami:` prefix |
+| `/silence <duration>` | Mute notifications for the calling subscriber for the given duration | slash command | `Silence: <duration>` prefix |
+| `/unsilence` | Cancel a silence | slash command | `Unsilence:` prefix |
+| `/subscribe <category>` | Opt the calling subscriber into a category | slash command | `Subscribe: <category>` prefix |
+| `/unsubscribe <category>` | Opt out | slash command | `Unsubscribe: <category>` prefix |
+| `/prefs` | Open a modal/form to edit `PreferenceSet` (channels supporting modals); otherwise return current prefs as JSON | slash command + modal | `Prefs:` prefix returns JSON only |
+
+**Reaction-based quick ops** — for channels that support emoji reactions (Slack, Discord, Telegram, Lark). Adding a reaction to a Herald message triggers the action; removing the reaction undoes it where the action is reversible.
+
+| Emoji | Action | Reversible | Required role |
+|---|---|---|---|
+| 👍 / 👌 | Ack (acknowledge — silences re-fires for the alert fingerprint for the default window) | yes | reader+ |
+| 🔇 | Silence for the configured default duration (`[interactions].default_silence`, default 1 h) | yes | reader+ |
+| ✅ | Resolve (closes the workable item or marks the alert resolved) | no | operator |
+| 🚨 | Escalate (bumps criticality up one level and re-pages) | no | operator |
+| 🔁 | Reopen (only on resolved items) | no | operator |
+| 🐛 | Reclassify as `bug` | yes | operator |
+| 📋 | Reclassify as `task` | yes | operator |
+| ❓ | Reclassify as `query` | yes | operator |
+| 🗑️ | Mark as spam → moves to `quarantined_messages` for operator review | yes | operator |
+
+Reactions emit `digital.vasic.herald.reply.reaction_applied` CloudEvents so the diary + audit trail capture every interaction.
+
+**Interactive button actions** — for channels that support clickable buttons (Slack Block Kit `actions`, Discord components, Telegram inline keyboards with `callback_data`, Teams Adaptive Card `Action.OpenUrl` / `Action.Execute`). Herald renders a per-flavor button palette on every "actionable" message; clicks call back through the channel's webhook to Herald's `/v1/interactions/<channel>` endpoint.
+
+**Modal forms** — for Slack (`views.open`) and Discord (modal interactions), Herald can request structured input (e.g., "what's the reproduction steps for HRD-042?") instead of free-form chat. Falls back to a multi-message conversation on channels without modal support.
+
+**Thread / forum-topic affinity** — incident-style flavors (`iherald`, `aherald`) pin all related messages to one thread / Telegram forum topic / Slack thread / Discord forum-channel post, so the conversation is self-contained for postmortem readers. Composes with §12 `ConversationRef` + §35 versioned reports.
+
+**Capability degradation** — if a channel doesn't support a primitive, Herald MUST degrade gracefully (text instructions instead of buttons, etc.) — never silently drop the interaction. The §11.0 `Capabilities` struct declares per-channel support; the router consults it before rendering.
+
 ### 18.2 Project Herald (`pherald`)
 
 **Focus**: Software-project development lifecycle. Integrates with VCS, code review, task tracking. Designed for AI-CLI-agent + developer-team workflows.
@@ -2146,6 +2197,19 @@ Per §33.2 the Claude Code session for the consuming project is anchored at `<co
 - The session anchor is read-only to Herald; manual deletion resets the session (operators MAY want this when Claude's context degrades — e.g. after a long-running incident produces a noisy session).
 - The flavor binary refuses to start if `[herald].project_name` is empty (Claude Code dispatch is non-optional in V3 r1).
 
+#### 18.2.6 Channel interactions
+
+In addition to the §18.1.1 cross-flavor primitives, `pherald` ships these flavor-specific interactive surfaces:
+
+| Surface | Channels | What it does |
+|---|---|---|
+| `/investigate <HRD-NNN>` slash command | Slack, Discord, Telegram | Re-runs the investigation phase for an existing item (useful after the subscriber adds more attachments to the thread). |
+| `/promote <HRD-INV-NNN>` slash command | Slack, Discord | Operator-only — force-promotes an investigation to a final workable item without waiting for LLM validation. |
+| `/reject <HRD-INV-NNN> <reason>` slash command | Slack, Discord | Operator-only — closes an investigation with a documented reason. |
+| `Investigation summary modal` | Slack `views.open`, Discord modal | When a subscriber clicks "Add reproduction steps" on Reply B, opens a structured modal asking for: repro steps, expected vs actual, environment, attachments. |
+| Investigation status buttons | Slack Block Kit `actions`, Telegram inline keyboard, Discord buttons | On Reply C of an investigation: `[Validate]` `[Reject]` `[Need more info]` `[Reassign]`. |
+| Workable-item card | All channels with rich messaging | A pinned card with workable item summary + criticality badge + assignee + status — refreshed via §35 versioned-report mechanic on every status change. |
+
 ### 18.3 System Herald (`sherald`)
 
 **Focus**: OS/host/service health and security. Designed for systems-administration teams + on-call rotation.
@@ -2185,6 +2249,18 @@ Per §33.2 the Claude Code session for the consuming project is anchored at `<co
 
 **Integrations**: `sherald` is often paired with `aherald` and `iherald` — the three flavors share the `commons_alert` package.
 
+#### 18.3.1 Channel interactions
+
+| Surface | Channels | What it does |
+|---|---|---|
+| Quick-action buttons on every alert | Slack, Discord, Telegram, Teams | `[Ack]` `[Silence 1h]` `[Silence 24h]` `[Resolve]` `[Runbook]` `[Escalate]` |
+| 🔇 reaction | Slack, Discord, Telegram, Lark | One-tap silence for the alert's fingerprint for the default window (1 h) — most-common-action wins the easiest UX. |
+| `/silence-similar` slash command | Slack, Discord | Silences not just the current fingerprint but every alert sharing the same `service` label + severity. |
+| `/runbook <fingerprint>` slash command | Slack, Discord, Telegram | Posts the runbook URL inline (saves operators from copy-pasting). |
+| Service-health card | All rich channels | Per-service status card with last-N alerts, MTTR, current open count — refreshed via §35 versioned-report mechanic. |
+| Slack `views.open` modal | Slack | Triggered by `[Silence custom…]` button — modal asks for duration + reason + scope (just fingerprint vs whole service). |
+| Forum-topic per service | Telegram (forum group) | Each service gets its own forum topic; all alerts for that service land there → less noise in the main channel. |
+
 ### 18.4 Build Herald (`bherald`)
 
 **Focus**: CI/CD build lifecycle events. Designed for development teams + release engineers.
@@ -2220,6 +2296,17 @@ Per §33.2 the Claude Code session for the consuming project is anchored at `<co
 - `Snooze: <duration>` — silence a flaky test.
 - `Triage: <finding>` — mark a security finding for review.
 
+#### 18.4.1 Channel interactions
+
+| Surface | Channels | What it does |
+|---|---|---|
+| `[Retry]` `[Open logs]` `[Blame]` buttons | Slack, Discord, Telegram, Teams | Posted alongside every failed-build message; one-click access to the most common follow-ups. |
+| `[Snooze flaky 1d]` `[Snooze flaky forever]` buttons | Slack, Discord | Posted on flaky-test events to throttle noise without needing prefix commands. |
+| `/triage <finding-id> {accepted|wont-fix|false-positive}` slash command | Slack, Discord | Records security-scan triage decisions; emits `digital.vasic.herald.ci.security_scan.triaged`. |
+| 🐛 reaction | Slack, Discord, Telegram | Promotes a failed-build event into a `pherald` bug investigation (`HRD-INV-NNN`) — one-emoji cross-flavor handoff. |
+| Coverage delta card | Slack, Discord, Teams | Posted on every PR's CI completion; shows new-vs-base coverage + which files dropped + jump-to-blame. |
+| Build digest forum topic | Telegram (forum group) | All build events for the same branch land in one topic; auto-archives on branch deletion. |
+
 ### 18.5 Deploy Herald (`dherald`)
 
 **Focus**: Release / deployment / rollout events.
@@ -2253,6 +2340,17 @@ Per §33.2 the Claude Code session for the consuming project is anchored at `<co
 
 **Composes with `rherald`** for the full release pipeline.
 
+#### 18.5.1 Channel interactions
+
+| Surface | Channels | What it does |
+|---|---|---|
+| `[Rollback]` `[Promote canary]` `[Hold env]` `[Open dashboard]` buttons | Slack, Discord, Telegram, Teams | Posted on every deploy event with elevated-role check before execution. Confirmation modal required for `Rollback` and `Hold env` (destructive). |
+| 🚨 reaction on a deploy event | Slack, Discord | Pages the on-call engineer + freezes further deploys to that env (one-emoji shortcut for "rollback in progress"). |
+| `/promote <deploy_id>` slash command | Slack, Discord | Promotes a canary to full rollout (operator role required). |
+| `/hold <env> <duration> [reason]` slash command | Slack, Discord | Freezes deploys to an env; bidirectional sync to deploy tool. |
+| Environment status card | All rich channels | One card per env (dev / staging / canary / prod) with current version + last deploy + health-check status — refreshed via §35 versioned-report mechanic on every event. |
+| Slack `views.open` modal | Slack | `[Rollback]` button opens modal asking for: target version, scope (full vs canary), reason, on-call notify list. |
+
 ### 18.6 Alert Herald (`aherald`)
 
 **Focus**: Monitoring-alert routing. Sits between alert producers (Alertmanager, Datadog, Grafana) and human/on-call channels (PagerDuty, OpsGenie, Slack). Provides smarter routing than Alertmanager's native receivers.
@@ -2279,6 +2377,18 @@ Per §33.2 the Claude Code session for the consuming project is anchored at `<co
 
 - `Ack:`, `Silence:`, `Resolve:` (same as `sherald`).
 - `Escalate:` — bump severity, route to on-call.
+
+#### 18.6.1 Channel interactions
+
+| Surface | Channels | What it does |
+|---|---|---|
+| `[Ack]` `[Silence 1h]` `[Silence 4h]` `[Resolve]` `[Escalate]` buttons | Slack, Discord, Telegram, Teams | Posted on every alert; one-click. `[Ack]` carries an implicit time-window (acknowledgement claim lasts for the alert's `escalation_window`, default 15 min — if not resolved by then, alert re-fires and escalation re-engages). |
+| 👍/🔇/🚨 reactions | Slack, Discord, Telegram, Lark | Cross-flavor primitives (per §18.1.1) wired to ack/silence/escalate. |
+| `/aherald group <service>` slash command | Slack, Discord | Shows the current grouping for a service: which alerts are collapsed into which digest. |
+| `/aherald inhibit <parent> <child>` slash command | Slack, Discord | Operator-only — creates a runtime inhibition rule without editing Alertmanager config (synced back via API). |
+| Alert digest card | All rich channels | Refreshed via §35 versioned-report mechanic — shows currently-firing group with member-alert chips; each chip is clickable for drill-down. |
+| Telegram inline-keyboard "expand" button | Telegram | Collapses long alert descriptions; one-tap to expand. Avoids hitting Telegram's message-length limit on big alert payloads. |
+| Email reply-by-keyword | Email | Subscribers may reply `ack`, `silence 4h`, `resolve`, `escalate` in the email body; Herald parses keywords + applies the action even without buttons (email is button-less). |
 
 ### 18.7 Schedule Herald (`scherald`)
 
@@ -2309,6 +2419,17 @@ Per §33.2 the Claude Code session for the consuming project is anchored at `<co
 - `Snooze: <reminder_id> for <duration>`.
 - `Cancel: <reminder_id>`.
 - `Remind me: <prose>` — parse and create a one-shot reminder.
+
+#### 18.7.1 Channel interactions
+
+| Surface | Channels | What it does |
+|---|---|---|
+| `[Snooze 1h]` `[Snooze 1d]` `[Snooze custom]` `[Cancel]` buttons | Slack, Discord, Telegram, Teams | One-click on every reminder. `[Snooze custom]` opens a modal (Slack/Discord) or DM-prompt fallback for duration entry. |
+| `/remind <subject> in <duration>` slash command | Slack, Discord, Telegram | Native cross-platform reminder creation; parses `<duration>` permissively (`5m`, `2 hours`, `tomorrow 9am`, `next Mon 14:00 UTC`). |
+| `/digest <daily|weekly|monthly>` slash command | Slack, Discord | On-demand digest generation; emits a §35 versioned report so subscribers can preview before the scheduled time. |
+| 🔁 reaction on a reminder | Slack, Discord, Telegram | Re-schedules for the same delta from now (e.g., subscriber gets reminder at 10:00, clicks 🔁 at 10:30 → next reminder at 11:00). |
+| Digest "[I read this]" reaction button | Slack, Discord, Teams | Tracks readership; in subsequent digests Herald can deprioritise sections fewer subscribers read (closes feedback loop). |
+| Forum-topic per recurring series | Telegram (forum group) | Each weekly project digest gets its own forum topic so readers can subscribe per series, not per channel. |
 
 ### 18.8 Incident Herald (`iherald`)
 
@@ -2342,6 +2463,18 @@ Per §33.2 the Claude Code session for the consuming project is anchored at `<co
 - `Update: <prose>` — post a public update.
 - `Resolve:` — close the incident.
 
+#### 18.8.1 Channel interactions
+
+| Surface | Channels | What it does |
+|---|---|---|
+| Incident command room | Slack thread / Discord forum-channel post / Telegram forum-topic / Teams channel | Every incident gets a dedicated **command room** — all updates, page-out logs, IC handoffs, action items, and resolution land in one place. Auto-archived 30 days post-resolution. |
+| `[Take IC]` `[Page sec]` `[Open runbook]` `[Update]` `[Resolve]` buttons | Slack, Discord, Telegram, Teams | Posted on every incident.opened. `[Take IC]` is a single-tap takeover (atomic compare-and-swap on `incidents.commander_id`). |
+| `[Acknowledge page]` button | Slack, Discord, Telegram, Teams, **Email**, **WhatsApp** | Posted on every page-out — the engineer's ack short-circuits the 5/10-min escalation. Email implementation uses a one-click signed URL (Universal §11.4.10 credentials never tracked → URL signed with `[interactions].ack_signing_key`). |
+| `/ic <handle>` slash command | Slack, Discord | Assign IC role to another subscriber; both parties get a DM confirming the handoff. |
+| `/postmortem` slash command | Slack, Discord | Generates a postmortem template (using §36 multi-format export) seeded with the incident timeline pulled from `incident_events` table; opens a Slack modal / Discord thread for in-place authoring. |
+| Status-update reaction kbd | Slack | Authoring an update in the command room uses Slack's native message composer; a `[Post as public status]` button publishes the message to subscribers outside the command room. |
+| Real-time timer | All rich channels | Refreshed via §35 versioned-report mechanic every 60 s — shows time-since-open, time-since-last-update, time-to-postmortem-due. |
+
 ### 18.9 Release Herald (`rherald`)
 
 **Focus**: Release lifecycle — tags, changelogs, dependency notifications.
@@ -2369,6 +2502,18 @@ Per §33.2 the Claude Code session for the consuming project is anchored at `<co
 
 - `Promote: <version> to <env>`.
 - `Approve: <dep_update>` — approve a Renovate PR via authorised channel.
+
+#### 18.9.1 Channel interactions
+
+| Surface | Channels | What it does |
+|---|---|---|
+| Release card | All rich channels | One pinned card per release tag with version, SBOM checksum, signed-provenance link, changelog excerpt, breaking-changes flag. Refreshed via §35 versioned-report mechanic on every related event. |
+| `[Promote to staging]` `[Promote to prod]` `[Hold]` `[Open changelog]` buttons | Slack, Discord, Telegram, Teams | One-click promotion path; `[Promote to prod]` requires a Slack modal confirmation with `release_note_signoff` field (recorded in audit log per §11.4.10). |
+| `[Approve]` `[Reject]` `[Defer 7d]` buttons | Slack, Discord, Telegram | Posted on every dependency-update event (Renovate / Dependabot PR). Approval routes back to the source via PR-comment API. |
+| `/cve <CVE-id>` slash command | Slack, Discord | Returns CVSS score + affected versions in the project + remediation guidance. |
+| `/release-notes` slash command | Slack, Discord, Telegram | Generates a §36 multi-format release notes bundle from `docs/changelogs/` since last tag. |
+| Compliance badge reactions | Slack, Discord | Operator reactions ✅ / ❌ on SBOM/SLSA-provenance events drive `cherald` triage queue. |
+| Breaking-changes thread | Slack thread / Telegram forum-topic | Each release with `breaking_changes=true` opens a thread for migration-question Q&A; auto-archive 30 days post-release. |
 
 ### 18.10 Compliance Herald (`cherald`)
 
@@ -2400,6 +2545,18 @@ Per §33.2 the Claude Code session for the consuming project is anchored at `<co
 - Quarterly summary digest emailed to compliance officer.
 
 **Constitution composition**: `cherald` events plug into the parent project's Constitution §11.4.10 (credentials never tracked) and §11.4.18 (audit-log discipline).
+
+#### 18.10.1 Channel interactions
+
+| Surface | Channels | What it does |
+|---|---|---|
+| Restricted audience by default | Slack private channel, Discord role-gated channel, Telegram private group, Teams private team | All `cherald` channel addresses default to `restricted=true` in `channel_addresses.metadata`; messages are *not* visible to unprivileged subscribers regardless of category. |
+| `[Acknowledge violation]` `[Mark false-positive]` `[Open ticket]` buttons | Slack, Discord, Teams | Posted on every policy-violation event. `[Open ticket]` cross-flavor handoff into `pherald` (creates an investigation in the security workable-items track). |
+| `/audit <subscriber-id>` slash command | Slack (operator-only) | Returns the audit trail for the named subscriber — every event they touched in the last N days. Operator-gated; emits a `digital.vasic.herald.compliance.audit.review` event so audits-of-audits are themselves audited. |
+| 🔒 reaction | Slack, Discord (operator-only) | Marks an event as `sensitive`; subsequent re-publish suppresses message body in non-restricted channels, leaving only the event ID + "details in restricted channel" pointer. |
+| Compliance digest modal | Slack `views.open` | Quarterly review modal lists overdue access-reviews + expiring certs + license issues in a single composable form for the compliance officer's sign-off. |
+| Email-as-system-of-record | Email | Every `cherald` event is *also* emailed (per the §35 versioned-report mechanic) so the immutable mail archive is the legal-grade backup; subscribers reply with `keep` / `ignore` keywords to drive triage. |
+| Forum-topic per compliance domain | Telegram (forum group) | One topic per domain (SOC2 / HIPAA / PCI-DSS / GDPR / internal-policy) so auditors can scope their review by clicking one topic. |
 
 ### 18.11 Future flavors
 
@@ -3687,3 +3844,34 @@ This is **not** a desk-review of V2 — it is a *requirements-driven* expansion.
 - V2 metadata bumped to `Status=superseded`; V2 re-exported to keep §11.4.65 invariant green.
 
 Statistical context: V1 was 594 lines; V2 r1 was 1745 lines (+1151); V2 r3 was ~3000 lines (+1255); V3 r1 adds another ~1100 lines. The spec has grown by ~5× in two days of iteration — about half of that is the V3 first-version requirements (§31–§36 + §18.2 expansion), the rest was architectural maturity in V2's three revisions.
+
+### 30.7 V3 r2 review log (this revision)
+
+V3 r1 specified the operator-product architecture but left every non-`pherald` flavor at V2's text-prefix command vocabulary. V3 r2 closes that gap by adding **per-flavor channel-interaction surfaces** — slash commands, reaction-based quick ops, interactive buttons, modal forms, threads/forum-topics — so subscribers can interact with each flavor through the channel's native UI affordances.
+
+#### 30.7.1 Findings applied (V3-R2-NN)
+
+- **V3-R2-01. No cross-flavor interaction primitives.** Each flavor invented its own button labels and slash commands → cognitive load for multi-flavor deployments. Applied: **§18.1.1** establishes universal primitives every flavor inherits — `/help` / `/status` / `/whoami` / `/silence` / `/subscribe` slash commands with text-prefix fallback, 9-emoji reaction set wired to ack/silence/resolve/escalate/reopen/reclassify/spam, interactive-button conventions, modal-form patterns, thread/forum-topic affinity, capability-degradation rule.
+- **V3-R2-02. `pherald` had no quick-action UI for investigation triage.** Applied: **§18.2.6** adds `/investigate`, `/promote`, `/reject` slash commands; investigation-summary modal (Slack `views.open` / Discord modal); status-action buttons (`[Validate]` `[Reject]` `[Need more info]` `[Reassign]`); pinned workable-item card refreshed via §35.
+- **V3-R2-03. `sherald` quick-silence pattern undocumented.** Applied: **§18.3.1** adds `[Ack]` / `[Silence 1h]` / `[Silence 24h]` / `[Resolve]` / `[Runbook]` / `[Escalate]` buttons; one-tap 🔇 silence; `/silence-similar` for same-service grouping; per-service forum topic on Telegram.
+- **V3-R2-04. `bherald` had no PR/build cross-flavor handoff.** Applied: **§18.4.1** introduces 🐛 reaction → promotes failed-build to `pherald` bug investigation (single-emoji cross-flavor handoff); `[Retry]` / `[Snooze flaky]` buttons; `/triage` slash for security-scan decisions; coverage-delta card; per-branch build digest forum topic.
+- **V3-R2-05. `dherald` lacked confirmation flow for destructive ops.** Applied: **§18.5.1** mandates Slack modal with `release_note_signoff` field on `[Rollback]` and `[Hold env]`; `[Promote canary]` button; environment status card; `[Page on-call]` 🚨 reaction freezes deploys to env.
+- **V3-R2-06. `aherald` did not specify per-channel ack semantics.** Applied: **§18.6.1** documents `[Ack]` carrying an implicit `escalation_window` timer; `/aherald group` and `/aherald inhibit` slash commands; Email reply-by-keyword (button-less channel still gets ack/silence/resolve/escalate via parsed keywords); Telegram inline-keyboard expand button avoids message-length limits.
+- **V3-R2-07. `scherald` reminders had no snooze UX.** Applied: **§18.7.1** adds `[Snooze 1h]` / `[Snooze 1d]` / `[Snooze custom]` / `[Cancel]` buttons; `/remind <subject> in <duration>` with permissive duration parser; `/digest <daily|weekly|monthly>` on-demand digest; 🔁 reaction re-schedules with the same delta; "[I read this]" reaction feeds digest-section deprioritisation.
+- **V3-R2-08. `iherald` lacked a "command room" pattern.** Applied: **§18.8.1** introduces incident command room (Slack thread / Discord forum-channel post / Telegram forum-topic / Teams channel); `[Take IC]` atomic compare-and-swap on `incidents.commander_id`; `[Acknowledge page]` button works on Email + WhatsApp via signed URLs; `/postmortem` slash generates §36 multi-format template seeded from `incident_events`; real-time timer card refreshed every 60 s.
+- **V3-R2-09. `rherald`/`cherald` had no compliance-grade UX.** Applied: **§18.9.1** adds release card + `[Promote to staging/prod]` / `[Hold]` buttons with Slack modal confirmation requiring `release_note_signoff` field; dependency-update `[Approve]` / `[Reject]` / `[Defer 7d]`; `/cve` and `/release-notes` slash commands; ✅/❌ operator reactions drive `cherald` triage queue; breaking-changes thread. **§18.10.1** mandates restricted-by-default channels for `cherald`; `[Acknowledge violation]` / `[Mark false-positive]` / `[Open ticket]` (cross-flavor handoff to `pherald`); operator-only `/audit <subscriber-id>` (which itself emits a `compliance.audit.review` event — audits-of-audits are audited); 🔒 reaction marks events sensitive; email-as-system-of-record with `keep`/`ignore` keyword triage; one forum topic per compliance domain.
+
+#### 30.7.2 Audit trail (r2)
+
+- Pre-review commit: V3 r1 at `e26a8dc`.
+- r2 commit: covers V3-R2-01..V3-R2-09 in one logical commit on top of V3 r1.
+- Inheritance gate before and after: 12 PASS / 0 FAIL.
+- All four Herald mirrors targeted on push.
+- V2 untouched in r2 (already at Status=superseded from r1 commit).
+
+#### 30.7.3 What remains for r3
+
+- **V3-R3-01. Full re-export of V1 + V2 + V3** to keep §11.4.65 universal-export invariant green across the full spec set.
+- **V3-R3-02. Polish pass** — minor refinements surfaced during r2 authoring (e.g., the §31 mandatory-integration list and the §18.x.1 channel-interaction tables share an implicit "every channel supports degradation" assumption that should be explicit; the Roadmap §27.1 table doesn't yet mention the V3 additions).
+- **V3-R3-03. Touch test on parent-project docs** — check whether `README.md`/`CLAUDE.md`/`AGENTS.md`/`HERALD_CONSTITUTION.md` reference the old `specification.md` path and need redirection to V3.
+- **Final commit + push EVERYTHING** to all 4 Herald mirrors (plus constitution mirrors if any constitution edit is needed).
