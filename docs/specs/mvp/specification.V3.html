@@ -5593,7 +5593,7 @@ quickstart (5-minute Docker Compose)</h3>
 fanning out to Telegram + Email in five minutes on a fresh laptop. This
 is the canonical "hello world" deployment.</p>
 <div class="sourceCode" id="cb34"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co"># docker-compose.quickstart.yml — referenced from containers/quickstart/</span></span>
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co"># docker-compose.quickstart.yml — referenced from quickstart/</span></span>
 <span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="fu">version</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;3.8&quot;</span></span>
 <span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a><span class="fu">services</span><span class="kw">:</span></span>
 <span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">postgres</span><span class="kw">:</span></span>
@@ -5659,7 +5659,7 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb35-1"><a href=
 <span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a><span class="va">$EDITOR</span> .env   <span class="co"># set HERALD_DB_PASSWORD, HERALD_REDIS_PASSWORD, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID</span></span>
 <span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Boot</span></span>
-<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> compose <span class="at">-f</span> containers/quickstart/docker-compose.quickstart.yml up <span class="at">-d</span></span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> compose <span class="at">-f</span> quickstart/docker-compose.quickstart.yml up <span class="at">-d</span></span>
 <span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb35-12"><a href="#cb35-12" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Wait for ready</span></span>
 <span id="cb35-13"><a href="#cb35-13" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">--retry</span> 30 <span class="at">--retry-delay</span> 2 <span class="at">--retry-connrefused</span> http://localhost:24090/readyz</span>
@@ -8409,12 +8409,11 @@ deployment.</li>
 <code>-ldflags</code>).</li>
 <li>SBOM + cosign signatures per V3 §21.</li>
 </ul>
-<p>Operators MAY use
-<code>containers/quickstart/Dockerfile.pherald</code> (shipped in this
-commit at HRD-008) as a <em>local development bridge</em> until the
-<code>containers</code> Submodule is added; once the submodule lands,
-the quickstart files migrate there and Herald's <code>containers/</code>
-directory becomes a thin pointer.</p>
+<p>Operators MAY use <code>quickstart/Dockerfile.pherald</code> (shipped
+in this commit at HRD-008) as a <em>local development bridge</em> until
+the <code>containers</code> Submodule is added; once the submodule
+lands, the quickstart files migrate there and Herald's
+<code>containers/</code> directory becomes a thin pointer.</p>
 <h3 id="417-openapi-generation">41.7 OpenAPI generation</h3>
 <p>Per §24.1, <code>docs/api/openapi.v1.yaml</code> is the
 source-of-truth schema. Gin-based REST handlers MUST be tagged with
@@ -9873,8 +9872,8 @@ expansion, multi-flavor binaries) builds on Foundation.</p>
 <code>POST /v1/events</code>, fans it out to the <code>null://</code>
 channel, writes a <code>constitution_state</code> row with the correct
 transition, and exposes that row via <code>GET /v1/compliance</code>.
-The full smoke is reproduced in <code>containers/quickstart/</code> and
-runs in CI per §40.</p>
+The full smoke is reproduced in <code>quickstart/</code> and runs in CI
+per §40.</p>
 <h3
 id="443-three-milestone-delivery-approach-b--bottom-up-vertical-slices">§44.3
 Three-milestone delivery (Approach B — bottom-up vertical slices)</h3>

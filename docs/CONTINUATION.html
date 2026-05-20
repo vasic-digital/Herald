@@ -285,7 +285,7 @@ lines).</li>
 <code>commons_storage</code>, <code>pherald</code> (all compile + unit
 tests pass).</li>
 <li><strong>Container scaffold:</strong>
-<code>containers/quickstart/{docker-compose.quickstart.yml, Dockerfile.pherald, otel-config.yaml, .env.example}</code>
+<code>quickstart/{docker-compose.quickstart.yml, Dockerfile.pherald, otel-config.yaml, .env.example}</code>
 for §26.5 quickstart.</li>
 <li><strong>CLI:</strong> <code>pherald version --json</code> returns
 canonical build info;
@@ -378,7 +378,7 @@ mode-ladder runtime config.</p></li>
 laptop with Podman or Docker:</p>
 <pre><code>git clone &lt;Herald repo&gt;
 git submodule update --init
-cd containers/quickstart
+cd quickstart
 podman build -t herald/pherald:dev -f Dockerfile.pherald ../..
 cp .env.example ../../.env &amp;&amp; $EDITOR ../../.env
 podman-compose -f docker-compose.quickstart.yml up -d
@@ -422,7 +422,7 @@ extending Universal.</li>
 <li><code>docs/guides/CONSTITUTION_INHERITANCE.md</code> —
 parent-discovery + gate.</li>
 <li><code>tests/test_constitution_inheritance.sh</code> — the gate.</li>
-<li><code>containers/quickstart/</code> — HRD-008 scaffold.</li>
+<li><code>quickstart/</code> — HRD-008 scaffold.</li>
 <li><code>commons/types.go</code> — the §11.0 type contract
 reference.</li>
 </ul>

@@ -418,9 +418,17 @@ embedded via <code>//go:embed</code>; pgx + River + Redis wiring pending
 <li><code>pherald/cmd/pherald/</code> — Cobra CLI;
 <code>pherald version</code> works end-to-end; other subcommands stubbed
 with HRD-NNN error pointers.</li>
-<li><code>containers/quickstart/</code> — Docker/Podman Compose +
+<li><code>quickstart/</code> — Herald-specific Docker/Podman Compose +
 Dockerfile + otel-config + <code>.env.example</code> per §26.5 (HRD-008
-open for operator validation).</li>
+open for operator validation). Migrated from
+<code>containers/quickstart/</code> 2026-05-20 when the
+<code>containers/</code> submodule was added.</li>
+<li><code>containers/</code> — git submodule pointing at
+<code>git@github.com:vasic-digital/containers.git</code> (the
+<code>digital.vasic.containers</code> Go module — runtime auto-detection
++ on-demand container boot + lifecycle/health). Imported by Foundation
+tests + the <code>pherald doctor</code> subcommand to bring Postgres +
+Redis + OTel up on-demand.</li>
 </ul>
 <p><strong>Build + test:</strong> from the repo root:</p>
 <div class="sourceCode" id="cb3"><pre

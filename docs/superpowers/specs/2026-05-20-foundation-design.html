@@ -965,7 +965,7 @@ set UUID</td>
 </table>
 <h3 id="53-m3-end-to-end-smoke-containerised">§5.3 M3 end-to-end smoke
 (containerised)</h3>
-<p>Manual + scripted via <code>containers/quickstart/</code>:</p>
+<p>Manual + scripted via <code>quickstart/</code>:</p>
 <pre><code>podman-compose -f docker-compose.quickstart.yml up -d
 curl --retry 30 --retry-delay 2 http://localhost:24091/v1/healthz
 curl -X POST http://localhost:24091/v1/events \
@@ -1071,10 +1071,10 @@ running process invalidates its own local cache. <strong>Resolve before
 M3 closes.</strong></li>
 <li><strong>JWT issuer + JWKS source.</strong> Foundation needs a
 dev-mode issuer for the M3 smoke. Options: (a) a static dev-only JWKS
-file under <code>containers/quickstart/</code>, (b) embed a tiny HS256
-issuer in pherald itself for dev, (c) require operator to point at an
-external IdP from day one. Recommendation: (a) — minimum friction,
-clearly dev-only. <strong>Resolve before M3 closes.</strong></li>
+file under <code>quickstart/</code>, (b) embed a tiny HS256 issuer in
+pherald itself for dev, (c) require operator to point at an external IdP
+from day one. Recommendation: (a) — minimum friction, clearly dev-only.
+<strong>Resolve before M3 closes.</strong></li>
 </ol>
 <h2 id="8-spec-landing--44-of-specificationv3md">§8. Spec landing — §44
 of <code>specification.V3.md</code></h2>

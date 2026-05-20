@@ -13,3 +13,6 @@
 [submodule "submodules/config"]
 	path = submodules/config
 	url = git@github.com:vasic-digital/config.git
+[submodule "containers"]
+	path = containers
+	url = git@github.com:vasic-digital/containers.git

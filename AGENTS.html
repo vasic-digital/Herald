@@ -395,7 +395,11 @@ pass. <code>pherald version --json</code> returns build info. The full
 <code>null://</code> sandbox adapter is fully working with 8 unit tests.
 SQL migrations 000001..000005 embedded via <code>//go:embed</code>.
 Docker/Podman Compose for §26.5 Quickstart shipped under
-<code>containers/quickstart/</code>.</p>
+<code>quickstart/</code> (migrated from
+<code>containers/quickstart/</code> when the <code>containers/</code>
+submodule landed). On-demand container orchestration is provided by the
+<code>containers/</code> submodule
+(<code>digital.vasic.containers</code>).</p>
 <p>Build + test from repo root:</p>
 <pre><code>go test ./commons/... ./commons_prefix/... ./commons_messaging/... ./commons_storage/...
 go build -o /tmp/pherald-dev ./pherald/cmd/pherald</code></pre>
