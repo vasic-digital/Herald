@@ -17,9 +17,10 @@
 // Licensed under the terms in ../LICENSE.
 module github.com/vasic-digital/herald/commons_constitution
 
-go 1.22
+go 1.25.0
 
 require (
+	digital.vasic.database v0.0.0
 	github.com/cloudevents/sdk-go/v2 v2.15.2
 	github.com/google/uuid v1.6.0
 )
@@ -34,3 +35,5 @@ require (
 )
 
 replace github.com/vasic-digital/herald/commons => ../commons
+
+replace digital.vasic.database => ../submodules/database

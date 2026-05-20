@@ -1,0 +1,6 @@
+-- 000008_force_rls.down.sql — rollback FORCE ROW LEVEL SECURITY.
+BEGIN;
+ALTER TABLE constitution_state    NO FORCE ROW LEVEL SECURITY;
+ALTER TABLE constitution_audit    NO FORCE ROW LEVEL SECURITY;
+ALTER TABLE constitution_bindings NO FORCE ROW LEVEL SECURITY;
+COMMIT;
