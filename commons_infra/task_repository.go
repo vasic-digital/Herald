@@ -36,6 +36,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	db "digital.vasic.database/pkg/database"
@@ -364,7 +365,9 @@ func scanTask(row db.Row) (*models.BackgroundTask, error) {
 		// Bridge pgx-driver-specific no-rows to a Herald-local sentinel.
 		// The error message contains "no rows" in standard pgx; the upstream
 		// queue treats nil-task + nil-error as "queue empty".
-		if errMsgContains(err, "no rows") {
+		// TODO: replace substring-match with a proper ErrNoRows sentinel once
+		// digital.vasic.database exposes one (follow-up HRD).
+		if strings.Contains(err.Error(), "no rows") {
 			return nil, errNoRows
 		}
 		return nil, fmt.Errorf("scanTask: %w", err)
@@ -387,20 +390,4 @@ func scanTask(row db.Row) (*models.BackgroundTask, error) {
 	t.Tags = tags
 	t.Metadata = metadata
 	return &t, nil
-}
-
-// errMsgContains is a tiny helper to bridge the pgx-driver-specific
-// "no rows" error (pgx.ErrNoRows.Error() == "no rows in result set")
-// without importing pgx directly here.
-func errMsgContains(err error, substr string) bool {
-	if err == nil {
-		return false
-	}
-	msg := err.Error()
-	for i := 0; i+len(substr) <= len(msg); i++ {
-		if msg[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
 }

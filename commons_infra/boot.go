@@ -45,8 +45,8 @@ import (
 	"digital.vasic.containers/pkg/compose"
 	"digital.vasic.containers/pkg/logging"
 	"digital.vasic.database/pkg/database"
-	storage "github.com/vasic-digital/herald/commons_storage"
 	"github.com/sirupsen/logrus"
+	storage "github.com/vasic-digital/herald/commons_storage"
 )
 
 // DefaultProjectName is the compose --project-name Herald uses by convention.
@@ -262,6 +262,7 @@ func (b *QuickstartBoot) Up(ctx context.Context) error {
 			if pool != nil {
 				_ = pool.Close()
 				b.pool = nil
+				b.queue = nil // symmetry with Down() lifecycle contract: queue was constructed atop the now-closed pool
 			}
 			return fmt.Errorf("commons_infra.Up: redis healthcheck: %w", err)
 		}
