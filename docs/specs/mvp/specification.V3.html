@@ -251,7 +251,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>4</td>
+<td>5</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -267,15 +267,18 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td>V3 r4 — five new operator-mandated sections (§37 tracker-doc change
-events, §38 workable-item announcement contract with
-attachment-size-aware inline vs permalink fallback, §39 message
-presentation + Herald Canonical Template + style rules, §40
-documentation + test-tier + 15 named challenges mandate, §41 REST API
-surface via Gin Gonic). Per the new Universal §11.4.6X versioning rule
-(landing in the constitution-submodule commit immediately following this
-one), secondary-version bump (Revision 3 → 4) is appropriate — these are
-additive operator-mandated requirements, not a primary-version
+<td>V3 r5 — new §42 Constitution-flavor binding catalogue lands: 65
+rule→flavor bindings derived from a deep survey of Constitution.md +
+research across OPA Gatekeeper, OPA Decision Logs, Kyverno
+PolicyReports, AWS CloudTrail/Config, GCP Cloud Audit Logs, GitHub
+branch-protection, NIST SSDF, SLSA VSA, Sigstore policy-controller,
+Anthropic Constitutional Classifiers. Establishes three-axis envelope
+<code>(rule_id, severity, decision)</code>, transitions-only emission
+discipline, constitution-bundle hash for replayability, three-mode
+rollout ladder (allow/warn/enforce), push (CloudEvents) + pull
+(<code>/v1/compliance</code> REST). Eleven process-only rules explicitly
+excluded (no runtime event surface). Per Universal §11.4.73, this is a
+secondary bump (Revision 4 → 5); §42 is additive, not a primary-version
 rewrite.</td>
 </tr>
 <tr>
@@ -616,6 +619,26 @@ presentation + template standards</a></li>
 Documentation + testing completeness mandate</a></li>
 <li><a href="#41-rest-api-surface-gin-gonic">§41. REST API surface (Gin
 Gonic)</a></li>
+<li><a href="#42-constitution-flavor-binding-catalogue">§42.
+Constitution-flavor binding catalogue</a>
+<ul>
+<li><a
+href="#421-binding-architecture-event-envelope-mode-ladder-replayability">42.1
+Binding architecture (event envelope, mode ladder,
+replayability)</a></li>
+<li><a href="#422-canonical-event-class-taxonomy">42.2 Canonical
+event-class taxonomy</a></li>
+<li><a href="#423-master-binding-table-constitution-rule-flavor">42.3
+Master binding table (constitution rule → flavor)</a></li>
+<li><a href="#424-subscriber-facing-payload-shape">42.4
+Subscriber-facing payload shape</a></li>
+<li><a href="#425-why-42-is-gated-not-aspirational">42.5 Why §42 is
+gated, not aspirational</a></li>
+<li><a href="#426-per-flavor-cross-references">42.6 Per-flavor
+cross-references</a></li>
+<li><a href="#427-composition-anti-bluff">42.7 Composition +
+anti-bluff</a></li>
+</ul></li>
 </ul>
 <hr />
 <h2 id="1-upstreams">§1. Upstreams</h2>
@@ -8380,6 +8403,1022 @@ auth before forwarding.</li>
 <code>pherald/internal/http/</code> (planned in HRD-016 follow-up — not
 in this V3 r2 commit; the Go binary currently exposes only CLI surface,
 with HTTP wiring deferred to the implementation cycle).</p>
+<hr />
+<h2 id="42-constitution-flavor-binding-catalogue">§42.
+Constitution-flavor binding catalogue</h2>
+<blockquote>
+<p><strong>Operator mandate (2026-05-20):</strong> every Helix Universal
+Constitution rule that produces a <em>runtime-observable state
+change</em> in a governed project MUST be bound to the natural Herald
+flavor that owns it — so subscribers learn about violations,
+transitions, and compliance state through the same channels they already
+use for project events. Process-only rules (agent self-discipline like
+§11.4.6 no-guessing, §11.4.20 subagent-by-default) are deliberately
+excluded; binding them adds noise without value.</p>
+</blockquote>
+<p>§42 is the <strong>single canonical mapping</strong> from
+constitution clauses to Herald event types + owning flavors. It composes
+with §37 (tracker-doc events), §32 (inbound pipeline), and §34 (reply
+protocol).</p>
+<h3
+id="421-binding-architecture-event-envelope-mode-ladder-replayability">42.1
+Binding architecture (event envelope, mode ladder, replayability)</h3>
+<p>Synthesised from a deep survey of how real governance systems emit
+events (OPA Gatekeeper, OPA Decision Logs, Kyverno PolicyReports, AWS
+CloudTrail + Config Rules, GCP Cloud Audit Logs, GitHub
+branch-protection, NIST SSDF, SLSA VSA, Sigstore policy-controller,
+Anthropic Constitutional Classifiers). Five design rules are universal
+across all of them:</p>
+<p><strong>§42.1.1 Three-axis envelope.</strong> Every constitution-rule
+event carries the triple
+<code>(rule_id, severity_category, decision_result)</code>. These are
+the three minimum required CloudEvent extension attributes on
+<code>digital.vasic.herald.constitution.*</code> events:</p>
+<table>
+<thead>
+<tr>
+<th>Extension attribute</th>
+<th>Example</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>heraldconstitutionrule</code></td>
+<td><code>§11.4.10</code></td>
+<td>Stable rule identifier; matches the §X.Y reference in
+Constitution.md.</td>
+</tr>
+<tr>
+<td><code>heraldconstitutionseverity</code></td>
+<td><code>critical</code>/<code>high</code>/<code>middle</code>/<code>low</code></td>
+<td>Per spec §18.2.2 criticality vocabulary.</td>
+</tr>
+<tr>
+<td><code>heraldconstitutiondecision</code></td>
+<td><code>pass</code>/<code>warn</code>/<code>fail</code>/<code>error</code>/<code>skip</code></td>
+<td>Kyverno-aligned (<code>scored=false</code> ⇒ warn).</td>
+</tr>
+</tbody>
+</table>
+<p>The CloudEvents <code>type</code> is the <strong>event
+class</strong>, not the rule ID — e.g.
+<code>digital.vasic.herald.constitution.gate.failed</code> carries
+<code>heraldconstitutionrule=§11.4.61</code> as an attribute, NOT in the
+<code>type</code> itself. This keeps the event-type tree finite (~12
+leaf classes) and lets routers fan out by rule via filter expressions
+without exploding subject namespaces.</p>
+<p><strong>§42.1.2 Transitions, not states.</strong> Herald MUST emit a
+constitution-rule event ONLY on state <em>change</em> —
+<code>pass → fail</code>, <code>fail → pass</code>,
+<code>unknown → fail</code>. Continuous "still compliant" pings are
+forbidden; they drown the audit channel and train operators to mute it.
+This mirrors AWS Config's <code>Config Rules Compliance Change</code>
+event (which carries both <code>newEvaluationResult</code> and
+<code>previousEvaluationResult</code>) and Kyverno's
+<code>summary</code> transitions. Implementation: every rule-evaluation
+result is hashed and stored in a Postgres
+<code>constitution_state</code> table; events fire only when the hash
+changes.</p>
+<div class="sourceCode" id="cb51"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- §42.1.2 constitution_state (planned 000006_constitution_state.up.sql).</span></span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> <span class="cf">IF</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> constitution_state (</span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>    tenant_id        UUID <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a>    rule_id          TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>,                  <span class="co">-- &quot;§11.4.10&quot;, &quot;§12.1&quot;, ...</span></span>
+<span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a>    subject          TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>,                  <span class="co">-- file path / repo / branch / commit SHA / tenant scope</span></span>
+<span id="cb51-6"><a href="#cb51-6" aria-hidden="true" tabindex="-1"></a>    last_decision    TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>,                  <span class="co">-- &#39;pass&#39;|&#39;warn&#39;|&#39;fail&#39;|&#39;error&#39;|&#39;skip&#39;</span></span>
+<span id="cb51-7"><a href="#cb51-7" aria-hidden="true" tabindex="-1"></a>    last_evaluated_at TIMESTAMPTZ <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> now(),</span>
+<span id="cb51-8"><a href="#cb51-8" aria-hidden="true" tabindex="-1"></a>    last_event_id    UUID,</span>
+<span id="cb51-9"><a href="#cb51-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">PRIMARY</span> <span class="kw">KEY</span> (tenant_id, rule_id, subject)</span>
+<span id="cb51-10"><a href="#cb51-10" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb51-11"><a href="#cb51-11" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> constitution_state <span class="kw">ENABLE</span> <span class="kw">ROW</span> <span class="kw">LEVEL</span> SECURITY;</span>
+<span id="cb51-12"><a href="#cb51-12" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> constitution_state <span class="kw">FORCE</span> <span class="kw">ROW</span> <span class="kw">LEVEL</span> SECURITY;</span>
+<span id="cb51-13"><a href="#cb51-13" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> POLICY cs_isolation <span class="kw">ON</span> constitution_state</span>
+<span id="cb51-14"><a href="#cb51-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">USING</span> (tenant_id <span class="op">=</span> current_setting(<span class="st">&#39;app.tenant_id&#39;</span>):<span class="ch">:uuid</span>)</span>
+<span id="cb51-15"><a href="#cb51-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">WITH</span> <span class="kw">CHECK</span> (tenant_id <span class="op">=</span> current_setting(<span class="st">&#39;app.tenant_id&#39;</span>):<span class="ch">:uuid</span>);</span></code></pre></div>
+<p><strong>§42.1.3 Constitution-bundle hash (replayability).</strong>
+Every constitution-rule event MUST carry the
+<strong><code>heraldconstitutionbundlesha</code></strong> extension —
+the SHA-256 of the rendered <code>Constitution.md</code> at the time of
+evaluation. This is the OPA-Decision-Logs <code>bundles</code> field and
+the SLSA-VSA <code>policy.digest</code>: without it, "rule §X said deny
+at T" is unreplayable a year later when the constitution has moved on.
+The bundle hash is captured at <em>evaluation</em> time, not
+<em>event-emission</em> time, so even if Herald itself fails over
+mid-stream the receiver can still verify which constitution revision
+produced the verdict.</p>
+<p><strong>§42.1.4 Mode ladder (allow / warn / enforce).</strong> Every
+binding declares a <code>mode</code> per tenant:</p>
+<ul>
+<li><code>allow</code> — evaluator runs, decision is computed, NO event
+fires. Used during initial rollout to gather baseline data.</li>
+<li><code>warn</code> — events fire on
+<code>fail</code>/<code>warn</code> outcomes but routed to non-paging
+channels (digest / diary only; never SMS / page-out).</li>
+<li><code>enforce</code> — events fire to all configured channels per §6
+tag-fan-out; high-severity failures may page on-call.</li>
+</ul>
+<p>The ladder mirrors Gatekeeper's <code>enforcementAction</code> field,
+Sigstore policy-controller's modes, and Anthropic's auto-mode safety
+thresholds. Operators MUST be able to roll a new binding through
+<code>allow → warn → enforce</code> without redeploying. Storage:
+per-binding row in <code>constitution_bindings</code> table (planned
+000007_constitution_bindings.up.sql).</p>
+<p><strong>§42.1.5 Push + pull surfaces.</strong> Per the research
+(Gatekeeper CR <code>status</code> is pull; Gatekeeper log line is push;
+GitHub PR comment is push; GitHub branch-protection settings query is
+pull), Herald maintains BOTH:</p>
+<ul>
+<li><strong>Push</strong> — CloudEvents on
+<code>digital.vasic.herald.constitution.*</code> topic fanned out to
+subscribed channels per the standard §6 + §32 pipeline.</li>
+<li><strong>Pull</strong> — REST endpoint per §41 mounted at
+<code>/v1/compliance</code> on every REST-enabled flavor. Returns the
+current <code>constitution_state</code> rows for the calling tenant +
+pagination + filter (<code>?rule=§11.4.10</code>,
+<code>?subject=docs/Issues.md</code>, <code>?decision=fail</code>).</li>
+</ul>
+<p>The pull surface lets auditors snapshot compliance posture without
+subscribing to fan-out; the push surface lets engineers learn about
+regressions in their channel of choice.</p>
+<h3 id="422-canonical-event-class-taxonomy">42.2 Canonical event-class
+taxonomy</h3>
+<p>CloudEvents <code>type</code> is one of these twelve leaf classes
+under <code>digital.vasic.herald.constitution.*</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Event <code>type</code></th>
+<th>When emitted</th>
+<th>Owning flavor (default)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>.gate.failed</code></td>
+<td>a CI/pre-commit gate keyed on a constitution rule FAILs (e.g.
+<code>CM-DOC-REVISION-HEADER-PRESENT</code>)</td>
+<td><code>bherald</code> (CI) or <code>cherald</code> (deep audit)</td>
+</tr>
+<tr>
+<td><code>.gate.recovered</code></td>
+<td>the same gate transitions back to PASS</td>
+<td>same as <code>.gate.failed</code></td>
+</tr>
+<tr>
+<td><code>.policy.violation</code></td>
+<td>a runtime evaluator detects a violation (e.g. naming rule §11.4.29,
+file-layout §11.4.11)</td>
+<td><code>cherald</code></td>
+</tr>
+<tr>
+<td><code>.policy.cleared</code></td>
+<td>a previously-violating subject now passes</td>
+<td><code>cherald</code></td>
+</tr>
+<tr>
+<td><code>.host.safety_breach</code></td>
+<td>a §12 host-safety rule violated (forbidden op attempted, mem budget
+exceeded)</td>
+<td><code>sherald</code></td>
+</tr>
+<tr>
+<td><code>.repo.safety_breach</code></td>
+<td>a §9 codebase-safety rule violated (force-push without
+authorization, missing backup)</td>
+<td><code>sherald</code> / <code>pherald</code> (both subscribe)</td>
+</tr>
+<tr>
+<td><code>.credential.leak</code></td>
+<td>a §11.4.10 / §11.4.10.A credential-handling violation</td>
+<td><code>cherald</code> + <code>iherald</code> (paged)</td>
+</tr>
+<tr>
+<td><code>.bundle.updated</code></td>
+<td>the constitution itself moves to a new SHA (post-pull validation
+§11.4.32 passed)</td>
+<td><code>sherald</code></td>
+</tr>
+<tr>
+<td><code>.bundle.update_failed</code></td>
+<td>post-pull validation FAILed</td>
+<td><code>sherald</code> + <code>iherald</code> (paged)</td>
+</tr>
+<tr>
+<td><code>.release.gate_blocked</code></td>
+<td>a §11.4.40-class release gate refused to let the tag land</td>
+<td><code>rherald</code></td>
+</tr>
+<tr>
+<td><code>.spec.revision_drift</code></td>
+<td>§11.4.73 spec-vs-Revision drift detected</td>
+<td><code>cherald</code></td>
+</tr>
+<tr>
+<td><code>.catalogue.miss</code></td>
+<td>§11.4.74 catalogue-check missing from a PR</td>
+<td><code>cherald</code></td>
+</tr>
+</tbody>
+</table>
+<p>Adapter implementation notes: each event carries the standard
+three-axis envelope (§42.1.1) plus the bundle hash (§42.1.3) plus the
+OTel trace context (<code>heraldtraceparent</code> /
+<code>heraldtracestate</code>).</p>
+<h3 id="423-master-binding-table-constitution-rule--flavor">42.3 Master
+binding table (constitution rule → flavor)</h3>
+<p>Rules NOT listed are intentionally excluded from runtime binding —
+they're process-only / agent-discipline rules that have no observable
+target-system event surface. Excluded rules: §11.4.6 (no-guessing),
+§11.4.8 (deep-web-research), §11.4.20 + §11.4.70 (subagent-by-default),
+§11.4.35 (canonical-root clarity), §11.4.54 (ATM-NNN —
+ATMOSphere-specific), §11.4.58 (parallel-development methodology),
+§11.4.63 (workable-items procedure), §11.4.72 (audio top-priority —
+operator-scheduling rule), §8 (aspirational), §10 (enforcement meta),
+§11 (anchor only).</p>
+<table>
+<thead>
+<tr>
+<th>Constitution rule</th>
+<th>Default event class</th>
+<th>Owning flavor</th>
+<th>Default mode</th>
+<th>Severity</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>§1 Test coverage mandatory</td>
+<td><code>.gate.failed</code></td>
+<td><code>bherald</code></td>
+<td>enforce</td>
+<td>high</td>
+<td>coverage drop or zero-test PR</td>
+</tr>
+<tr>
+<td>§1.1 False-positive immunity (paired mutation)</td>
+<td><code>.gate.failed</code></td>
+<td><code>bherald</code> + <code>cherald</code></td>
+<td>enforce</td>
+<td>critical</td>
+<td>meta-test fails to detect mutation</td>
+</tr>
+<tr>
+<td>§2 Commit + push mechanics</td>
+<td><code>.repo.safety_breach</code></td>
+<td><code>pherald</code> + <code>sherald</code></td>
+<td>enforce</td>
+<td>high</td>
+<td>wrong entrypoint OR partial fan-out</td>
+</tr>
+<tr>
+<td>§3 Submodule changes propagate first</td>
+<td><code>.repo.safety_breach</code></td>
+<td><code>pherald</code></td>
+<td>enforce</td>
+<td>high</td>
+<td>parent commit before submodule commit</td>
+</tr>
+<tr>
+<td>§4 Tag mirroring</td>
+<td><code>.release.gate_blocked</code></td>
+<td><code>rherald</code></td>
+<td>enforce</td>
+<td>high</td>
+<td>tag missing on owned submodule</td>
+</tr>
+<tr>
+<td>§5 Changelog + multi-format export</td>
+<td><code>.policy.violation</code></td>
+<td><code>rherald</code> + <code>cherald</code></td>
+<td>warn</td>
+<td>middle</td>
+<td>changelog missing or stale export</td>
+</tr>
+<tr>
+<td>§7.1 NO-BLUFF positive-evidence</td>
+<td><code>.gate.failed</code></td>
+<td><code>cherald</code></td>
+<td>enforce</td>
+<td>critical</td>
+<td>gate PASSes without captured evidence</td>
+</tr>
+<tr>
+<td>§9.1 Destructive-op protocol</td>
+<td><code>.repo.safety_breach</code></td>
+<td><code>sherald</code></td>
+<td>enforce</td>
+<td>critical</td>
+<td><code>rm -rf</code> / <code>git reset --hard</code> without
+backup</td>
+</tr>
+<tr>
+<td>§9.2 Force-push authorization</td>
+<td><code>.repo.safety_breach</code></td>
+<td><code>sherald</code> + <code>pherald</code></td>
+<td>enforce</td>
+<td>critical</td>
+<td>force-push without explicit per-session auth</td>
+</tr>
+<tr>
+<td>§9.3 Hardlinked backup before destructive</td>
+<td><code>.gate.recovered</code></td>
+<td><code>sherald</code></td>
+<td>enforce</td>
+<td>middle</td>
+<td>backup-created event for audit trail</td>
+</tr>
+<tr>
+<td>§9.4 Commit-message audit trail</td>
+<td><code>.policy.violation</code></td>
+<td><code>cherald</code></td>
+<td>warn</td>
+<td>low</td>
+<td>history rewrite without audit line</td>
+</tr>
+<tr>
+<td>§11.4.1 FAIL-bluffs forbidden</td>
+<td><code>.gate.failed</code></td>
+<td><code>cherald</code></td>
+<td>enforce</td>
+<td>critical</td>
+<td>FAIL that's actually a fake-fail</td>
+</tr>
+<tr>
+<td>§11.4.2 Recorded-evidence requirement</td>
+<td><code>.gate.failed</code></td>
+<td><code>bherald</code></td>
+<td>enforce</td>
+<td>high</td>
+<td>test PASS without <code>tests/.captured-evidence/</code>
+artifact</td>
+</tr>
+<tr>
+<td>§11.4.3 Per-environment-topology dispatch</td>
+<td><code>.gate.failed</code></td>
+<td><code>bherald</code></td>
+<td>warn</td>
+<td>middle</td>
+<td>test ran in wrong environment</td>
+</tr>
+<tr>
+<td>§11.4.4 Test-interrupt-on-discovery</td>
+<td><code>.gate.failed</code></td>
+<td><code>bherald</code></td>
+<td>warn</td>
+<td>middle</td>
+<td>test continued past first failure</td>
+</tr>
+<tr>
+<td>§11.4.5 Captured-evidence quality</td>
+<td><code>.gate.failed</code></td>
+<td><code>bherald</code></td>
+<td>warn</td>
+<td>middle</td>
+<td>evidence file present but malformed/empty</td>
+</tr>
+<tr>
+<td>§11.4.7 Demotion-evidence</td>
+<td><code>.gate.failed</code></td>
+<td><code>bherald</code></td>
+<td>warn</td>
+<td>middle</td>
+<td>promotion lacks the captured demotion proof</td>
+</tr>
+<tr>
+<td>§11.4.9 Batch-source-fixes-before-rebuild</td>
+<td><code>.policy.violation</code></td>
+<td><code>bherald</code></td>
+<td>warn</td>
+<td>low</td>
+<td>per-fix rebuild loop detected</td>
+</tr>
+<tr>
+<td>§11.4.10 Credentials-handling</td>
+<td><code>.credential.leak</code></td>
+<td><code>cherald</code> + <code>iherald</code></td>
+<td>enforce</td>
+<td>critical</td>
+<td>tracked <code>.env</code>, plaintext credential in source</td>
+</tr>
+<tr>
+<td>§11.4.10.A Pre-store leak audit</td>
+<td><code>.credential.leak</code></td>
+<td><code>cherald</code> + <code>iherald</code></td>
+<td>enforce</td>
+<td>critical</td>
+<td>gate before committing credential storage</td>
+</tr>
+<tr>
+<td>§11.4.11 File-layout discipline</td>
+<td><code>.policy.violation</code></td>
+<td><code>pherald</code></td>
+<td>warn</td>
+<td>low</td>
+<td>file in wrong directory</td>
+</tr>
+<tr>
+<td>§11.4.12 Auto-generated docs sync</td>
+<td><code>.policy.violation</code></td>
+<td><code>cherald</code></td>
+<td>warn</td>
+<td>low</td>
+<td>covered by §37; reuses tracker events</td>
+</tr>
+<tr>
+<td>§11.4.13 Out-of-band sink-side evidence</td>
+<td><code>.gate.failed</code></td>
+<td><code>bherald</code></td>
+<td>warn</td>
+<td>middle</td>
+<td>log-side claim without sink-side proof</td>
+</tr>
+<tr>
+<td>§11.4.14 Test playback cleanup</td>
+<td><code>.policy.violation</code></td>
+<td><code>bherald</code></td>
+<td>warn</td>
+<td>low</td>
+<td>playback artifact left over after run</td>
+</tr>
+<tr>
+<td>§11.4.15 Item-status tracking</td>
+<td><code>.policy.violation</code></td>
+<td><code>pherald</code></td>
+<td>warn</td>
+<td>low</td>
+<td>covered by §37</td>
+</tr>
+<tr>
+<td>§11.4.16 Item-type tracking</td>
+<td><code>.policy.violation</code></td>
+<td><code>pherald</code></td>
+<td>warn</td>
+<td>low</td>
+<td>covered by §32.6 classifier</td>
+</tr>
+<tr>
+<td>§11.4.17 Universal-vs-project rule promotion</td>
+<td><code>.policy.violation</code></td>
+<td><code>cherald</code></td>
+<td>warn</td>
+<td>low</td>
+<td>rule promoted without §11.4 audit</td>
+</tr>
+<tr>
+<td>§11.4.18 Script documentation mandate</td>
+<td><code>.policy.violation</code></td>
+<td><code>cherald</code></td>
+<td>warn</td>
+<td>low</td>
+<td>shell script without companion <code>.md</code></td>
+</tr>
+<tr>
+<td>§11.4.19 Fixed-document column alignment</td>
+<td><code>.policy.violation</code></td>
+<td><code>cherald</code></td>
+<td>warn</td>
+<td>low</td>
+<td>misaligned columns in <code>Fixed.md</code></td>
+</tr>
+<tr>
+<td>§11.4.21 Operator-blocked status</td>
+<td><code>.policy.violation</code></td>
+<td><code>pherald</code> + <code>iherald</code></td>
+<td>enforce</td>
+<td>high</td>
+<td>item enters operator-blocked → page on-call</td>
+</tr>
+<tr>
+<td>§11.4.22 Document-sync commit discipline</td>
+<td><code>.policy.violation</code></td>
+<td><code>pherald</code></td>
+<td>warn</td>
+<td>low</td>
+<td>doc + code committed in separate commits</td>
+</tr>
+<tr>
+<td>§11.4.23 Visual-cue &amp; grouping for Issues docs</td>
+<td><code>.policy.violation</code></td>
+<td><code>cherald</code></td>
+<td>warn</td>
+<td>low</td>
+<td>colorizer drift</td>
+</tr>
+<tr>
+<td>§11.4.24 Build-resource stats tracking</td>
+<td><code>.gate.failed</code></td>
+<td><code>bherald</code> + <code>sherald</code></td>
+<td>warn</td>
+<td>middle</td>
+<td>build stats missing</td>
+</tr>
+<tr>
+<td>§11.4.25 Full-Automation-Coverage</td>
+<td><code>.policy.violation</code></td>
+<td><code>cherald</code></td>
+<td>warn</td>
+<td>low</td>
+<td>manual step detected in operator runbook</td>
+</tr>
+<tr>
+<td>§11.4.26 Constitution-Submodule Update Workflow</td>
+<td><code>.bundle.updated</code></td>
+<td><code>sherald</code></td>
+<td>enforce</td>
+<td>middle</td>
+<td>constitution pulled successfully</td>
+</tr>
+<tr>
+<td>§11.4.27 No-Fakes-Beyond-Unit-Tests</td>
+<td><code>.gate.failed</code></td>
+<td><code>bherald</code></td>
+<td>enforce</td>
+<td>high</td>
+<td>fake/mock present in non-unit test</td>
+</tr>
+<tr>
+<td>§11.4.28 Submodules-As-Equal-Codebase</td>
+<td><code>.policy.violation</code></td>
+<td><code>cherald</code></td>
+<td>warn</td>
+<td>low</td>
+<td>submodule rule violated</td>
+</tr>
+<tr>
+<td>§11.4.29 Lowercase-Snake_Case-Naming</td>
+<td><code>.policy.violation</code></td>
+<td><code>cherald</code></td>
+<td>warn</td>
+<td>low</td>
+<td>naming convention violation</td>
+</tr>
+<tr>
+<td>§11.4.30 No-Versioned-Build-Artifacts</td>
+<td><code>.repo.safety_breach</code></td>
+<td><code>cherald</code> + <code>bherald</code></td>
+<td>enforce</td>
+<td>high</td>
+<td>build artifact committed</td>
+</tr>
+<tr>
+<td>§11.4.31 Submodule-Dependency-Manifest</td>
+<td><code>.policy.violation</code></td>
+<td><code>cherald</code></td>
+<td>warn</td>
+<td>low</td>
+<td>manifest missing/stale</td>
+</tr>
+<tr>
+<td>§11.4.32 Post-Constitution-Pull Validation</td>
+<td><code>.bundle.updated</code> /
+<code>.bundle.update_failed</code></td>
+<td><code>sherald</code></td>
+<td>enforce</td>
+<td>high</td>
+<td>post-pull gate result</td>
+</tr>
+<tr>
+<td>§11.4.33 Type-aware closure-status vocabulary</td>
+<td><code>.policy.violation</code></td>
+<td><code>pherald</code></td>
+<td>warn</td>
+<td>low</td>
+<td>covered by §32.6 classifier</td>
+</tr>
+<tr>
+<td>§11.4.34 Reopened-source attribution</td>
+<td><code>.policy.violation</code></td>
+<td><code>pherald</code></td>
+<td>warn</td>
+<td>low</td>
+<td>covered by §37 / §11.4.55 composition</td>
+</tr>
+<tr>
+<td>§11.4.36 Mandatory install_upstreams</td>
+<td><code>.repo.safety_breach</code></td>
+<td><code>sherald</code></td>
+<td>warn</td>
+<td>middle</td>
+<td>submodule missing upstream config</td>
+</tr>
+<tr>
+<td>§11.4.37 Fetch-before-edit</td>
+<td><code>.repo.safety_breach</code></td>
+<td><code>pherald</code></td>
+<td>warn</td>
+<td>middle</td>
+<td>edit on stale base</td>
+</tr>
+<tr>
+<td>§11.4.38 Installable-Asset Evidence</td>
+<td><code>.release.gate_blocked</code></td>
+<td><code>rherald</code></td>
+<td>enforce</td>
+<td>high</td>
+<td>release asset fails installability check</td>
+</tr>
+<tr>
+<td>§11.4.39 Per-Feature On-Device Validation</td>
+<td><code>.gate.failed</code></td>
+<td><code>bherald</code></td>
+<td>enforce</td>
+<td>high</td>
+<td>feature claimed done without on-device proof</td>
+</tr>
+<tr>
+<td>§11.4.40 Full-suite retest before release tag</td>
+<td><code>.release.gate_blocked</code></td>
+<td><code>rherald</code></td>
+<td>enforce</td>
+<td>critical</td>
+<td>tag attempted without full retest</td>
+</tr>
+<tr>
+<td>§11.4.41 Pre-Force-Push Merge-First</td>
+<td><code>.repo.safety_breach</code></td>
+<td><code>sherald</code> + <code>pherald</code></td>
+<td>enforce</td>
+<td>critical</td>
+<td>force-push without preceding merge</td>
+</tr>
+<tr>
+<td>§11.4.42 Iteration-discipline</td>
+<td><code>.policy.violation</code></td>
+<td><code>pherald</code></td>
+<td>warn</td>
+<td>low</td>
+<td>iteration cycle skipped</td>
+</tr>
+<tr>
+<td>§11.4.43 TDD-Fix-Discipline</td>
+<td><code>.gate.failed</code></td>
+<td><code>bherald</code> + <code>cherald</code></td>
+<td>enforce</td>
+<td>high</td>
+<td>fix without preceding red test</td>
+</tr>
+<tr>
+<td>§11.4.44 Document Revision Header</td>
+<td><code>.policy.violation</code></td>
+<td><code>cherald</code></td>
+<td>warn</td>
+<td>low</td>
+<td>doc missing revision header</td>
+</tr>
+<tr>
+<td>§11.4.45 Integration-Status-Doc Maintenance</td>
+<td><code>.policy.violation</code></td>
+<td><code>scherald</code> + <code>cherald</code></td>
+<td>warn</td>
+<td>low</td>
+<td>Status.md stale; composes with §37</td>
+</tr>
+<tr>
+<td>§11.4.46 Validate-recent-work-before-post-flash</td>
+<td><code>.gate.failed</code></td>
+<td><code>bherald</code></td>
+<td>warn</td>
+<td>middle</td>
+<td>post-flash tests ran on un-rebased base</td>
+</tr>
+<tr>
+<td>§11.4.47 Firebase Data Review</td>
+<td><code>.policy.violation</code></td>
+<td><code>sherald</code></td>
+<td>warn</td>
+<td>low</td>
+<td>data review skipped (project-specific)</td>
+</tr>
+<tr>
+<td>§11.4.48 UI-Driven Video Testing</td>
+<td><code>.gate.failed</code></td>
+<td><code>bherald</code></td>
+<td>warn</td>
+<td>middle</td>
+<td>UI test without video capture</td>
+</tr>
+<tr>
+<td>§11.4.49 Dual-Approach Testing</td>
+<td><code>.gate.failed</code></td>
+<td><code>bherald</code></td>
+<td>warn</td>
+<td>middle</td>
+<td>only one of unit/e2e present</td>
+</tr>
+<tr>
+<td>§11.4.50 Deterministic Consistency</td>
+<td><code>.gate.failed</code></td>
+<td><code>bherald</code></td>
+<td>enforce</td>
+<td>high</td>
+<td>flaky test detected (same input, different result)</td>
+</tr>
+<tr>
+<td>§11.4.51 Live-ADB-First Maximization</td>
+<td><code>.policy.violation</code></td>
+<td><code>bherald</code></td>
+<td>warn</td>
+<td>low</td>
+<td>proxy when live-ADB available</td>
+</tr>
+<tr>
+<td>§11.4.52 Autonomous-Validation</td>
+<td><code>.gate.failed</code></td>
+<td><code>bherald</code></td>
+<td>warn</td>
+<td>middle</td>
+<td>human-only validation step skipped</td>
+</tr>
+<tr>
+<td>§11.4.53 Fixed_Summary parity</td>
+<td><code>.policy.violation</code></td>
+<td><code>cherald</code></td>
+<td>warn</td>
+<td>low</td>
+<td>covered by §37</td>
+</tr>
+<tr>
+<td>§11.4.55 Reopens-history tracking</td>
+<td><code>.policy.violation</code></td>
+<td><code>pherald</code></td>
+<td>warn</td>
+<td>low</td>
+<td>reopen without Reopens/HRD-NNN.md</td>
+</tr>
+<tr>
+<td>§11.4.56 Status_Summary parity</td>
+<td><code>.policy.violation</code></td>
+<td><code>cherald</code></td>
+<td>warn</td>
+<td>low</td>
+<td>covered by §37</td>
+</tr>
+<tr>
+<td>§11.4.57 README doc-link section</td>
+<td><code>.policy.violation</code></td>
+<td><code>cherald</code></td>
+<td>warn</td>
+<td>low</td>
+<td>README missing doc-link table</td>
+</tr>
+<tr>
+<td>§11.4.59 README always-sync</td>
+<td><code>.policy.violation</code></td>
+<td><code>cherald</code></td>
+<td>warn</td>
+<td>low</td>
+<td>covered by §37</td>
+</tr>
+<tr>
+<td>§11.4.60 Documentation composite covenant</td>
+<td><code>.gate.failed</code></td>
+<td><code>cherald</code></td>
+<td>enforce</td>
+<td>high</td>
+<td>composite gate fail</td>
+</tr>
+<tr>
+<td>§11.4.61 Markdown metadata + ToC</td>
+<td><code>.policy.violation</code></td>
+<td><code>cherald</code></td>
+<td>warn</td>
+<td>low</td>
+<td>new structured doc missing metadata/ToC</td>
+</tr>
+<tr>
+<td>§11.4.65 Universal Markdown export</td>
+<td><code>.policy.violation</code></td>
+<td><code>cherald</code></td>
+<td>warn</td>
+<td>low</td>
+<td>.md edited without .html/.pdf regen</td>
+</tr>
+<tr>
+<td>§11.4.66 Blocker-resolution clarification</td>
+<td><code>.policy.violation</code></td>
+<td><code>pherald</code> + <code>iherald</code></td>
+<td>enforce</td>
+<td>high</td>
+<td>operator-blocked without clarification prompt</td>
+</tr>
+<tr>
+<td>§11.4.67 Shell-script parseability</td>
+<td><code>.gate.failed</code></td>
+<td><code>bherald</code></td>
+<td>warn</td>
+<td>low</td>
+<td>non-portable bashism detected</td>
+</tr>
+<tr>
+<td>§11.4.68 Positive sink-side evidence</td>
+<td><code>.gate.failed</code></td>
+<td><code>cherald</code></td>
+<td>enforce</td>
+<td>high</td>
+<td>downstream proof missing</td>
+</tr>
+<tr>
+<td>§11.4.69 Sink-Side Positive-Evidence Taxonomy</td>
+<td><code>.gate.failed</code></td>
+<td><code>cherald</code></td>
+<td>enforce</td>
+<td>high</td>
+<td>taxonomy violation</td>
+</tr>
+<tr>
+<td>§11.4.71 Pre-Push Fetch + Investigate + Integrate</td>
+<td><code>.repo.safety_breach</code></td>
+<td><code>pherald</code> + <code>sherald</code></td>
+<td>enforce</td>
+<td>high</td>
+<td>push without preceding fetch+integrate</td>
+</tr>
+<tr>
+<td>§11.4.73 Main-spec versioning + revision discipline</td>
+<td><code>.spec.revision_drift</code></td>
+<td><code>cherald</code></td>
+<td>enforce</td>
+<td>high</td>
+<td>spec touched without Revision bump</td>
+</tr>
+<tr>
+<td>§11.4.74 Submodule-catalogue-first</td>
+<td><code>.catalogue.miss</code></td>
+<td><code>cherald</code> + <code>pherald</code></td>
+<td>enforce</td>
+<td>high</td>
+<td>non-trivial PR missing Catalogue-Check line</td>
+</tr>
+<tr>
+<td>§12.1 Forbidden host-session operations</td>
+<td><code>.host.safety_breach</code></td>
+<td><code>sherald</code></td>
+<td>enforce</td>
+<td>critical</td>
+<td>suspend/hibernate/logout attempted</td>
+</tr>
+<tr>
+<td>§12.2 Required safeguards</td>
+<td><code>.host.safety_breach</code></td>
+<td><code>sherald</code></td>
+<td>enforce</td>
+<td>high</td>
+<td>heavy work without bounded scope</td>
+</tr>
+<tr>
+<td>§12.3 Container hygiene</td>
+<td><code>.host.safety_breach</code></td>
+<td><code>sherald</code> + <code>dherald</code></td>
+<td>enforce</td>
+<td>high</td>
+<td>container without mem_limit</td>
+</tr>
+<tr>
+<td>§12.6 Memory-Budget 60% Ceiling</td>
+<td><code>.host.safety_breach</code></td>
+<td><code>sherald</code></td>
+<td>enforce</td>
+<td>critical</td>
+<td>budget breach detected</td>
+</tr>
+<tr>
+<td>§12.10 CONTINUATION sacred invariant</td>
+<td><code>.policy.violation</code></td>
+<td><code>cherald</code></td>
+<td>enforce</td>
+<td>high</td>
+<td>CONTINUATION.md missing/stale</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Total bindings: 65.</strong> Process-only rules excluded (no
+runtime event surface) — see prefix to this section.</p>
+<h3 id="424-subscriber-facing-payload-shape">42.4 Subscriber-facing
+payload shape</h3>
+<p>Every constitution event renders into a subscriber-facing message via
+the §39 Herald Canonical Template. The body block carries:</p>
+<pre><code>[&lt;flavor icon&gt;] &lt;severity badge&gt; Constitution rule violated: &lt;rule_id&gt;  —  &lt;one-line outcome&gt;
+
+&lt;short description of the violation context (≤ 280 chars)&gt;
+
+Rule:          &lt;rule_id&gt; — &lt;rule title from Constitution.md ToC&gt;
+Bundle:        &lt;heraldconstitutionbundlesha short-form 12 chars&gt;
+Subject:       &lt;file path / repo / commit SHA / tenant scope&gt;
+Decision:      &lt;pass|warn|fail|error|skip&gt;
+Mode:          &lt;allow|warn|enforce&gt;
+Evidence:      &lt;link to evidence artifact or transparency log&gt;
+🔗 Constitution.md §&lt;rule_id&gt;: &lt;permalink to that section on the active mirror&gt;
+👤 Caught by: &lt;evaluator name&gt;
+🕒 &lt;RFC 3339 timestamp&gt;</code></pre>
+<p>For <code>allow</code> mode, the message is suppressed (only logged
+to diary + the pull surface). For <code>warn</code> mode, message routes
+to digest tag only. For <code>enforce</code>, full §6 tag-fan-out.</p>
+<h3 id="425-why-42-is-gated-not-aspirational">42.5 Why §42 is gated, not
+aspirational</h3>
+<p>The catalogue-row count (65) means landing every binding at once is
+impossible. Rollout discipline:</p>
+<ol type="1">
+<li><strong>First</strong> — <code>commons_constitution</code> Go
+package (planned <code>commons_constitution/</code>) implementing the
+<code>Evaluator</code> interface + the 12-class event-emit helpers.
+<strong>HRD-018</strong>.</li>
+<li><strong>Second</strong> — <code>cherald</code> gets the bulk of
+bindings; HRD-019 implements the gate-result subscribers + the pull
+surface <code>/v1/compliance</code>. Initial mode for all bindings:
+<code>allow</code> (data gathering only).</li>
+<li><strong>Third</strong> — <code>sherald</code> host-safety +
+repo-safety bindings (§9, §12, §11.4.32, §11.4.36, §11.4.41, §11.4.71).
+<strong>HRD-020</strong>.</li>
+<li><strong>Fourth</strong> — <code>bherald</code> CI / test bindings
+(§1, §11.4.2 / .3 / .4 / .5 / .7 / .13 / .14 / .24 / .27 / .39 / .43 /
+.46 / .48–.52 / .67). <strong>HRD-021</strong>.</li>
+<li><strong>Fifth</strong> — <code>rherald</code> release bindings (§4,
+§5, §11.4.38, §11.4.40). <strong>HRD-022</strong>.</li>
+<li><strong>Sixth</strong> — <code>pherald</code> project bindings (§2,
+§3, §11.4.11 / .15 / .21 / .22 / .34 / .37 / .42 / .55 / .66 / .71 /
+.74). <strong>HRD-023</strong>.</li>
+<li><strong>Seventh</strong> — <code>iherald</code> incident bindings
+(§11.4.10 / .10.A escalation, §11.4.21 + .66 escalation).
+<strong>HRD-024</strong>.</li>
+<li><strong>Eighth</strong> — <code>scherald</code> scheduled audit
+bindings (§11.4.45 periodic audit + digests).
+<strong>HRD-025</strong>.</li>
+<li><strong>Cross-cutting</strong> — bundle-hash captureer (HRD-026),
+mode-ladder runtime config (HRD-027), pull surface
+<code>/v1/compliance</code> Gin handler (HRD-028).</li>
+</ol>
+<p>Each HRD MUST carry a <code>Catalogue-Check:</code> per Universal
+§11.4.74 (since most of this work <em>might</em> already exist as a
+Submodule under <code>vasic-digital</code> /
+<code>HelixDevelopment</code> — the catalogue survey is HRD-018's first
+task).</p>
+<h3 id="426-per-flavor-cross-references">42.6 Per-flavor
+cross-references</h3>
+<p>Each flavor's §18.X.2 "Constitution bindings" sub-section enumerates
+only the rules where that flavor is the <em>default owner</em> (the bold
+flavor in the master table above). Bindings where a flavor is a
+<em>secondary subscriber</em> (the second flavor in
+<code>cherald + iherald</code>-style rows) are implemented as filtered
+routes — the §6 channel router fans out to the secondary flavor's
+subscribers based on the <code>heraldconstitutionrule</code> extension
+attribute, not via a duplicate adapter.</p>
+<p>The per-flavor sub-sections live at:</p>
+<ul>
+<li><strong>§18.2.7</strong> <code>pherald</code> — Constitution
+bindings.</li>
+<li><strong>§18.3.2</strong> <code>sherald</code> — Constitution
+bindings.</li>
+<li><strong>§18.4.2</strong> <code>bherald</code> — Constitution
+bindings.</li>
+<li><strong>§18.5.2</strong> <code>dherald</code> — Constitution
+bindings.</li>
+<li><strong>§18.6.2</strong> <code>aherald</code> — Constitution
+bindings.</li>
+<li><strong>§18.7.2</strong> <code>scherald</code> — Constitution
+bindings.</li>
+<li><strong>§18.8.2</strong> <code>iherald</code> — Constitution
+bindings.</li>
+<li><strong>§18.9.2</strong> <code>rherald</code> — Constitution
+bindings.</li>
+<li><strong>§18.10.2</strong> <code>cherald</code> — Constitution
+bindings.</li>
+</ul>
+<p>For brevity, the master table in §42.3 IS the source of truth;
+per-flavor sub-sections (added in §18.X.2 below by the implementation
+HRDs) point back to it and add only flavor-specific rendering / SLA
+notes that aren't captured by the table.</p>
+<h3 id="427-composition--anti-bluff">42.7 Composition + anti-bluff</h3>
+<p>§42 composes with:</p>
+<ul>
+<li><strong>§4 Event model</strong> — constitution events use the same
+CloudEvents v1.0 envelope as every other Herald event.</li>
+<li><strong>§32 Inbound pipeline</strong> — inbound subscriber
+acks/silences for constitution events use the standard pipeline
+(<code>Ack:</code> / <code>Silence: &lt;duration&gt;</code> /
+etc.).</li>
+<li><strong>§34 Reply protocol</strong> — silencing a constitution event
+in <code>warn</code> mode emits the standard three replies.</li>
+<li><strong>§35 Versioned reports</strong> — constitution-bundle updates
+emit <code>.bundle.updated</code> events that compose with §35 (the
+Constitution.md export bundle gets a new SHA).</li>
+<li><strong>§37 Tracker-doc change events</strong> — rules that map onto
+tracker-doc state (§11.4.12, .15, .53, .56, .59, .60) are emitted via
+§37 with <code>heraldconstitutionrule</code> as an additional attribute
+— NOT duplicated as separate <code>.policy.violation</code> events.</li>
+<li><strong>§41 REST API</strong> — every REST-enabled flavor mounts the
+<code>/v1/compliance</code> pull surface.</li>
+</ul>
+<p>Anti-bluff (Universal §11.4 + §1.1):</p>
+<ul>
+<li>Every <code>.gate.failed</code> / <code>.gate.recovered</code> event
+MUST carry an <code>evidence_uri</code> per Universal §11.4.2.</li>
+<li>The <code>constitution_state</code> transition gate MUST itself have
+a paired §1.1 mutation: mutate the <code>last_decision</code> row to a
+different value while leaving the actual evaluator deterministic; expect
+the gate to detect the drift.</li>
+</ul>
 <hr />
 <h2 id="30-v2-self-review-log">§30. V2 self-review log</h2>
 <blockquote>

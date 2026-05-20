@@ -2,16 +2,16 @@
 
 | Field | Value |
 |---|---|
-| Revision | 2 |
+| Revision | 3 |
 | Created | 2026-05-20 |
 | Last modified | 2026-05-20 |
 | Status | active |
-| Status summary | First-implementation cycle r1 landed: Go scaffold across 5 modules, null:// adapter fully working, migrations + types complete, pherald CLI compiles + `version` subcommand works end-to-end. Spec V3 r4 with five new operator-mandated sections (§37–§41). |
+| Status summary | First-implementation cycle r1 landed (5 Go modules, null:// adapter working, migrations + Cobra CLI). Spec V3 r5: §37–§41 + §42 constitution-flavor binding catalogue. HRD-017 closed (universal §11.4.73 + §11.4.74 mandates landed in constitution commit 34a82b3). |
 | Issues | see `Issues.md` |
-| Issues summary | HRD-008/-010/-011/-012/-015/-016/-017 still open or in-progress. |
-| Fixed | HRD-001..HRD-007 (prior); HRD-009, HRD-009b, HRD-013, HRD-014 (this commit) |
-| Fixed summary | spec evolution V1→V3 r4 complete; Go module foundation (commons + commons_prefix + commons_messaging + commons_storage + pherald) landed with passing unit tests. |
-| Continuation | see `CONTINUATION.md` for the live HRD-008 quickstart-validation path. |
+| Issues summary | HRD-008/-010/-011/-012/-015/-016/-018..-028 open. |
+| Fixed | HRD-001..HRD-007, HRD-009, HRD-009b, HRD-013, HRD-014, HRD-017 |
+| Fixed summary | spec V1→V3 r5; Go module foundation; universal §11.4.73 + §11.4.74 mandates propagated into constitution submodule. |
+| Continuation | see `CONTINUATION.md`. |
 
 ## Table of contents
 
@@ -21,7 +21,8 @@
 
 | ID | Type | Criticality | Title | Closed | Commit | Reference |
 |---|---|---|---|---|---|---|
-| HRD-014 | task | middle | pherald CLI scaffold — Cobra root + version + 5 stubbed subcommands; `pherald version --json` returns canonical build info | 2026-05-20 | (this commit) | spec V3 §3 + §18.2 |
+| HRD-017 | task | middle | Propagate Universal §11.4.73 (main-spec versioning + revision discipline) and §11.4.74 (submodule-catalogue-first discovery) into parent constitution Constitution.md + CLAUDE.md + AGENTS.md | 2026-05-20 | constitution `34a82b3` | Universal §11.4.73, §11.4.74 |
+| HRD-014 | task | middle | pherald CLI scaffold — Cobra root + version + 5 stubbed subcommands; `pherald version --json` returns canonical build info | 2026-05-20 | `e627c76` | spec V3 §3 + §18.2 |
 | HRD-013 | task | middle | commons_messaging + null:// adapter — full §11.0 Channel contract impl with ring buffer + fail_rate/latency/ceiling URL params + 8-case unit test suite | 2026-05-20 | (this commit) | spec V3 §11.14 |
 | HRD-009b | task | low | commons_prefix module — §8.2 deterministic 3-letter prefix algorithm with CamelCase split + collision-resolution via fnv1a32 + table-driven tests | 2026-05-20 | (this commit) | spec V3 §8.2 |
 | HRD-009 | task | middle | commons module — full §11.0 Go type contract (Channel + Capabilities + DeliveryEvidence + OutboundMessage + Body + Attachment + Recipient + Action + Priority + Receipt + InboundHandler + InboundEvent + Subscriber + SubscriberAlias + CloudEventEnvelope + TraceContext + Branding + ChannelID + PreferenceSet + …) + Clock abstraction + UUIDv7 helper + DefaultBranding factory | 2026-05-20 | (this commit) | spec V3 §11.0 + §3.5 + §4.3 + §6.3 |

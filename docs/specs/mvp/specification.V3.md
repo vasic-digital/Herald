@@ -2,11 +2,11 @@
 
 | Field | Value |
 |---|---|
-| Revision | 4 |
+| Revision | 5 |
 | Created | 2026-05-20 |
 | Last modified | 2026-05-20 |
 | Status | active |
-| Status summary | V3 r4 — five new operator-mandated sections (§37 tracker-doc change events, §38 workable-item announcement contract with attachment-size-aware inline vs permalink fallback, §39 message presentation + Herald Canonical Template + style rules, §40 documentation + test-tier + 15 named challenges mandate, §41 REST API surface via Gin Gonic). Per the new Universal §11.4.6X versioning rule (landing in the constitution-submodule commit immediately following this one), secondary-version bump (Revision 3 → 4) is appropriate — these are additive operator-mandated requirements, not a primary-version rewrite. |
+| Status summary | V3 r5 — new §42 Constitution-flavor binding catalogue lands: 65 rule→flavor bindings derived from a deep survey of Constitution.md + research across OPA Gatekeeper, OPA Decision Logs, Kyverno PolicyReports, AWS CloudTrail/Config, GCP Cloud Audit Logs, GitHub branch-protection, NIST SSDF, SLSA VSA, Sigstore policy-controller, Anthropic Constitutional Classifiers. Establishes three-axis envelope `(rule_id, severity, decision)`, transitions-only emission discipline, constitution-bundle hash for replayability, three-mode rollout ladder (allow/warn/enforce), push (CloudEvents) + pull (`/v1/compliance` REST). Eleven process-only rules explicitly excluded (no runtime event surface). Per Universal §11.4.73, this is a secondary bump (Revision 4 → 5); §42 is additive, not a primary-version rewrite. |
 | Issues | none |
 | Issues summary | — |
 | Fixed | V3-R3-01..V3-R3-03 (this revision: parent-doc spec-path sync); V3-R2-01..V3-R2-09 (r2); V3-R1-01..V3-R1-14 (r1); inherits closed V2 + V1 lineage. |
@@ -155,6 +155,14 @@ The **bi-directional event fan-out** system: Herald ingests events from heteroge
 - [§39. Message presentation + template standards](#39-message-presentation-template-standards)
 - [§40. Documentation + testing completeness mandate](#40-documentation-testing-completeness-mandate)
 - [§41. REST API surface (Gin Gonic)](#41-rest-api-surface-gin-gonic)
+- [§42. Constitution-flavor binding catalogue](#42-constitution-flavor-binding-catalogue)
+  - [42.1 Binding architecture (event envelope, mode ladder, replayability)](#421-binding-architecture-event-envelope-mode-ladder-replayability)
+  - [42.2 Canonical event-class taxonomy](#422-canonical-event-class-taxonomy)
+  - [42.3 Master binding table (constitution rule → flavor)](#423-master-binding-table-constitution-rule-flavor)
+  - [42.4 Subscriber-facing payload shape](#424-subscriber-facing-payload-shape)
+  - [42.5 Why §42 is gated, not aspirational](#425-why-42-is-gated-not-aspirational)
+  - [42.6 Per-flavor cross-references](#426-per-flavor-cross-references)
+  - [42.7 Composition + anti-bluff](#427-composition-anti-bluff)
 
 ---
 
@@ -4151,6 +4159,247 @@ Two recommended integration patterns documented in `docs/integrations/`:
 - **Reverse-proxy fan-out** — apps mount Herald's REST under their own `/api/herald/*` namespace, applying app-side auth before forwarding.
 
 `pherald` r1 ships REST scaffolding under `pherald/internal/http/` (planned in HRD-016 follow-up — not in this V3 r2 commit; the Go binary currently exposes only CLI surface, with HTTP wiring deferred to the implementation cycle).
+
+---
+
+## §42. Constitution-flavor binding catalogue
+
+> **Operator mandate (2026-05-20):** every Helix Universal Constitution rule that produces a *runtime-observable state change* in a governed project MUST be bound to the natural Herald flavor that owns it — so subscribers learn about violations, transitions, and compliance state through the same channels they already use for project events. Process-only rules (agent self-discipline like §11.4.6 no-guessing, §11.4.20 subagent-by-default) are deliberately excluded; binding them adds noise without value.
+
+§42 is the **single canonical mapping** from constitution clauses to Herald event types + owning flavors. It composes with §37 (tracker-doc events), §32 (inbound pipeline), and §34 (reply protocol).
+
+### 42.1 Binding architecture (event envelope, mode ladder, replayability)
+
+Synthesised from a deep survey of how real governance systems emit events (OPA Gatekeeper, OPA Decision Logs, Kyverno PolicyReports, AWS CloudTrail + Config Rules, GCP Cloud Audit Logs, GitHub branch-protection, NIST SSDF, SLSA VSA, Sigstore policy-controller, Anthropic Constitutional Classifiers). Five design rules are universal across all of them:
+
+**§42.1.1 Three-axis envelope.** Every constitution-rule event carries the triple `(rule_id, severity_category, decision_result)`. These are the three minimum required CloudEvent extension attributes on `digital.vasic.herald.constitution.*` events:
+
+| Extension attribute | Example | Notes |
+|---|---|---|
+| `heraldconstitutionrule` | `§11.4.10` | Stable rule identifier; matches the §X.Y reference in Constitution.md. |
+| `heraldconstitutionseverity` | `critical`/`high`/`middle`/`low` | Per spec §18.2.2 criticality vocabulary. |
+| `heraldconstitutiondecision` | `pass`/`warn`/`fail`/`error`/`skip` | Kyverno-aligned (`scored=false` ⇒ warn). |
+
+The CloudEvents `type` is the **event class**, not the rule ID — e.g. `digital.vasic.herald.constitution.gate.failed` carries `heraldconstitutionrule=§11.4.61` as an attribute, NOT in the `type` itself. This keeps the event-type tree finite (~12 leaf classes) and lets routers fan out by rule via filter expressions without exploding subject namespaces.
+
+**§42.1.2 Transitions, not states.** Herald MUST emit a constitution-rule event ONLY on state *change* — `pass → fail`, `fail → pass`, `unknown → fail`. Continuous "still compliant" pings are forbidden; they drown the audit channel and train operators to mute it. This mirrors AWS Config's `Config Rules Compliance Change` event (which carries both `newEvaluationResult` and `previousEvaluationResult`) and Kyverno's `summary` transitions. Implementation: every rule-evaluation result is hashed and stored in a Postgres `constitution_state` table; events fire only when the hash changes.
+
+```sql
+-- §42.1.2 constitution_state (planned 000006_constitution_state.up.sql).
+CREATE TABLE IF NOT EXISTS constitution_state (
+    tenant_id        UUID NOT NULL,
+    rule_id          TEXT NOT NULL,                  -- "§11.4.10", "§12.1", ...
+    subject          TEXT NOT NULL,                  -- file path / repo / branch / commit SHA / tenant scope
+    last_decision    TEXT NOT NULL,                  -- 'pass'|'warn'|'fail'|'error'|'skip'
+    last_evaluated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    last_event_id    UUID,
+    PRIMARY KEY (tenant_id, rule_id, subject)
+);
+ALTER TABLE constitution_state ENABLE ROW LEVEL SECURITY;
+ALTER TABLE constitution_state FORCE ROW LEVEL SECURITY;
+CREATE POLICY cs_isolation ON constitution_state
+    USING (tenant_id = current_setting('app.tenant_id')::uuid)
+    WITH CHECK (tenant_id = current_setting('app.tenant_id')::uuid);
+```
+
+**§42.1.3 Constitution-bundle hash (replayability).** Every constitution-rule event MUST carry the **`heraldconstitutionbundlesha`** extension — the SHA-256 of the rendered `Constitution.md` at the time of evaluation. This is the OPA-Decision-Logs `bundles` field and the SLSA-VSA `policy.digest`: without it, "rule §X said deny at T" is unreplayable a year later when the constitution has moved on. The bundle hash is captured at *evaluation* time, not *event-emission* time, so even if Herald itself fails over mid-stream the receiver can still verify which constitution revision produced the verdict.
+
+**§42.1.4 Mode ladder (allow / warn / enforce).** Every binding declares a `mode` per tenant:
+
+- `allow` — evaluator runs, decision is computed, NO event fires. Used during initial rollout to gather baseline data.
+- `warn` — events fire on `fail`/`warn` outcomes but routed to non-paging channels (digest / diary only; never SMS / page-out).
+- `enforce` — events fire to all configured channels per §6 tag-fan-out; high-severity failures may page on-call.
+
+The ladder mirrors Gatekeeper's `enforcementAction` field, Sigstore policy-controller's modes, and Anthropic's auto-mode safety thresholds. Operators MUST be able to roll a new binding through `allow → warn → enforce` without redeploying. Storage: per-binding row in `constitution_bindings` table (planned 000007_constitution_bindings.up.sql).
+
+**§42.1.5 Push + pull surfaces.** Per the research (Gatekeeper CR `status` is pull; Gatekeeper log line is push; GitHub PR comment is push; GitHub branch-protection settings query is pull), Herald maintains BOTH:
+
+- **Push** — CloudEvents on `digital.vasic.herald.constitution.*` topic fanned out to subscribed channels per the standard §6 + §32 pipeline.
+- **Pull** — REST endpoint per §41 mounted at `/v1/compliance` on every REST-enabled flavor. Returns the current `constitution_state` rows for the calling tenant + pagination + filter (`?rule=§11.4.10`, `?subject=docs/Issues.md`, `?decision=fail`).
+
+The pull surface lets auditors snapshot compliance posture without subscribing to fan-out; the push surface lets engineers learn about regressions in their channel of choice.
+
+### 42.2 Canonical event-class taxonomy
+
+CloudEvents `type` is one of these twelve leaf classes under `digital.vasic.herald.constitution.*`:
+
+| Event `type` | When emitted | Owning flavor (default) |
+|---|---|---|
+| `.gate.failed` | a CI/pre-commit gate keyed on a constitution rule FAILs (e.g. `CM-DOC-REVISION-HEADER-PRESENT`) | `bherald` (CI) or `cherald` (deep audit) |
+| `.gate.recovered` | the same gate transitions back to PASS | same as `.gate.failed` |
+| `.policy.violation` | a runtime evaluator detects a violation (e.g. naming rule §11.4.29, file-layout §11.4.11) | `cherald` |
+| `.policy.cleared` | a previously-violating subject now passes | `cherald` |
+| `.host.safety_breach` | a §12 host-safety rule violated (forbidden op attempted, mem budget exceeded) | `sherald` |
+| `.repo.safety_breach` | a §9 codebase-safety rule violated (force-push without authorization, missing backup) | `sherald` / `pherald` (both subscribe) |
+| `.credential.leak` | a §11.4.10 / §11.4.10.A credential-handling violation | `cherald` + `iherald` (paged) |
+| `.bundle.updated` | the constitution itself moves to a new SHA (post-pull validation §11.4.32 passed) | `sherald` |
+| `.bundle.update_failed` | post-pull validation FAILed | `sherald` + `iherald` (paged) |
+| `.release.gate_blocked` | a §11.4.40-class release gate refused to let the tag land | `rherald` |
+| `.spec.revision_drift` | §11.4.73 spec-vs-Revision drift detected | `cherald` |
+| `.catalogue.miss` | §11.4.74 catalogue-check missing from a PR | `cherald` |
+
+Adapter implementation notes: each event carries the standard three-axis envelope (§42.1.1) plus the bundle hash (§42.1.3) plus the OTel trace context (`heraldtraceparent` / `heraldtracestate`).
+
+### 42.3 Master binding table (constitution rule → flavor)
+
+Rules NOT listed are intentionally excluded from runtime binding — they're process-only / agent-discipline rules that have no observable target-system event surface. Excluded rules: §11.4.6 (no-guessing), §11.4.8 (deep-web-research), §11.4.20 + §11.4.70 (subagent-by-default), §11.4.35 (canonical-root clarity), §11.4.54 (ATM-NNN — ATMOSphere-specific), §11.4.58 (parallel-development methodology), §11.4.63 (workable-items procedure), §11.4.72 (audio top-priority — operator-scheduling rule), §8 (aspirational), §10 (enforcement meta), §11 (anchor only).
+
+| Constitution rule | Default event class | Owning flavor | Default mode | Severity | Notes |
+|---|---|---|---|---|---|
+| §1 Test coverage mandatory | `.gate.failed` | `bherald` | enforce | high | coverage drop or zero-test PR |
+| §1.1 False-positive immunity (paired mutation) | `.gate.failed` | `bherald` + `cherald` | enforce | critical | meta-test fails to detect mutation |
+| §2 Commit + push mechanics | `.repo.safety_breach` | `pherald` + `sherald` | enforce | high | wrong entrypoint OR partial fan-out |
+| §3 Submodule changes propagate first | `.repo.safety_breach` | `pherald` | enforce | high | parent commit before submodule commit |
+| §4 Tag mirroring | `.release.gate_blocked` | `rherald` | enforce | high | tag missing on owned submodule |
+| §5 Changelog + multi-format export | `.policy.violation` | `rherald` + `cherald` | warn | middle | changelog missing or stale export |
+| §7.1 NO-BLUFF positive-evidence | `.gate.failed` | `cherald` | enforce | critical | gate PASSes without captured evidence |
+| §9.1 Destructive-op protocol | `.repo.safety_breach` | `sherald` | enforce | critical | `rm -rf` / `git reset --hard` without backup |
+| §9.2 Force-push authorization | `.repo.safety_breach` | `sherald` + `pherald` | enforce | critical | force-push without explicit per-session auth |
+| §9.3 Hardlinked backup before destructive | `.gate.recovered` | `sherald` | enforce | middle | backup-created event for audit trail |
+| §9.4 Commit-message audit trail | `.policy.violation` | `cherald` | warn | low | history rewrite without audit line |
+| §11.4.1 FAIL-bluffs forbidden | `.gate.failed` | `cherald` | enforce | critical | FAIL that's actually a fake-fail |
+| §11.4.2 Recorded-evidence requirement | `.gate.failed` | `bherald` | enforce | high | test PASS without `tests/.captured-evidence/` artifact |
+| §11.4.3 Per-environment-topology dispatch | `.gate.failed` | `bherald` | warn | middle | test ran in wrong environment |
+| §11.4.4 Test-interrupt-on-discovery | `.gate.failed` | `bherald` | warn | middle | test continued past first failure |
+| §11.4.5 Captured-evidence quality | `.gate.failed` | `bherald` | warn | middle | evidence file present but malformed/empty |
+| §11.4.7 Demotion-evidence | `.gate.failed` | `bherald` | warn | middle | promotion lacks the captured demotion proof |
+| §11.4.9 Batch-source-fixes-before-rebuild | `.policy.violation` | `bherald` | warn | low | per-fix rebuild loop detected |
+| §11.4.10 Credentials-handling | `.credential.leak` | `cherald` + `iherald` | enforce | critical | tracked `.env`, plaintext credential in source |
+| §11.4.10.A Pre-store leak audit | `.credential.leak` | `cherald` + `iherald` | enforce | critical | gate before committing credential storage |
+| §11.4.11 File-layout discipline | `.policy.violation` | `pherald` | warn | low | file in wrong directory |
+| §11.4.12 Auto-generated docs sync | `.policy.violation` | `cherald` | warn | low | covered by §37; reuses tracker events |
+| §11.4.13 Out-of-band sink-side evidence | `.gate.failed` | `bherald` | warn | middle | log-side claim without sink-side proof |
+| §11.4.14 Test playback cleanup | `.policy.violation` | `bherald` | warn | low | playback artifact left over after run |
+| §11.4.15 Item-status tracking | `.policy.violation` | `pherald` | warn | low | covered by §37 |
+| §11.4.16 Item-type tracking | `.policy.violation` | `pherald` | warn | low | covered by §32.6 classifier |
+| §11.4.17 Universal-vs-project rule promotion | `.policy.violation` | `cherald` | warn | low | rule promoted without §11.4 audit |
+| §11.4.18 Script documentation mandate | `.policy.violation` | `cherald` | warn | low | shell script without companion `.md` |
+| §11.4.19 Fixed-document column alignment | `.policy.violation` | `cherald` | warn | low | misaligned columns in `Fixed.md` |
+| §11.4.21 Operator-blocked status | `.policy.violation` | `pherald` + `iherald` | enforce | high | item enters operator-blocked → page on-call |
+| §11.4.22 Document-sync commit discipline | `.policy.violation` | `pherald` | warn | low | doc + code committed in separate commits |
+| §11.4.23 Visual-cue & grouping for Issues docs | `.policy.violation` | `cherald` | warn | low | colorizer drift |
+| §11.4.24 Build-resource stats tracking | `.gate.failed` | `bherald` + `sherald` | warn | middle | build stats missing |
+| §11.4.25 Full-Automation-Coverage | `.policy.violation` | `cherald` | warn | low | manual step detected in operator runbook |
+| §11.4.26 Constitution-Submodule Update Workflow | `.bundle.updated` | `sherald` | enforce | middle | constitution pulled successfully |
+| §11.4.27 No-Fakes-Beyond-Unit-Tests | `.gate.failed` | `bherald` | enforce | high | fake/mock present in non-unit test |
+| §11.4.28 Submodules-As-Equal-Codebase | `.policy.violation` | `cherald` | warn | low | submodule rule violated |
+| §11.4.29 Lowercase-Snake_Case-Naming | `.policy.violation` | `cherald` | warn | low | naming convention violation |
+| §11.4.30 No-Versioned-Build-Artifacts | `.repo.safety_breach` | `cherald` + `bherald` | enforce | high | build artifact committed |
+| §11.4.31 Submodule-Dependency-Manifest | `.policy.violation` | `cherald` | warn | low | manifest missing/stale |
+| §11.4.32 Post-Constitution-Pull Validation | `.bundle.updated` / `.bundle.update_failed` | `sherald` | enforce | high | post-pull gate result |
+| §11.4.33 Type-aware closure-status vocabulary | `.policy.violation` | `pherald` | warn | low | covered by §32.6 classifier |
+| §11.4.34 Reopened-source attribution | `.policy.violation` | `pherald` | warn | low | covered by §37 / §11.4.55 composition |
+| §11.4.36 Mandatory install_upstreams | `.repo.safety_breach` | `sherald` | warn | middle | submodule missing upstream config |
+| §11.4.37 Fetch-before-edit | `.repo.safety_breach` | `pherald` | warn | middle | edit on stale base |
+| §11.4.38 Installable-Asset Evidence | `.release.gate_blocked` | `rherald` | enforce | high | release asset fails installability check |
+| §11.4.39 Per-Feature On-Device Validation | `.gate.failed` | `bherald` | enforce | high | feature claimed done without on-device proof |
+| §11.4.40 Full-suite retest before release tag | `.release.gate_blocked` | `rherald` | enforce | critical | tag attempted without full retest |
+| §11.4.41 Pre-Force-Push Merge-First | `.repo.safety_breach` | `sherald` + `pherald` | enforce | critical | force-push without preceding merge |
+| §11.4.42 Iteration-discipline | `.policy.violation` | `pherald` | warn | low | iteration cycle skipped |
+| §11.4.43 TDD-Fix-Discipline | `.gate.failed` | `bherald` + `cherald` | enforce | high | fix without preceding red test |
+| §11.4.44 Document Revision Header | `.policy.violation` | `cherald` | warn | low | doc missing revision header |
+| §11.4.45 Integration-Status-Doc Maintenance | `.policy.violation` | `scherald` + `cherald` | warn | low | Status.md stale; composes with §37 |
+| §11.4.46 Validate-recent-work-before-post-flash | `.gate.failed` | `bherald` | warn | middle | post-flash tests ran on un-rebased base |
+| §11.4.47 Firebase Data Review | `.policy.violation` | `sherald` | warn | low | data review skipped (project-specific) |
+| §11.4.48 UI-Driven Video Testing | `.gate.failed` | `bherald` | warn | middle | UI test without video capture |
+| §11.4.49 Dual-Approach Testing | `.gate.failed` | `bherald` | warn | middle | only one of unit/e2e present |
+| §11.4.50 Deterministic Consistency | `.gate.failed` | `bherald` | enforce | high | flaky test detected (same input, different result) |
+| §11.4.51 Live-ADB-First Maximization | `.policy.violation` | `bherald` | warn | low | proxy when live-ADB available |
+| §11.4.52 Autonomous-Validation | `.gate.failed` | `bherald` | warn | middle | human-only validation step skipped |
+| §11.4.53 Fixed_Summary parity | `.policy.violation` | `cherald` | warn | low | covered by §37 |
+| §11.4.55 Reopens-history tracking | `.policy.violation` | `pherald` | warn | low | reopen without Reopens/HRD-NNN.md |
+| §11.4.56 Status_Summary parity | `.policy.violation` | `cherald` | warn | low | covered by §37 |
+| §11.4.57 README doc-link section | `.policy.violation` | `cherald` | warn | low | README missing doc-link table |
+| §11.4.59 README always-sync | `.policy.violation` | `cherald` | warn | low | covered by §37 |
+| §11.4.60 Documentation composite covenant | `.gate.failed` | `cherald` | enforce | high | composite gate fail |
+| §11.4.61 Markdown metadata + ToC | `.policy.violation` | `cherald` | warn | low | new structured doc missing metadata/ToC |
+| §11.4.65 Universal Markdown export | `.policy.violation` | `cherald` | warn | low | .md edited without .html/.pdf regen |
+| §11.4.66 Blocker-resolution clarification | `.policy.violation` | `pherald` + `iherald` | enforce | high | operator-blocked without clarification prompt |
+| §11.4.67 Shell-script parseability | `.gate.failed` | `bherald` | warn | low | non-portable bashism detected |
+| §11.4.68 Positive sink-side evidence | `.gate.failed` | `cherald` | enforce | high | downstream proof missing |
+| §11.4.69 Sink-Side Positive-Evidence Taxonomy | `.gate.failed` | `cherald` | enforce | high | taxonomy violation |
+| §11.4.71 Pre-Push Fetch + Investigate + Integrate | `.repo.safety_breach` | `pherald` + `sherald` | enforce | high | push without preceding fetch+integrate |
+| §11.4.73 Main-spec versioning + revision discipline | `.spec.revision_drift` | `cherald` | enforce | high | spec touched without Revision bump |
+| §11.4.74 Submodule-catalogue-first | `.catalogue.miss` | `cherald` + `pherald` | enforce | high | non-trivial PR missing Catalogue-Check line |
+| §12.1 Forbidden host-session operations | `.host.safety_breach` | `sherald` | enforce | critical | suspend/hibernate/logout attempted |
+| §12.2 Required safeguards | `.host.safety_breach` | `sherald` | enforce | high | heavy work without bounded scope |
+| §12.3 Container hygiene | `.host.safety_breach` | `sherald` + `dherald` | enforce | high | container without mem_limit |
+| §12.6 Memory-Budget 60% Ceiling | `.host.safety_breach` | `sherald` | enforce | critical | budget breach detected |
+| §12.10 CONTINUATION sacred invariant | `.policy.violation` | `cherald` | enforce | high | CONTINUATION.md missing/stale |
+
+**Total bindings: 65.** Process-only rules excluded (no runtime event surface) — see prefix to this section.
+
+### 42.4 Subscriber-facing payload shape
+
+Every constitution event renders into a subscriber-facing message via the §39 Herald Canonical Template. The body block carries:
+
+```
+[<flavor icon>] <severity badge> Constitution rule violated: <rule_id>  —  <one-line outcome>
+
+<short description of the violation context (≤ 280 chars)>
+
+Rule:          <rule_id> — <rule title from Constitution.md ToC>
+Bundle:        <heraldconstitutionbundlesha short-form 12 chars>
+Subject:       <file path / repo / commit SHA / tenant scope>
+Decision:      <pass|warn|fail|error|skip>
+Mode:          <allow|warn|enforce>
+Evidence:      <link to evidence artifact or transparency log>
+🔗 Constitution.md §<rule_id>: <permalink to that section on the active mirror>
+👤 Caught by: <evaluator name>
+🕒 <RFC 3339 timestamp>
+```
+
+For `allow` mode, the message is suppressed (only logged to diary + the pull surface). For `warn` mode, message routes to digest tag only. For `enforce`, full §6 tag-fan-out.
+
+### 42.5 Why §42 is gated, not aspirational
+
+The catalogue-row count (65) means landing every binding at once is impossible. Rollout discipline:
+
+1. **First** — `commons_constitution` Go package (planned `commons_constitution/`) implementing the `Evaluator` interface + the 12-class event-emit helpers. **HRD-018**.
+2. **Second** — `cherald` gets the bulk of bindings; HRD-019 implements the gate-result subscribers + the pull surface `/v1/compliance`. Initial mode for all bindings: `allow` (data gathering only).
+3. **Third** — `sherald` host-safety + repo-safety bindings (§9, §12, §11.4.32, §11.4.36, §11.4.41, §11.4.71). **HRD-020**.
+4. **Fourth** — `bherald` CI / test bindings (§1, §11.4.2 / .3 / .4 / .5 / .7 / .13 / .14 / .24 / .27 / .39 / .43 / .46 / .48–.52 / .67). **HRD-021**.
+5. **Fifth** — `rherald` release bindings (§4, §5, §11.4.38, §11.4.40). **HRD-022**.
+6. **Sixth** — `pherald` project bindings (§2, §3, §11.4.11 / .15 / .21 / .22 / .34 / .37 / .42 / .55 / .66 / .71 / .74). **HRD-023**.
+7. **Seventh** — `iherald` incident bindings (§11.4.10 / .10.A escalation, §11.4.21 + .66 escalation). **HRD-024**.
+8. **Eighth** — `scherald` scheduled audit bindings (§11.4.45 periodic audit + digests). **HRD-025**.
+9. **Cross-cutting** — bundle-hash captureer (HRD-026), mode-ladder runtime config (HRD-027), pull surface `/v1/compliance` Gin handler (HRD-028).
+
+Each HRD MUST carry a `Catalogue-Check:` per Universal §11.4.74 (since most of this work *might* already exist as a Submodule under `vasic-digital` / `HelixDevelopment` — the catalogue survey is HRD-018's first task).
+
+### 42.6 Per-flavor cross-references
+
+Each flavor's §18.X.2 "Constitution bindings" sub-section enumerates only the rules where that flavor is the *default owner* (the bold flavor in the master table above). Bindings where a flavor is a *secondary subscriber* (the second flavor in `cherald + iherald`-style rows) are implemented as filtered routes — the §6 channel router fans out to the secondary flavor's subscribers based on the `heraldconstitutionrule` extension attribute, not via a duplicate adapter.
+
+The per-flavor sub-sections live at:
+
+- **§18.2.7** `pherald` — Constitution bindings.
+- **§18.3.2** `sherald` — Constitution bindings.
+- **§18.4.2** `bherald` — Constitution bindings.
+- **§18.5.2** `dherald` — Constitution bindings.
+- **§18.6.2** `aherald` — Constitution bindings.
+- **§18.7.2** `scherald` — Constitution bindings.
+- **§18.8.2** `iherald` — Constitution bindings.
+- **§18.9.2** `rherald` — Constitution bindings.
+- **§18.10.2** `cherald` — Constitution bindings.
+
+For brevity, the master table in §42.3 IS the source of truth; per-flavor sub-sections (added in §18.X.2 below by the implementation HRDs) point back to it and add only flavor-specific rendering / SLA notes that aren't captured by the table.
+
+### 42.7 Composition + anti-bluff
+
+§42 composes with:
+
+- **§4 Event model** — constitution events use the same CloudEvents v1.0 envelope as every other Herald event.
+- **§32 Inbound pipeline** — inbound subscriber acks/silences for constitution events use the standard pipeline (`Ack:` / `Silence: <duration>` / etc.).
+- **§34 Reply protocol** — silencing a constitution event in `warn` mode emits the standard three replies.
+- **§35 Versioned reports** — constitution-bundle updates emit `.bundle.updated` events that compose with §35 (the Constitution.md export bundle gets a new SHA).
+- **§37 Tracker-doc change events** — rules that map onto tracker-doc state (§11.4.12, .15, .53, .56, .59, .60) are emitted via §37 with `heraldconstitutionrule` as an additional attribute — NOT duplicated as separate `.policy.violation` events.
+- **§41 REST API** — every REST-enabled flavor mounts the `/v1/compliance` pull surface.
+
+Anti-bluff (Universal §11.4 + §1.1):
+
+- Every `.gate.failed` / `.gate.recovered` event MUST carry an `evidence_uri` per Universal §11.4.2.
+- The `constitution_state` transition gate MUST itself have a paired §1.1 mutation: mutate the `last_decision` row to a different value while leaving the actual evaluator deterministic; expect the gate to detect the drift.
 
 ---
 

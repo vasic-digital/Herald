@@ -186,7 +186,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>2</td>
+<td>3</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -202,10 +202,11 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td>First-implementation cycle r1 landed: Go scaffold across 5 modules,
-null:// adapter fully working, migrations + types complete, pherald CLI
-compiles + <code>version</code> subcommand works end-to-end. Spec V3 r4
-with five new operator-mandated sections (§37–§41).</td>
+<td>First-implementation cycle r1 landed (5 Go modules, null:// adapter
+working, migrations + Cobra CLI). Spec V3 r5: §37–§41 + §42
+constitution-flavor binding catalogue. HRD-017 closed (universal
+§11.4.73 + §11.4.74 mandates landed in constitution commit
+34a82b3).</td>
 </tr>
 <tr>
 <td>Issues</td>
@@ -213,24 +214,20 @@ with five new operator-mandated sections (§37–§41).</td>
 </tr>
 <tr>
 <td>Issues summary</td>
-<td>HRD-008/-010/-011/-012/-015/-016/-017 still open or
-in-progress.</td>
+<td>HRD-008/-010/-011/-012/-015/-016/-018..-028 open.</td>
 </tr>
 <tr>
 <td>Fixed</td>
-<td>HRD-001..HRD-007 (prior); HRD-009, HRD-009b, HRD-013, HRD-014 (this
-commit)</td>
+<td>HRD-001..HRD-007, HRD-009, HRD-009b, HRD-013, HRD-014, HRD-017</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
-<td>spec evolution V1→V3 r4 complete; Go module foundation (commons +
-commons_prefix + commons_messaging + commons_storage + pherald) landed
-with passing unit tests.</td>
+<td>spec V1→V3 r5; Go module foundation; universal §11.4.73 + §11.4.74
+mandates propagated into constitution submodule.</td>
 </tr>
 <tr>
 <td>Continuation</td>
-<td>see <code>CONTINUATION.md</code> for the live HRD-008
-quickstart-validation path.</td>
+<td>see <code>CONTINUATION.md</code>.</td>
 </tr>
 </tbody>
 </table>
@@ -253,13 +250,24 @@ quickstart-validation path.</td>
 </thead>
 <tbody>
 <tr>
+<td>HRD-017</td>
+<td>task</td>
+<td>middle</td>
+<td>Propagate Universal §11.4.73 (main-spec versioning + revision
+discipline) and §11.4.74 (submodule-catalogue-first discovery) into
+parent constitution Constitution.md + CLAUDE.md + AGENTS.md</td>
+<td>2026-05-20</td>
+<td>constitution <code>34a82b3</code></td>
+<td>Universal §11.4.73, §11.4.74</td>
+</tr>
+<tr>
 <td>HRD-014</td>
 <td>task</td>
 <td>middle</td>
 <td>pherald CLI scaffold — Cobra root + version + 5 stubbed subcommands;
 <code>pherald version --json</code> returns canonical build info</td>
 <td>2026-05-20</td>
-<td>(this commit)</td>
+<td><code>e627c76</code></td>
 <td>spec V3 §3 + §18.2</td>
 </tr>
 <tr>

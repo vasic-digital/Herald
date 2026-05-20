@@ -2,16 +2,16 @@
 
 | Field | Value |
 |---|---|
-| Revision | 2 |
+| Revision | 3 |
 | Created | 2026-05-20 |
 | Last modified | 2026-05-20 |
 | Status | active |
-| Status summary | First-implementation cycle r1 LANDED. Spec V3 r4 (5 new sections §37–§41). Five Go modules compile + tests pass. Quickstart compose scaffolded for operator validation. Live integrations (Postgres+River / Telegram / Claude Code / Gin REST) pending. |
-| Issues | HRD-008, HRD-010, HRD-011, HRD-012, HRD-015, HRD-016, HRD-017 |
+| Status summary | Spec V3 r5: §42 constitution-flavor binding catalogue (65 rule→flavor bindings + design from policy-as-code research) landed. HRD-018..HRD-028 opened for the implementation rollout. First-implementation cycle continues (HRD-008/-010/-011/-012/-015/-016 still open). |
+| Issues | HRD-008, HRD-010, HRD-011, HRD-012, HRD-015, HRD-016, HRD-018..HRD-028 |
 | Issues summary | see `Issues.md` |
-| Fixed | HRD-001..HRD-007 (prior) + HRD-009/HRD-009b/HRD-013/HRD-014 (this commit) |
+| Fixed | HRD-001..HRD-007, HRD-009, HRD-009b, HRD-013, HRD-014, HRD-017 |
 | Fixed summary | see `Fixed.md` |
-| Continuation | next concrete step: HRD-008 live operator-side quickstart compose validation (Postgres + Redis + OTel + pherald container). After that: HRD-010 (live Postgres + River wiring), HRD-011 (Telegram adapter), HRD-012 (Claude Code live), HRD-016 (REST API). |
+| Continuation | first up: HRD-018 commons_constitution package (Evaluator + 12 event-emit helpers + bundle-hash captureer + mode-ladder config). Catalogue-Check survey before scaffolding (per Universal §11.4.74). |
 
 ## Table of contents
 

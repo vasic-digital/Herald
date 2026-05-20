@@ -2,14 +2,14 @@
 
 | Field | Value |
 |---|---|
-| Revision | 2 |
+| Revision | 3 |
 | Created | 2026-05-20 |
 | Last modified | 2026-05-20 |
 | Status | active |
-| Status summary | First-implementation cycle r1 LANDED — Go scaffold across 5 modules with passing unit tests. Spec V3 r4 (§37 tracker events + §38 announcement contract + §39 templates + §40 docs/tests + §41 REST). Next: HRD-008 operator-side compose validation, then HRD-010/-011/-012/-016 live integrations. |
-| Issues | HRD-008, HRD-010, HRD-011, HRD-012, HRD-015, HRD-016, HRD-017 |
+| Status summary | Spec V3 r5 + Constitution-flavor binding catalogue (§42) landed. HRD-018..HRD-028 opened to implement the 65 rule→flavor bindings across the 9 flavors. First-implementation cycle continues. |
+| Issues | HRD-008, HRD-010, HRD-011, HRD-012, HRD-015, HRD-016, HRD-018..HRD-028 |
 | Issues summary | see `Issues.md` |
-| Fixed | HRD-001..HRD-007 + HRD-009, HRD-009b, HRD-013, HRD-014 |
+| Fixed | HRD-001..HRD-007, HRD-009, HRD-009b, HRD-013, HRD-014, HRD-017 |
 | Fixed summary | see `Fixed.md` |
 | Continuation | This file IS the continuation pointer. Update on every non-trivial commit (per Universal §12.10). |
 
@@ -64,6 +64,8 @@ ok  	github.com/vasic-digital/herald/commons_storage	1.630s
 | HRD-017 | open | Propagate Universal §11.4.6X spec-versioning + submodule-catalogue-first mandates into the parent constitution. |
 
 ## §4. Next concrete steps
+
+0. **HRD-018 Catalogue-Check survey + `commons_constitution` scaffold** — first action of the §42 implementation rollout. **MUST start** with a `vasic-digital` + `HelixDevelopment` catalogue survey per the brand-new Universal §11.4.74. Record `Catalogue-Check: reuse|extend|no-match` on HRD-018 before any Go code lands. Then scaffold the `Evaluator` interface, 12 event-class emit helpers, `constitution_state` + `constitution_bindings` migrations, bundle-hash captureer, mode-ladder runtime config.
 
 1. **HRD-008 quickstart validation** — On a fresh laptop with Podman or Docker:
    ```

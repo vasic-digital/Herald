@@ -186,7 +186,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>2</td>
+<td>3</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -202,23 +202,25 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td>First-implementation cycle in progress: V3 spec extended (§37–§41),
-Go scaffold landed (commons + commons_prefix + commons_messaging +
-commons_storage + pherald CLI), Quickstart compose scaffolded, null://
-adapter fully working with passing tests.</td>
+<td>Constitution-flavor binding plan landed in spec V3 §42 (65
+rule→flavor bindings); HRD-018..HRD-028 opened for the implementation
+rollout. HRD-017 closed (universal §11.4.73 + §11.4.74 mandates landed
+in constitution commit 34a82b3).</td>
 </tr>
 <tr>
 <td>Issues</td>
-<td>HRD-008, HRD-010, HRD-011, HRD-012, HRD-015, HRD-016, HRD-017</td>
+<td>HRD-008, HRD-010, HRD-011, HRD-012, HRD-015, HRD-016,
+HRD-018..HRD-028</td>
 </tr>
 <tr>
 <td>Issues summary</td>
-<td>live integrations + REST API surface + universal versioning rule
-propagation pending.</td>
+<td>17 open / in-progress workable items spanning quickstart validation,
+live channel integrations, REST surface, and the §42
+constitution-binding rollout.</td>
 </tr>
 <tr>
 <td>Fixed</td>
-<td>HRD-007, HRD-009, HRD-009b, HRD-013, HRD-014 (this commit)</td>
+<td>HRD-001..HRD-007, HRD-009, HRD-009b, HRD-013, HRD-014, HRD-017</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
@@ -235,8 +237,15 @@ propagation pending.</td>
 <li><a href="#open">Open</a></li>
 <li><a href="#in-progress">In progress</a></li>
 <li><a href="#blocked">Blocked</a></li>
+<li><a href="#conventions">Conventions</a></li>
 </ul>
 <h2 id="open">Open</h2>
+<p>Per Universal §11.4.74 every new row carries a
+<code>Catalogue-Check</code> line in its References cell (one of
+<code>reuse|extend|no-match &lt;org/repo&gt;@&lt;sha&gt;</code>). For
+HRDs whose catalogue-check is still pending, the row records
+<code>no-match (2026-05-20)</code> — operators reviewing the
+implementation PR will re-verify.</p>
 <table>
 <thead>
 <tr>
@@ -247,7 +256,7 @@ propagation pending.</td>
 <th>Title</th>
 <th>Opened</th>
 <th>Last update</th>
-<th>Reference</th>
+<th>References</th>
 </tr>
 </thead>
 <tbody>
@@ -260,7 +269,8 @@ propagation pending.</td>
 queue, Redis ACL)</td>
 <td>2026-05-20</td>
 <td>2026-05-20</td>
-<td>spec V3 §9.6 + §16; migrations already shipped in this commit</td>
+<td>spec V3 §9.6 + §16; Catalogue-Check: no-match (2026-05-20) —
+golang-migrate is the standard, not a vasic/Helix-owned thing</td>
 </tr>
 <tr>
 <td>HRD-011</td>
@@ -271,30 +281,31 @@ queue, Redis ACL)</td>
 long-poll + webhook secret_token)</td>
 <td>2026-05-20</td>
 <td>2026-05-20</td>
-<td>spec V3 §11.1; stub shipped</td>
+<td>spec V3 §11.1; Catalogue-Check: no-match (2026-05-20)</td>
 </tr>
 <tr>
 <td>HRD-012</td>
 <td>task</td>
 <td>open</td>
 <td>middle</td>
-<td>Claude Code dispatcher live integration (resolve_session +
-<code>claude --resume</code> + parse
+<td>Claude Code dispatcher live integration
+(<code>claude --resume</code> + parse
 <code>&lt;&lt;&lt;HERALD-REPLY&gt;&gt;&gt;</code>)</td>
 <td>2026-05-20</td>
 <td>2026-05-20</td>
-<td>spec V3 §33; stub + envelope formatter + tests shipped</td>
+<td>spec V3 §33; Catalogue-Check: no-match (2026-05-20)</td>
 </tr>
 <tr>
 <td>HRD-015</td>
 <td>task</td>
 <td>open</td>
 <td>low</td>
-<td>Add inheritance gate I8 invariants for Go scaffold (go.work present
-+ commons/types.go present + null adapter passes test)</td>
+<td>Inheritance gate I8 invariants for Go scaffold (go.work +
+commons/types.go + null adapter test passes)</td>
 <td>2026-05-20</td>
 <td>2026-05-20</td>
-<td>spec V3 §40 + gate I7 pattern</td>
+<td>spec V3 §40 + gate I7 pattern; Catalogue-Check: no-match
+(2026-05-20)</td>
 </tr>
 <tr>
 <td>HRD-016</td>
@@ -305,19 +316,144 @@ long-poll + webhook secret_token)</td>
 with /v1/* routes + JWT auth + OpenAPI tags</td>
 <td>2026-05-20</td>
 <td>2026-05-20</td>
-<td>spec V3 §41 (new this commit)</td>
+<td>spec V3 §41; Catalogue-Check: no-match (2026-05-20) — Gin is
+external</td>
 </tr>
 <tr>
-<td>HRD-017</td>
+<td>HRD-018</td>
+<td>task</td>
+<td>open</td>
+<td>high</td>
+<td><code>commons_constitution</code> Go package: Evaluator interface +
+12 event-class emit helpers + constitution_state + constitution_bindings
+table migrations + bundle-hash captureer + mode-ladder runtime
+config</td>
+<td>2026-05-20</td>
+<td>2026-05-20</td>
+<td>spec V3 §42.1 / §42.5 step 1; Catalogue-Check: TBD — agent MUST
+survey vasic-digital + HelixDevelopment for existing
+rule-evaluation/audit modules before scaffolding</td>
+</tr>
+<tr>
+<td>HRD-019</td>
+<td>task</td>
+<td>open</td>
+<td>high</td>
+<td><code>cherald</code> constitution bindings — bulk implementation:
+~30 <code>.policy.violation</code> rules +
+<code>.gate.failed</code>/<code>.gate.recovered</code>/<code>.credential.leak</code>/<code>.spec.revision_drift</code>/<code>.catalogue.miss</code>
+handlers; <code>/v1/compliance</code> pull surface</td>
+<td>2026-05-20</td>
+<td>2026-05-20</td>
+<td>spec V3 §42.3 cherald rows + §42.5 step 2; Catalogue-Check: TBD</td>
+</tr>
+<tr>
+<td>HRD-020</td>
+<td>task</td>
+<td>open</td>
+<td>high</td>
+<td><code>sherald</code> host-safety + repo-safety bindings (§9.1/.2/.3,
+§12.1/.2/.3/.6, §11.4.32, §11.4.36, §11.4.41, §11.4.71) — destructive-op
+detection hook, force-push interceptor, mem-budget watcher</td>
+<td>2026-05-20</td>
+<td>2026-05-20</td>
+<td>spec V3 §42.3 sherald rows + §42.5 step 3; Catalogue-Check: TBD</td>
+</tr>
+<tr>
+<td>HRD-021</td>
+<td>task</td>
+<td>open</td>
+<td>middle</td>
+<td><code>bherald</code> CI/test bindings (§1,
+§11.4.2/.3/.4/.5/.7/.13/.14/.24/.27/.39/.43/.46/.48–.52/.67) —
+gate-result event emitters; integrates with the consuming project's CI
+workflow</td>
+<td>2026-05-20</td>
+<td>2026-05-20</td>
+<td>spec V3 §42.3 bherald rows + §42.5 step 4; Catalogue-Check: TBD</td>
+</tr>
+<tr>
+<td>HRD-022</td>
+<td>task</td>
+<td>open</td>
+<td>middle</td>
+<td><code>rherald</code> release bindings (§4 tag mirroring, §5
+changelog, §11.4.38 installable-asset evidence, §11.4.40 full-suite
+retest)</td>
+<td>2026-05-20</td>
+<td>2026-05-20</td>
+<td>spec V3 §42.3 rherald rows + §42.5 step 5; Catalogue-Check: TBD</td>
+</tr>
+<tr>
+<td>HRD-023</td>
+<td>task</td>
+<td>open</td>
+<td>middle</td>
+<td><code>pherald</code> project bindings (§2 commit+push, §3 submodule
+propagation, §11.4.11/.15/.21/.22/.34/.37/.42/.55/.66/.71/.74)</td>
+<td>2026-05-20</td>
+<td>2026-05-20</td>
+<td>spec V3 §42.3 pherald rows + §42.5 step 6; Catalogue-Check: TBD</td>
+</tr>
+<tr>
+<td>HRD-024</td>
+<td>task</td>
+<td>open</td>
+<td>middle</td>
+<td><code>iherald</code> constitution-rule escalation bindings
+(§11.4.10/.10.A credential-leak page-out, §11.4.21 + §11.4.66
+operator-blocked escalation)</td>
+<td>2026-05-20</td>
+<td>2026-05-20</td>
+<td>spec V3 §42.3 iherald rows + §42.5 step 7; Catalogue-Check: TBD</td>
+</tr>
+<tr>
+<td>HRD-025</td>
 <td>task</td>
 <td>open</td>
 <td>low</td>
-<td>Propagate the new Universal §11.4.6X spec-versioning mandate into
-the parent constitution; add corresponding HERALD_CONSTITUTION §107</td>
+<td><code>scherald</code> scheduled-audit bindings (§11.4.45 periodic
+Status.md sweep + daily/weekly/monthly compliance digest)</td>
 <td>2026-05-20</td>
 <td>2026-05-20</td>
-<td>pending in the constitution-submodule commit immediately
-following</td>
+<td>spec V3 §42.3 scherald rows + §42.5 step 8; Catalogue-Check:
+TBD</td>
+</tr>
+<tr>
+<td>HRD-026</td>
+<td>task</td>
+<td>open</td>
+<td>middle</td>
+<td>Constitution-bundle hash captureer — computes SHA-256 of rendered
+Constitution.md at evaluation time; persists on every emitted event for
+replayability</td>
+<td>2026-05-20</td>
+<td>2026-05-20</td>
+<td>spec V3 §42.1.3; Catalogue-Check: TBD</td>
+</tr>
+<tr>
+<td>HRD-027</td>
+<td>task</td>
+<td>open</td>
+<td>middle</td>
+<td>Mode-ladder runtime config (<code>constitution_bindings</code> table
++ admin REST endpoints to flip allow/warn/enforce per binding per tenant
+without redeploy)</td>
+<td>2026-05-20</td>
+<td>2026-05-20</td>
+<td>spec V3 §42.1.4; Catalogue-Check: TBD</td>
+</tr>
+<tr>
+<td>HRD-028</td>
+<td>task</td>
+<td>open</td>
+<td>low</td>
+<td><code>/v1/compliance</code> pull surface — Gin handler returning
+<code>constitution_state</code> rows filtered by rule / subject /
+decision; paginated</td>
+<td>2026-05-20</td>
+<td>2026-05-20</td>
+<td>spec V3 §42.1.5 + §41; Catalogue-Check: TBD</td>
 </tr>
 </tbody>
 </table>
@@ -332,7 +468,7 @@ following</td>
 <th>Title</th>
 <th>Opened</th>
 <th>Last update</th>
-<th>Reference</th>
+<th>References</th>
 </tr>
 </thead>
 <tbody>
@@ -345,8 +481,9 @@ following</td>
 + pherald container)</td>
 <td>2026-05-20</td>
 <td>2026-05-20</td>
-<td>spec V3 §26.5 — scaffold shipped this commit; live end-to-end run
-pending operator.</td>
+<td>spec V3 §26.5 — scaffold shipped, live end-to-end run pending
+operator; Catalogue-Check: no-match (2026-05-20) — bespoke to
+Herald</td>
 </tr>
 </tbody>
 </table>
@@ -354,6 +491,6 @@ pending operator.</td>
 <p>(none)</p>
 <h2 id="conventions">Conventions</h2>
 <p>See <a href="Fixed.md"><code>Fixed.md</code></a> for closed items +
-Universal §11.4.12/.15/.16/.19/.33/.55 composition rules.</p>
+Universal §11.4.12/.15/.16/.19/.33/.55/.73/.74 composition rules.</p>
 </body>
 </html>

@@ -186,7 +186,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>2</td>
+<td>3</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -202,15 +202,14 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td>First-implementation cycle r1 LANDED — Go scaffold across 5 modules
-with passing unit tests. Spec V3 r4 (§37 tracker events + §38
-announcement contract + §39 templates + §40 docs/tests + §41 REST).
-Next: HRD-008 operator-side compose validation, then
-HRD-010/-011/-012/-016 live integrations.</td>
+<td>Spec V3 r5 + Constitution-flavor binding catalogue (§42) landed.
+HRD-018..HRD-028 opened to implement the 65 rule→flavor bindings across
+the 9 flavors. First-implementation cycle continues.</td>
 </tr>
 <tr>
 <td>Issues</td>
-<td>HRD-008, HRD-010, HRD-011, HRD-012, HRD-015, HRD-016, HRD-017</td>
+<td>HRD-008, HRD-010, HRD-011, HRD-012, HRD-015, HRD-016,
+HRD-018..HRD-028</td>
 </tr>
 <tr>
 <td>Issues summary</td>
@@ -218,7 +217,7 @@ HRD-010/-011/-012/-016 live integrations.</td>
 </tr>
 <tr>
 <td>Fixed</td>
-<td>HRD-001..HRD-007 + HRD-009, HRD-009b, HRD-013, HRD-014</td>
+<td>HRD-001..HRD-007, HRD-009, HRD-009b, HRD-013, HRD-014, HRD-017</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
@@ -355,9 +354,19 @@ submodule-catalogue-first mandates into the parent constitution.</td>
 </tbody>
 </table>
 <h2 id="4-next-concrete-steps">§4. Next concrete steps</h2>
-<ol type="1">
-<li><strong>HRD-008 quickstart validation</strong> — On a fresh laptop
-with Podman or Docker:
+<ol start="0" type="1">
+<li><p><strong>HRD-018 Catalogue-Check survey +
+<code>commons_constitution</code> scaffold</strong> — first action of
+the §42 implementation rollout. <strong>MUST start</strong> with a
+<code>vasic-digital</code> + <code>HelixDevelopment</code> catalogue
+survey per the brand-new Universal §11.4.74. Record
+<code>Catalogue-Check: reuse|extend|no-match</code> on HRD-018 before
+any Go code lands. Then scaffold the <code>Evaluator</code> interface,
+12 event-class emit helpers, <code>constitution_state</code> +
+<code>constitution_bindings</code> migrations, bundle-hash captureer,
+mode-ladder runtime config.</p></li>
+<li><p><strong>HRD-008 quickstart validation</strong> — On a fresh
+laptop with Podman or Docker:</p>
 <pre><code>git clone &lt;Herald repo&gt;
 git submodule update --init
 cd containers/quickstart
@@ -365,33 +374,33 @@ podman build -t herald/pherald:dev -f Dockerfile.pherald ../..
 cp .env.example ../../.env &amp;&amp; $EDITOR ../../.env
 podman-compose -f docker-compose.quickstart.yml up -d
 curl --retry 30 --retry-delay 2 http://localhost:24090/readyz</code></pre>
-The current <code>pherald serve</code> returns "not implemented" —
+<p>The current <code>pherald serve</code> returns "not implemented" —
 HRD-010/HRD-011/HRD-012 must land first to make the live
 <code>curl POST /v1/events</code> succeed end-to-end. Validation reveals
 which of the spec's assumptions (port ranges, Compose syntax, OTel
 collector config, Postgres healthcheck) hold against real
-infrastructure.</li>
-<li><strong>HRD-010</strong> — wire
+infrastructure.</p></li>
+<li><p><strong>HRD-010</strong> — wire
 <code>commons_storage/storage.go</code>'s <code>MigrationDriver</code>
 to golang-migrate; bring pgx + River + Redis client up; add integration
-tests under <code>//go:build integration</code>.</li>
-<li><strong>HRD-011</strong> — replace
+tests under <code>//go:build integration</code>.</p></li>
+<li><p><strong>HRD-011</strong> — replace
 <code>commons_messaging/channels/tgram/tgram.go</code> stub with a live
 implementation against <code>gopkg.in/telebot.v3</code> or
 <code>github.com/mymmrac/telego</code>; recorded HTTP fixtures under
-<code>testdata/</code>.</li>
-<li><strong>HRD-012</strong> — replace
+<code>testdata/</code>.</p></li>
+<li><p><strong>HRD-012</strong> — replace
 <code>commons_messaging/dispatch/claude_code/claude_code.go</code>'s
 <code>Dispatch</code> stub with a real <code>claude --resume</code>
 invocation; capture session UUID; parse
-<code>&lt;&lt;&lt;HERALD-REPLY&gt;&gt;&gt;</code>.</li>
-<li><strong>HRD-016</strong> — scaffold
+<code>&lt;&lt;&lt;HERALD-REPLY&gt;&gt;&gt;</code>.</p></li>
+<li><p><strong>HRD-016</strong> — scaffold
 <code>pherald/internal/http/</code> with Gin routes per V3 §41; wire
 <code>pherald serve</code> to mount the Gin router on
-<code>http_port</code>.</li>
-<li><strong>HRD-017</strong> — propagate Universal §11.4.6X new mandates
-(spec-versioning + submodule-catalogue-first) into the constitution
-submodule.</li>
+<code>http_port</code>.</p></li>
+<li><p><strong>HRD-017</strong> — propagate Universal §11.4.6X new
+mandates (spec-versioning + submodule-catalogue-first) into the
+constitution submodule.</p></li>
 </ol>
 <h2 id="5-long-form-pointers">§5. Long-form pointers</h2>
 <ul>
