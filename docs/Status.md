@@ -2,11 +2,11 @@
 
 | Field | Value |
 |---|---|
-| Revision | 4 |
+| Revision | 5 |
 | Created | 2026-05-20 |
 | Last modified | 2026-05-20 |
 | Status | active |
-| Status summary | Foundation design (Sub-project 1) approved + locked. Three-milestone vertical-slice approach across M1/M2/M3. Catalogue-Check survey complete: **9 of 12 capabilities map to existing Helix-stack modules** (`digital.vasic.background` replaces River; `digital.vasic.eventbus` replaces Watermill; `digital.vasic.middleware`+`auth`+`observability` compose the Gin/JWT/OTel layer; `digital.vasic.database` provides pgx + migrations; `digital.vasic.cache` provides Redis). Bespoke parts (Evaluator + BundleHash + ModeLadder): write new under `commons_constitution`. M1 implementation next. |
+| Status summary | **Foundation M1 landed.** `commons_constitution` package (14 files, ~2.9k LOC) — Evaluator + Registry + 12 emit helpers + BundleHash captureer + ModeLadder + ConstitutionStore + in-process MemoryBus + Runner with panic isolation + CloudEvents v1.0 adapter — all green under `go test -race`. Spec V3 bumped to Revision 7 with new §44 Foundation implementation contract. HRD-080 opened to refine the I6 gate-invariant before M2 (which needs git submodules for Helix-stack modules). M2 (Postgres + `digital.vasic.background`) next. |
 | Issues | HRD-008, HRD-010, HRD-011, HRD-012, HRD-015, HRD-016, HRD-018 (in_progress), HRD-019..HRD-028, HRD-029..HRD-056 |
 | Issues summary | see `Issues.md` |
 | Fixed | HRD-001..HRD-007, HRD-009, HRD-009b, HRD-013, HRD-014, HRD-017 |

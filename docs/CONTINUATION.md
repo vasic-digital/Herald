@@ -2,11 +2,11 @@
 
 | Field | Value |
 |---|---|
-| Revision | 4 |
+| Revision | 5 |
 | Created | 2026-05-20 |
 | Last modified | 2026-05-20 |
 | Status | active |
-| Status summary | Foundation (Sub-project 1) design approved + Catalogue-Check landed. Architectural pivot: 9 of 12 capabilities map to existing `digital.vasic.*` modules — see `catalogue-checks/HRD-018-foundation.md`. River replaced by `digital.vasic.background`. Watermill replaced by `digital.vasic.eventbus`. Gin skeleton uses `digital.vasic.middleware`+`auth`+`observability`. M1 implementation begins next. |
+| Status summary | **Foundation M1 landed.** `commons_constitution` (14 files, ~2.9k LOC) green under -race. Spec V3 r7 with §44. HRD-080 opened (I6 gate refinement for git-submodule support). Next: M2 Postgres + `digital.vasic.background` + RLS wiring. |
 | Issues | HRD-008, HRD-010, HRD-011, HRD-012, HRD-015, HRD-016, HRD-018 (in_progress), HRD-019..HRD-028, HRD-029..HRD-056 |
 | Issues summary | see `Issues.md` |
 | Fixed | HRD-001..HRD-007, HRD-009, HRD-009b, HRD-013, HRD-014, HRD-017 |

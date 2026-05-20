@@ -186,7 +186,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>4</td>
+<td>5</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -202,16 +202,16 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td>Foundation design (Sub-project 1) approved + locked. Three-milestone
-vertical-slice approach across M1/M2/M3. Catalogue-Check survey
-complete: <strong>9 of 12 capabilities map to existing Helix-stack
-modules</strong> (<code>digital.vasic.background</code> replaces River;
-<code>digital.vasic.eventbus</code> replaces Watermill;
-<code>digital.vasic.middleware</code>+<code>auth</code>+<code>observability</code>
-compose the Gin/JWT/OTel layer; <code>digital.vasic.database</code>
-provides pgx + migrations; <code>digital.vasic.cache</code> provides
-Redis). Bespoke parts (Evaluator + BundleHash + ModeLadder): write new
-under <code>commons_constitution</code>. M1 implementation next.</td>
+<td><strong>Foundation M1 landed.</strong>
+<code>commons_constitution</code> package (14 files, ~2.9k LOC) —
+Evaluator + Registry + 12 emit helpers + BundleHash captureer +
+ModeLadder + ConstitutionStore + in-process MemoryBus + Runner with
+panic isolation + CloudEvents v1.0 adapter — all green under
+<code>go test -race</code>. Spec V3 bumped to Revision 7 with new §44
+Foundation implementation contract. HRD-080 opened to refine the I6
+gate-invariant before M2 (which needs git submodules for Helix-stack
+modules). M2 (Postgres + <code>digital.vasic.background</code>)
+next.</td>
 </tr>
 <tr>
 <td>Issues</td>

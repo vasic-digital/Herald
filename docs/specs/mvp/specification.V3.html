@@ -251,7 +251,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>6</td>
+<td>7</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -267,14 +267,14 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td>V3 r6 — §43 Constitution-derived flavor commands + workflows. 27
-concrete operator-facing CLI subcommands + REST endpoints
-(HRD-029..HRD-056) that wrap constitution-named workflows
-(install_upstreams, constitution pull, composite-gate, creds-scan, docs
-sync, force-push gate, etc.) as native flavor capabilities. Composes
-with §42 (events emitted) + §41 (REST surface) + §39 (subscriber-facing
-template). Per Universal §11.4.73, secondary bump (Revision 5 → 6); §43
-is additive.</td>
+<td>V3 r7 — §44 <strong>Foundation implementation contract</strong>
+lands. Locks the three-milestone (M1/M2/M3) Approach B vertical-slice
+delivery for Sub-project 1 of 8. Records the Catalogue-Check verdict (9
+of 12 caps <code>extend</code> existing <code>digital.vasic.*</code>
+modules; 3 <code>no-match</code> bespoke). Per Universal §11.4.73
+secondary bump (Revision 6 → 7); §44 is additive. M1 evidence captured
+in §44.9 (<code>commons_constitution</code> package, 14 files, all tests
+PASS under -race).</td>
 </tr>
 <tr>
 <td>Issues</td>
@@ -286,25 +286,28 @@ is additive.</td>
 </tr>
 <tr>
 <td>Fixed</td>
-<td>V3-R3-01..V3-R3-03 (this revision: parent-doc spec-path sync);
+<td>V3-R3-01..V3-R3-03 (r3 parent-doc spec-path sync);
 V3-R2-01..V3-R2-09 (r2); V3-R1-01..V3-R1-14 (r1); inherits closed V2 +
 V1 lineage.</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
-<td>r3 closes the gap between V3 §23 anchor (now points at
-<code>specification.V3.md</code>) and the propagated copies in README +
-CLAUDE + AGENTS + HERALD_CONSTITUTION §106 — all four parent docs
-aligned. Inheritance gate stays green (anchor-phrase 'comprehensive
-planning and implementation' was the I7 enforcement target, not the path
-string).</td>
+<td>r7 lands §44 Foundation contract + records M1 as-built evidence
+(commons_constitution 14-file scaffold, in-process
+EventBus/Registry/Captureer/Ladder/Store/Runner all green under -race;
+full workspace inheritance gate 12 PASS / 0 FAIL).</td>
 </tr>
 <tr>
 <td>Continuation</td>
-<td>First-implementation cycle: scaffold <code>commons</code> +
-<code>commons_messaging</code> per §11.0 contract + per-channel adapters
-+ River queue + Claude Code dispatcher + quickstart compose. Track under
-<code>HRD-</code> prefix.</td>
+<td>M2: <code>commons_storage</code> live-wire via
+<code>digital.vasic.database</code> (pgx + migrations) +
+<code>digital.vasic.background</code> (Postgres queue) — integration
+tests against testcontainers Postgres. Then M3: Gin REST via
+<code>digital.vasic.middleware</code>+<code>auth</code>+<code>observability</code>
+composition + <code>digital.vasic.cache</code> for the mode-ladder
+read-cache. Each milestone followed by multi-mirror push. Then codegraph
+integration per <a
+href="https://github.com/colbymchenry/codegraph">https://github.com/colbymchenry/codegraph</a>.</td>
 </tr>
 </tbody>
 </table>
@@ -649,6 +652,29 @@ gating</a></li>
 Composition with §41 REST + §42 events + §39 templates</a></li>
 <li><a href="#435-boundary-what-43-does-not-add">43.5 Boundary: what §43
 does NOT add</a></li>
+</ul></li>
+<li><a href="#44-foundation-implementation-contract">§44. Foundation
+implementation contract</a>
+<ul>
+<li><a href="#441-scope">44.1 Scope</a></li>
+<li><a href="#442-done-criterion-locked">44.2 Done criterion
+(locked)</a></li>
+<li><a
+href="#443-three-milestone-delivery-approach-b--bottom-up-vertical-slices">44.3
+Three-milestone delivery (Approach B — bottom-up vertical
+slices)</a></li>
+<li><a href="#444-evaluator-trigger-model-locked">44.4 Evaluator trigger
+model (locked)</a></li>
+<li><a href="#445-mode-ladder-storage-locked">44.5 Mode-ladder storage
+(locked)</a></li>
+<li><a href="#446-three-axis-governance-envelope-locked">44.6 Three-axis
+governance envelope (locked)</a></li>
+<li><a href="#447-catalogue-check-verdict-recorded-2026-05-20">44.7
+Catalogue-Check verdict (recorded 2026-05-20)</a></li>
+<li><a href="#448-anti-bluff-testing-mandate-continuous">44.8 Anti-bluff
+testing mandate (continuous)</a></li>
+<li><a href="#449-m1-evidence-landed-2026-05-20">44.9 M1 evidence
+(landed 2026-05-20)</a></li>
 </ul></li>
 </ul>
 <hr />
@@ -9823,6 +9849,177 @@ operator-facing (CLI + REST), not subscriber-facing
 constitution itself names or implies</em>. Anything else (custom project
 tooling, integrations with external SaaS) is the consuming project's
 concern, not Herald's.</p>
+<hr />
+<h2 id="44-foundation-implementation-contract">§44. Foundation
+implementation contract</h2>
+<blockquote>
+<p>Added 2026-05-20 (V3 r7). Locks the contract for the
+<strong>Foundation sub-project</strong> — the first of eight
+implementation sub-projects derived from V3. Full design + rationale
+lives in
+<code>docs/superpowers/specs/2026-05-20-foundation-design.md</code>;
+this section is the contract the spec carries forward.</p>
+</blockquote>
+<h3 id="441-scope">§44.1 Scope</h3>
+<p>Foundation composes HRD-018 (<code>commons_constitution</code>) +
+HRD-010 (<code>commons_storage</code> live wiring) + HRD-016 (Gin REST
+skeleton subset) + HRD-026 (bundle-hash captureer) + HRD-027
+(mode-ladder runtime config) + HRD-028 (<code>/v1/compliance</code> pull
+surface) into a single, end-to-end-smokeable substrate. Every other
+sub-project (channel adapters, dispatchers, sweep daemon, REST surface
+expansion, multi-flavor binaries) builds on Foundation.</p>
+<h3 id="442-done-criterion-locked">§44.2 Done criterion (locked)</h3>
+<p>The Quickstart compose stack accepts a real CloudEvent v1.0 on
+<code>POST /v1/events</code>, fans it out to the <code>null://</code>
+channel, writes a <code>constitution_state</code> row with the correct
+transition, and exposes that row via <code>GET /v1/compliance</code>.
+The full smoke is reproduced in <code>containers/quickstart/</code> and
+runs in CI per §40.</p>
+<h3
+id="443-three-milestone-delivery-approach-b--bottom-up-vertical-slices">§44.3
+Three-milestone delivery (Approach B — bottom-up vertical slices)</h3>
+<table>
+<thead>
+<tr>
+<th>Milestone</th>
+<th>What lands</th>
+<th>Smoke criterion</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>M1</strong></td>
+<td><code>commons_constitution</code> package (Evaluator + 12 emit
+helpers + BundleHash + ModeLadder + ConstitutionStore + in-process
+EventBus) — all in-memory, no external deps.</td>
+<td><code>go test -race ./commons_constitution/...</code> proves an
+in-memory evaluator detects a transition → emits a
+<code>.policy.violation</code> → memory-pubsub listener counts it.</td>
+</tr>
+<tr>
+<td><strong>M2</strong></td>
+<td><code>commons_storage</code> live:
+<code>digital.vasic.database</code> (pgx + migrations) +
+<code>digital.vasic.background</code> (Postgres job queue). New
+migrations 000006_constitution_state + 000007_constitution_bindings.
+Postgres backends for <code>ConstitutionStore</code> +
+<code>ModeLadder</code>.</td>
+<td><code>go test -tags=integration</code> against testcontainers
+Postgres + queue verifies UPSERT semantics, RLS isolation, transition
+detection, audit-row append, job enqueue + consume.</td>
+</tr>
+<tr>
+<td><strong>M3</strong></td>
+<td><code>pherald/internal/http/</code> (Gin via
+<code>digital.vasic.middleware</code> + <code>digital.vasic.auth</code>
++ <code>digital.vasic.observability</code>) +
+<code>digital.vasic.cache</code> 60s read-cache for mode-ladder. Wire
+<code>pherald serve</code> to mount the Gin router.</td>
+<td>Quickstart compose up; curl POST <code>/v1/events</code> → fans to
+<code>null://</code> → <code>constitution_state</code> row written →
+diary appended → curl GET <code>/v1/compliance</code> returns the
+row.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="444-evaluator-trigger-model-locked">§44.4 Evaluator trigger
+model (locked)</h3>
+<p><strong>Hybrid:</strong> push-trigger for critical-severity rules (§9
+secret-handling, §11.4.10 root-cause, §12 ops invariants — re-evaluate
+immediately on the named CloudEvents type); pull-sweep every 5–15 min
+for lower-severity rules (sweep daemon itself lives in Sub-project 5,
+but the Registry building blocks land in Foundation M1).</p>
+<h3 id="445-mode-ladder-storage-locked">§44.5 Mode-ladder storage
+(locked)</h3>
+<p>Postgres <code>constitution_bindings</code> table is the source of
+truth. Redis 60-second read-cache wraps it (mirrors §4.3
+idempotency-keys pattern). Cache invalidation on
+<code>ModeLadder.Set</code> is published as a
+<code>mode-ladder.invalidated</code> event on the in-process EventBus so
+every running process invalidates its own cache (see Foundation design
+§7 open question 3 for the rationale).</p>
+<h3 id="446-three-axis-governance-envelope-locked">§44.6 Three-axis
+governance envelope (locked)</h3>
+<p>Every emitted Constitution-CloudEvent carries the spec §42.1.1
+envelope:</p>
+<div class="sourceCode" id="cb53"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;envelope&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;rule_id&quot;</span><span class="fu">:</span> <span class="st">&quot;§11.4.10&quot;</span><span class="fu">,</span></span>
+<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;severity_category&quot;</span><span class="fu">:</span> <span class="st">&quot;critical&quot;</span><span class="fu">,</span></span>
+<span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;decision_result&quot;</span><span class="fu">:</span> <span class="st">&quot;fail&quot;</span><span class="fu">,</span></span>
+<span id="cb53-6"><a href="#cb53-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;bundle_hash&quot;</span><span class="fu">:</span> <span class="st">&quot;&lt;sha256-hex&gt;&quot;</span><span class="fu">,</span></span>
+<span id="cb53-7"><a href="#cb53-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;transition_from&quot;</span><span class="fu">:</span> <span class="st">&quot;pass&quot;</span><span class="fu">,</span></span>
+<span id="cb53-8"><a href="#cb53-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;transition_to&quot;</span><span class="fu">:</span> <span class="st">&quot;fail&quot;</span><span class="fu">,</span></span>
+<span id="cb53-9"><a href="#cb53-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;tenant_id&quot;</span><span class="fu">:</span> <span class="st">&quot;&lt;uuid&gt;&quot;</span><span class="fu">,</span></span>
+<span id="cb53-10"><a href="#cb53-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;evidence_uri&quot;</span><span class="fu">:</span> <span class="st">&quot;&lt;uri&gt;&quot;</span><span class="fu">,</span></span>
+<span id="cb53-11"><a href="#cb53-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;traceparent&quot;</span><span class="fu">:</span> <span class="st">&quot;&lt;W3C trace-context&gt;&quot;</span></span>
+<span id="cb53-12"><a href="#cb53-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">},</span></span>
+<span id="cb53-13"><a href="#cb53-13" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;payload&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="er">/*</span> <span class="er">per-class</span> <span class="er">typed</span> <span class="er">payload</span> <span class="er">*/</span> <span class="fu">}</span></span>
+<span id="cb53-14"><a href="#cb53-14" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>On the wire (CloudEvent extension attributes), underscored keys are
+normalised to lowercase alphanumeric per CloudEvents v1.0 §3
+(<code>rule_id</code> → <code>ruleid</code>, etc.). The internal Go API
+keeps the readable form; the boundary normaliser lives in
+<code>commons_constitution/cloudevents.go</code>.</p>
+<h3 id="447-catalogue-check-verdict-recorded-2026-05-20">§44.7
+Catalogue-Check verdict (recorded 2026-05-20)</h3>
+<p>Per Universal §11.4.74, every Foundation capability surveyed for
+existing modules in <code>vasic-digital</code> +
+<code>HelixDevelopment</code> before code lands. Full evidence in
+<code>docs/catalogue-checks/HRD-018-foundation.md</code>. Summary:</p>
+<ul>
+<li><strong>9 of 12</strong> capabilities <code>extend</code> existing
+Helix-stack modules.</li>
+<li><strong>3 of 12</strong> capabilities <code>no-match</code>
+(bespoke, written new): Evaluator framework, BundleHash captureer,
+ModeLadder semantics.</li>
+<li>River queue <strong>replaced</strong> by
+<code>digital.vasic.background</code>; Watermill pub/sub
+<strong>replaced</strong> by <code>digital.vasic.eventbus</code>; raw
+Gin/JWT/OTel <strong>composed</strong> from
+<code>digital.vasic.middleware</code> + <code>auth</code> +
+<code>observability</code>; raw pgx + golang-migrate
+<strong>wrapped</strong> via <code>digital.vasic.database</code>.</li>
+</ul>
+<h3 id="448-anti-bluff-testing-mandate-continuous">§44.8 Anti-bluff
+testing mandate (continuous)</h3>
+<p>Per operator mandate 2026-05-20: every Foundation test (M1 unit + M2
+integration + M3 e2e) MUST exercise the behavior it claims to verify —
+no pass-without-execution paths, no mock-only tests that don't
+round-trip, no <code>t.Skip</code> paths that mask broken features. Each
+test failure in CI MUST imply a real broken feature. This mandate
+propagates to all Helix-stack submodules consumed by Foundation (their
+existing tests + Challenges are audited at integration time per the
+codegraph milestone).</p>
+<h3 id="449-m1-evidence-landed-2026-05-20">§44.9 M1 evidence (landed
+2026-05-20)</h3>
+<p>The Foundation M1 milestone landed with the following observed
+deltas:</p>
+<ul>
+<li><strong>New module</strong>:
+<code>github.com/vasic-digital/herald/commons_constitution</code> — 8
+production files (~1.2k LOC) + 6 test files (~1.2k LOC).</li>
+<li><strong><code>go test -race -count=1 ./commons_constitution/...</code></strong>
+— all 3 packages PASS (top, ladder/, state/).</li>
+<li><strong>Inheritance gate</strong> — 12 PASS / 0 FAIL before +
+after.</li>
+<li><strong>Other workspace modules</strong> — unchanged behavior (still
+PASS).</li>
+<li><strong>I6 gate-policy conflict surfaced</strong> — current
+<code>I6</code> invariant in
+<code>tests/test_constitution_inheritance.sh</code> forbids any
+<code>.gitmodules</code> file (originally written to prevent
+re-embedding the parent <code>constitution/</code>). M1 sidesteps this
+by writing all Helix-stack modules' Go-equivalents in-package; M2/M3
+will require either an I6 refinement (<code>.gitmodules</code> permitted
+iff it does NOT contain a <code>constitution/</code> entry) or a
+non-submodule install path. <strong>Open: HRD-080</strong> (gate
+refinement) tracks this.</li>
+</ul>
+<p>When M2 closes, this section is appended with the M2 evidence. M3
+closure appends the as-built CloudEvent example + RLS isolation proof +
+null:// ring-buffer trace.</p>
 <hr />
 <h2 id="30-v2-self-review-log">§30. V2 self-review log</h2>
 <blockquote>
