@@ -89,11 +89,21 @@ Herald does **not** ship a `constitution/` submodule of its own; the parent proj
 **Build + test:** from the repo root:
 
 ```bash
-go build ./commons/... ./commons_prefix/... ./commons_messaging/... ./commons_storage/... ./pherald/...
-go test  ./commons/... ./commons_prefix/... ./commons_messaging/... ./commons_storage/...
+go build ./commons/... ./commons_prefix/... ./commons_messaging/... ./commons_storage/... ./commons_constitution/... ./commons_infra/... ./pherald/...
+go test -race -count=1 ./commons/... ./commons_prefix/... ./commons_messaging/... ./commons_storage/... ./commons_constitution/... ./commons_infra/... ./pherald/...
 ```
 
-Tests pass on Go 1.22+ (verified on 1.26). Workspace is configured via `go.work` listing all 5 modules.
+Tests pass on Go 1.25+ (verified on 1.26). Workspace is configured via `go.work` listing 7 Herald modules (`commons`, `commons_constitution`, `commons_infra`, `commons_messaging`, `commons_prefix`, `commons_storage`, `pherald`). The 9 Helix-stack submodules under `submodules/` are referenced via `replace` directives in the consuming modules' `go.mod`, not via `go.work`.
+
+**Anti-bluff verification (run before any release tag or risky commit):**
+
+```bash
+scripts/audit_antibluff.sh      # 3 invariants: §11.4 anchor + tests + paired meta
+scripts/codegraph_validate.sh   # CodeGraph index integrity (7 probes)
+scripts/e2e_bluff_hunt.sh       # 14 end-to-end checks against real services
+```
+
+`scripts/e2e_bluff_hunt.sh` is the canonical end-to-end smoke per Universal §11.4. It builds pherald, runs the full test suite, starts a real Gin server + hits every /v1 route + asserts response bodies, boots a real Postgres container via the `containers/` submodule, runs the M2 integration tests against it, and graceful-shutdowns. ALL 14 invariants must PASS — a single FAIL means a real feature is broken for end users. At 2026-05-20 it reports 14/14 PASS.
 
 When the user asks to "add a feature" the spec is the source of truth — find the relevant §, then the relevant module + package, then the relevant HRD-NNN if one is already open. New work opens a new HRD-NNN in `docs/Issues.md` per V3 §8.3 lifecycle.
 

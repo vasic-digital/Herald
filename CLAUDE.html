@@ -432,10 +432,30 @@ Redis + OTel up on-demand.</li>
 </ul>
 <p><strong>Build + test:</strong> from the repo root:</p>
 <div class="sourceCode" id="cb3"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> build ./commons/... ./commons_prefix/... ./commons_messaging/... ./commons_storage/... ./pherald/...</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test  ./commons/... ./commons_prefix/... ./commons_messaging/... ./commons_storage/...</span></code></pre></div>
-<p>Tests pass on Go 1.22+ (verified on 1.26). Workspace is configured
-via <code>go.work</code> listing all 5 modules.</p>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> build ./commons/... ./commons_prefix/... ./commons_messaging/... ./commons_storage/... ./commons_constitution/... ./commons_infra/... ./pherald/...</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test <span class="at">-race</span> <span class="at">-count</span><span class="op">=</span>1 ./commons/... ./commons_prefix/... ./commons_messaging/... ./commons_storage/... ./commons_constitution/... ./commons_infra/... ./pherald/...</span></code></pre></div>
+<p>Tests pass on Go 1.25+ (verified on 1.26). Workspace is configured
+via <code>go.work</code> listing 7 Herald modules (<code>commons</code>,
+<code>commons_constitution</code>, <code>commons_infra</code>,
+<code>commons_messaging</code>, <code>commons_prefix</code>,
+<code>commons_storage</code>, <code>pherald</code>). The 9 Helix-stack
+submodules under <code>submodules/</code> are referenced via
+<code>replace</code> directives in the consuming modules'
+<code>go.mod</code>, not via <code>go.work</code>.</p>
+<p><strong>Anti-bluff verification (run before any release tag or risky
+commit):</strong></p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">scripts/audit_antibluff.sh</span>      <span class="co"># 3 invariants: §11.4 anchor + tests + paired meta</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ex">scripts/codegraph_validate.sh</span>   <span class="co"># CodeGraph index integrity (7 probes)</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="ex">scripts/e2e_bluff_hunt.sh</span>       <span class="co"># 14 end-to-end checks against real services</span></span></code></pre></div>
+<p><code>scripts/e2e_bluff_hunt.sh</code> is the canonical end-to-end
+smoke per Universal §11.4. It builds pherald, runs the full test suite,
+starts a real Gin server + hits every /v1 route + asserts response
+bodies, boots a real Postgres container via the <code>containers/</code>
+submodule, runs the M2 integration tests against it, and
+graceful-shutdowns. ALL 14 invariants must PASS — a single FAIL means a
+real feature is broken for end users. At 2026-05-20 it reports 14/14
+PASS.</p>
 <p>When the user asks to "add a feature" the spec is the source of truth
 — find the relevant §, then the relevant module + package, then the
 relevant HRD-NNN if one is already open. New work opens a new HRD-NNN in
@@ -489,9 +509,9 @@ files keeps working.</p>
 <h2
 id="inheritance-gate-run-before-any-commit-touching-root-docs">Inheritance
 gate (run before any commit touching root docs)</h2>
-<div class="sourceCode" id="cb4"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> tests/test_constitution_inheritance.sh        <span class="co"># 6 invariants (I1–I6), 9 checks</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> tests/test_constitution_inheritance_meta.sh   <span class="co"># paired §1.1 mutation proof</span></span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> tests/test_constitution_inheritance.sh        <span class="co"># 6 invariants (I1–I6), 9 checks</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> tests/test_constitution_inheritance_meta.sh   <span class="co"># paired §1.1 mutation proof</span></span></code></pre></div>
 <p>The gate inline-walks parents for
 <code>&lt;ancestor&gt;/constitution/Constitution.md</code>. I5 is split
 into I5a–d (one check per root doc that must declare parent-discovery:
