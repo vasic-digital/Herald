@@ -43,6 +43,7 @@ import (
 	"digital.vasic.containers/pkg/compose"
 	"digital.vasic.containers/pkg/logging"
 	"digital.vasic.database/pkg/database"
+	storage "github.com/vasic-digital/herald/commons_storage"
 )
 
 // DefaultProjectName is the compose --project-name Herald uses by convention.
@@ -145,6 +146,44 @@ func (b *QuickstartBoot) Up(ctx context.Context) error {
 	); err != nil {
 		return fmt.Errorf("infra: compose up: %w", err)
 	}
+
+	// HRD-010 Task 2: open the pgx pool against the booted Postgres
+	// container and apply migrations so the schema is live before
+	// tests use the pool.
+	//
+	// Host port default (24100) matches the host-side mapping declared
+	// in quickstart/docker-compose.quickstart.yml ("24100:5432" — spec
+	// §9.4 reserved range). User/password/db default to the Herald
+	// development credentials (the compose container is bootstrapped
+	// with POSTGRES_USER=herald, POSTGRES_DB=herald, and the password
+	// is supplied via the ${HERALD_DB_PASSWORD} env var the compose
+	// file requires).
+	//
+	// All values are overridable via HERALD_PG_HOST/PORT/USER/PASSWORD/
+	// DBNAME so production wiring (typed config, secret manager) can
+	// fan in without code changes.
+	cfg := storage.ConfigForHerald(
+		envOr("HERALD_PG_HOST", "127.0.0.1"),
+		envOrInt("HERALD_PG_PORT", 24100),
+		envOr("HERALD_PG_USER", "herald"),
+		envOr("HERALD_PG_PASSWORD", os.Getenv("HERALD_DB_PASSWORD")),
+		envOr("HERALD_PG_DBNAME", "herald"),
+	)
+	pool, err := storage.Open(ctx, cfg)
+	if err != nil {
+		return fmt.Errorf("commons_infra.Up: open pgx pool: %w", err)
+	}
+	b.pool = pool
+
+	// Apply migrations so the schema is live before tests use the pool.
+	applied, err := storage.RunMigrations(ctx, pool)
+	if err != nil {
+		_ = pool.Close()
+		b.pool = nil
+		return fmt.Errorf("commons_infra.Up: run migrations: %w", err)
+	}
+	_ = applied // logged when a logger is wired
+
 	return nil
 }
 
@@ -188,4 +227,26 @@ func findQuickstartCompose() (string, error) {
 		cur = parent
 	}
 	return "", errors.New("infra: docker-compose.quickstart.yml not found within 16 parents of " + cwd)
+}
+
+// envOr returns the value of env var `key`, falling back to `fallback`
+// when the var is unset or empty. Used by Up() to let operators override
+// the pgx connection defaults without code changes.
+func envOr(key, fallback string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return fallback
+}
+
+// envOrInt is the integer counterpart of envOr. Falls back when the env
+// var is unset, empty, or not parseable as a decimal integer.
+func envOrInt(key string, fallback int) int {
+	if v := os.Getenv(key); v != "" {
+		var i int
+		if _, err := fmt.Sscanf(v, "%d", &i); err == nil {
+			return i
+		}
+	}
+	return fallback
 }
