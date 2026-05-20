@@ -39,8 +39,10 @@ import (
 	"os"
 	"path/filepath"
 
+	"digital.vasic.cache/pkg/redis"
 	"digital.vasic.containers/pkg/compose"
 	"digital.vasic.containers/pkg/logging"
+	"digital.vasic.database/pkg/database"
 )
 
 // DefaultProjectName is the compose --project-name Herald uses by convention.
@@ -48,9 +50,24 @@ import (
 const DefaultProjectName = "herald-quickstart"
 
 // QuickstartBoot wraps a compose.Orchestrator with Herald-specific defaults.
+//
+// HRD-010 wiring fields (added Task 1, populated by Tasks 2/4/5):
+//   - pool: pgx-backed database.Database; nil until Up() opens it.
+//   - queue: task queue; nil until Up() wires it.
+//   - redis: cache client; nil until Up() opens it.
+//
+// All three are exposed via Pool/Queue/Redis getters in clients.go.
+// Getters return ErrNotBooted when the field is nil — see clients.go
+// for the anti-bluff contract.
 type QuickstartBoot struct {
 	orch    compose.ComposeOrchestrator
 	project compose.ComposeProject
+
+	// HRD-010 client fields. Populated by Up() in later tasks; remain
+	// nil until then. Pool()/Queue()/Redis() return ErrNotBooted on nil.
+	pool  database.Database
+	queue TaskQueue
+	redis *redis.Client
 }
 
 // Config configures NewQuickstartBoot. Zero values pick Herald defaults.
