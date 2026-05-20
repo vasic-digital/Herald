@@ -70,7 +70,6 @@ Per Universal §11.4.74 every new row carries a `Catalogue-Check` line in its Re
 | HRD-054 | task | open | middle | §11.4.73 `cherald spec-version check` — Revision-vs-edits drift detection | 2026-05-20 | 2026-05-20 | spec §43.2 / §11.4.73; Catalogue-Check: no-match (very-new mandate) |
 | HRD-055 | task | open | middle | §11.4.74 `cherald catalogue-check <pr>` — scan PR for Catalogue-Check + survey runner over vasic-digital + HelixDevelopment | 2026-05-20 | 2026-05-20 | spec §43.2 / §11.4.74; Catalogue-Check: no-match (very-new mandate) |
 | HRD-056 | task | open | high | §12.6 `sherald mem-budget watch` — daemon-mode 60% threshold watcher emitting `.host.safety_breach` | 2026-05-20 | 2026-05-20 | spec §43.2 / §12.6; Catalogue-Check: TBD |
-| HRD-080 | task | open | low | Refine `tests/test_constitution_inheritance.sh` I6 invariant from blanket `.gitmodules` forbidden to "no `constitution/` entry in `.gitmodules`" — enables Helix-stack module installation via git submodules under `submodules/<name>/` at Foundation M2/M3 per the CLAUDE.md vendored-SDK policy | 2026-05-20 | 2026-05-20 | spec V3 §44.9; Catalogue-Check: no-match (Herald-gate refinement) |
 
 ## In progress
 

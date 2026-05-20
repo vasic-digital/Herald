@@ -186,7 +186,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>3</td>
+<td>4</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -202,11 +202,10 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td>First-implementation cycle r1 landed (5 Go modules, null:// adapter
-working, migrations + Cobra CLI). Spec V3 r5: §37–§41 + §42
-constitution-flavor binding catalogue. HRD-017 closed (universal
-§11.4.73 + §11.4.74 mandates landed in constitution commit
-34a82b3).</td>
+<td>Foundation M1 landed: <code>commons_constitution</code> (14 files,
+~2.9k LOC, all green under -race). Spec V3 → Revision 7 (§44 Foundation
+contract). HRD-080 closed (I6 gate refinement + paired meta-test). Next:
+M2 Helix-stack submodule installs + Postgres wiring.</td>
 </tr>
 <tr>
 <td>Issues</td>
@@ -214,16 +213,19 @@ constitution-flavor binding catalogue. HRD-017 closed (universal
 </tr>
 <tr>
 <td>Issues summary</td>
-<td>HRD-008/-010/-011/-012/-015/-016/-018..-028 open.</td>
+<td>HRD-008/-010/-011/-012/-015/-016/-018 (in_progress) +
+HRD-019..HRD-056 still open.</td>
 </tr>
 <tr>
 <td>Fixed</td>
-<td>HRD-001..HRD-007, HRD-009, HRD-009b, HRD-013, HRD-014, HRD-017</td>
+<td>HRD-001..HRD-007, HRD-009, HRD-009b, HRD-013, HRD-014, HRD-017,
+HRD-080 (and HRD-018 partial — M1 component landed)</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
-<td>spec V1→V3 r5; Go module foundation; universal §11.4.73 + §11.4.74
-mandates propagated into constitution submodule.</td>
+<td>spec V1→V3 r7; Go module foundation + Foundation M1; universal
+§11.4.73 + §11.4.74 mandates propagated; I6 gate refined to allow
+Helix-stack submodules.</td>
 </tr>
 <tr>
 <td>Continuation</td>
@@ -249,6 +251,19 @@ mandates propagated into constitution submodule.</td>
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>HRD-080</td>
+<td>task</td>
+<td>low</td>
+<td>Refine I6 inheritance-gate invariant from blanket
+<code>.gitmodules</code>-forbidden to "no <code>constitution/</code>
+entry in <code>.gitmodules</code>" — paired meta-test
+<code>test_i6_refinement_meta.sh</code> with 3 anti-bluff subtests.
+Enables Foundation M2/M3 Helix-stack submodule installs.</td>
+<td>2026-05-20</td>
+<td>(this commit)</td>
+<td>spec V3 §44.9</td>
+</tr>
 <tr>
 <td>HRD-017</td>
 <td>task</td>

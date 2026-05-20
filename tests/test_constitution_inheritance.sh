@@ -93,8 +93,23 @@ check "I5d README.md documents the constitution-inheritance contract" \
 # Invariant 6: NO embedded copy of the constitution inside Herald
 # (Herald MUST use the parent-provided constitution; a local submodule
 # violates the deployment model.)
+#
+# Refinement (HRD-080, V3 §44.9 / 2026-05-20):
+# I6 originally forbade ANY .gitmodules file at the repo root. The
+# refined form forbids only a `path = constitution` (or `constitution/...`)
+# entry inside .gitmodules, so non-constitution submodules (the
+# Helix-stack `digital.vasic.*` modules Herald consumes at Foundation
+# M2/M3 per the CLAUDE.md vendored-SDK policy) are permitted.
+#
+# Two-clause check:
+#   (a) no <repo>/constitution/ directory
+#   (b) no `path = constitution` or `path = constitution/*` entry
+#       inside .gitmodules (regex-anchored to the path= key so a
+#       coincidental match elsewhere in the file does not fire).
 check "I6 No constitution submodule embedded in Herald" \
-    "! [ -d '${REPO_ROOT}/constitution' ] && ! [ -f '${REPO_ROOT}/.gitmodules' ]"
+    "! [ -d '${REPO_ROOT}/constitution' ] && \
+     { ! [ -f '${REPO_ROOT}/.gitmodules' ] || \
+       ! grep -qE '^[[:space:]]*path[[:space:]]*=[[:space:]]*constitution(/.*)?$' '${REPO_ROOT}/.gitmodules'; }"
 
 # Invariant 7: spec-change rule propagated to CLAUDE.md, AGENTS.md, and
 # HERALD_CONSTITUTION.md (§106). The literal anchor is the phrase
