@@ -28,3 +28,9 @@
 [submodule "submodules/recovery"]
 	path = submodules/recovery
 	url = git@github.com:vasic-digital/recovery.git
+[submodule "submodules/Models"]
+	path = submodules/Models
+	url = git@github.com:vasic-digital/Models.git
+[submodule "submodules/Concurrency"]
+	path = submodules/Concurrency
+	url = git@github.com:vasic-digital/Concurrency.git

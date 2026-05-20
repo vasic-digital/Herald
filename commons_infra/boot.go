@@ -40,11 +40,13 @@ import (
 	"path/filepath"
 	"time"
 
+	bg "digital.vasic.background"
 	"digital.vasic.cache/pkg/redis"
 	"digital.vasic.containers/pkg/compose"
 	"digital.vasic.containers/pkg/logging"
 	"digital.vasic.database/pkg/database"
 	storage "github.com/vasic-digital/herald/commons_storage"
+	"github.com/sirupsen/logrus"
 )
 
 // DefaultProjectName is the compose --project-name Herald uses by convention.
@@ -224,6 +226,17 @@ func (b *QuickstartBoot) Up(ctx context.Context) error {
 			return fmt.Errorf("commons_infra.Up: run migrations: %w", err)
 		}
 		_ = applied // logged when a logger is wired
+
+		// HRD-010 Task 5: bind the upstream digital.vasic.background
+		// PostgresTaskQueue to the booted pool via Herald's local
+		// pgxTaskRepository (task_repository.go). This is the §11.4.74
+		// extend-don't-reimplement seam: the queue's Enqueue/Dequeue/Peek/
+		// Requeue/MoveToDeadLetter logic is inherited from the upstream;
+		// only the thin SQL-binding repository is Herald-owned (its schema
+		// is project-specific — migration 000009 in commons_storage).
+		queueLogger := logrus.New()
+		queueLogger.SetLevel(logrus.WarnLevel) // suppress per-task INFO/DEBUG noise in tests
+		b.queue = bg.NewPostgresTaskQueue(newPgxTaskRepository(pool), queueLogger)
 	}
 
 	// HRD-010 Task 4: open the Redis client against the booted Redis
@@ -296,10 +309,11 @@ func (b *QuickstartBoot) Down(ctx context.Context) error {
 		b.redis = nil
 	}
 	if b.queue != nil {
-		// Queue is just an interface today (queue.go). Task 5 will add
-		// real construction with a documented Close() contract; for now
-		// just clear the field so a follow-up Up() doesn't see a stale
-		// interface value.
+		// PostgresTaskQueue has no Close() of its own — it borrows the
+		// db.Database we already closed above. Just clear the field so a
+		// follow-up Up() doesn't see a stale interface value (the underlying
+		// pool was closed seconds earlier, so dequeue calls on a stale handle
+		// would 500 — that's the §107 PASS-bluff this nil-out prevents).
 		b.queue = nil
 	}
 

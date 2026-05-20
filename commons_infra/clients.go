@@ -48,10 +48,14 @@ func (b *QuickstartBoot) Pool() (database.Database, error) {
 // Queue returns the live task queue wired by Up(), or ErrNotBooted if
 // Up() has not been called.
 //
-// Returned type is the Herald-local TaskQueue interface (see queue.go);
-// when the digital.vasic.models submodule is incorporated under Herald
-// (Task 5 of HRD-010), this becomes a thin alias for
-// digital.vasic.background.TaskQueue per §11.4.74 extend-don't-reimplement.
+// Returned type is `digital.vasic.background.TaskQueue` (aliased as
+// `TaskQueue` in queue.go) — Herald inherits the upstream queue's
+// Enqueue/Dequeue/Peek/Requeue/MoveToDeadLetter/GetPendingCount/
+// GetRunningCount/GetQueueDepth contract via the §11.4.74
+// extend-don't-reimplement seam. The Models + Concurrency submodules
+// landed in HRD-010 Task 5 (2026-05-20) so the upstream transitive
+// dependency resolves cleanly. The queue is bound to the booted pool
+// via Herald's pgxTaskRepository (commons_infra/task_repository.go).
 func (b *QuickstartBoot) Queue() (TaskQueue, error) {
 	if b.queue == nil {
 		return nil, ErrNotBooted

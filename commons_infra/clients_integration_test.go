@@ -26,9 +26,13 @@ package infra
 
 import (
 	"context"
+	"encoding/json"
 	"os"
 	"testing"
 	"time"
+
+	"digital.vasic.models"
+	"github.com/google/uuid"
 )
 
 func TestUp_PopulatesPool(t *testing.T) {
@@ -152,4 +156,107 @@ func TestUp_PopulatesRedis_TTLRoundTrip(t *testing.T) {
 	if exists {
 		t.Fatalf("key %q still present after TTL — Redis didn't enforce TTL (§107 / §11.4.68 bluff trap)", key)
 	}
+}
+
+// TestUp_PopulatesQueue_EnqueueDequeueRoundTrip is HRD-010 Task 5's E15
+// live-evidence anchor. After QuickstartBoot.Up() the Queue getter MUST
+// return a real digital.vasic.background.TaskQueue bound to the booted
+// Postgres container's `background_tasks` table (migration 000009),
+// AND that queue MUST persist a task such that a subsequent Dequeue
+// returns the SAME task by ID — proving the task survived the
+// Postgres-side INSERT → UPDATE...RETURNING transaction, not just an
+// in-memory map.
+//
+// §11.4.68 positive sink-side evidence: the strong assertion is on
+// `got.ID == enqueueID` AND `got.Status == TaskStatusRunning` (the
+// dequeue transitions pending → running atomically). Asserting only
+// "got non-nil task" would be a §107 PASS-bluff that an in-memory
+// fake could satisfy.
+//
+// Compose with §11.4.5 captured-evidence: the failure message embeds
+// the exact diff if IDs don't match, so a real defect produces an
+// actionable failure log, not just "got != want".
+func TestUp_PopulatesQueue_EnqueueDequeueRoundTrip(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Minute)
+	defer cancel()
+
+	t.Setenv("HERALD_DB_PASSWORD", "test-postgres-password-DO-NOT-USE-IN-PROD")
+	t.Setenv("HERALD_REDIS_PASSWORD", "test-redis-password-DO-NOT-USE-IN-PROD")
+	t.Setenv("HERALD_PROJECT_NAME", "Herald-Integration-Test")
+	t.Setenv("HERALD_TENANT_ID", "00000000-0000-0000-0000-000000000099")
+
+	if os.Getenv("DOCKER_HOST") == "" {
+		if sock := os.Getenv("PODMAN_MAC_SOCK"); sock != "" {
+			t.Setenv("DOCKER_HOST", "unix://"+sock)
+		}
+	}
+
+	// Queue is Postgres-backed (per HRD-010 Task 5 architecture); request
+	// only postgres to keep the boot fast. Redis isn't required for E15.
+	boot, err := NewQuickstartBoot(Config{
+		Services: []string{"postgres"},
+	})
+	if err != nil {
+		t.Skipf("compose runtime not available; skipping (closed-set reason: hardware_not_present): %v", err)
+	}
+
+	if err := boot.Up(ctx); err != nil {
+		t.Fatalf("Up: %v", err)
+	}
+	t.Cleanup(func() {
+		downCtx, downCancel := context.WithTimeout(context.Background(), 60*time.Second)
+		defer downCancel()
+		if err := boot.Down(downCtx); err != nil {
+			t.Logf("boot.Down (cleanup): %v", err)
+		}
+	})
+
+	q, err := boot.Queue()
+	if err != nil {
+		t.Fatalf("Queue() after Up: %v", err)
+	}
+	if q == nil {
+		t.Fatal("Queue() returned nil without error — §107 PASS-bluff guard")
+	}
+
+	// Construct a task using the upstream constructor so all defaults
+	// (TaskConfig, TaskStatusPending, retry counts, timestamps) are set
+	// honestly. Assign an explicit ID so we can assert round-trip identity.
+	taskID := uuid.NewString()
+	payload, _ := json.Marshal(map[string]string{"hello": "world"})
+	task := models.NewBackgroundTask("herald.test.e15", "round-trip", payload)
+	task.ID = taskID
+	task.Priority = models.TaskPriorityHigh // ensure ordering puts it ahead of any leftover task
+
+	if err := q.Enqueue(ctx, task); err != nil {
+		t.Fatalf("Enqueue: %v", err)
+	}
+
+	// Dequeue with no resource constraints — the test task has tiny CPU/mem
+	// requirements (1 core / 512 MB per NewBackgroundTask defaults) so any
+	// host satisfies the implicit upstream filter.
+	workerID := "test-worker-" + taskID
+	got, err := q.Dequeue(ctx, workerID, bgResReq())
+	if err != nil {
+		t.Fatalf("Dequeue: %v", err)
+	}
+	if got == nil {
+		t.Fatal("Dequeue returned nil task — §107 sink-side bluff guard: the queue claimed PASS without actually returning the enqueued row")
+	}
+	if got.ID != taskID {
+		t.Fatalf("Dequeue returned wrong task ID: want %s got %s (queue dequeued a leftover from a prior run, OR the round-trip lost the task)", taskID, got.ID)
+	}
+	if got.Status != models.TaskStatusRunning {
+		t.Fatalf("Dequeue did not transition status to running: got %s (proves the UPDATE...RETURNING atomic-claim is broken)", got.Status)
+	}
+	if got.WorkerID == nil || *got.WorkerID != workerID {
+		t.Fatalf("Dequeue did not claim for the requesting worker: got %v want %s", got.WorkerID, workerID)
+	}
+}
+
+// bgResReq is a tiny helper to construct an empty ResourceRequirements
+// (zero values mean "no limit" per upstream PostgresTaskQueue.Dequeue
+// convention).
+func bgResReq() ResourceRequirements {
+	return ResourceRequirements{}
 }
