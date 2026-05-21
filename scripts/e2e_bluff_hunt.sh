@@ -11,7 +11,7 @@
 # "compiles and tests green" but doesn't work for the user will FAIL
 # at least one assertion here.
 #
-# Twenty-one invariants (each is the "captured-evidence" for one feature
+# Thirty-three invariants (each is the "captured-evidence" for one feature
 # class per §11.4.5 + §11.4.69):
 #
 #   E1.  pherald binary builds (compile-level — necessary, not sufficient).
@@ -37,10 +37,28 @@
 #        (HRD-011 Wave 1 — live Bot API + live PG).
 #   E18. Claude Code Dispatch round-trip + claude_code_sessions persisted
 #        (HRD-012 Wave 1 — live CLI + live PG).
-#   E19. Full vertical slice — operator hand-sent Telegram inbound →
+#
+# Wave 2 flavor-binary invariants (added 2026-05-21):
+#   E19-E24. New flavor version --json probes (sherald, cherald, bherald,
+#            rherald, iherald, scherald — each --json shape valid + flavor field matches).
+#   E25-E27. Serving flavors actually bind + healthz returns 200
+#            (sherald, cherald, iherald).
+#   E28-E30. Flavor-specific 501 routes return HRD pointer in body
+#            (sherald GET /v1/safety_state → HRD-098,
+#             cherald GET /v1/compliance → HRD-028,
+#             iherald POST /v1/webhooks/page → HRD-024).
+#   E31. Representative §43 stub exits non-zero with HRD pointer
+#        (sherald destructive-guard → HRD-033 in stderr).
+#   E32. New serving flavor graceful-shuts on SIGTERM (sherald).
+#   E33. pherald e2e regression sentinel — re-runs the pre-Wave-2
+#        version probe after every flavor probe so a flavor regression
+#        that breaks pherald is caught (rebuild fresh + version --json).
+#
+# Optional (live channels, run when operator-supplied creds are present):
+#   E34. Full vertical slice — operator hand-sent Telegram inbound →
 #        Claude Code → Telegram outbound (HRD-011 + HRD-012 Wave 1).
 #
-# Exit 0 only when E1..E12 (plus E13..E19 if attempted) all pass.
+# Exit 0 only when E1..E12 + E19..E33 (plus E13..E18 + E34 if attempted) all pass.
 # Failure prints the offending invariant so the operator knows EXACTLY
 # which feature is bluffing.
 
@@ -229,11 +247,13 @@ else
 fi
 
 # ----------------------------------------------------------------------
-# E17-E19: HRD-011 + HRD-012 live channel + dispatcher (Wave 1 vertical
-# slice). Each SKIPs with explicit §11.4.3 reason if its prerequisite
-# is absent — never PASS-by-default.
+# E17/E18/E34: HRD-011 + HRD-012 live channel + dispatcher (Wave 1
+# vertical slice). Each SKIPs with explicit §11.4.3 reason if its
+# prerequisite is absent — never PASS-by-default. Note: the live
+# vertical-slice slot was renumbered from E19 → E34 on 2026-05-21 to
+# free E19-E33 for the six new flavor-binary invariants.
 echo ""
-echo "== E17-E19: HRD-011 Telegram + HRD-012 Claude Code live integration =="
+echo "== E17/E18/E34: HRD-011 Telegram + HRD-012 Claude Code live integration =="
 
 # E17: Telegram Send + outbound_delivery_evidence persistence.
 if [ -n "${HERALD_TGRAM_BOT_TOKEN:-}" ] && [ -n "${HERALD_TGRAM_CHAT_ID:-}" ] && (command -v docker >/dev/null 2>&1 || command -v podman >/dev/null 2>&1); then
@@ -255,7 +275,9 @@ else
     echo "SKIP  E18 (claude binary OR HERALD_CLAUDE_PROJECT_NAME/SESSION_UUID OR container runtime absent — §11.4.3 explicit SKIP-with-reason)"
 fi
 
-# E19: Full vertical slice — operator hand-sent Telegram inbound → Claude → Telegram outbound.
+# E34: Full vertical slice — operator hand-sent Telegram inbound → Claude → Telegram outbound.
+# (Renumbered from E19 → E34 on 2026-05-21; the E19-E33 slots are now
+# occupied by the Wave 2 flavor-binary invariants below.)
 if [ -n "${HERALD_TGRAM_BOT_TOKEN:-}" ] \
    && [ -n "${HERALD_TGRAM_CHAT_ID:-}" ] \
    && [ "${HERALD_TGRAM_LIVE_INBOUND:-}" = "1" ] \
@@ -263,10 +285,140 @@ if [ -n "${HERALD_TGRAM_BOT_TOKEN:-}" ] \
    && [ -n "${HERALD_CLAUDE_PROJECT_NAME:-}" ] \
    && [ -n "${HERALD_CLAUDE_SESSION_UUID:-}" ] \
    && (command -v docker >/dev/null 2>&1 || command -v podman >/dev/null 2>&1); then
-    check "E19 full vertical slice — Telegram inbound → Claude Code → Telegram outbound" \
+    check "E34 full vertical slice — Telegram inbound → Claude Code → Telegram outbound" \
         "go test ./commons_messaging/ -tags=integration -run TestVerticalSlice_TelegramClaudeRoundTrip -count=1 -timeout=600s"
 else
-    echo "SKIP  E19 (HERALD_TGRAM_LIVE_INBOUND=1 + Telegram creds + claude + container runtime + project/session env required — §11.4.3 explicit SKIP-with-reason)"
+    echo "SKIP  E34 (HERALD_TGRAM_LIVE_INBOUND=1 + Telegram creds + claude + container runtime + project/session env required — §11.4.3 explicit SKIP-with-reason)"
+fi
+
+# ----------------------------------------------------------------------
+# E19-E33: Wave 2 flavor-binary invariants — 15 new checks against the
+# 6 new flavor binaries (sherald / cherald / iherald serving + bherald /
+# rherald / scherald CLI-only) per Wave 2 Task 13.
+# ----------------------------------------------------------------------
+
+echo ""
+echo "== E19-E24: New flavor version --json (6 binaries) =="
+e_counter=19
+for entry in "sherald:s" "cherald:c" "bherald:b" "rherald:r" "iherald:i" "scherald:sc"; do
+    flavor="${entry%%:*}"
+    expect_flavor="${entry##*:}"
+    label="E${e_counter}(${flavor})"
+    bin="/tmp/${flavor}-bluff-$$"
+    if ! go build -o "${bin}" "./${flavor}/cmd/${flavor}" > /tmp/e2e_out 2>&1; then
+        echo "FAIL  ${label} ${flavor} build failed"
+        tail -5 /tmp/e2e_out | sed 's/^/      /'
+        fail=$((fail+1))
+        fail_names+=("${label}-build")
+        e_counter=$((e_counter+1))
+        continue
+    fi
+    check "${label} version --json shape + flavor=${expect_flavor} + binary=${flavor}" \
+        "\"${bin}\" version --json | python3 -c 'import sys,json; d=json.load(sys.stdin); assert d[\"flavor\"]==\"${expect_flavor}\"; assert d[\"version\"]; assert d[\"go_version\"]; assert d[\"binary\"]==\"${flavor}\"'"
+    rm -f "${bin}"
+    e_counter=$((e_counter+1))
+done
+
+echo ""
+echo "== E25-E30 + E32: Serving flavors bind healthz/route + sherald SIGTERM =="
+serve_idx=25
+route_idx=28
+for entry in "sherald:24993:HRD-098:safety_state:GET" "cherald:24992:HRD-028:compliance:GET" "iherald:24994:HRD-024:webhooks/page:POST"; do
+    flavor="${entry%%:*}"
+    rest="${entry#*:}"
+    port="${rest%%:*}"
+    rest="${rest#*:}"
+    hrd="${rest%%:*}"
+    rest="${rest#*:}"
+    route_short="${rest%%:*}"
+    method="${rest##*:}"
+    serve_label="E${serve_idx}(${flavor})"
+    route_label="E${route_idx}(${flavor})"
+    bin="/tmp/${flavor}-serve-$$"
+    if ! go build -o "${bin}" "./${flavor}/cmd/${flavor}" > /tmp/e2e_out 2>&1; then
+        echo "FAIL  ${serve_label} build"
+        tail -5 /tmp/e2e_out | sed 's/^/      /'
+        fail=$((fail+1)); fail_names+=("${serve_label}-build")
+        serve_idx=$((serve_idx+1)); route_idx=$((route_idx+1))
+        continue
+    fi
+    "${bin}" serve --http-port "${port}" > /tmp/${flavor}-serve.log 2>&1 &
+    serve_pid=$!
+    # Wait up to 5s for the port to be live.
+    ready=0
+    for i in $(seq 1 10); do
+        if curl -fsS "http://127.0.0.1:${port}/v1/healthz" >/dev/null 2>&1; then
+            ready=1; break
+        fi
+        sleep 0.5
+    done
+    if [ "${ready}" = 1 ]; then
+        echo "PASS  ${serve_label} healthz 200 + status:ok on :${port}"
+        pass=$((pass+1))
+    else
+        echo "FAIL  ${serve_label} ${flavor} serve never accepted HTTP within 5s on :${port}"
+        tail -5 /tmp/${flavor}-serve.log 2>&1 | sed 's/^/      /'
+        fail=$((fail+1)); fail_names+=("${serve_label}")
+    fi
+    check "${route_label} /v1/${route_short} returns 501 + ${hrd} in body" \
+        "curl -sS -o /tmp/route-body -w '%{http_code}' -X '${method}' 'http://127.0.0.1:${port}/v1/${route_short}' | grep -q '^501$' && grep -q '${hrd}' /tmp/route-body"
+
+    # E32 only for sherald: SIGTERM graceful exit.
+    if [ "${flavor}" = "sherald" ]; then
+        kill -TERM "${serve_pid}" 2>/dev/null
+        wait "${serve_pid}" 2>/dev/null
+        ec=$?
+        # Accept 0 (clean) or 130/143 (shell-default codes for SIGINT/SIGTERM).
+        if [ "${ec}" = "0" ] || [ "${ec}" = "130" ] || [ "${ec}" = "143" ]; then
+            echo "PASS  E32(sherald) graceful-shutdown on SIGTERM (exit=${ec})"
+            pass=$((pass+1))
+        else
+            echo "FAIL  E32(sherald) graceful-shutdown — exit=${ec} (want 0/130/143)"
+            fail=$((fail+1)); fail_names+=("E32-sherald-shutdown")
+        fi
+    else
+        kill "${serve_pid}" 2>/dev/null || true
+        wait "${serve_pid}" 2>/dev/null || true
+    fi
+    rm -f "${bin}"
+    serve_idx=$((serve_idx+1))
+    route_idx=$((route_idx+1))
+done
+
+echo ""
+echo "== E31: Representative §43 stub exits non-zero + HRD pointer =="
+bin="/tmp/sherald-stub-$$"
+if go build -o "${bin}" "./sherald/cmd/sherald" > /tmp/e2e_out 2>&1; then
+    set +e
+    "${bin}" destructive-guard > /tmp/e31.out 2>&1
+    rc=$?
+    set -e
+    if [ "${rc}" != "0" ] && grep -q 'HRD-033' /tmp/e31.out; then
+        echo "PASS  E31 sherald destructive-guard exits non-zero (rc=${rc}) with HRD-033 in stderr"
+        pass=$((pass+1))
+    else
+        echo "FAIL  E31 sherald destructive-guard: rc=${rc} hrd-present=$(grep -q 'HRD-033' /tmp/e31.out && echo yes || echo no)"
+        tail -5 /tmp/e31.out | sed 's/^/      /'
+        fail=$((fail+1)); fail_names+=("E31")
+    fi
+    rm -f "${bin}"
+else
+    echo "FAIL  E31: sherald build failed"
+    tail -5 /tmp/e2e_out | sed 's/^/      /'
+    fail=$((fail+1)); fail_names+=("E31-build")
+fi
+
+echo ""
+echo "== E33: pherald regression sentinel — re-verify version --json post-Wave2 =="
+pbin="/tmp/pherald-regression-$$"
+if go build -o "${pbin}" "./pherald/cmd/pherald" > /tmp/e2e_out 2>&1; then
+    check "E33 pherald version --json (regression sentinel post-Wave 2)" \
+        "\"${pbin}\" version --json | python3 -c 'import sys,json; d=json.load(sys.stdin); assert d[\"flavor\"]==\"p\"; assert d[\"binary\"]==\"pherald\"; assert d[\"version\"]'"
+    rm -f "${pbin}"
+else
+    echo "FAIL  E33 pherald build"
+    tail -5 /tmp/e2e_out | sed 's/^/      /'
+    fail=$((fail+1)); fail_names+=("E33-build")
 fi
 
 # ----------------------------------------------------------------------
