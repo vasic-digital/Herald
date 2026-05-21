@@ -10,8 +10,11 @@
 # owned-by-us submodule under submodules/ + containers/:
 #
 #   I1. §11.4 forensic anchor present in {CONSTITUTION,CLAUDE,AGENTS}.md
-#       of every submodule (the exact verbatim user-mandate sentence
-#       beginning "We had been in position...").
+#       of every OWNED submodule (vasic-digital + HelixDevelopment) —
+#       the exact verbatim user-mandate sentence beginning "We had been
+#       in position...". Third-party vendored SDKs (per §11.4.74
+#       catalogue-check no-match → vendor) are SKIP-with-reason: we
+#       cannot mandate an anchor on an upstream we don't own.
 #   I2. Go test suite passes WITHOUT integration-tag (proves unit-level
 #       assertions exercise real behaviour even in CI's hermetic mode).
 #   I3. Inheritance gate (tests/test_constitution_inheritance.sh) + the
@@ -27,9 +30,26 @@ cd "${REPO_ROOT}"
 
 pass=0
 fail=0
+skip=0
 
 # The verbatim §11.4 forensic anchor sentence (canonical) - one fragment.
 ANCHOR='tests do execute with success and all Challenges as well'
+
+# Classify a submodule by its remote URL (from .gitmodules) into
+# "owned" (vasic-digital | HelixDevelopment → §11.4 anchor REQUIRED) or
+# "vendor" (third-party → §11.4 anchor NOT required per §11.4.74).
+# Echoes "owned" or "vendor".
+classify_submodule() {
+    local path="$1"
+    local url
+    url="$(git config -f .gitmodules --get-regexp 'submodule\..*\.path' 2>/dev/null \
+        | awk -v p="${path}" '$2 == p { sub(/\.path$/, ".url", $1); print $1 }' \
+        | while read -r key; do git config -f .gitmodules --get "${key}"; done)"
+    case "${url}" in
+        *vasic-digital*|*HelixDevelopment*) echo "owned" ;;
+        *) echo "vendor" ;;
+    esac
+}
 
 echo "== I1: §11.4 forensic anchor across submodules =="
 all_submodules=()
@@ -43,6 +63,13 @@ if [ "${#all_submodules[@]}" -eq 0 ]; then
 fi
 for sub in "${all_submodules[@]}"; do
     name="$(basename "$sub")"
+    sub_path="${sub%/}"
+    classification="$(classify_submodule "${sub_path}")"
+    if [ "${classification}" = "vendor" ]; then
+        echo "SKIP  ${name}: third-party vendored SDK (Catalogue-Check no-match per §11.4.74); §11.4 anchor not required"
+        skip=$((skip+1))
+        continue
+    fi
     found=0
     for f in "$sub/CONSTITUTION.md" "$sub/CLAUDE.md" "$sub/AGENTS.md"; do
         if [ -f "$f" ] && grep -qF "${ANCHOR}" "$f"; then
@@ -107,13 +134,15 @@ fi
 
 echo ""
 echo "----"
-echo "Result: ${pass} PASS / ${fail} FAIL"
+echo "Result: ${pass} PASS / ${fail} FAIL / ${skip} SKIP"
 if [ "${fail}" -gt 0 ]; then
     exit 1
 fi
 echo ""
 echo "Anti-bluff covenant intact:"
-echo "  - All submodules carry the §11.4 forensic anchor."
+echo "  - All OWNED submodules (vasic-digital + HelixDevelopment) carry"
+echo "    the §11.4 forensic anchor; third-party vendored SDKs (via"
+echo "    §11.4.74 catalogue-check no-match → vendor) are excluded."
 echo "  - Default-mode test suite genuinely exercises behaviour."
 echo "  - Inheritance gate + paired §1.1 meta-test both green."
 exit 0
