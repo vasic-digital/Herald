@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Revision | 2 |
+| Revision | 3 |
 | Created | 2026-05-15 |
 | Last modified | 2026-05-20 |
 | Status | active |
@@ -24,6 +24,10 @@
   - [1. Place a copy of the Helix Constitution alongside Herald](#1-place-a-copy-of-the-helix-constitution-alongside-herald)
   - [2. Verify the inheritance contract](#2-verify-the-inheritance-contract)
   - [3. Read the inherited rules](#3-read-the-inherited-rules)
+- [Operator setup guides](#operator-setup-guides)
+  - [Messengers](#messengers)
+  - [LLM / agent dispatchers](#llm--agent-dispatchers)
+  - [Credentials master guide](#credentials-master-guide)
 - [Mirror & push convention](#mirror-push-convention)
 - [License](#license)
 - [Contact / contribution](#contact-contribution)
@@ -142,6 +146,47 @@ In this order, read fully before submitting any change:
 5. [`docs/guides/HERALD_CONSTITUTION.md`](docs/guides/HERALD_CONSTITUTION.md) — Herald's articles §101–§106.
 6. [`docs/guides/CONSTITUTION_INHERITANCE.md`](docs/guides/CONSTITUTION_INHERITANCE.md) — the discovery contract and gate semantics.
 7. [`docs/specs/mvp/specification.V3.md`](docs/specs/mvp/specification.V3.md) — current spec (active). Historical V1/V2 in [`docs/specs/mvp/archive/`](docs/specs/mvp/archive/).
+
+## Operator setup guides
+
+Every supported messenger and every supported LLM / agent dispatcher has its own step-by-step setup guide under [`docs/guides/`](docs/guides/). **Live** ones are detailed end-to-end (obtain credentials → set env vars → verify integration tests → troubleshooting). **Planned** ones are placeholder stubs that reserve the env-var names so your `.env` stays stable as features land.
+
+### Messengers
+
+| Channel | Status | Guide |
+|---|---|---|
+| Telegram | **LIVE** (HRD-011 code complete; awaiting live evidence) | [`docs/guides/messengers/TELEGRAM.md`](docs/guides/messengers/TELEGRAM.md) |
+| Slack | Planned (V2) | [`docs/guides/messengers/SLACK.md`](docs/guides/messengers/SLACK.md) |
+| Email (SMTP + Resend) | Planned (V2) | [`docs/guides/messengers/EMAIL.md`](docs/guides/messengers/EMAIL.md) |
+| Max | Planned (V2) | [`docs/guides/messengers/MAX.md`](docs/guides/messengers/MAX.md) |
+| Microsoft Teams | Planned (V3) | [`docs/guides/messengers/TEAMS.md`](docs/guides/messengers/TEAMS.md) |
+| Lark / Feishu | Planned (later) | [`docs/guides/messengers/LARK.md`](docs/guides/messengers/LARK.md) |
+| Discord | Planned (later) | [`docs/guides/messengers/DISCORD.md`](docs/guides/messengers/DISCORD.md) |
+| WhatsApp Business | Planned (later) | [`docs/guides/messengers/WHATSAPP.md`](docs/guides/messengers/WHATSAPP.md) |
+| Viber | Planned (later) | [`docs/guides/messengers/VIBER.md`](docs/guides/messengers/VIBER.md) |
+
+### LLM / agent dispatchers
+
+| Dispatcher | Status | Guide |
+|---|---|---|
+| Claude Code | **LIVE** (HRD-012 Fixed — live E18 evidence captured) | [`docs/guides/dispatchers/CLAUDE_CODE.md`](docs/guides/dispatchers/CLAUDE_CODE.md) |
+| OpenCode | Planned | [`docs/guides/dispatchers/OPENCODE.md`](docs/guides/dispatchers/OPENCODE.md) |
+| Aider | Planned | [`docs/guides/dispatchers/AIDER.md`](docs/guides/dispatchers/AIDER.md) |
+| Gemini | Planned | [`docs/guides/dispatchers/GEMINI.md`](docs/guides/dispatchers/GEMINI.md) |
+| Cursor | Planned | [`docs/guides/dispatchers/CURSOR.md`](docs/guides/dispatchers/CURSOR.md) |
+| Anthropic Managed Agent | Planned | [`docs/guides/dispatchers/ANTHROPIC.md`](docs/guides/dispatchers/ANTHROPIC.md) |
+
+### Credentials master guide
+
+[`docs/guides/OPERATOR_CREDENTIALS.md`](docs/guides/OPERATOR_CREDENTIALS.md) is the umbrella reference covering:
+
+- The 12-factor resolution order (CLI flag > shell exports > `.env` > defaults)
+- How to set credentials via `~/.bashrc` / `~/.zshrc` (shell-export path) AND `.env` (project-local path) — both supported per spec V3 §3.3
+- Pre-commit secrets audit checklist (`.env` not tracked; no obvious-format secrets; `.env.example` only has placeholders)
+- Quickstart-compose vs native pherald operating modes
+- Troubleshooting (SQLSTATE 28P01, "DSN not set", SKIP-with-reason logic per §11.4.3, …)
+
+Per Universal Constitution §11.4.10: **`.env` files MUST NEVER be committed**. The repo's `.gitignore` already covers `.env`. The committed `quickstart/.env.example` is the only credentials-file that lives in git, and it contains only placeholder values.
 
 ## Mirror & push convention
 

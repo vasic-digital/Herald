@@ -34,6 +34,24 @@
 - [Audit checklist (run before every commit)](#audit-checklist-run-before-every-commit)
 - [Troubleshooting](#troubleshooting)
 
+## Per-service dedicated guides
+
+This umbrella document covers the credentials model, resolution order, audit checklist, and per-service reserved env-var names. For **detailed step-by-step setup** of each integration, see the dedicated per-service guides:
+
+### Messengers — under [`messengers/`](messengers/)
+
+- [`messengers/TELEGRAM.md`](messengers/TELEGRAM.md) — **LIVE** (HRD-011)
+- [`messengers/SLACK.md`](messengers/SLACK.md) — planned V2
+- [`messengers/EMAIL.md`](messengers/EMAIL.md) — planned V2 (SMTP + Resend)
+- [`messengers/MAX.md`](messengers/MAX.md) — planned V2
+- [`messengers/TEAMS.md`](messengers/TEAMS.md) — planned V3
+- [`messengers/LARK.md`](messengers/LARK.md), [`DISCORD.md`](messengers/DISCORD.md), [`WHATSAPP.md`](messengers/WHATSAPP.md), [`VIBER.md`](messengers/VIBER.md) — planned later iterations
+
+### LLM / agent dispatchers — under [`dispatchers/`](dispatchers/)
+
+- [`dispatchers/CLAUDE_CODE.md`](dispatchers/CLAUDE_CODE.md) — **LIVE** (HRD-012)
+- [`dispatchers/OPENCODE.md`](dispatchers/OPENCODE.md), [`AIDER.md`](dispatchers/AIDER.md), [`GEMINI.md`](dispatchers/GEMINI.md), [`CURSOR.md`](dispatchers/CURSOR.md), [`ANTHROPIC.md`](dispatchers/ANTHROPIC.md) — planned
+
 ## Resolution order (12-factor)
 
 Herald follows 12-factor conventions (spec V3 §3.3 + §11.4.10) with a strict, single-direction precedence. From highest to lowest:

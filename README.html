@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>Herald</title>
+  <title>Herald — README</title>
   <style>
     /* Default styles provided by pandoc.
     ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -238,10 +238,59 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">Herald</h1>
+<h1 class="title">Herald — README</h1>
 </header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#herald" id="toc-herald">Herald</a>
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+contents</a></li>
+<li><a href="#status" id="toc-status">Status</a></li>
+<li><a href="#mission" id="toc-mission">Mission</a></li>
+<li><a href="#deployment-model" id="toc-deployment-model">Deployment
+model</a></li>
+<li><a href="#governance-helix-constitution-inheritance"
+id="toc-governance-helix-constitution-inheritance">Governance — Helix
+Constitution inheritance</a></li>
+<li><a href="#repository-layout" id="toc-repository-layout">Repository
+layout</a></li>
+<li><a href="#quickstart-for-developers-and-agents"
+id="toc-quickstart-for-developers-and-agents">Quickstart for developers
+and agents</a>
+<ul>
+<li><a href="#place-a-copy-of-the-helix-constitution-alongside-herald"
+id="toc-place-a-copy-of-the-helix-constitution-alongside-herald">1.
+Place a copy of the Helix Constitution alongside Herald</a></li>
+<li><a href="#verify-the-inheritance-contract"
+id="toc-verify-the-inheritance-contract">2. Verify the inheritance
+contract</a></li>
+<li><a href="#read-the-inherited-rules"
+id="toc-read-the-inherited-rules">3. Read the inherited rules</a></li>
+</ul></li>
+<li><a href="#operator-setup-guides"
+id="toc-operator-setup-guides">Operator setup guides</a>
+<ul>
+<li><a href="#messengers" id="toc-messengers">Messengers</a></li>
+<li><a href="#llm-agent-dispatchers" id="toc-llm-agent-dispatchers">LLM
+/ agent dispatchers</a></li>
+<li><a href="#credentials-master-guide"
+id="toc-credentials-master-guide">Credentials master guide</a></li>
+</ul></li>
+<li><a href="#mirror-push-convention"
+id="toc-mirror-push-convention">Mirror &amp; push convention</a></li>
+<li><a href="#license" id="toc-license">License</a></li>
+<li><a href="#contact-contribution"
+id="toc-contact-contribution">Contact / contribution</a></li>
+</ul></li>
+</ul>
+</nav>
 <h1 id="herald">Herald</h1>
 <table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
 <thead>
 <tr>
 <th>Field</th>
@@ -251,7 +300,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>2</td>
+<td>3</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -311,6 +360,13 @@ inheritance contract</a></li>
 <li><a href="#3-read-the-inherited-rules">3. Read the inherited
 rules</a></li>
 </ul></li>
+<li><a href="#operator-setup-guides">Operator setup guides</a>
+<ul>
+<li><a href="#messengers">Messengers</a></li>
+<li><a href="#llm--agent-dispatchers">LLM / agent dispatchers</a></li>
+<li><a href="#credentials-master-guide">Credentials master
+guide</a></li>
+</ul></li>
 <li><a href="#mirror-push-convention">Mirror &amp; push
 convention</a></li>
 <li><a href="#license">License</a></li>
@@ -360,7 +416,7 @@ channels.</li>
 </ul>
 <h2 id="deployment-model">Deployment model</h2>
 <p>Herald is designed to be consumed as a <strong>git submodule</strong>
-of a larger project (the "consuming project"). The consuming project
+of a larger project (the “consuming project”). The consuming project
 provides:</p>
 <ul>
 <li>The <strong>Helix Constitution</strong> submodule at its own
@@ -374,7 +430,7 @@ constitution. See <a
 href="docs/guides/CONSTITUTION_INHERITANCE.md"><code>docs/guides/CONSTITUTION_INHERITANCE.md</code></a>
 for the full rationale and the discovery contract that lets Herald
 locate the constitution at runtime from any nested depth.</p>
-<h2 id="governance--helix-constitution-inheritance">Governance — Helix
+<h2 id="governance-helix-constitution-inheritance">Governance — Helix
 Constitution inheritance</h2>
 <p>Herald inherits unconditionally from the <a
 href="https://github.com/HelixDevelopment/HelixConstitution">Helix
@@ -399,7 +455,8 @@ GitHub + GitLab + GitFlic + GitVerse (§2.1).</li>
 <li><strong>Hardlinked backup before destructive ops</strong> (§9).</li>
 </ul>
 <p>The constitution lives at <a
-href="https://github.com/HelixDevelopment/HelixConstitution">https://github.com/HelixDevelopment/HelixConstitution</a>
+href="https://github.com/HelixDevelopment/HelixConstitution"
+class="uri">https://github.com/HelixDevelopment/HelixConstitution</a>
 and is mirrored to GitLab, GitFlic, and GitVerse.</p>
 <h2 id="repository-layout">Repository layout</h2>
 <pre><code>Herald/
@@ -428,7 +485,7 @@ and is mirrored to GitLab, GitFlic, and GitVerse.</p>
     └── test_constitution_inheritance_meta.sh  # paired mutation meta-test (§1.1)</code></pre>
 <h2 id="quickstart-for-developers-and-agents">Quickstart for developers
 and agents</h2>
-<h3 id="1-place-a-copy-of-the-helix-constitution-alongside-herald">1.
+<h3 id="place-a-copy-of-the-helix-constitution-alongside-herald">1.
 Place a copy of the Helix Constitution alongside Herald</h3>
 <p>If you cloned Herald standalone (not as a submodule of a larger
 project), put a clone of the constitution <strong>next to</strong>
@@ -441,7 +498,7 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="
 <p>This is only needed for standalone work. When Herald is consumed as a
 submodule of a larger project, that project already provides
 <code>&lt;parent&gt;/constitution/</code>.</p>
-<h3 id="2-verify-the-inheritance-contract">2. Verify the inheritance
+<h3 id="verify-the-inheritance-contract">2. Verify the inheritance
 contract</h3>
 <div class="sourceCode" id="cb3"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> tests/test_constitution_inheritance.sh        <span class="co"># gate (7 invariants)</span></span>
@@ -452,7 +509,7 @@ prints <code>✓ META-TEST PASS</code> when the gate correctly fails on a
 mutated constitution.</p>
 <p>If <code>I1</code> fails (constitution not found), follow the message
 — clone the constitution alongside Herald.</p>
-<h3 id="3-read-the-inherited-rules">3. Read the inherited rules</h3>
+<h3 id="read-the-inherited-rules">3. Read the inherited rules</h3>
 <p>In this order, read fully before submitting any change:</p>
 <ol type="1">
 <li><code>&lt;discovered-constitution&gt;/CLAUDE.md</code> +
@@ -465,7 +522,7 @@ href="AGENTS.md"><code>AGENTS.md</code></a> — Herald-specific
 guidance.</li>
 <li><a
 href="docs/guides/HERALD_CONSTITUTION.md"><code>docs/guides/HERALD_CONSTITUTION.md</code></a>
-— Herald's articles §101–§106.</li>
+— Herald’s articles §101–§106.</li>
 <li><a
 href="docs/guides/CONSTITUTION_INHERITANCE.md"><code>docs/guides/CONSTITUTION_INHERITANCE.md</code></a>
 — the discovery contract and gate semantics.</li>
@@ -474,7 +531,163 @@ href="docs/specs/mvp/specification.V3.md"><code>docs/specs/mvp/specification.V3.
 — current spec (active). Historical V1/V2 in <a
 href="docs/specs/mvp/archive/"><code>docs/specs/mvp/archive/</code></a>.</li>
 </ol>
-<h2 id="mirror--push-convention">Mirror &amp; push convention</h2>
+<h2 id="operator-setup-guides">Operator setup guides</h2>
+<p>Every supported messenger and every supported LLM / agent dispatcher
+has its own step-by-step setup guide under <a
+href="docs/guides/"><code>docs/guides/</code></a>. <strong>Live</strong>
+ones are detailed end-to-end (obtain credentials → set env vars → verify
+integration tests → troubleshooting). <strong>Planned</strong> ones are
+placeholder stubs that reserve the env-var names so your
+<code>.env</code> stays stable as features land.</p>
+<h3 id="messengers">Messengers</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Channel</th>
+<th>Status</th>
+<th>Guide</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Telegram</td>
+<td><strong>LIVE</strong> (HRD-011 code complete; awaiting live
+evidence)</td>
+<td><a
+href="docs/guides/messengers/TELEGRAM.md"><code>docs/guides/messengers/TELEGRAM.md</code></a></td>
+</tr>
+<tr>
+<td>Slack</td>
+<td>Planned (V2)</td>
+<td><a
+href="docs/guides/messengers/SLACK.md"><code>docs/guides/messengers/SLACK.md</code></a></td>
+</tr>
+<tr>
+<td>Email (SMTP + Resend)</td>
+<td>Planned (V2)</td>
+<td><a
+href="docs/guides/messengers/EMAIL.md"><code>docs/guides/messengers/EMAIL.md</code></a></td>
+</tr>
+<tr>
+<td>Max</td>
+<td>Planned (V2)</td>
+<td><a
+href="docs/guides/messengers/MAX.md"><code>docs/guides/messengers/MAX.md</code></a></td>
+</tr>
+<tr>
+<td>Microsoft Teams</td>
+<td>Planned (V3)</td>
+<td><a
+href="docs/guides/messengers/TEAMS.md"><code>docs/guides/messengers/TEAMS.md</code></a></td>
+</tr>
+<tr>
+<td>Lark / Feishu</td>
+<td>Planned (later)</td>
+<td><a
+href="docs/guides/messengers/LARK.md"><code>docs/guides/messengers/LARK.md</code></a></td>
+</tr>
+<tr>
+<td>Discord</td>
+<td>Planned (later)</td>
+<td><a
+href="docs/guides/messengers/DISCORD.md"><code>docs/guides/messengers/DISCORD.md</code></a></td>
+</tr>
+<tr>
+<td>WhatsApp Business</td>
+<td>Planned (later)</td>
+<td><a
+href="docs/guides/messengers/WHATSAPP.md"><code>docs/guides/messengers/WHATSAPP.md</code></a></td>
+</tr>
+<tr>
+<td>Viber</td>
+<td>Planned (later)</td>
+<td><a
+href="docs/guides/messengers/VIBER.md"><code>docs/guides/messengers/VIBER.md</code></a></td>
+</tr>
+</tbody>
+</table>
+<h3 id="llm-agent-dispatchers">LLM / agent dispatchers</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Dispatcher</th>
+<th>Status</th>
+<th>Guide</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Claude Code</td>
+<td><strong>LIVE</strong> (HRD-012 Fixed — live E18 evidence
+captured)</td>
+<td><a
+href="docs/guides/dispatchers/CLAUDE_CODE.md"><code>docs/guides/dispatchers/CLAUDE_CODE.md</code></a></td>
+</tr>
+<tr>
+<td>OpenCode</td>
+<td>Planned</td>
+<td><a
+href="docs/guides/dispatchers/OPENCODE.md"><code>docs/guides/dispatchers/OPENCODE.md</code></a></td>
+</tr>
+<tr>
+<td>Aider</td>
+<td>Planned</td>
+<td><a
+href="docs/guides/dispatchers/AIDER.md"><code>docs/guides/dispatchers/AIDER.md</code></a></td>
+</tr>
+<tr>
+<td>Gemini</td>
+<td>Planned</td>
+<td><a
+href="docs/guides/dispatchers/GEMINI.md"><code>docs/guides/dispatchers/GEMINI.md</code></a></td>
+</tr>
+<tr>
+<td>Cursor</td>
+<td>Planned</td>
+<td><a
+href="docs/guides/dispatchers/CURSOR.md"><code>docs/guides/dispatchers/CURSOR.md</code></a></td>
+</tr>
+<tr>
+<td>Anthropic Managed Agent</td>
+<td>Planned</td>
+<td><a
+href="docs/guides/dispatchers/ANTHROPIC.md"><code>docs/guides/dispatchers/ANTHROPIC.md</code></a></td>
+</tr>
+</tbody>
+</table>
+<h3 id="credentials-master-guide">Credentials master guide</h3>
+<p><a
+href="docs/guides/OPERATOR_CREDENTIALS.md"><code>docs/guides/OPERATOR_CREDENTIALS.md</code></a>
+is the umbrella reference covering:</p>
+<ul>
+<li>The 12-factor resolution order (CLI flag &gt; shell exports &gt;
+<code>.env</code> &gt; defaults)</li>
+<li>How to set credentials via <code>~/.bashrc</code> /
+<code>~/.zshrc</code> (shell-export path) AND <code>.env</code>
+(project-local path) — both supported per spec V3 §3.3</li>
+<li>Pre-commit secrets audit checklist (<code>.env</code> not tracked;
+no obvious-format secrets; <code>.env.example</code> only has
+placeholders)</li>
+<li>Quickstart-compose vs native pherald operating modes</li>
+<li>Troubleshooting (SQLSTATE 28P01, “DSN not set”, SKIP-with-reason
+logic per §11.4.3, …)</li>
+</ul>
+<p>Per Universal Constitution §11.4.10: <strong><code>.env</code> files
+MUST NEVER be committed</strong>. The repo’s <code>.gitignore</code>
+already covers <code>.env</code>. The committed
+<code>quickstart/.env.example</code> is the only credentials-file that
+lives in git, and it contains only placeholder values.</p>
+<h2 id="mirror-push-convention">Mirror &amp; push convention</h2>
 <p>Herald is mirrored to four hosts. The <code>origin</code> remote is
 <strong>fan-out</strong>: one fetch URL + four push URLs. A single
 <code>git push origin main</code> propagates to every mirror in one
@@ -512,7 +725,7 @@ operation.</p>
 <p>Each entry under <code>upstreams/</code> is a shell script that
 exports a single <code>UPSTREAMABLE_REPOSITORY=…</code> URL and is meant
 to be <strong>sourced</strong>, not executed for its output.
-Capitalization matches each host's brand (GitFlic, GitVerse); do not
+Capitalization matches each host’s brand (GitFlic, GitVerse); do not
 normalize to lowercase or collapse into one file — external mirror-push
 tooling keys on the per-file split.</p>
 <p>If you ever need to rebuild the fan-out configuration, the
@@ -521,7 +734,7 @@ consumes <code>Upstreams/*.sh</code> declarations and configures git
 remotes accordingly; the same pattern can be adapted for Herald.</p>
 <h2 id="license">License</h2>
 <p><a href="LICENSE"><code>LICENSE</code></a> — see file for terms.</p>
-<h2 id="contact--contribution">Contact / contribution</h2>
+<h2 id="contact-contribution">Contact / contribution</h2>
 <p>Substantive contributions land via PRs on GitHub; mirrors are
 read-only for external consumers. Inheritance rules and the gate apply
 to every PR.</p>
