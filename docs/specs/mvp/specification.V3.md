@@ -8,16 +8,16 @@
 
 | Field | Value |
 |---|---|
-| Revision | 7 |
+| Revision | 8 |
 | Created | 2026-05-20 |
-| Last modified | 2026-05-20 |
+| Last modified | 2026-05-21 |
 | Status | active |
-| Status summary | V3 r7 — §44 **Foundation implementation contract** lands. Locks the three-milestone (M1/M2/M3) Approach B vertical-slice delivery for Sub-project 1 of 8. Records the Catalogue-Check verdict (9 of 12 caps `extend` existing `digital.vasic.*` modules; 3 `no-match` bespoke). Per Universal §11.4.73 secondary bump (Revision 6 → 7); §44 is additive. M1 evidence captured in §44.9 (`commons_constitution` package, 14 files, all tests PASS under -race). |
+| Status summary | V3 r8 — Wave 2 lands the shared `commons/cli/` scaffold + 6 new flavor binaries (sherald, cherald, bherald, rherald, iherald, scherald) + pherald refactor. §6.3 HeraldBranding extended with 5 per-flavor identity fields (Flavor, Prefix, DisplayName, DefaultPort, Mission). §18 Flavors + §41 REST surface expanded. §44 gains §44.M Wave 2 milestone. `scripts/e2e_bluff_hunt.sh` invariants grow 18 → 33 with a paired §1.1 mutation gate (`tests/test_wave2_mutation_meta.sh`). |
 | Issues | none |
 | Issues summary | — |
-| Fixed | V3-R3-01..V3-R3-03 (r3 parent-doc spec-path sync); V3-R2-01..V3-R2-09 (r2); V3-R1-01..V3-R1-14 (r1); inherits closed V2 + V1 lineage. |
-| Fixed summary | r7 lands §44 Foundation contract + records M1 as-built evidence (commons_constitution 14-file scaffold, in-process EventBus/Registry/Captureer/Ladder/Store/Runner all green under -race; full workspace inheritance gate 12 PASS / 0 FAIL). |
-| Continuation | M2: `commons_storage` live-wire via `digital.vasic.database` (pgx + migrations) + `digital.vasic.background` (Postgres queue) — integration tests against testcontainers Postgres. Then M3: Gin REST via `digital.vasic.middleware`+`auth`+`observability` composition + `digital.vasic.cache` for the mode-ladder read-cache. Each milestone followed by multi-mirror push. Then codegraph integration per https://github.com/colbymchenry/codegraph. |
+| Fixed | V3-R8-01..V3-R8-05 (r8 Wave 2 scaffolds + Branding extension + REST surface expansion + §44.M milestone + §43 catalogue HRD-092 entry); V3-R3-01..V3-R3-03 (r3 parent-doc spec-path sync); V3-R2-01..V3-R2-09 (r2); V3-R1-01..V3-R1-14 (r1); inherits closed V2 + V1 lineage. |
+| Fixed summary | r8 captures Wave 2 as-built — shared `commons/cli/` scaffold + 7 flavor binaries (1 refactored, 6 net new), Branding struct extended with 5 per-flavor identity fields, §41 REST surface gains `/v1/compliance` (cherald), `/v1/safety_state` (sherald), `/v1/webhooks/page` (iherald), §44.M Wave 2 milestone subsection records 33-invariant e2e + 4/4 mutation meta + HRD-092 catalogue-check (no-match → vendor). r7 lands §44 Foundation contract + records M1 as-built evidence (commons_constitution 14-file scaffold, in-process EventBus/Registry/Captureer/Ladder/Store/Runner all green under -race; full workspace inheritance gate 12 PASS / 0 FAIL). |
+| Continuation | Wave 3 work: HRD-016 Runner wiring (pherald `/v1/events`), HRD-024 iherald `/v1/webhooks/page` live, HRD-028 cherald `/v1/compliance` constitution_state pull live, HRD-098 sherald `/v1/safety_state` daemon live, plus the 28 §43 command implementations (HRD-029..056). Each milestone followed by multi-mirror push. Then codegraph integration per https://github.com/colbymchenry/codegraph. |
 
 The **bi-directional event fan-out** system: Herald ingests events from heterogeneous sources and reliably fans them out to multiple notification channels so every alert reaches the right destination without confusion, and processes inbound replies/commands back from subscribers in a structured, security-validated way.
 
@@ -105,6 +105,7 @@ The **bi-directional event fan-out** system: Herald ingests events from heteroge
   - [17.5 Health probes (livez / readyz / startupz)](#175-health-probes-livez-readyz-startupz)
   - [17.6 `doctor` CLI](#176-doctor-cli)
 - [§18. Flavors (the implementations)](#18-flavors-the-implementations)
+  - [18.0 Wave 2 — Flavor scaffold catalogue (landed 2026-05-21)](#180-wave-2--flavor-scaffold-catalogue-landed-2026-05-21)
   - [18.1 Common flavor contract](#181-common-flavor-contract)
   - [18.1.1 Common channel-interaction primitives (cross-flavor)](#1811-common-channel-interaction-primitives-cross-flavor)
   - [18.2 Project Herald (`pherald`)](#182-project-herald-pherald)
@@ -185,6 +186,7 @@ The **bi-directional event fan-out** system: Herald ingests events from heteroge
   - [44.7 Catalogue-Check verdict (recorded 2026-05-20)](#447-catalogue-check-verdict-recorded-2026-05-20)
   - [44.8 Anti-bluff testing mandate (continuous)](#448-anti-bluff-testing-mandate-continuous)
   - [44.9 M1 evidence (landed 2026-05-20)](#449-m1-evidence-landed-2026-05-20)
+  - [§44.M Wave 2 — Flavor scaffolds (landed 2026-05-21)](#44m-wave-2--flavor-scaffolds-landed-2026-05-21)
 
 ---
 
@@ -768,15 +770,24 @@ Per Apprise's `AppriseAsset`: a `HeraldBranding` struct injected per-flavor:
 
 ```go
 type Branding struct {
-    AppName       string  // "Project Herald"
-    BinaryName    string  // "pherald"
-    IconURL       string  // for rich embeds
+    AppName        string // "Project Herald", "System Herald", ...
+    BinaryName     string // "pherald", "sherald", ...
+    IconURL        string // for rich embeds
     AccentColorHex string // "#2C7BE5"
-    DefaultFooter string  // "Sent by pherald 1.0 · github.com/vasic-digital/Herald"
+    DefaultFooter  string // "Sent by pherald 1.0 · github.com/vasic-digital/Herald"
+
+    // Wave 2 (r8) — per-flavor identity propagated to the shared
+    // commons/cli/ scaffold. Drives Cobra Use/Short/Long output,
+    // default HTTP serve-port binding, and version --json shape.
+    Flavor      string // "p", "s", "b", ... (single-letter key; "sc" for scherald)
+    Prefix      string // 3-letter §8.2 anchor (e.g. "PHR", "SHR", "CHR")
+    DisplayName string // operator-facing display name (often == AppName)
+    DefaultPort int    // default HTTP listen port (24791..24799 block; 0 for CLI-only flavors)
+    Mission     string // one-line mission statement for --help / about
 }
 ```
 
-Channel adapters consult `Branding` when rendering rich messages (Slack Block Kit headers, Discord embed `author`, Adaptive Card `Container` accent color, Email From-name).
+Channel adapters consult `Branding` when rendering rich messages (Slack Block Kit headers, Discord embed `author`, Adaptive Card `Container` accent color, Email From-name). Per-flavor `Branding` is constructed via `commons.DefaultBranding(<flavor>, version)` at startup of each `<prefix>herald` binary and threaded through every `OutboundMessage`; the Wave 2 fields (`Flavor`, `Prefix`, `DisplayName`, `DefaultPort`, `Mission`) drive both the shared `commons/cli/` scaffold (Cobra Use/Short/Long, default HTTP serve-port binding, `version --json` shape) and adapter-side branding when rendering rich messages.
 
 ---
 
@@ -1365,14 +1376,24 @@ type TraceContext struct {
 }
 
 // Branding is the per-flavor visual identity (§6.3 reference).
-// One Branding is constructed per flavor binary at startup and threaded
-// through OutboundMessage so adapters render channel-specific bling.
+// One Branding is constructed per flavor binary at startup via
+// commons.DefaultBranding(<flavor>, version) and threaded through
+// OutboundMessage so adapters render channel-specific bling. The Wave 2
+// (r8) fields below also drive the shared commons/cli/ scaffold (Cobra
+// metadata + default HTTP serve-port binding + version --json shape).
 type Branding struct {
     AppName        string  // "Project Herald", "System Herald", ...
     BinaryName     string  // "pherald", "sherald", ...
     IconURL        string  // for rich embeds (Slack auth user, Discord author, ...)
     AccentColorHex string  // "#2C7BE5" — used as Slack attachment color, Discord embed color, Adaptive Card accent
     DefaultFooter  string  // "Sent by pherald 1.0 · github.com/vasic-digital/Herald"
+
+    // Wave 2 per-flavor identity fields (r8).
+    Flavor      string  // single-letter (or short) flavor key: "p", "s", "b", "sc", ...
+    Prefix      string  // 3-letter §8.2 anchor (e.g. "PHR", "SHR", "CHR")
+    DisplayName string  // operator-facing display name (typically == AppName)
+    DefaultPort int     // default HTTP listen port (24791..24799 block; 0 for CLI-only flavors)
+    Mission     string  // one-line mission statement for --help / about
 }
 
 // ChannelID is the canonical channel identifier. It MUST match the
@@ -2020,16 +2041,37 @@ Exits with non-zero status code on any failure + writes a structured report to s
 
 ## §18. Flavors (the implementations)
 
+### 18.0 Wave 2 — Flavor scaffold catalogue (landed 2026-05-21)
+
+Wave 2 (r8) lands the shared `commons/cli/` package and 7 flavor binaries (1 refactor + 6 net new). Every flavor's `cmd/<flavor>/main.go` is ~30 LOC: construct `commons.DefaultBranding(<flavor>, version)`, build the root command via `cli.NewRootCmd(branding)`, register flavor-specific stubs from `internal/stubs/stubs.go`, and (for serving flavors) call `cli.ServeCmd(opts)` with `internal/http.Routes()`.
+
+| Flavor | DisplayName | Default port | Serves? | §43 stubs (count) | Flavor-specific routes |
+|---|---|---|---|---|---|
+| `pherald` | Project Herald | 24791 | ✓ | 6 (HRD-029, 030, 043, 044, 049, 053) | `POST /v1/events` (HRD-016) |
+| `sherald` | System Herald | 24793 | ✓ | 5 (HRD-033, 034, 040, 046, 056) | `GET /v1/safety_state` (HRD-098) |
+| `cherald` | Constitution Herald | 24792 | ✓ | 11 (HRD-036..039, 042, 048, 050..052, 054, 055) | `GET /v1/compliance` (HRD-028) |
+| `iherald` | Incident Herald | 24794 | ✓ | 0 | `POST /v1/webhooks/page` (HRD-024) |
+| `bherald` | Build Herald | n/a | ✗ | 3 (HRD-035, 041, 045) | — |
+| `rherald` | Release Herald | n/a | ✗ | 3 (HRD-031, 032, 045) | — |
+| `scherald` | Scheduled-audit Herald | n/a | ✗ | 1 (HRD-047) | — |
+
+Stub total: 28 unique §43 HRDs + 1 cross-flavor alias (HRD-045 shared `bherald` ↔ `rherald`) = **29 stub registrations**.
+
+**Port allocation:** `24791..24799` (`2479X` block). Reserved: `pherald` 24791, `cherald` 24792, `sherald` 24793, `iherald` 24794. Free: 24795..24799 for future flavors.
+
+The shared CLI scaffold lives in `commons/cli/` (`NewRootCmd`, `VersionCmd`, `ServeCmd` with Middleware hook, `StubCmd`, `Healthz`/`Readyz`/`Metrics` handlers, `Route` + `StubRouteHandler`). See §44.M for the as-built evidence + HRD-092 catalogue-check verdict (`no-match → vendor as Herald-internal package`).
+
 ### 18.1 Common flavor contract
 
 Every flavor binary MUST:
 
 - Be named `<prefix>herald` and built from `<prefix>herald/cmd/<prefix>herald/main.go`.
-- Implement the same Cobra-subcommand surface (`send`, `serve`, `doctor`, `migrate`, `deadletter`, `subscriber`, `digest`, `version`).
+- Implement the common Cobra-subcommand surface (`version` baseline; serving flavors also expose `serve`; other subcommands — `send`, `doctor`, `migrate`, `deadletter`, `subscriber`, `digest` — are stubbed via `cli.StubCmd` until their owning HRD lands).
+- Consume the shared `commons/cli/` package: root Cobra command + `version` subcommand + (for serving flavors) the `serve` subcommand are provided by `cli.NewRootCmd(branding)` / `cli.VersionCmd(branding)` / `cli.ServeCmd(opts)` respectively. The shared scaffold landed in Wave 2 (r8) — see §18.0 + §44.M.
 - Embed `commons` + `commons_messaging` + `commons_storage` + `commons_security` + `commons_observability` + `commons_diary` at the same pinned versions.
 - Publish a flavor-specific event-type subtree (`digital.vasic.herald.<flavor>.*`).
 - Register flavor-specific subscriber commands (the `Bug:` / `Query:` / etc. tokens that map to flavor-specific handlers).
-- Provide a flavor-specific `HeraldBranding` (app name, icon, accent color).
+- Provide a flavor-specific `HeraldBranding` constructed via `commons.DefaultBranding(<flavor>, version)` (app name, icon, accent color, plus the Wave 2 identity fields `Flavor`, `Prefix`, `DisplayName`, `DefaultPort`, `Mission`).
 - Ship its own user manual under `docs/flavors/<flavor>/`.
 
 ### 18.1.1 Common channel-interaction primitives (cross-flavor)
@@ -4144,6 +4186,14 @@ Mounted under `/v1/` per spec §5.7 (REST is the *same* ingress port — `[serve
 | `GET` | `/v1/healthz` | Public-facing health (composite of /livez + /readyz). |
 | Per-flavor | `/v1/<flavor>/...` | Flavor-specific endpoints (e.g. `/v1/incident/{id}/take-ic` on `iherald`; `/v1/build/{id}/retry` on `bherald`). |
 
+**Wave 2 (r8) per-flavor route additions** — landed as 501-stub routes by Wave 2 (scaffold only; live wiring lands in Wave 3 under the cited HRDs):
+
+| Method | Path | Owning flavor | Behaviour | HRD |
+|---|---|---|---|---|
+| `GET` | `/v1/compliance` | `cherald` | Constitution-state pull surface. Returns the current `constitution_state` row per tenant (rule_id, severity_category, decision_result, transition_from/to, bundle_hash, last_decided_at). Composes with §42.7 + §44.6. | HRD-028 |
+| `GET` | `/v1/safety_state` | `sherald` | Daemon status surface: open `.host.safety_breach` events, current memory% (per §12.6 budget), last destructive-op log entry (per §9.1). Used by `sherald serve` daemon-mode. | HRD-098 |
+| `POST` | `/v1/webhooks/page` | `iherald` | PagerDuty/Opsgenie-compatible inbound webhook for paging events. Translates into the §42 `digital.vasic.herald.alert.firing` event class + fans out per §11 channel selection. | HRD-024 |
+
 ### 41.4 Authentication
 
 Reuses the §5.7 auth model:
@@ -4474,6 +4524,8 @@ Every row in §43.2 below MUST land as its own HRD-NNN (already opened HRD-029..
 
 Total: **27 new flavor commands / workflows** — one per HRD-029 through HRD-056 (note: HRD-049 is `reopen` which maps onto an existing REST endpoint per §41 rather than a fresh `/v1/<verb>`; net new HRDs: 27).
 
+**Wave 2 (r8) addendum — shared CLI scaffold.** The 28 commands above ship as Cobra subcommands on their owning `<prefix>herald` binary. Wave 2 landed the **shared CLI scaffold** (`commons/cli/`) that every flavor binary consumes — `NewRootCmd` / `VersionCmd` / `ServeCmd` / `StubCmd` plus `/v1/healthz`, `/v1/readyz`, `/v1/metrics`, and per-flavor 501-stub route registration. Tracked under **HRD-092** (Catalogue-Check: `no-match → vendor as Herald-internal package`; evidence in `docs/catalogue-checks/HRD-092-commons-cli.md`). HRD-092 is **Fixed (Wave 2, r8)** — every §43.2 command's Cobra surface is now built on top of this scaffold rather than each flavor reinventing root + version + serve. See §44.M for the full Wave 2 milestone.
+
 ### 43.3 Implementation gating
 
 §43 is a *catalogue*; landing all 27 commands at once would freeze every other workstream. Order:
@@ -4579,6 +4631,37 @@ The Foundation M1 milestone landed with the following observed deltas:
 - **I6 gate-policy conflict surfaced** — current `I6` invariant in `tests/test_constitution_inheritance.sh` forbids any `.gitmodules` file (originally written to prevent re-embedding the parent `constitution/`). M1 sidesteps this by writing all Helix-stack modules' Go-equivalents in-package; M2/M3 will require either an I6 refinement (`.gitmodules` permitted iff it does NOT contain a `constitution/` entry) or a non-submodule install path. **Open: HRD-080** (gate refinement) tracks this.
 
 When M2 closes, this section is appended with the M2 evidence. M3 closure appends the as-built CloudEvent example + RLS isolation proof + null:// ring-buffer trace.
+
+### §44.M Wave 2 — Flavor scaffolds (landed 2026-05-21)
+
+**Scope** (per [`docs/superpowers/specs/2026-05-21-wave2-flavor-scaffolds-design.md`]):
+
+- Shared `commons/cli/` package — `NewRootCmd`, `VersionCmd`, `ServeCmd` (with Middleware hook), `StubCmd`, `Healthz`/`Readyz`/`Metrics` handlers, `Route` + `StubRouteHandler`. ~400 LOC + 7 unit tests.
+- `pherald` refactor — `cmd/pherald/main.go` + stubs consume `cli.NewRootCmd` + `cli.VersionCmd`; `serve.go` uses `cli.ServeCmd` with `pherald`'s `RequestIDMiddleware` + 2 flavor routes. Old `pherald/internal/http/server.go` (150 LOC) deleted; 5 `server_test.go` tests replaced by 4 focused middleware + routes tests.
+- 6 new flavor binaries scaffolded: `sherald` (:24793 serving), `cherald` (:24792 serving), `iherald` (:24794 serving), `bherald` (CLI-only), `rherald` (CLI-only), `scherald` (CLI-only). Each `cmd/<flavor>/main.go` is ~25 LOC consuming the shared scaffold.
+- `Branding` struct extended with 5 per-flavor identity fields (`Flavor`, `Prefix`, `DisplayName`, `DefaultPort`, `Mission`); `commons.DefaultBranding(<flavor>, version)` populates them for every flavor key.
+- `scripts/e2e_bluff_hunt.sh` invariants grow 18 → 33: **E19–E24** cover the 6 new `version --json` shapes, **E25–E30** cover serving-flavor `/v1/healthz` + flavor-specific 501 routes, **E31** covers a representative §43 stub HRD-pointer surfacing, **E32** covers `sherald` SIGTERM graceful shutdown, **E33** is the `pherald` regression sentinel.
+- Paired §1.1 mutation gate: `tests/test_wave2_mutation_meta.sh` (3 mutations + 1 post-flight, all PASS).
+
+**As-built evidence (2026-05-21):**
+
+- Commits: `7e0a614..37e348e` (13 Wave 2 commits) + `24b96f2` (branding polish, parallel work).
+- `go build ./...` across 13 workspace modules: PASS clean.
+- `go test -race -count=1 ./...`: PASS across all 13 modules.
+- `scripts/e2e_bluff_hunt.sh`: **33 PASS / 0 FAIL / 3 SKIP** (live channel SKIPs documented per §11.4.3).
+- `tests/test_wave2_mutation_meta.sh`: **4/4 PASS** (mutations correctly trigger e2e failures).
+- `scripts/audit_antibluff.sh`: **16 PASS / 0 FAIL / 1 SKIP**.
+- Inheritance gate: **15/15 PASS**; meta-test META-PASS.
+
+**Catalogue-Check verdict:** `commons/cli/` is `no-match → vendor as Herald-internal package` per Universal §11.4.74. Tracked under HRD-092 (now Fixed in r8). Evidence: `docs/catalogue-checks/HRD-092-commons-cli.md`.
+
+**Open follow-ups (Wave 3+):**
+
+- **HRD-016** — `pherald` `/v1/events` Runner wiring (Wave 3).
+- **HRD-024** — `iherald` `/v1/webhooks/page` live (Wave 3/4).
+- **HRD-028** — `cherald` `/v1/compliance` constitution_state pull live (Wave 3).
+- **HRD-098** — `sherald` `/v1/safety_state` live (Wave 3).
+- **HRD-029..056** — the 28 §43 command bodies (Wave 4+).
 
 ---
 

@@ -112,7 +112,7 @@ alt="Herald" />{width=96px height=96px}</p>
 <tbody>
 <tr>
 <td>Revision</td>
-<td>7</td>
+<td>8</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -120,7 +120,7 @@ alt="Herald" />{width=96px height=96px}</p>
 </tr>
 <tr>
 <td>Last modified</td>
-<td>2026-05-20</td>
+<td>2026-05-21</td>
 </tr>
 <tr>
 <td>Status</td>
@@ -128,14 +128,14 @@ alt="Herald" />{width=96px height=96px}</p>
 </tr>
 <tr>
 <td>Status summary</td>
-<td>V3 r7 — §44 <strong>Foundation implementation contract</strong>
-lands. Locks the three-milestone (M1/M2/M3) Approach B vertical-slice
-delivery for Sub-project 1 of 8. Records the Catalogue-Check verdict (9
-of 12 caps <code>extend</code> existing <code>digital.vasic.*</code>
-modules; 3 <code>no-match</code> bespoke). Per Universal §11.4.73
-secondary bump (Revision 6 → 7); §44 is additive. M1 evidence captured
-in §44.9 (<code>commons_constitution</code> package, 14 files, all tests
-PASS under -race).</td>
+<td>V3 r8 — Wave 2 lands the shared <code>commons/cli/</code> scaffold +
+6 new flavor binaries (sherald, cherald, bherald, rherald, iherald,
+scherald) + pherald refactor. §6.3 HeraldBranding extended with 5
+per-flavor identity fields (Flavor, Prefix, DisplayName, DefaultPort,
+Mission). §18 Flavors + §41 REST surface expanded. §44 gains §44.M Wave
+2 milestone. <code>scripts/e2e_bluff_hunt.sh</code> invariants grow 18 →
+33 with a paired §1.1 mutation gate
+(<code>tests/test_wave2_mutation_meta.sh</code>).</td>
 </tr>
 <tr>
 <td>Issues</td>
@@ -147,27 +147,33 @@ PASS under -race).</td>
 </tr>
 <tr>
 <td>Fixed</td>
-<td>V3-R3-01..V3-R3-03 (r3 parent-doc spec-path sync);
-V3-R2-01..V3-R2-09 (r2); V3-R1-01..V3-R1-14 (r1); inherits closed V2 +
-V1 lineage.</td>
+<td>V3-R8-01..V3-R8-05 (r8 Wave 2 scaffolds + Branding extension + REST
+surface expansion + §44.M milestone + §43 catalogue HRD-092 entry);
+V3-R3-01..V3-R3-03 (r3 parent-doc spec-path sync); V3-R2-01..V3-R2-09
+(r2); V3-R1-01..V3-R1-14 (r1); inherits closed V2 + V1 lineage.</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
-<td>r7 lands §44 Foundation contract + records M1 as-built evidence
-(commons_constitution 14-file scaffold, in-process
-EventBus/Registry/Captureer/Ladder/Store/Runner all green under -race;
-full workspace inheritance gate 12 PASS / 0 FAIL).</td>
+<td>r8 captures Wave 2 as-built — shared <code>commons/cli/</code>
+scaffold + 7 flavor binaries (1 refactored, 6 net new), Branding struct
+extended with 5 per-flavor identity fields, §41 REST surface gains
+<code>/v1/compliance</code> (cherald), <code>/v1/safety_state</code>
+(sherald), <code>/v1/webhooks/page</code> (iherald), §44.M Wave 2
+milestone subsection records 33-invariant e2e + 4/4 mutation meta +
+HRD-092 catalogue-check (no-match → vendor). r7 lands §44 Foundation
+contract + records M1 as-built evidence (commons_constitution 14-file
+scaffold, in-process EventBus/Registry/Captureer/Ladder/Store/Runner all
+green under -race; full workspace inheritance gate 12 PASS / 0
+FAIL).</td>
 </tr>
 <tr>
 <td>Continuation</td>
-<td>M2: <code>commons_storage</code> live-wire via
-<code>digital.vasic.database</code> (pgx + migrations) +
-<code>digital.vasic.background</code> (Postgres queue) — integration
-tests against testcontainers Postgres. Then M3: Gin REST via
-<code>digital.vasic.middleware</code>+<code>auth</code>+<code>observability</code>
-composition + <code>digital.vasic.cache</code> for the mode-ladder
-read-cache. Each milestone followed by multi-mirror push. Then codegraph
-integration per <a
+<td>Wave 3 work: HRD-016 Runner wiring (pherald
+<code>/v1/events</code>), HRD-024 iherald <code>/v1/webhooks/page</code>
+live, HRD-028 cherald <code>/v1/compliance</code> constitution_state
+pull live, HRD-098 sherald <code>/v1/safety_state</code> daemon live,
+plus the 28 §43 command implementations (HRD-029..056). Each milestone
+followed by multi-mirror push. Then codegraph integration per <a
 href="https://github.com/colbymchenry/codegraph">https://github.com/colbymchenry/codegraph</a>.</td>
 </tr>
 </tbody>
@@ -343,6 +349,9 @@ probes (livez / readyz / startupz)</a></li>
 <li><a href="#18-flavors-the-implementations">§18. Flavors (the
 implementations)</a>
 <ul>
+<li><a
+href="#180-wave-2--flavor-scaffold-catalogue-landed-2026-05-21">18.0
+Wave 2 — Flavor scaffold catalogue (landed 2026-05-21)</a></li>
 <li><a href="#181-common-flavor-contract">18.1 Common flavor
 contract</a></li>
 <li><a
@@ -536,6 +545,8 @@ Catalogue-Check verdict (recorded 2026-05-20)</a></li>
 testing mandate (continuous)</a></li>
 <li><a href="#449-m1-evidence-landed-2026-05-20">44.9 M1 evidence
 (landed 2026-05-20)</a></li>
+<li><a href="#44m-wave-2--flavor-scaffolds-landed-2026-05-21">§44.M Wave
+2 — Flavor scaffolds (landed 2026-05-21)</a></li>
 </ul></li>
 </ul>
 <hr />
@@ -1563,15 +1574,33 @@ in <code>.env</code> / shell env).</p>
 <code>HeraldBranding</code> struct injected per-flavor:</p>
 <div class="sourceCode" id="cb10"><pre
 class="sourceCode go"><code class="sourceCode go"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Branding <span class="kw">struct</span> <span class="op">{</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    AppName       <span class="dt">string</span>  <span class="co">// &quot;Project Herald&quot;</span></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    BinaryName    <span class="dt">string</span>  <span class="co">// &quot;pherald&quot;</span></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    IconURL       <span class="dt">string</span>  <span class="co">// for rich embeds</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    AppName        <span class="dt">string</span> <span class="co">// &quot;Project Herald&quot;, &quot;System Herald&quot;, ...</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    BinaryName     <span class="dt">string</span> <span class="co">// &quot;pherald&quot;, &quot;sherald&quot;, ...</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    IconURL        <span class="dt">string</span> <span class="co">// for rich embeds</span></span>
 <span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    AccentColorHex <span class="dt">string</span> <span class="co">// &quot;#2C7BE5&quot;</span></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    DefaultFooter <span class="dt">string</span>  <span class="co">// &quot;Sent by pherald 1.0 · github.com/vasic-digital/Herald&quot;</span></span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    DefaultFooter  <span class="dt">string</span> <span class="co">// &quot;Sent by pherald 1.0 · github.com/vasic-digital/Herald&quot;</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Wave 2 (r8) — per-flavor identity propagated to the shared</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">// commons/cli/ scaffold. Drives Cobra Use/Short/Long output,</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// default HTTP serve-port binding, and version --json shape.</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>    Flavor      <span class="dt">string</span> <span class="co">// &quot;p&quot;, &quot;s&quot;, &quot;b&quot;, ... (single-letter key; &quot;sc&quot; for scherald)</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>    Prefix      <span class="dt">string</span> <span class="co">// 3-letter §8.2 anchor (e.g. &quot;PHR&quot;, &quot;SHR&quot;, &quot;CHR&quot;)</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>    DisplayName <span class="dt">string</span> <span class="co">// operator-facing display name (often == AppName)</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>    DefaultPort <span class="dt">int</span>    <span class="co">// default HTTP listen port (24791..24799 block; 0 for CLI-only flavors)</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>    Mission     <span class="dt">string</span> <span class="co">// one-line mission statement for --help / about</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <p>Channel adapters consult <code>Branding</code> when rendering rich
 messages (Slack Block Kit headers, Discord embed <code>author</code>,
-Adaptive Card <code>Container</code> accent color, Email From-name).</p>
+Adaptive Card <code>Container</code> accent color, Email From-name).
+Per-flavor <code>Branding</code> is constructed via
+<code>commons.DefaultBranding(&lt;flavor&gt;, version)</code> at startup
+of each <code>&lt;prefix&gt;herald</code> binary and threaded through
+every <code>OutboundMessage</code>; the Wave 2 fields
+(<code>Flavor</code>, <code>Prefix</code>, <code>DisplayName</code>,
+<code>DefaultPort</code>, <code>Mission</code>) drive both the shared
+<code>commons/cli/</code> scaffold (Cobra Use/Short/Long, default HTTP
+serve-port binding, <code>version --json</code> shape) and adapter-side
+branding when rendering rich messages.</p>
 <hr />
 <h2 id="7-subscriber-model">§7. Subscriber model</h2>
 <h3 id="71-identity--reconciliation-per-channel-id--operator-alias">7.1
@@ -2379,64 +2408,74 @@ class="sourceCode go"><code class="sourceCode go"><span id="cb18-1"><a href="#cb
 <span id="cb18-191"><a href="#cb18-191" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb18-192"><a href="#cb18-192" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb18-193"><a href="#cb18-193" aria-hidden="true" tabindex="-1"></a><span class="co">// Branding is the per-flavor visual identity (§6.3 reference).</span></span>
-<span id="cb18-194"><a href="#cb18-194" aria-hidden="true" tabindex="-1"></a><span class="co">// One Branding is constructed per flavor binary at startup and threaded</span></span>
-<span id="cb18-195"><a href="#cb18-195" aria-hidden="true" tabindex="-1"></a><span class="co">// through OutboundMessage so adapters render channel-specific bling.</span></span>
-<span id="cb18-196"><a href="#cb18-196" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Branding <span class="kw">struct</span> <span class="op">{</span></span>
-<span id="cb18-197"><a href="#cb18-197" aria-hidden="true" tabindex="-1"></a>    AppName        <span class="dt">string</span>  <span class="co">// &quot;Project Herald&quot;, &quot;System Herald&quot;, ...</span></span>
-<span id="cb18-198"><a href="#cb18-198" aria-hidden="true" tabindex="-1"></a>    BinaryName     <span class="dt">string</span>  <span class="co">// &quot;pherald&quot;, &quot;sherald&quot;, ...</span></span>
-<span id="cb18-199"><a href="#cb18-199" aria-hidden="true" tabindex="-1"></a>    IconURL        <span class="dt">string</span>  <span class="co">// for rich embeds (Slack auth user, Discord author, ...)</span></span>
-<span id="cb18-200"><a href="#cb18-200" aria-hidden="true" tabindex="-1"></a>    AccentColorHex <span class="dt">string</span>  <span class="co">// &quot;#2C7BE5&quot; — used as Slack attachment color, Discord embed color, Adaptive Card accent</span></span>
-<span id="cb18-201"><a href="#cb18-201" aria-hidden="true" tabindex="-1"></a>    DefaultFooter  <span class="dt">string</span>  <span class="co">// &quot;Sent by pherald 1.0 · github.com/vasic-digital/Herald&quot;</span></span>
-<span id="cb18-202"><a href="#cb18-202" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb18-203"><a href="#cb18-203" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-204"><a href="#cb18-204" aria-hidden="true" tabindex="-1"></a><span class="co">// ChannelID is the canonical channel identifier. It MUST match the</span></span>
-<span id="cb18-205"><a href="#cb18-205" aria-hidden="true" tabindex="-1"></a><span class="co">// scheme used in `channel_addresses.address_url` and in the URL</span></span>
-<span id="cb18-206"><a href="#cb18-206" aria-hidden="true" tabindex="-1"></a><span class="co">// scheme registered by the adapter (e.g. &quot;tgram&quot;, &quot;slack&quot;, &quot;mailto&quot;).</span></span>
-<span id="cb18-207"><a href="#cb18-207" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ChannelID <span class="dt">string</span></span>
-<span id="cb18-208"><a href="#cb18-208" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-209"><a href="#cb18-209" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> <span class="op">(</span></span>
-<span id="cb18-210"><a href="#cb18-210" aria-hidden="true" tabindex="-1"></a>    ChannelTelegram ChannelID <span class="op">=</span> <span class="st">&quot;tgram&quot;</span></span>
-<span id="cb18-211"><a href="#cb18-211" aria-hidden="true" tabindex="-1"></a>    ChannelMax      ChannelID <span class="op">=</span> <span class="st">&quot;max&quot;</span></span>
-<span id="cb18-212"><a href="#cb18-212" aria-hidden="true" tabindex="-1"></a>    ChannelSlack    ChannelID <span class="op">=</span> <span class="st">&quot;slack&quot;</span></span>
-<span id="cb18-213"><a href="#cb18-213" aria-hidden="true" tabindex="-1"></a>    ChannelDiscord  ChannelID <span class="op">=</span> <span class="st">&quot;discord&quot;</span></span>
-<span id="cb18-214"><a href="#cb18-214" aria-hidden="true" tabindex="-1"></a>    ChannelTeams    ChannelID <span class="op">=</span> <span class="st">&quot;teams&quot;</span></span>
-<span id="cb18-215"><a href="#cb18-215" aria-hidden="true" tabindex="-1"></a>    ChannelLark     ChannelID <span class="op">=</span> <span class="st">&quot;lark&quot;</span></span>
-<span id="cb18-216"><a href="#cb18-216" aria-hidden="true" tabindex="-1"></a>    ChannelWhatsApp ChannelID <span class="op">=</span> <span class="st">&quot;whatsapp&quot;</span></span>
-<span id="cb18-217"><a href="#cb18-217" aria-hidden="true" tabindex="-1"></a>    ChannelViber    ChannelID <span class="op">=</span> <span class="st">&quot;viber&quot;</span></span>
-<span id="cb18-218"><a href="#cb18-218" aria-hidden="true" tabindex="-1"></a>    ChannelEmail    ChannelID <span class="op">=</span> <span class="st">&quot;mailto&quot;</span></span>
-<span id="cb18-219"><a href="#cb18-219" aria-hidden="true" tabindex="-1"></a>    ChannelNtfy     ChannelID <span class="op">=</span> <span class="st">&quot;ntfy&quot;</span></span>
-<span id="cb18-220"><a href="#cb18-220" aria-hidden="true" tabindex="-1"></a>    ChannelGotify   ChannelID <span class="op">=</span> <span class="st">&quot;gotify&quot;</span></span>
-<span id="cb18-221"><a href="#cb18-221" aria-hidden="true" tabindex="-1"></a>    ChannelWebhook  ChannelID <span class="op">=</span> <span class="st">&quot;webhook&quot;</span></span>
-<span id="cb18-222"><a href="#cb18-222" aria-hidden="true" tabindex="-1"></a>    ChannelDiary    ChannelID <span class="op">=</span> <span class="st">&quot;diary&quot;</span></span>
-<span id="cb18-223"><a href="#cb18-223" aria-hidden="true" tabindex="-1"></a>    ChannelNull     ChannelID <span class="op">=</span> <span class="st">&quot;null&quot;</span>  <span class="co">// §11.14 sandbox/no-op adapter for tests</span></span>
-<span id="cb18-224"><a href="#cb18-224" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span>
-<span id="cb18-225"><a href="#cb18-225" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-226"><a href="#cb18-226" aria-hidden="true" tabindex="-1"></a><span class="co">// PreferenceSet is a typed view of the per-subscriber preferences JSON</span></span>
-<span id="cb18-227"><a href="#cb18-227" aria-hidden="true" tabindex="-1"></a><span class="co">// stored in `subscribers.metadata.preferences` (§7.2). See §7.2 for the</span></span>
-<span id="cb18-228"><a href="#cb18-228" aria-hidden="true" tabindex="-1"></a><span class="co">// JSON shape; this is the Go decoded form.</span></span>
-<span id="cb18-229"><a href="#cb18-229" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> PreferenceSet <span class="kw">struct</span> <span class="op">{</span></span>
-<span id="cb18-230"><a href="#cb18-230" aria-hidden="true" tabindex="-1"></a>    Categories  <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span>CategoryPref   <span class="co">// category_id → pref</span></span>
-<span id="cb18-231"><a href="#cb18-231" aria-hidden="true" tabindex="-1"></a>    Workflows   <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span>WorkflowPref   <span class="co">// CloudEvents type → pref</span></span>
-<span id="cb18-232"><a href="#cb18-232" aria-hidden="true" tabindex="-1"></a>    QuietHours  <span class="op">*</span>QuietHours               <span class="co">// nil ⇒ no quiet hours configured</span></span>
-<span id="cb18-233"><a href="#cb18-233" aria-hidden="true" tabindex="-1"></a>    ChannelData <span class="kw">map</span><span class="op">[</span>ChannelID<span class="op">]</span><span class="dt">any</span>         <span class="co">// provider-specific routing data</span></span>
-<span id="cb18-234"><a href="#cb18-234" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb18-194"><a href="#cb18-194" aria-hidden="true" tabindex="-1"></a><span class="co">// One Branding is constructed per flavor binary at startup via</span></span>
+<span id="cb18-195"><a href="#cb18-195" aria-hidden="true" tabindex="-1"></a><span class="co">// commons.DefaultBranding(&lt;flavor&gt;, version) and threaded through</span></span>
+<span id="cb18-196"><a href="#cb18-196" aria-hidden="true" tabindex="-1"></a><span class="co">// OutboundMessage so adapters render channel-specific bling. The Wave 2</span></span>
+<span id="cb18-197"><a href="#cb18-197" aria-hidden="true" tabindex="-1"></a><span class="co">// (r8) fields below also drive the shared commons/cli/ scaffold (Cobra</span></span>
+<span id="cb18-198"><a href="#cb18-198" aria-hidden="true" tabindex="-1"></a><span class="co">// metadata + default HTTP serve-port binding + version --json shape).</span></span>
+<span id="cb18-199"><a href="#cb18-199" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Branding <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb18-200"><a href="#cb18-200" aria-hidden="true" tabindex="-1"></a>    AppName        <span class="dt">string</span>  <span class="co">// &quot;Project Herald&quot;, &quot;System Herald&quot;, ...</span></span>
+<span id="cb18-201"><a href="#cb18-201" aria-hidden="true" tabindex="-1"></a>    BinaryName     <span class="dt">string</span>  <span class="co">// &quot;pherald&quot;, &quot;sherald&quot;, ...</span></span>
+<span id="cb18-202"><a href="#cb18-202" aria-hidden="true" tabindex="-1"></a>    IconURL        <span class="dt">string</span>  <span class="co">// for rich embeds (Slack auth user, Discord author, ...)</span></span>
+<span id="cb18-203"><a href="#cb18-203" aria-hidden="true" tabindex="-1"></a>    AccentColorHex <span class="dt">string</span>  <span class="co">// &quot;#2C7BE5&quot; — used as Slack attachment color, Discord embed color, Adaptive Card accent</span></span>
+<span id="cb18-204"><a href="#cb18-204" aria-hidden="true" tabindex="-1"></a>    DefaultFooter  <span class="dt">string</span>  <span class="co">// &quot;Sent by pherald 1.0 · github.com/vasic-digital/Herald&quot;</span></span>
+<span id="cb18-205"><a href="#cb18-205" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-206"><a href="#cb18-206" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Wave 2 per-flavor identity fields (r8).</span></span>
+<span id="cb18-207"><a href="#cb18-207" aria-hidden="true" tabindex="-1"></a>    Flavor      <span class="dt">string</span>  <span class="co">// single-letter (or short) flavor key: &quot;p&quot;, &quot;s&quot;, &quot;b&quot;, &quot;sc&quot;, ...</span></span>
+<span id="cb18-208"><a href="#cb18-208" aria-hidden="true" tabindex="-1"></a>    Prefix      <span class="dt">string</span>  <span class="co">// 3-letter §8.2 anchor (e.g. &quot;PHR&quot;, &quot;SHR&quot;, &quot;CHR&quot;)</span></span>
+<span id="cb18-209"><a href="#cb18-209" aria-hidden="true" tabindex="-1"></a>    DisplayName <span class="dt">string</span>  <span class="co">// operator-facing display name (typically == AppName)</span></span>
+<span id="cb18-210"><a href="#cb18-210" aria-hidden="true" tabindex="-1"></a>    DefaultPort <span class="dt">int</span>     <span class="co">// default HTTP listen port (24791..24799 block; 0 for CLI-only flavors)</span></span>
+<span id="cb18-211"><a href="#cb18-211" aria-hidden="true" tabindex="-1"></a>    Mission     <span class="dt">string</span>  <span class="co">// one-line mission statement for --help / about</span></span>
+<span id="cb18-212"><a href="#cb18-212" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb18-213"><a href="#cb18-213" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-214"><a href="#cb18-214" aria-hidden="true" tabindex="-1"></a><span class="co">// ChannelID is the canonical channel identifier. It MUST match the</span></span>
+<span id="cb18-215"><a href="#cb18-215" aria-hidden="true" tabindex="-1"></a><span class="co">// scheme used in `channel_addresses.address_url` and in the URL</span></span>
+<span id="cb18-216"><a href="#cb18-216" aria-hidden="true" tabindex="-1"></a><span class="co">// scheme registered by the adapter (e.g. &quot;tgram&quot;, &quot;slack&quot;, &quot;mailto&quot;).</span></span>
+<span id="cb18-217"><a href="#cb18-217" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ChannelID <span class="dt">string</span></span>
+<span id="cb18-218"><a href="#cb18-218" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-219"><a href="#cb18-219" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> <span class="op">(</span></span>
+<span id="cb18-220"><a href="#cb18-220" aria-hidden="true" tabindex="-1"></a>    ChannelTelegram ChannelID <span class="op">=</span> <span class="st">&quot;tgram&quot;</span></span>
+<span id="cb18-221"><a href="#cb18-221" aria-hidden="true" tabindex="-1"></a>    ChannelMax      ChannelID <span class="op">=</span> <span class="st">&quot;max&quot;</span></span>
+<span id="cb18-222"><a href="#cb18-222" aria-hidden="true" tabindex="-1"></a>    ChannelSlack    ChannelID <span class="op">=</span> <span class="st">&quot;slack&quot;</span></span>
+<span id="cb18-223"><a href="#cb18-223" aria-hidden="true" tabindex="-1"></a>    ChannelDiscord  ChannelID <span class="op">=</span> <span class="st">&quot;discord&quot;</span></span>
+<span id="cb18-224"><a href="#cb18-224" aria-hidden="true" tabindex="-1"></a>    ChannelTeams    ChannelID <span class="op">=</span> <span class="st">&quot;teams&quot;</span></span>
+<span id="cb18-225"><a href="#cb18-225" aria-hidden="true" tabindex="-1"></a>    ChannelLark     ChannelID <span class="op">=</span> <span class="st">&quot;lark&quot;</span></span>
+<span id="cb18-226"><a href="#cb18-226" aria-hidden="true" tabindex="-1"></a>    ChannelWhatsApp ChannelID <span class="op">=</span> <span class="st">&quot;whatsapp&quot;</span></span>
+<span id="cb18-227"><a href="#cb18-227" aria-hidden="true" tabindex="-1"></a>    ChannelViber    ChannelID <span class="op">=</span> <span class="st">&quot;viber&quot;</span></span>
+<span id="cb18-228"><a href="#cb18-228" aria-hidden="true" tabindex="-1"></a>    ChannelEmail    ChannelID <span class="op">=</span> <span class="st">&quot;mailto&quot;</span></span>
+<span id="cb18-229"><a href="#cb18-229" aria-hidden="true" tabindex="-1"></a>    ChannelNtfy     ChannelID <span class="op">=</span> <span class="st">&quot;ntfy&quot;</span></span>
+<span id="cb18-230"><a href="#cb18-230" aria-hidden="true" tabindex="-1"></a>    ChannelGotify   ChannelID <span class="op">=</span> <span class="st">&quot;gotify&quot;</span></span>
+<span id="cb18-231"><a href="#cb18-231" aria-hidden="true" tabindex="-1"></a>    ChannelWebhook  ChannelID <span class="op">=</span> <span class="st">&quot;webhook&quot;</span></span>
+<span id="cb18-232"><a href="#cb18-232" aria-hidden="true" tabindex="-1"></a>    ChannelDiary    ChannelID <span class="op">=</span> <span class="st">&quot;diary&quot;</span></span>
+<span id="cb18-233"><a href="#cb18-233" aria-hidden="true" tabindex="-1"></a>    ChannelNull     ChannelID <span class="op">=</span> <span class="st">&quot;null&quot;</span>  <span class="co">// §11.14 sandbox/no-op adapter for tests</span></span>
+<span id="cb18-234"><a href="#cb18-234" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span>
 <span id="cb18-235"><a href="#cb18-235" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-236"><a href="#cb18-236" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> CategoryPref <span class="kw">struct</span> <span class="op">{</span></span>
-<span id="cb18-237"><a href="#cb18-237" aria-hidden="true" tabindex="-1"></a>    Channels <span class="op">[]</span>ChannelID</span>
-<span id="cb18-238"><a href="#cb18-238" aria-hidden="true" tabindex="-1"></a>    Muted    <span class="dt">bool</span></span>
-<span id="cb18-239"><a href="#cb18-239" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb18-240"><a href="#cb18-240" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-241"><a href="#cb18-241" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> WorkflowPref <span class="kw">struct</span> <span class="op">{</span></span>
-<span id="cb18-242"><a href="#cb18-242" aria-hidden="true" tabindex="-1"></a>    Channels <span class="op">[]</span>ChannelID  <span class="co">// may be empty (= use Category default)</span></span>
-<span id="cb18-243"><a href="#cb18-243" aria-hidden="true" tabindex="-1"></a>    Muted    <span class="dt">bool</span></span>
+<span id="cb18-236"><a href="#cb18-236" aria-hidden="true" tabindex="-1"></a><span class="co">// PreferenceSet is a typed view of the per-subscriber preferences JSON</span></span>
+<span id="cb18-237"><a href="#cb18-237" aria-hidden="true" tabindex="-1"></a><span class="co">// stored in `subscribers.metadata.preferences` (§7.2). See §7.2 for the</span></span>
+<span id="cb18-238"><a href="#cb18-238" aria-hidden="true" tabindex="-1"></a><span class="co">// JSON shape; this is the Go decoded form.</span></span>
+<span id="cb18-239"><a href="#cb18-239" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> PreferenceSet <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb18-240"><a href="#cb18-240" aria-hidden="true" tabindex="-1"></a>    Categories  <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span>CategoryPref   <span class="co">// category_id → pref</span></span>
+<span id="cb18-241"><a href="#cb18-241" aria-hidden="true" tabindex="-1"></a>    Workflows   <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span>WorkflowPref   <span class="co">// CloudEvents type → pref</span></span>
+<span id="cb18-242"><a href="#cb18-242" aria-hidden="true" tabindex="-1"></a>    QuietHours  <span class="op">*</span>QuietHours               <span class="co">// nil ⇒ no quiet hours configured</span></span>
+<span id="cb18-243"><a href="#cb18-243" aria-hidden="true" tabindex="-1"></a>    ChannelData <span class="kw">map</span><span class="op">[</span>ChannelID<span class="op">]</span><span class="dt">any</span>         <span class="co">// provider-specific routing data</span></span>
 <span id="cb18-244"><a href="#cb18-244" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb18-245"><a href="#cb18-245" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-246"><a href="#cb18-246" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> QuietHours <span class="kw">struct</span> <span class="op">{</span></span>
-<span id="cb18-247"><a href="#cb18-247" aria-hidden="true" tabindex="-1"></a>    TZ                <span class="dt">string</span>    <span class="co">// IANA TZ</span></span>
-<span id="cb18-248"><a href="#cb18-248" aria-hidden="true" tabindex="-1"></a>    Start             <span class="dt">string</span>    <span class="co">// &quot;HH:MM&quot; 24h</span></span>
-<span id="cb18-249"><a href="#cb18-249" aria-hidden="true" tabindex="-1"></a>    End               <span class="dt">string</span>    <span class="co">// &quot;HH:MM&quot; 24h</span></span>
-<span id="cb18-250"><a href="#cb18-250" aria-hidden="true" tabindex="-1"></a>    ExemptCategories  <span class="op">[]</span><span class="dt">string</span>  <span class="co">// categories that override quiet hours</span></span>
-<span id="cb18-251"><a href="#cb18-251" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<span id="cb18-246"><a href="#cb18-246" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> CategoryPref <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb18-247"><a href="#cb18-247" aria-hidden="true" tabindex="-1"></a>    Channels <span class="op">[]</span>ChannelID</span>
+<span id="cb18-248"><a href="#cb18-248" aria-hidden="true" tabindex="-1"></a>    Muted    <span class="dt">bool</span></span>
+<span id="cb18-249"><a href="#cb18-249" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb18-250"><a href="#cb18-250" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-251"><a href="#cb18-251" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> WorkflowPref <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb18-252"><a href="#cb18-252" aria-hidden="true" tabindex="-1"></a>    Channels <span class="op">[]</span>ChannelID  <span class="co">// may be empty (= use Category default)</span></span>
+<span id="cb18-253"><a href="#cb18-253" aria-hidden="true" tabindex="-1"></a>    Muted    <span class="dt">bool</span></span>
+<span id="cb18-254"><a href="#cb18-254" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb18-255"><a href="#cb18-255" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-256"><a href="#cb18-256" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> QuietHours <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb18-257"><a href="#cb18-257" aria-hidden="true" tabindex="-1"></a>    TZ                <span class="dt">string</span>    <span class="co">// IANA TZ</span></span>
+<span id="cb18-258"><a href="#cb18-258" aria-hidden="true" tabindex="-1"></a>    Start             <span class="dt">string</span>    <span class="co">// &quot;HH:MM&quot; 24h</span></span>
+<span id="cb18-259"><a href="#cb18-259" aria-hidden="true" tabindex="-1"></a>    End               <span class="dt">string</span>    <span class="co">// &quot;HH:MM&quot; 24h</span></span>
+<span id="cb18-260"><a href="#cb18-260" aria-hidden="true" tabindex="-1"></a>    ExemptCategories  <span class="op">[]</span><span class="dt">string</span>  <span class="co">// categories that override quiet hours</span></span>
+<span id="cb18-261"><a href="#cb18-261" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <p>These types live in <code>commons/types.go</code> and
 <code>commons/preferences.go</code>. Every adapter under
 <code>commons_messaging/channels/&lt;name&gt;</code> consumes them; no
@@ -3708,15 +3747,118 @@ report to stdout (machine-readable JSON option <code>--json</code>).</p>
 <hr />
 <h2 id="18-flavors-the-implementations">§18. Flavors (the
 implementations)</h2>
+<h3 id="180-wave-2--flavor-scaffold-catalogue-landed-2026-05-21">18.0
+Wave 2 — Flavor scaffold catalogue (landed 2026-05-21)</h3>
+<p>Wave 2 (r8) lands the shared <code>commons/cli/</code> package and 7
+flavor binaries (1 refactor + 6 net new). Every flavor's
+<code>cmd/&lt;flavor&gt;/main.go</code> is ~30 LOC: construct
+<code>commons.DefaultBranding(&lt;flavor&gt;, version)</code>, build the
+root command via <code>cli.NewRootCmd(branding)</code>, register
+flavor-specific stubs from <code>internal/stubs/stubs.go</code>, and
+(for serving flavors) call <code>cli.ServeCmd(opts)</code> with
+<code>internal/http.Routes()</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Flavor</th>
+<th>DisplayName</th>
+<th>Default port</th>
+<th>Serves?</th>
+<th>§43 stubs (count)</th>
+<th>Flavor-specific routes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>pherald</code></td>
+<td>Project Herald</td>
+<td>24791</td>
+<td>✓</td>
+<td>6 (HRD-029, 030, 043, 044, 049, 053)</td>
+<td><code>POST /v1/events</code> (HRD-016)</td>
+</tr>
+<tr>
+<td><code>sherald</code></td>
+<td>System Herald</td>
+<td>24793</td>
+<td>✓</td>
+<td>5 (HRD-033, 034, 040, 046, 056)</td>
+<td><code>GET /v1/safety_state</code> (HRD-098)</td>
+</tr>
+<tr>
+<td><code>cherald</code></td>
+<td>Constitution Herald</td>
+<td>24792</td>
+<td>✓</td>
+<td>11 (HRD-036..039, 042, 048, 050..052, 054, 055)</td>
+<td><code>GET /v1/compliance</code> (HRD-028)</td>
+</tr>
+<tr>
+<td><code>iherald</code></td>
+<td>Incident Herald</td>
+<td>24794</td>
+<td>✓</td>
+<td>0</td>
+<td><code>POST /v1/webhooks/page</code> (HRD-024)</td>
+</tr>
+<tr>
+<td><code>bherald</code></td>
+<td>Build Herald</td>
+<td>n/a</td>
+<td>✗</td>
+<td>3 (HRD-035, 041, 045)</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>rherald</code></td>
+<td>Release Herald</td>
+<td>n/a</td>
+<td>✗</td>
+<td>3 (HRD-031, 032, 045)</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>scherald</code></td>
+<td>Scheduled-audit Herald</td>
+<td>n/a</td>
+<td>✗</td>
+<td>1 (HRD-047)</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p>Stub total: 28 unique §43 HRDs + 1 cross-flavor alias (HRD-045 shared
+<code>bherald</code> ↔︎ <code>rherald</code>) = <strong>29 stub
+registrations</strong>.</p>
+<p><strong>Port allocation:</strong> <code>24791..24799</code>
+(<code>2479X</code> block). Reserved: <code>pherald</code> 24791,
+<code>cherald</code> 24792, <code>sherald</code> 24793,
+<code>iherald</code> 24794. Free: 24795..24799 for future flavors.</p>
+<p>The shared CLI scaffold lives in <code>commons/cli/</code>
+(<code>NewRootCmd</code>, <code>VersionCmd</code>, <code>ServeCmd</code>
+with Middleware hook, <code>StubCmd</code>,
+<code>Healthz</code>/<code>Readyz</code>/<code>Metrics</code> handlers,
+<code>Route</code> + <code>StubRouteHandler</code>). See §44.M for the
+as-built evidence + HRD-092 catalogue-check verdict
+(<code>no-match → vendor as Herald-internal package</code>).</p>
 <h3 id="181-common-flavor-contract">18.1 Common flavor contract</h3>
 <p>Every flavor binary MUST:</p>
 <ul>
 <li>Be named <code>&lt;prefix&gt;herald</code> and built from
 <code>&lt;prefix&gt;herald/cmd/&lt;prefix&gt;herald/main.go</code>.</li>
-<li>Implement the same Cobra-subcommand surface (<code>send</code>,
-<code>serve</code>, <code>doctor</code>, <code>migrate</code>,
-<code>deadletter</code>, <code>subscriber</code>, <code>digest</code>,
-<code>version</code>).</li>
+<li>Implement the common Cobra-subcommand surface (<code>version</code>
+baseline; serving flavors also expose <code>serve</code>; other
+subcommands — <code>send</code>, <code>doctor</code>,
+<code>migrate</code>, <code>deadletter</code>, <code>subscriber</code>,
+<code>digest</code> — are stubbed via <code>cli.StubCmd</code> until
+their owning HRD lands).</li>
+<li>Consume the shared <code>commons/cli/</code> package: root Cobra
+command + <code>version</code> subcommand + (for serving flavors) the
+<code>serve</code> subcommand are provided by
+<code>cli.NewRootCmd(branding)</code> /
+<code>cli.VersionCmd(branding)</code> / <code>cli.ServeCmd(opts)</code>
+respectively. The shared scaffold landed in Wave 2 (r8) — see §18.0 +
+§44.M.</li>
 <li>Embed <code>commons</code> + <code>commons_messaging</code> +
 <code>commons_storage</code> + <code>commons_security</code> +
 <code>commons_observability</code> + <code>commons_diary</code> at the
@@ -3726,8 +3868,11 @@ same pinned versions.</li>
 <li>Register flavor-specific subscriber commands (the <code>Bug:</code>
 / <code>Query:</code> / etc. tokens that map to flavor-specific
 handlers).</li>
-<li>Provide a flavor-specific <code>HeraldBranding</code> (app name,
-icon, accent color).</li>
+<li>Provide a flavor-specific <code>HeraldBranding</code> constructed
+via <code>commons.DefaultBranding(&lt;flavor&gt;, version)</code> (app
+name, icon, accent color, plus the Wave 2 identity fields
+<code>Flavor</code>, <code>Prefix</code>, <code>DisplayName</code>,
+<code>DefaultPort</code>, <code>Mission</code>).</li>
 <li>Ship its own user manual under
 <code>docs/flavors/&lt;flavor&gt;/</code>.</li>
 </ul>
@@ -8237,6 +8382,50 @@ JSON.</td>
 </tr>
 </tbody>
 </table>
+<p><strong>Wave 2 (r8) per-flavor route additions</strong> — landed as
+501-stub routes by Wave 2 (scaffold only; live wiring lands in Wave 3
+under the cited HRDs):</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Owning flavor</th>
+<th>Behaviour</th>
+<th>HRD</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GET</code></td>
+<td><code>/v1/compliance</code></td>
+<td><code>cherald</code></td>
+<td>Constitution-state pull surface. Returns the current
+<code>constitution_state</code> row per tenant (rule_id,
+severity_category, decision_result, transition_from/to, bundle_hash,
+last_decided_at). Composes with §42.7 + §44.6.</td>
+<td>HRD-028</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/v1/safety_state</code></td>
+<td><code>sherald</code></td>
+<td>Daemon status surface: open <code>.host.safety_breach</code> events,
+current memory% (per §12.6 budget), last destructive-op log entry (per
+§9.1). Used by <code>sherald serve</code> daemon-mode.</td>
+<td>HRD-098</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/v1/webhooks/page</code></td>
+<td><code>iherald</code></td>
+<td>PagerDuty/Opsgenie-compatible inbound webhook for paging events.
+Translates into the §42 <code>digital.vasic.herald.alert.firing</code>
+event class + fans out per §11 channel selection.</td>
+<td>HRD-024</td>
+</tr>
+</tbody>
+</table>
 <h3 id="414-authentication">41.4 Authentication</h3>
 <p>Reuses the §5.7 auth model:</p>
 <ul>
@@ -9639,6 +9828,21 @@ missing.</td>
 HRD-029 through HRD-056 (note: HRD-049 is <code>reopen</code> which maps
 onto an existing REST endpoint per §41 rather than a fresh
 <code>/v1/&lt;verb&gt;</code>; net new HRDs: 27).</p>
+<p><strong>Wave 2 (r8) addendum — shared CLI scaffold.</strong> The 28
+commands above ship as Cobra subcommands on their owning
+<code>&lt;prefix&gt;herald</code> binary. Wave 2 landed the
+<strong>shared CLI scaffold</strong> (<code>commons/cli/</code>) that
+every flavor binary consumes — <code>NewRootCmd</code> /
+<code>VersionCmd</code> / <code>ServeCmd</code> / <code>StubCmd</code>
+plus <code>/v1/healthz</code>, <code>/v1/readyz</code>,
+<code>/v1/metrics</code>, and per-flavor 501-stub route registration.
+Tracked under <strong>HRD-092</strong> (Catalogue-Check:
+<code>no-match → vendor as Herald-internal package</code>; evidence in
+<code>docs/catalogue-checks/HRD-092-commons-cli.md</code>). HRD-092 is
+<strong>Fixed (Wave 2, r8)</strong> — every §43.2 command's Cobra
+surface is now built on top of this scaffold rather than each flavor
+reinventing root + version + serve. See §44.M for the full Wave 2
+milestone.</p>
 <h3 id="433-implementation-gating">43.3 Implementation gating</h3>
 <p>§43 is a <em>catalogue</em>; landing all 27 commands at once would
 freeze every other workstream. Order:</p>
@@ -9880,6 +10084,82 @@ refinement) tracks this.</li>
 <p>When M2 closes, this section is appended with the M2 evidence. M3
 closure appends the as-built CloudEvent example + RLS isolation proof +
 null:// ring-buffer trace.</p>
+<h3 id="44m-wave-2--flavor-scaffolds-landed-2026-05-21">§44.M Wave 2 —
+Flavor scaffolds (landed 2026-05-21)</h3>
+<p><strong>Scope</strong> (per
+[<code>docs/superpowers/specs/2026-05-21-wave2-flavor-scaffolds-design.md</code>]):</p>
+<ul>
+<li>Shared <code>commons/cli/</code> package — <code>NewRootCmd</code>,
+<code>VersionCmd</code>, <code>ServeCmd</code> (with Middleware hook),
+<code>StubCmd</code>,
+<code>Healthz</code>/<code>Readyz</code>/<code>Metrics</code> handlers,
+<code>Route</code> + <code>StubRouteHandler</code>. ~400 LOC + 7 unit
+tests.</li>
+<li><code>pherald</code> refactor — <code>cmd/pherald/main.go</code> +
+stubs consume <code>cli.NewRootCmd</code> + <code>cli.VersionCmd</code>;
+<code>serve.go</code> uses <code>cli.ServeCmd</code> with
+<code>pherald</code>'s <code>RequestIDMiddleware</code> + 2 flavor
+routes. Old <code>pherald/internal/http/server.go</code> (150 LOC)
+deleted; 5 <code>server_test.go</code> tests replaced by 4 focused
+middleware + routes tests.</li>
+<li>6 new flavor binaries scaffolded: <code>sherald</code> (:24793
+serving), <code>cherald</code> (:24792 serving), <code>iherald</code>
+(:24794 serving), <code>bherald</code> (CLI-only), <code>rherald</code>
+(CLI-only), <code>scherald</code> (CLI-only). Each
+<code>cmd/&lt;flavor&gt;/main.go</code> is ~25 LOC consuming the shared
+scaffold.</li>
+<li><code>Branding</code> struct extended with 5 per-flavor identity
+fields (<code>Flavor</code>, <code>Prefix</code>,
+<code>DisplayName</code>, <code>DefaultPort</code>,
+<code>Mission</code>);
+<code>commons.DefaultBranding(&lt;flavor&gt;, version)</code> populates
+them for every flavor key.</li>
+<li><code>scripts/e2e_bluff_hunt.sh</code> invariants grow 18 → 33:
+<strong>E19–E24</strong> cover the 6 new <code>version --json</code>
+shapes, <strong>E25–E30</strong> cover serving-flavor
+<code>/v1/healthz</code> + flavor-specific 501 routes,
+<strong>E31</strong> covers a representative §43 stub HRD-pointer
+surfacing, <strong>E32</strong> covers <code>sherald</code> SIGTERM
+graceful shutdown, <strong>E33</strong> is the <code>pherald</code>
+regression sentinel.</li>
+<li>Paired §1.1 mutation gate:
+<code>tests/test_wave2_mutation_meta.sh</code> (3 mutations + 1
+post-flight, all PASS).</li>
+</ul>
+<p><strong>As-built evidence (2026-05-21):</strong></p>
+<ul>
+<li>Commits: <code>7e0a614..37e348e</code> (13 Wave 2 commits) +
+<code>24b96f2</code> (branding polish, parallel work).</li>
+<li><code>go build ./...</code> across 13 workspace modules: PASS
+clean.</li>
+<li><code>go test -race -count=1 ./...</code>: PASS across all 13
+modules.</li>
+<li><code>scripts/e2e_bluff_hunt.sh</code>: <strong>33 PASS / 0 FAIL / 3
+SKIP</strong> (live channel SKIPs documented per §11.4.3).</li>
+<li><code>tests/test_wave2_mutation_meta.sh</code>: <strong>4/4
+PASS</strong> (mutations correctly trigger e2e failures).</li>
+<li><code>scripts/audit_antibluff.sh</code>: <strong>16 PASS / 0 FAIL /
+1 SKIP</strong>.</li>
+<li>Inheritance gate: <strong>15/15 PASS</strong>; meta-test
+META-PASS.</li>
+</ul>
+<p><strong>Catalogue-Check verdict:</strong> <code>commons/cli/</code>
+is <code>no-match → vendor as Herald-internal package</code> per
+Universal §11.4.74. Tracked under HRD-092 (now Fixed in r8). Evidence:
+<code>docs/catalogue-checks/HRD-092-commons-cli.md</code>.</p>
+<p><strong>Open follow-ups (Wave 3+):</strong></p>
+<ul>
+<li><strong>HRD-016</strong> — <code>pherald</code>
+<code>/v1/events</code> Runner wiring (Wave 3).</li>
+<li><strong>HRD-024</strong> — <code>iherald</code>
+<code>/v1/webhooks/page</code> live (Wave 3/4).</li>
+<li><strong>HRD-028</strong> — <code>cherald</code>
+<code>/v1/compliance</code> constitution_state pull live (Wave 3).</li>
+<li><strong>HRD-098</strong> — <code>sherald</code>
+<code>/v1/safety_state</code> live (Wave 3).</li>
+<li><strong>HRD-029..056</strong> — the 28 §43 command bodies (Wave
+4+).</li>
+</ul>
 <hr />
 <h2 id="30-v2-self-review-log">§30. V2 self-review log</h2>
 <blockquote>
