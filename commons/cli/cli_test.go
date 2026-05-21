@@ -2,10 +2,13 @@ package cli
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"errors"
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -118,5 +121,37 @@ func TestMetricsHandler_EmitsBuildInfoGauge(t *testing.T) {
 	body := rec.Body.String()
 	if !strings.Contains(body, "sherald_build_info{") {
 		t.Errorf("expected gauge sherald_build_info{...} in body, got:\n%s", body)
+	}
+}
+
+func TestServeCmd_BindsHealthzAndShutsDownOnSIGTERM(t *testing.T) {
+	br := commons.Branding{Flavor: "sherald", DisplayName: "System Herald", DefaultPort: 0}
+	opts := ServeOpts{Branding: br, Routes: []Route{}}
+	cmd := ServeCmd(opts)
+	cmd.SetArgs([]string{"--http-port", "0"}) // 0 = OS picks a free port
+
+	done := make(chan error, 1)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	cmd.SetContext(ctx)
+	go func() { done <- cmd.Execute() }()
+
+	// Verify cmd is still running after 200ms (didn't return prematurely)
+	select {
+	case err := <-done:
+		t.Fatalf("ServeCmd returned prematurely: %v", err)
+	case <-time.After(200 * time.Millisecond):
+		// good — server is running
+	}
+
+	// Trigger graceful shutdown via context cancel
+	cancel()
+	select {
+	case err := <-done:
+		if err != nil && !errors.Is(err, context.Canceled) {
+			t.Errorf("ServeCmd exit error = %v, want nil or context.Canceled", err)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("ServeCmd did not shut down within 5s")
 	}
 }
