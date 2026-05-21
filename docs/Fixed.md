@@ -8,15 +8,15 @@
 
 | Field | Value |
 |---|---|
-| Revision | 6 |
+| Revision | 7 |
 | Created | 2026-05-20 |
 | Last modified | 2026-05-21 |
 | Status | active |
-| Status summary | HRD-012 Claude Code dispatcher live integration closed atomically per §107 — Plan 2 Tasks 6 + 7 produced two independent live PASS runs (24s + 36s) against real `claude --resume` with exact-match assertions on session_uuid, anchor_path, Outcome, and Summary. HRD-011 Telegram stays open ("code complete, awaiting live E17/E19 evidence") per §107 — operator credentials needed before live PASS captured. Prior: HRD-010 commons_storage + the E14 RLS-bypass production bug fix; Foundation M1/M2/M3. |
-| Issues | see `Issues.md` |
-| Issues summary | HRD-008/-011 (code complete pending creds) /-015/-016/-018 (in_progress) + HRD-019..HRD-056 + HRD-081 + HRD-085..HRD-090 still open. |
-| Fixed | HRD-001..HRD-007, HRD-009, HRD-009b, HRD-010, HRD-012, HRD-013, HRD-014, HRD-017, HRD-080 (and HRD-018 partial — M1 component landed) |
-| Fixed summary | spec V1→V3 r7; Go module foundation + Foundation M1/M2/M3; HRD-010 commons_storage live wiring; HRD-012 Claude Code dispatcher live (live PASS evidence captured); universal §11.4.73 + §11.4.74 mandates propagated; I6 gate refined. |
+| Status summary | r7 captures Wave 2 atomic closures: HRD-092 (commons/cli/ scaffold), HRD-093 (sherald), HRD-094 (cherald), HRD-095 (bherald), HRD-096 (rherald), HRD-097 (iherald + scherald paired). All 6 closed by commits 7e0a614..eef606b with as-built evidence in §44.M of spec V3 r8. HRD-012 Claude Code dispatcher live integration closed atomically per §107 — Plan 2 Tasks 6 + 7 produced two independent live PASS runs (24s + 36s) against real `claude --resume` with exact-match assertions on session_uuid, anchor_path, Outcome, and Summary. HRD-011 Telegram stays open ("code complete, awaiting live E17/E19 evidence") per §107 — operator credentials needed before live PASS captured. Prior: HRD-010 commons_storage + the E14 RLS-bypass production bug fix; Foundation M1/M2/M3. |
+| Issues | see `Issues.md` — r8 adds HRD-098 (sherald /v1/safety_state live impl, Wave 3+). |
+| Issues summary | HRD-008/-011 (code complete pending creds) /-015/-016/-018 (in_progress) + HRD-019..HRD-056 + HRD-081 + HRD-085..HRD-090 + HRD-098 still open. |
+| Fixed | HRD-001..HRD-007, HRD-009, HRD-009b, HRD-010, HRD-012, HRD-013, HRD-014, HRD-017, HRD-080, HRD-092, HRD-093, HRD-094, HRD-095, HRD-096, HRD-097 (and HRD-018 partial — M1 component landed) |
+| Fixed summary | spec V1→V3 r8; Go module foundation + Foundation M1/M2/M3; HRD-010 commons_storage live wiring; HRD-012 Claude Code dispatcher live (live PASS evidence captured); universal §11.4.73 + §11.4.74 mandates propagated; I6 gate refined; Wave 2 flavor scaffolds (HRD-092..097) closed atomically. |
 | Continuation | see `CONTINUATION.md`. |
 
 ## Table of contents
@@ -27,6 +27,12 @@
 
 | ID | Type | Criticality | Title | Closed | Commit | Reference |
 |---|---|---|---|---|---|---|
+| HRD-092 | task | middle | commons/cli/ shared CLI scaffold (Wave 2) — NewRootCmd + VersionCmd + ServeCmd (with Middleware hook) + StubCmd + healthz/readyz/metrics handlers. Vendored as Herald-internal per §11.4.74 catalogue-check no-match. As-built evidence: §44.M of spec V3 r8 + docs/catalogue-checks/HRD-092-commons-cli.md. | 2026-05-21 | (this commit) | spec V3 §44.M; Catalogue-Check: no-match → vendor |
+| HRD-093 | task | middle | sherald flavor scaffold — System Herald binary serving :24793 with cli.ServeCmd, 5 §43 stubs (HRD-033/034/040/046/056) + /v1/safety_state 501 stub → HRD-098. | 2026-05-21 | (this commit) | spec V3 §18.0 + §44.M; Catalogue-Check: no-match → vendor |
+| HRD-094 | task | middle | cherald flavor scaffold — Constitution Herald binary serving :24792 with cli.ServeCmd, 11 §43 stubs + /v1/compliance 501 stub → HRD-028. | 2026-05-21 | (this commit) | spec V3 §18.0 + §44.M; Catalogue-Check: no-match → vendor |
+| HRD-095 | task | low | bherald flavor scaffold — Build Herald CLI-only binary with 3 §43 stubs (HRD-035/041/045). | 2026-05-21 | (this commit) | spec V3 §18.0 + §44.M; Catalogue-Check: no-match → vendor |
+| HRD-096 | task | low | rherald flavor scaffold — Release Herald CLI-only binary with 3 §43 stubs (HRD-031/032/045). | 2026-05-21 | (this commit) | spec V3 §18.0 + §44.M; Catalogue-Check: no-match → vendor |
+| HRD-097 | task | low | iherald + scherald flavor scaffolds — Incident Herald serving :24794 with /v1/webhooks/page → HRD-024 + Scheduled-audit Herald CLI-only with 1 §43 stub (HRD-047). Paired since iherald has zero §43 stubs. | 2026-05-21 | (this commit) | spec V3 §18.0 + §44.M; Catalogue-Check: no-match → vendor |
 | HRD-012 | task | middle | Claude Code dispatcher live integration — `claude --resume <UUID> --print <envelope>` exec + `<<<HERALD-REPLY>>>` JSON parse + `claude_code_sessions` persistence per §33. §107 evidence: Plan 2 Task 6 commit `702b5a3` (live PASS 24.24s — real claude CLI round-trip, structured reply parsed, Outcome+Summary non-empty) + Task 7 commit `4718c0e` (live PASS 36.23s — session_state upsert under HeraldSystemTenant with exact-equality assertions on session_uuid + anchor_path + last_response JSONB round-trip). HRD-085..HRD-090 stay open for upstream-defined TaskRepository methods not exercised by the Dispatch+session hot path. | 2026-05-21 | (this commit) | spec V3 §33 + §33.2; Catalogue-Check: no-match → `claude` is external binary not library; extend digital.vasic.database@<pinned> for live pool. |
 | HRD-010 | task | middle | commons_storage live wiring — pgx pool + RLS-enforcing WithTenantContext (discovered + fixed RLS-bypass bug via E14 falsifiability) + 9 migrations + background queue (digital.vasic.background bound via pgxTaskRepository) + Redis ACL (digital.vasic.cache) + pherald migrate up/status/down/validate subcommand + 3 new §107 e2e invariants (E14/E15/E16) + HRD-085..090 registered for queue-repository stubs | 2026-05-20 | (this commit) | spec V3 §9.6 + §16; Catalogue-Check: extend digital.vasic.database@<pinned> + digital.vasic.background@2d46dd60 + digital.vasic.cache@<pinned>; Models + Concurrency submodules added |
 | HRD-080 | task | low | Refine I6 inheritance-gate invariant from blanket `.gitmodules`-forbidden to "no `constitution/` entry in `.gitmodules`" — paired meta-test `test_i6_refinement_meta.sh` with 3 anti-bluff subtests. Enables Foundation M2/M3 Helix-stack submodule installs. | 2026-05-20 | (this commit) | spec V3 §44.9 |

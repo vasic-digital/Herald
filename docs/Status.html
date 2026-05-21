@@ -47,7 +47,7 @@ alt="Herald" />{width=96px height=96px}</p>
 <tbody>
 <tr>
 <td>Revision</td>
-<td>8</td>
+<td>9</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -63,43 +63,41 @@ alt="Herald" />{width=96px height=96px}</p>
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>Foundation M1+M2+M3 + HRD-010 + HRD-012 closed; HRD-011 code
-complete pending operator creds; comprehensive operator credentials
-guide shipped.</strong> Plan 2 Tasks 1-10 landed (commits 92c9cb3..[this
-commit]) — telebot.v3 vendored; Telegram code
-(HealthCheck/Send/Subscribe/persistence) complete + tests SKIP cleanly
-without creds; Claude Code Dispatch + session persistence LIVE with PASS
-evidence (24s + 36s round-trips); E15 queue test fix uncovered a
-test-isolation bluff (leftover PENDING rows from prior runs masquerading
-as just-enqueued task — production code OK; test now TRUNCATEs +
-verifies). audit_antibluff.sh strengthened to skip third-party vendored
-SDKs per §11.4.74 (telebot SKIP-with-reason; vasic-digital +
-HelixDevelopment still REQUIRE the §11.4 anchor). New
-<code>docs/guides/OPERATOR_CREDENTIALS.md</code> provides step-by-step
-setup for every supported messenger + LLM dispatcher + audit checklist.
-Prior: Foundation M1+M2+M3 + HRD-010 commons_storage (pgx + RLS + queue
-+ Redis + migrate CLI; E14 caught a production RLS-bypass bug).
-Anti-bluff regime: e2e_bluff_hunt.sh <strong>18/18 PASS</strong> (E15
-now deterministic post-7697644); audit_antibluff 16 PASS / 0 FAIL / 1
-SKIP (telebot); inheritance gate 15/15 PASS.</td>
+<td><strong>Wave 2 flavor scaffolds + spec V3 r8 landed (commits
+7e0a614..eef606b + 24b96f2 logo branding parallel work).</strong> Shared
+<code>commons/cli/</code> package + 6 new flavor binaries (sherald,
+cherald, bherald, rherald, iherald, scherald) + pherald refactor
+(consumes cli.ServeCmd with RequestIDMiddleware hook). Branding struct
+extended with 5 per-flavor fields
+(Flavor/Prefix/DisplayName/DefaultPort/Mission); DefaultBranding factory
+populates them. e2e_bluff_hunt grew 18 → 33 invariants; paired mutation
+gate <code>tests/test_wave2_mutation_meta.sh</code> (4/4 PASS) proves
+the new invariants catch the regressions they claim. Spec V3 r7 → r8
+captured §6.3 Branding extension + §18.0 Wave 2 catalogue + §41 REST
+routes + §44.M milestone + §43.2 catalogue-check addendum. HRD-092..097
+atomically Issues→Fixed in r8 Issues / r7 Fixed; HRD-098 opened as Wave
+3+ deferred (sherald /v1/safety_state live).</td>
 </tr>
 <tr>
 <td>Issues</td>
-<td>HRD-008, HRD-011, HRD-012, HRD-015, HRD-016, HRD-018 (in_progress),
-HRD-019..HRD-028, HRD-029..HRD-056, HRD-081, HRD-085..HRD-090</td>
+<td>HRD-008, HRD-011, HRD-015, HRD-016, HRD-018 (in_progress),
+HRD-019..HRD-028, HRD-029..HRD-056, HRD-081, HRD-085..HRD-090,
+HRD-098</td>
 </tr>
 <tr>
 <td>Issues summary</td>
 <td>see <code>Issues.md</code> — 51 open items spanning live channel
-integrations (HRD-011/012), REST surface (HRD-016), §42 constitution
+integrations (HRD-011), REST surface (HRD-016), §42 constitution
 bindings (HRD-018..028), §43 command-catalogue (HRD-029..056), HRD-081
-(containers podman-compose adapter refinement), and HRD-085..090
-(queue-repository stub-completion surface opened during HRD-010).</td>
+(containers podman-compose adapter refinement), HRD-085..090
+(queue-repository stub-completion surface opened during HRD-010), and
+HRD-098 (sherald /v1/safety_state live impl, Wave 3+).</td>
 </tr>
 <tr>
 <td>Fixed</td>
-<td>HRD-001..HRD-007, HRD-009, HRD-009b, HRD-010, HRD-013, HRD-014,
-HRD-017, HRD-080</td>
+<td>HRD-001..HRD-007, HRD-009, HRD-009b, HRD-010, HRD-012, HRD-013,
+HRD-014, HRD-017, HRD-080, HRD-092, HRD-093, HRD-094, HRD-095, HRD-096,
+HRD-097</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
@@ -107,12 +105,13 @@ HRD-017, HRD-080</td>
 </tr>
 <tr>
 <td>Continuation</td>
-<td>HRD-010 closed; live channel integrations next. Priority order:
-HRD-008 (operator quickstart e2e validation) → HRD-011/012 (Telegram +
-Claude Code live) → HRD-085..090 (queue-repository stub completion) →
-§42 constitution-binding rollout (HRD-018..028) → §43 command catalogue
-(HRD-029..056). Each milestone followed by multi-mirror push + full
-anti-bluff verification (audit + gate + e2e bluff-hunt).</td>
+<td>Wave 3 priorities: HRD-016 (pherald Runner wiring), HRD-024 (iherald
+paging live), HRD-028 (cherald compliance live), HRD-098 (sherald
+safety_state live), and the 28 §43 command bodies. Operator priorities
+remain: HRD-008 (quickstart e2e validation) and HRD-011 (Telegram live
+evidence pending operator creds). Each milestone followed by
+multi-mirror push + full anti-bluff verification (audit + gate + e2e
+bluff-hunt).</td>
 </tr>
 </tbody>
 </table>
@@ -125,25 +124,31 @@ anti-bluff verification (audit + gate + e2e bluff-hunt).</td>
 <li><a href="#risk-surface">Risk surface</a></li>
 </ul>
 <h2 id="project-phase">Project phase</h2>
-<p><strong>Implementation-r1, Foundation complete.</strong> Spec V3 r6
-is active, the Go module foundation compiles, all three Foundation
-milestones (M1/M2/M3) have landed, and the §107 end-user-usability
-covenant is now explicit in Herald's three root docs + gate (added
-2026-05-20). The remaining cycle is wiring live channel integrations and
-validating the §26.5 quickstart end-to-end on operator hardware.</p>
+<p><strong>Implementation-r1, Foundation complete + Wave 2 flavor
+scaffolds landed.</strong> Spec V3 r8 is active, the Go module
+foundation compiles, all three Foundation milestones (M1/M2/M3) plus the
+Wave 2 flavor-scaffold workstream have landed, and the §107
+end-user-usability covenant is now explicit in Herald's three root docs
++ gate (added 2026-05-20). The remaining cycle is wiring live channel
+integrations (HRD-011, HRD-016, HRD-024, HRD-028, HRD-098), validating
+the §26.5 quickstart end-to-end on operator hardware, and implementing
+the 28 §43 command bodies still stubbed.</p>
 <h2 id="specification">Specification</h2>
 <ul>
 <li><strong>Active spec:</strong>
-<code>docs/specs/mvp/specification.V3.md</code> (Revision 7, ~4300
-lines).</li>
+<code>docs/specs/mvp/specification.V3.md</code> (Revision 8, ~4600 lines
+after r8 Wave 2 capture).</li>
 <li><strong>Archived specs:</strong> V1 + V2 in
 <code>docs/specs/mvp/archive/</code> (frozen).</li>
 <li><strong>Recent sections:</strong> §37 Tracker-doc change events; §38
 Workable-item announcement contract; §39 Message presentation + Herald
 Canonical Template; §40 Documentation + 15 named test challenges; §41
 REST API surface (Gin Gonic); §42 Constitution-binding integration; §43
-Constitution-derived flavor commands (27 entries → HRD-029..HRD-056);
-§44 Foundation implementation contract.</li>
+Constitution-derived flavor commands (27 entries → HRD-029..HRD-056) +
+§43.2 catalogue-check addendum (r8); §44 Foundation implementation
+contract + §44.M Wave 2 milestone capture (r8); §6.3 Branding extension
+with per-flavor fields (r8); §18.0 Wave 2 flavor-binary catalogue
+(r8).</li>
 <li><strong>Spec-change rule:</strong> §23 + HERALD_CONSTITUTION §106 +
 I7 gate — green throughout.</li>
 <li><strong>End-user-usability covenant:</strong> HERALD_CONSTITUTION
@@ -207,18 +212,55 @@ remaining 16 pgxTaskRepository methods returning
 orchestration via <code>containers/</code>.</td>
 </tr>
 <tr>
+<td><code>commons/cli</code> (L0)</td>
+<td>✅ landed (Wave 2 / HRD-092)</td>
+<td>Shared CLI scaffold: NewRootCmd + VersionCmd + ServeCmd (with
+Middleware hook) + StubCmd + healthz/readyz/metrics handlers. Consumed
+by pherald + 6 new flavor binaries. Catalogue-check no-match → vendored
+Herald-internal per §11.4.74.</td>
+</tr>
+<tr>
 <td><code>pherald</code> (CLI)</td>
-<td>✅ partial (M3)</td>
+<td>✅ partial (M3 + Wave 2 refactor)</td>
 <td>Cobra root + version + <strong><code>serve</code> (live HTTP on
-:24791, /v1/healthz, /v1/readyz, /v1/events, /metrics)</strong>, commit
-21593e6. send/doctor/migrate/subscriber/deadletter stubbed with HRD
+:24791, /v1/healthz, /v1/readyz, /v1/events, /metrics)</strong> now
+consumes cli.ServeCmd with RequestIDMiddleware hook (commits 1f81d69,
+31562cf). send/doctor/migrate/subscriber/deadletter stubbed with HRD
 pointers.</td>
 </tr>
 <tr>
-<td>Other flavors
-(sherald/bherald/cherald/rherald/iherald/scherald)</td>
-<td>not started</td>
-<td>scaffold once HRD-018..028 §42 binding rollout begins.</td>
+<td><code>sherald</code> (CLI)</td>
+<td>✅ scaffolded (Wave 2 / HRD-093)</td>
+<td>System Herald binary serving :24793 via cli.ServeCmd. 5 §43 stubs
+(HRD-033/034/040/046/056). <code>/v1/safety_state</code> returns honest
+501 + HRD-098.</td>
+</tr>
+<tr>
+<td><code>cherald</code> (CLI)</td>
+<td>✅ scaffolded (Wave 2 / HRD-094)</td>
+<td>Constitution Herald binary serving :24792 via cli.ServeCmd. 11 §43
+stubs. <code>/v1/compliance</code> returns honest 501 + HRD-028.</td>
+</tr>
+<tr>
+<td><code>bherald</code> (CLI)</td>
+<td>✅ scaffolded (Wave 2 / HRD-095)</td>
+<td>Build Herald CLI-only binary. 3 §43 stubs (HRD-035/041/045).</td>
+</tr>
+<tr>
+<td><code>rherald</code> (CLI)</td>
+<td>✅ scaffolded (Wave 2 / HRD-096)</td>
+<td>Release Herald CLI-only binary. 3 §43 stubs (HRD-031/032/045).</td>
+</tr>
+<tr>
+<td><code>iherald</code> (CLI)</td>
+<td>✅ scaffolded (Wave 2 / HRD-097)</td>
+<td>Incident Herald binary serving :24794 via cli.ServeCmd.
+<code>/v1/webhooks/page</code> returns honest 501 + HRD-024.</td>
+</tr>
+<tr>
+<td><code>scherald</code> (CLI)</td>
+<td>✅ scaffolded (Wave 2 / HRD-097)</td>
+<td>Scheduled-audit Herald CLI-only binary. 1 §43 stub (HRD-047).</td>
 </tr>
 </tbody>
 </table>
@@ -229,18 +271,24 @@ fan-out proven across spec + Foundation M1/M2/M3 + anti-bluff infra +
 §107 covenant landing.</li>
 <li><strong>Constitution inheritance gate:</strong> <strong>15 PASS / 0
 FAIL</strong> (was 12; I8a/b/c added 2026-05-20 for §107 covenant).</li>
-<li><strong>Anti-bluff audit:</strong> <strong>14 PASS / 0 FAIL</strong>
-(was 13; I8 paired meta-test added).</li>
-<li><strong>CodeGraph validate:</strong> 7 PASS / 0 FAIL.</li>
-<li><strong>E2E bluff-hunt against real services:</strong> <strong>18
-PASS / 0 FAIL</strong> (was 14; HRD-010 added E14 live-RLS-isolation +
-E15 live-queue-enqueue/dequeue + E16 live-Redis-TTL-round-trip in commit
-13cea69) — builds pherald, starts real Gin server, hits live
-<code>/v1/*</code> endpoints, boots real Postgres + Redis containers via
-<code>containers/</code> submodule, runs M2 RLS integration tests +
-HRD-010 storage tests against the live stack,
-SIGTERM-graceful-shutdowns. This is the canonical §107 evidence per
-Herald §107.</li>
+<li><strong>Anti-bluff audit:</strong> <strong>16 PASS / 0 FAIL / 1
+SKIP</strong> (was 14; HRD-011 telebot.v3 third-party SKIP-with-reason
+per §11.4.74; I8 paired meta-test included).</li>
+<li><strong>CodeGraph validate:</strong> 7 PASS / 0 FAIL / 2 SKIP
+(HRD-091 documented submodule-traversal gap).</li>
+<li><strong>E2E bluff-hunt against real services:</strong> <strong>33
+PASS / 0 FAIL / 3 SKIP</strong> (was 18; Wave 2 added E19-E33 covering 6
+new flavor binaries: version --json shape, serving flavors healthz on
+:249NN, /v1/safety_state 501, /v1/compliance 501, /v1/webhooks/page 501,
+sherald SIGTERM graceful-shutdown, §43 stub exit-code, pherald
+regression sentinel). SKIPs are E17/E18/E34 (Telegram live, claude live,
+full inbound) requiring operator credentials. Real Gin server, live
+<code>/v1/*</code> endpoints, real Postgres + Redis containers via
+<code>containers/</code> submodule, M2 RLS integration tests + HRD-010
+storage tests against the live stack, SIGTERM-graceful-shutdowns. Paired
+§1.1 mutation gate <code>tests/test_wave2_mutation_meta.sh</code> (4/4
+PASS) proves the new Wave 2 invariants catch the regressions they claim.
+This is the canonical §107 evidence per Herald §107.</li>
 <li><strong>Submodules:</strong> 12 vendored — 11 Helix-stack capability
 modules under <code>submodules/</code> (<code>auth</code>,
 <code>background</code>, <code>cache</code>, <code>config</code>,
@@ -266,13 +314,14 @@ line per Universal §11.4.74. New HRDs (HRD-029..056 §43 catalogue)
 currently default to <code>TBD</code> pending operator review.</li>
 <li><strong>Versioning discipline (operator mandate
 2026-05-20).</strong> Minor changes bump secondary version, major bump
-primary. Currently at V3 r6→r7 within the V3 series; a full V4 rewrite
+primary. Currently at V3 r7→r8 within the V3 series; a full V4 rewrite
 is reserved for a primary-version jump.</li>
 <li><strong>Live channel integrations untested at runtime.</strong>
-HRD-011 (Telegram telebot live) + HRD-012 (Claude Code
-<code>claude --resume</code> live) require operator-supplied credentials
-per <code>docs/CONTINUATION.md</code>. The §107 covenant blocks claims
-of "done" on these until end-user evidence is captured.</li>
+HRD-011 (Telegram telebot live) requires operator-supplied credentials
+per <code>docs/CONTINUATION.md</code>. HRD-012 (Claude Code
+<code>claude --resume</code> live) is closed with live PASS evidence
+captured. The §107 covenant blocks claims of "done" on these until
+end-user evidence is captured.</li>
 <li><strong>HRD-008 operator-side quickstart not yet validated
 end-to-end on a fresh laptop.</strong> The compose stack works in dev;
 operator hardware validation is the next concrete §107 evidence
@@ -296,5 +345,49 @@ the application connection to a non-superuser role + ran
 The §107 covenant directly prevented this from shipping; the lesson is
 "EXACT-N row count, never &gt;=N" for any isolation test.</li>
 </ul>
+<h2 id="recent-activity">Recent activity</h2>
+<h3 id="wave-2--flavor-scaffold-sweep-closed-2026-05-21">Wave 2 —
+flavor-scaffold sweep (closed 2026-05-21)</h3>
+<p>15-step workstream commits <code>7e0a614..eef606b</code> (with
+parallel logo branding <code>24b96f2</code>) shipped:</p>
+<ul>
+<li><strong>Shared scaffold</strong> — new <code>commons/cli/</code>
+package: <code>NewRootCmd</code> (steps 2), <code>VersionCmd</code>
+(step 2), <code>routes.go</code> + healthz/readyz/metrics handlers (step
+3), <code>ServeCmd</code> with Middleware-hook + graceful shutdown (step
+4), <code>StubCmd</code> honest 501-style stubs (step 1). Vendored
+Herald-internal per §11.4.74 catalogue-check no-match → see
+<code>docs/catalogue-checks/HRD-092-commons-cli.md</code>.</li>
+<li><strong>pherald refactor</strong> — main + stubs migrated to consume
+<code>commons/cli/</code> (step 5); <code>pherald serve</code> consumes
+<code>cli.ServeCmd</code> with RequestIDMiddleware hook (step 6, commit
+<code>31562cf</code>).</li>
+<li><strong>6 new flavor binaries</strong> — sherald serving :24793
+(step 7, HRD-093), cherald serving :24792 (step 8, HRD-094), iherald
+serving :24794 (step 9, HRD-097), bherald CLI-only (step 10, HRD-095),
+rherald CLI-only (step 11, HRD-096), scherald CLI-only (step 12,
+HRD-097). Each ships honest 501-style §43 command stubs with HRD
+pointers.</li>
+<li><strong>Anti-bluff additions</strong> —
+<code>scripts/e2e_bluff_hunt.sh</code> grew from 18 → 33 invariants
+covering all 6 new binaries (version --json shape, healthz binding,
+/v1/safety_state + /v1/compliance + /v1/webhooks/page 501 honesty,
+sherald SIGTERM graceful-shutdown, §43 stub exit-code, pherald
+regression sentinel). New paired mutation gate
+<code>tests/test_wave2_mutation_meta.sh</code> (4/4 PASS) proves the new
+invariants catch their claimed regressions.</li>
+<li><strong>Spec capture</strong> — V3 r7 → r8 added §6.3 Branding
+extension (per-flavor fields), §18.0 Wave 2 catalogue, §41 REST route
+additions, §44.M Wave 2 milestone, §43.2 catalogue-check addendum (step
+14, commit <code>eef606b</code>).</li>
+<li><strong>Atomic Issues→Fixed</strong> — HRD-092..097 closed in r7 of
+Fixed.md; HRD-098 opened in r8 of Issues.md as Wave 3+ deferred (sherald
+/v1/safety_state live impl).</li>
+</ul>
+<p>Anti-bluff battery sign-off (this commit): inheritance gate 15/15
+PASS; meta-tests (I6, I8, Wave2) all green;
+<code>audit_antibluff.sh</code> 16 PASS / 0 FAIL / 1 SKIP;
+<code>codegraph_validate.sh</code> 7 PASS / 0 FAIL / 2 SKIP;
+<code>e2e_bluff_hunt.sh</code> 33 PASS / 0 FAIL / 3 SKIP.</p>
 </body>
 </html>
