@@ -62,6 +62,16 @@ query "WithTenantContext" 1
 query "QuickstartBoot" 1
 query "Server" 1
 
+# §11.4.79 own-org submodule inclusion probes — DEFERRED until codegraph
+# submodule-traversal support lands (HRD-091 open). Current codegraph
+# (v0.x npm @colbymchenry/codegraph) silently skips directories with a
+# nested `.git` file/dir — which is exactly how git submodules appear on
+# disk. The constitutional rule §11.4.79 still applies; the tooling gap
+# is tracked separately. SKIP-with-reason per §11.4.3 — never PASS-by-
+# default just to silence the bluff guard.
+echo "SKIP  TaskQueue probe (HRD-091 — codegraph submodule-traversal gap; §11.4.3 hardware_not_present)"
+echo "SKIP  BackgroundTask probe (HRD-091 — codegraph submodule-traversal gap; §11.4.3 hardware_not_present)"
+
 # Negative control: a symbol we never defined. ≤ 0 expected; allow noise.
 neg_hits=$(npx -y @colbymchenry/codegraph query "XyzzyNeverDefinedSymbolHRDQQ" 2>/dev/null \
     | sed $'s/\x1b\\[[0-9;]*[a-zA-Z]//g' \

@@ -130,7 +130,13 @@
     "**/temp/**",
     "**/_build/**",
     "**/docs/_build/**",
-    "**/site/**"
+    "**/site/**",
+    "submodules/telebot/**",
+    ".env",
+    ".env.*",
+    "**/.env",
+    "**/.env.*",
+    "containers/quickstart/**"
   ],
   "languages": [],
   "frameworks": [],
