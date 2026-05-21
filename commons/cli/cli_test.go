@@ -3,8 +3,11 @@ package cli
 import (
 	"bytes"
 	"encoding/json"
+	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/gin-gonic/gin"
 
 	"github.com/vasic-digital/herald/commons"
 )
@@ -71,5 +74,49 @@ func TestVersionCmd_JSONOutputShape(t *testing.T) {
 	}
 	if got["flavor"] != "sherald" {
 		t.Errorf("flavor field = %v, want %q", got["flavor"], "sherald")
+	}
+}
+
+func TestHealthzHandler_Returns200WithBuildInfo(t *testing.T) {
+	br := commons.Branding{Flavor: "sherald", DisplayName: "System Herald"}
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.GET("/v1/healthz", HealthzHandler(br))
+	req := httptest.NewRequest("GET", "/v1/healthz", nil)
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+	if rec.Code != 200 {
+		t.Fatalf("status = %d, want 200", rec.Code)
+	}
+	var body map[string]any
+	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
+		t.Fatalf("body unmarshal: %v", err)
+	}
+	if body["status"] != "ok" {
+		t.Errorf("status field = %v, want \"ok\"", body["status"])
+	}
+	build, ok := body["build"].(map[string]any)
+	if !ok {
+		t.Fatalf("build is not a map, got %T", body["build"])
+	}
+	if v, _ := build["version"].(string); v == "" {
+		t.Errorf("build.version empty — §107 bluff guard")
+	}
+}
+
+func TestMetricsHandler_EmitsBuildInfoGauge(t *testing.T) {
+	br := commons.Branding{Flavor: "sherald"}
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.GET("/metrics", MetricsHandler(br))
+	req := httptest.NewRequest("GET", "/metrics", nil)
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+	if rec.Code != 200 {
+		t.Fatalf("status = %d, want 200", rec.Code)
+	}
+	body := rec.Body.String()
+	if !strings.Contains(body, "sherald_build_info{") {
+		t.Errorf("expected gauge sherald_build_info{...} in body, got:\n%s", body)
 	}
 }
