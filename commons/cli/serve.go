@@ -49,14 +49,20 @@ func ServeCmd(opts ServeOpts) *cobra.Command {
 			gin.SetMode(gin.ReleaseMode)
 			r := gin.New()
 			r.Use(gin.Recovery())
+			// Health/observability endpoints are registered BEFORE the
+			// flavor middleware chain so they remain reachable without auth
+			// (the standard practice for k8s liveness/readiness probes and
+			// Prometheus scrapers). Per §107, blocking healthz behind JWT
+			// is a PASS-bluff: load balancers can't probe the service and
+			// the operator gets a green deploy with a dead canary.
+			r.GET("/v1/healthz", HealthzHandler(opts.Branding))
+			r.GET("/v1/readyz", ReadyzHandler(opts.Branding))
+			r.GET("/metrics", MetricsHandler(opts.Branding))
 			for _, mw := range opts.Middleware {
 				if mw != nil {
 					r.Use(mw)
 				}
 			}
-			r.GET("/v1/healthz", HealthzHandler(opts.Branding))
-			r.GET("/v1/readyz", ReadyzHandler(opts.Branding))
-			r.GET("/metrics", MetricsHandler(opts.Branding))
 			for _, route := range opts.Routes {
 				h := route.Handler
 				if h == nil && route.HRD != "" {

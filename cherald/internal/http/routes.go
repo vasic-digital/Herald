@@ -1,20 +1,33 @@
-// Package http exports cherald's HTTP plane. Wave 2 ships /v1/compliance
-// as a 501 stub (→ HRD-028) per the anti-bluff posture (§11.4.69): an
-// honest 501 + HRD pointer beats a 200 stub returning empty.
+// Package http exports cherald's HTTP plane. Wave 3a ships /v1/compliance
+// LIVE — the Wave 2 501-stub (HRD-028) is now replaced by the
+// cherald/internal/compliance.Handler backed by a
+// commons_constitution.ConstitutionStore.
+//
 // cli.ServeCmd provides healthz/readyz/metrics; only the flavor-specific
 // route is declared here.
 package http
 
-import "github.com/vasic-digital/herald/commons/cli"
+import (
+	"github.com/gin-gonic/gin"
 
-// Routes returns cherald-specific HTTP routes. Wave 2 ships 1 501 stub.
-func Routes() []cli.Route {
+	"github.com/vasic-digital/herald/cherald/internal/compliance"
+	"github.com/vasic-digital/herald/commons/cli"
+	constitution "github.com/vasic-digital/herald/commons_constitution"
+)
+
+// Routes returns cherald-specific HTTP routes. /v1/compliance is now
+// LIVE (Wave 3a) — replaces the 501-stub that pointed at HRD-028.
+func Routes(store constitution.ConstitutionStore) []cli.Route {
 	return []cli.Route{
 		{
 			Method:      "GET",
 			Path:        "/v1/compliance",
-			HRD:         "HRD-028",
-			Description: "constitution_state pull surface (spec §41)",
+			Handler:     compliance.Handler(store),
+			Description: "Constitution-state pull surface (V3 §41 / Wave 3a live)",
 		},
 	}
 }
+
+// _ = gin.HandlerFunc(nil) // import-guard for the gin package to stay
+// referenced even if compliance.Handler's import is later refactored.
+var _ gin.HandlerFunc = nil
