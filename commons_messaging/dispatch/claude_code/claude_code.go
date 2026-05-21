@@ -31,15 +31,27 @@ import (
 	"path/filepath"
 	"strings"
 
+	db "digital.vasic.database/pkg/database"
 	"github.com/google/uuid"
 	"github.com/vasic-digital/herald/commons"
 )
 
+// HeraldSystemTenant is a fixed UUID that scopes Herald's internal
+// (operator-shared, non-customer-tenant) data. Sessions, configs, and
+// other infra-level state live under this tenant.
+//
+// Per §16 + §44.6 this is NOT a customer tenant — it's the operator-shared
+// bucket. The RLS infrastructure treats it like any other tenant_id, but
+// application-level interpretation differs (rows here are operator state,
+// not subscriber state).
+var HeraldSystemTenant = uuid.MustParse("00000000-0000-0000-0000-000000000001")
+
 // Dispatcher is the Claude Code LLM dispatcher.
 type Dispatcher struct {
-	binaryPath  string // typically "claude"
-	workingDir  string // consuming-project root
-	projectName string // e.g. "ATMOSphere"
+	binaryPath  string      // typically "claude"
+	workingDir  string      // consuming-project root
+	projectName string      // e.g. "ATMOSphere"
+	pool        db.Database // optional; nil = persistence disabled (Dispatch-only)
 }
 
 // New constructs a Dispatcher.
@@ -66,6 +78,26 @@ func New(binaryPath, workingDir, projectName string) (*Dispatcher, error) {
 		workingDir:  workingDir,
 		projectName: projectName,
 	}, nil
+}
+
+// NewWithStorage constructs a Dispatcher that persists session state to
+// the given pool after each successful Dispatch. Persistence is
+// best-effort: if the upsert fails AFTER `claude` has already produced a
+// reply, Dispatch returns the error to the caller but does NOT roll back
+// the dispatch — Claude has already responded and re-issuing would
+// double-spend the model invocation. Per §107 we prefer dropping a
+// persistence row over re-issuing.
+//
+// Callers wanting persistence get it automatically through Dispatch (no
+// SendForTenant-style separate entry point — the projectName is already
+// owned by the Dispatcher, and Herald system-tenant scoping is implicit).
+func NewWithStorage(binaryPath, workingDir, projectName string, pool db.Database) (*Dispatcher, error) {
+	d, err := New(binaryPath, workingDir, projectName)
+	if err != nil {
+		return nil, err
+	}
+	d.pool = pool
+	return d, nil
 }
 
 // Name identifies this dispatcher.

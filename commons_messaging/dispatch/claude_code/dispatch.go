@@ -56,6 +56,16 @@ func (d *Dispatcher) Dispatch(ctx context.Context, req DispatchRequest) (Dispatc
 	// Stash session metadata for the persistence layer (HRD-012 step 7).
 	resp.SessionUUID = sessionUUID
 	resp.AnchorPath = anchor
+
+	// Best-effort persistence: pool == nil means callers opted out via
+	// New (Dispatch-only adapter); NewWithStorage opts in. Persistence
+	// failure surfaces an error but does NOT undo the dispatch — Claude
+	// has already responded, so re-issuing would double-spend.
+	if d.pool != nil {
+		if err := d.PersistSessionState(ctx, resp); err != nil {
+			return resp, fmt.Errorf("claude_code: dispatch persist session: %w", err)
+		}
+	}
 	return resp, nil
 }
 
