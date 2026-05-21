@@ -1,30 +1,30 @@
 // Package claude_code is the Claude Code LLM dispatcher per spec §33.
 //
-// Status: SCAFFOLD (HRD-012). Session-resolution algorithm + envelope
-// formatter are implemented for unit testing; the live `claude --resume
-// <UUID> --print "<envelope>"` invocation is a stub that returns a
-// hard-coded "not implemented" error until HRD-012's operator-supplied
-// session is wired up.
+// Status: LIVE (HRD-012 step 6). Session-resolution + envelope formatter
+// remain in this file; live `claude --resume <UUID> --print "<envelope>"`
+// invocation + <<<HERALD-REPLY>>> parsing live in dispatch.go. Session
+// bootstrap (auto-spawn on uuid.Nil + PersistSession write-back) is
+// HRD-012 step 7; until then Dispatch returns an explicit error when
+// the anchor is missing rather than fabricating a session.
 //
 // The resolution algorithm (spec §33.2):
 //
-//   1. compute working_dir = config[herald.session_workdir] (default:
-//      consuming-project root via parent-walk).
-//   2. compute session_anchor_path = working_dir/.herald/claude-code/
-//      sessions/<project_name>.session.
-//   3. if session_anchor_path exists AND contains a valid session UUID
-//      AND `claude --resume <uuid> --print "ping"` returns 0:
-//        → return that UUID.
-//   4. else:
-//        spawn `claude --print "Initializing Herald session for project:
-//        <project_name>"` in working_dir.
-//        capture the new session UUID from Claude Code stdout.
-//        write UUID to session_anchor_path.
-//        → return new UUID.
+//  1. compute working_dir = config[herald.session_workdir] (default:
+//     consuming-project root via parent-walk).
+//  2. compute session_anchor_path = working_dir/.herald/claude-code/
+//     sessions/<project_name>.session.
+//  3. if session_anchor_path exists AND contains a valid session UUID
+//     AND `claude --resume <uuid> --print "ping"` returns 0:
+//     → return that UUID.
+//  4. else:
+//     spawn `claude --print "Initializing Herald session for project:
+//     <project_name>"` in working_dir.
+//     capture the new session UUID from Claude Code stdout.
+//     write UUID to session_anchor_path.
+//     → return new UUID.
 package claude_code
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -106,13 +106,13 @@ func (d *Dispatcher) PersistSession(u uuid.UUID, anchorPath string) error {
 // DispatchRequest carries the structured fields the §33.3 envelope is
 // built from.
 type DispatchRequest struct {
-	InboundID       string
-	Sender          string                  // formatted "<channel>:<handle>"
-	Channel         commons.ChannelID
-	Classification  Classification
-	Conversation    string                  // full thread bottom-to-top
-	Attachments     []commons.Attachment
-	UserMessage     string
+	InboundID      string
+	Sender         string // formatted "<channel>:<handle>"
+	Channel        commons.ChannelID
+	Classification Classification
+	Conversation   string // full thread bottom-to-top
+	Attachments    []commons.Attachment
+	UserMessage    string
 }
 
 // Classification is the spec §32.6 classifier output.
@@ -155,40 +155,32 @@ func (d *Dispatcher) FormatEnvelope(req DispatchRequest) string {
 	return sb.String()
 }
 
-// Dispatch is NOT YET IMPLEMENTED (HRD-012 live integration).
-//
-// The real implementation:
-//
-//  1. ResolveSession; if empty, spawn `claude --print "Initializing..."` to
-//     create a new session, capture the UUID from stdout, persist via
-//     PersistSession.
-//  2. Spawn `claude --resume <UUID> --print "<FormatEnvelope output>"`
-//     in d.workingDir with a 5 min timeout.
-//  3. Scan stdout for the <<<HERALD-REPLY>>>{...} line.
-//  4. Parse the JSON, return a typed DispatchResponse.
-func (d *Dispatcher) Dispatch(ctx context.Context, req DispatchRequest) (DispatchResponse, error) {
-	return DispatchResponse{}, errors.New("claude_code: live dispatch not implemented (HRD-012)")
-}
-
 // DispatchResponse is the typed projection of the §33.3 JSON reply.
+// JSON tags match the snake_case schema declared in replyJSONSchema.
+// SessionUUID + AnchorPath are populated by Dispatch post-exec for the
+// persistence layer (HRD-012 step 7) and are excluded from the wire JSON.
 type DispatchResponse struct {
-	Outcome             string   // "validated"|"rejected"|"needs_more_info"|"answered"
-	Summary             string
-	Details             string
-	AffectedPaths       []string
-	ReproductionSteps   []string
-	EstimatedEffort     string // "S"|"M"|"L"|"XL"
-	WorkableItemProposed *WorkableItemProposal
-	FollowUpQuestions   []string
+	Outcome              string                `json:"outcome"` // "validated"|"rejected"|"needs_more_info"|"answered"
+	Summary              string                `json:"summary"`
+	Details              string                `json:"details"`
+	AffectedPaths        []string              `json:"affected_paths"`
+	ReproductionSteps    []string              `json:"reproduction_steps"`
+	EstimatedEffort      string                `json:"estimated_effort"` // "S"|"M"|"L"|"XL"
+	WorkableItemProposed *WorkableItemProposal `json:"workable_item_proposed,omitempty"`
+	FollowUpQuestions    []string              `json:"follow_up_questions"`
+
+	// Populated by Dispatch — not part of the wire JSON.
+	SessionUUID uuid.UUID `json:"-"`
+	AnchorPath  string    `json:"-"`
 }
 
 // WorkableItemProposal is the §33.3 nested object the LLM may include
 // when outcome=validated.
 type WorkableItemProposal struct {
-	Type        string
-	Criticality string
-	Title       string
-	Labels      []string
+	Type        string   `json:"type"`
+	Criticality string   `json:"criticality"`
+	Title       string   `json:"title"`
+	Labels      []string `json:"labels"`
 }
 
 // --- internals ---------------------------------------------------------

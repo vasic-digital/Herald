@@ -103,8 +103,8 @@ func TestFormatEnvelope_ContainsExpectedFields(t *testing.T) {
 func TestFormatEnvelope_TaskVerbVariesByType(t *testing.T) {
 	d, _ := New("claude", t.TempDir(), "X")
 	for itemType, expect := range map[string]string{
-		"bug":           "reproduce + identify affected code paths",
-		"query":         "research + answer",
+		"bug":            "reproduce + identify affected code paths",
+		"query":          "research + answer",
 		"implementation": "scope effort + propose approach",
 	} {
 		env := d.FormatEnvelope(DispatchRequest{
