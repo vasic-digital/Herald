@@ -43,16 +43,25 @@ func ReadyzHandler(br commons.Branding) gin.HandlerFunc {
 	}
 }
 
-// MetricsHandler returns Prometheus text with a <flavor>_build_info gauge.
-// Wave 2 emits just the gauge; full Prometheus client wiring is a follow-
-// up HRD (live observability per spec §17).
+// MetricsHandler returns Prometheus text with a <prefix>_build_info gauge.
+// The gauge prefix follows the documented Prometheus convention for
+// Herald flavors: BinaryName takes precedence (so pherald emits
+// "pherald_build_info", sherald emits "sherald_build_info", …); when
+// BinaryName is empty we fall back to Flavor (Wave 2 tests pass Flavor
+// directly as the binary name). Wave 2 emits just the gauge; full
+// Prometheus client wiring is a follow-up HRD (live observability per
+// spec §17).
 func MetricsHandler(br commons.Branding) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		prefix := br.BinaryName
+		if prefix == "" {
+			prefix = br.Flavor
+		}
 		c.Header("Content-Type", "text/plain; version=0.0.4; charset=utf-8")
-		fmt.Fprintf(c.Writer, "# HELP %s_build_info Build information for %s.\n", br.Flavor, br.DisplayName)
-		fmt.Fprintf(c.Writer, "# TYPE %s_build_info gauge\n", br.Flavor)
+		fmt.Fprintf(c.Writer, "# HELP %s_build_info Build information for %s.\n", prefix, br.DisplayName)
+		fmt.Fprintf(c.Writer, "# TYPE %s_build_info gauge\n", prefix)
 		fmt.Fprintf(c.Writer, "%s_build_info{version=%q,commit=%q,go_version=%q} 1\n",
-			br.Flavor, BuildVersion, BuildCommit, buildGoVersion())
+			prefix, BuildVersion, BuildCommit, buildGoVersion())
 	}
 }
 

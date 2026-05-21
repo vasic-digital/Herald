@@ -1,78 +1,44 @@
+// Package http exports pherald's HTTP plane: the pherald-specific Route
+// slice for /v1/events + /v1/compliance, plus the RequestIDMiddleware
+// that propagates the X-Request-ID header. cli.ServeCmd consumes both
+// via ServeOpts.Routes + ServeOpts.Middleware.
+//
+// Wave 2 Task 6 refactor (2026-05-21): the previous 150-line gin.Engine
+// owner (Server / Config / BuildInfo + 5 method handlers) was deleted
+// in favour of the shared commons/cli/ scaffold — pherald's serve
+// subcommand now delegates engine construction + lifecycle to
+// cli.ServeCmd and only contributes its flavor-specific routes +
+// middleware through this package.
+//
+// Anti-bluff (§107 / §11.4.69): /v1/events + /v1/compliance return 501
+// with explicit HRD-016 pointers until the Runner wiring lands. A 200
+// stub returning empty would be a §11.4 violation.
 package http
 
 import (
-	"net/http"
-
-	"github.com/gin-gonic/gin"
+	"github.com/vasic-digital/herald/commons/cli"
 )
 
-// registerRoutes wires the M3 route set onto s.engine. Per V3 §44.3, M3
-// ships the minimum-viable subset; richer routes (full §41 surface) are
-// expanded under HRD-016.
-func (s *Server) registerRoutes() {
-	v1 := s.engine.Group("/v1")
-	v1.GET("/healthz", s.healthz)
-	v1.GET("/readyz", s.readyz)
-	v1.POST("/events", s.eventsIngest)
-	v1.GET("/compliance", s.complianceList)
-
-	// /metrics lives at the root (Prometheus convention) — not under /v1.
-	s.engine.GET("/metrics", s.metrics)
-}
-
-// healthz: liveness probe. Returns build info + 200 OK as long as the
-// process is up. Does NOT probe dependencies (that's readyz's job).
-func (s *Server) healthz(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"status": "ok",
-		"build":  s.cfg.Build,
-	})
-}
-
-// readyz: readiness probe. Currently a thin stub — returns 200 once the
-// server is started. Real implementation (Postgres ping + Redis ping +
-// constitution-bundle hash refresh) is HRD-016 expansion work.
-func (s *Server) readyz(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"status": "ready",
-		"checks": gin.H{
-			"postgres": "not-yet-wired",
-			"redis":    "not-yet-wired",
-			"bundle":   "not-yet-wired",
+// Routes returns the pherald-specific /v1 routes. healthz/readyz/metrics
+// are handled by cli.ServeCmd's built-ins (commons/cli/routes.go) — flavor
+// implementations only need to declare their flavor-specific routes.
+//
+// Both routes are 501-stubs pending HRD-016 (Runner.Run wiring) — the
+// honest §11.4.69 anti-bluff posture (501 + HRD pointer beats a 200
+// stub returning empty).
+func Routes() []cli.Route {
+	return []cli.Route{
+		{
+			Method:      "POST",
+			Path:        "/v1/events",
+			HRD:         "HRD-016",
+			Description: "Inbound CloudEvent ingestion (spec §41)",
 		},
-		"note": "real readiness checks land with HRD-016 (depend on Runner wiring)",
-	})
-}
-
-// eventsIngest: stub for CloudEvents POST /v1/events. Returns 501 with
-// an HRD pointer per §11.4.69 anti-bluff (501 = "feature not yet
-// implemented"; a 200 stub would lie).
-func (s *Server) eventsIngest(c *gin.Context) {
-	c.JSON(http.StatusNotImplemented, gin.H{
-		"error":  "not-implemented",
-		"detail": "POST /v1/events full ingest pipeline pending HRD-016 (Runner.Run wiring) — Foundation M3 ships the route + middleware chain only",
-		"hrd":    "HRD-016",
-	})
-}
-
-// complianceList: stub for GET /v1/compliance. Same 501 + HRD pointer.
-func (s *Server) complianceList(c *gin.Context) {
-	c.JSON(http.StatusNotImplemented, gin.H{
-		"error":  "not-implemented",
-		"detail": "GET /v1/compliance constitution_state pull surface pending HRD-016 (ConstitutionStore.List wiring through tenant-extracted JWT) — Foundation M3 ships the route + middleware chain only",
-		"hrd":    "HRD-016",
-	})
-}
-
-// metrics: Prometheus scrape endpoint. Foundation M3 ships a placeholder
-// emitting the build-info gauge so scrapers can detect the endpoint;
-// real counters land with HRD-016 (request-duration histogram, RLS-
-// scoped counters per rule_id, etc.).
-func (s *Server) metrics(c *gin.Context) {
-	c.Header("Content-Type", "text/plain; version=0.0.4; charset=utf-8")
-	c.String(http.StatusOK,
-		"# HELP herald_build_info Build-time provenance for the running pherald binary.\n"+
-			"# TYPE herald_build_info gauge\n"+
-			"herald_build_info{version=\""+s.cfg.Build.Version+"\",commit=\""+s.cfg.Build.GitCommit+"\"} 1\n",
-	)
+		{
+			Method:      "GET",
+			Path:        "/v1/compliance",
+			HRD:         "HRD-016",
+			Description: "constitution_state pull surface (spec §41)",
+		},
+	}
 }

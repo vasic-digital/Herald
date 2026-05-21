@@ -158,8 +158,8 @@ check "E9 /v1/readyz returns 200 + status:ready" \
 check "E10 /v1/events POST returns 501 + HRD-016 pointer (honest stub)" \
     "test \"\$(curl -s -o /tmp/ev.body -w \"%{http_code}\" -X POST 'http://127.0.0.1:${HTTP_PORT}/v1/events' -H 'Content-Type: application/cloudevents+json' -d '{}')\" = 501 && grep -q 'HRD-016' /tmp/ev.body"
 
-check "E11 /metrics returns text/plain + herald_build_info gauge" \
-    "curl -fsS 'http://127.0.0.1:${HTTP_PORT}/metrics' | grep -q '^herald_build_info{'"
+check "E11 /metrics returns text/plain + pherald_build_info gauge" \
+    "curl -fsS 'http://127.0.0.1:${HTTP_PORT}/metrics' | grep -q '^pherald_build_info{'"
 
 # E12: graceful shutdown — send SIGTERM and verify exit 0.
 kill -TERM "${PHERALD_PID}"

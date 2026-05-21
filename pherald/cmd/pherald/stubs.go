@@ -7,22 +7,19 @@
 // registered as a cli.StubCmd that returns a 501-style error with an
 // HRD pointer so the operator knows where the implementation is tracked.
 //
-// newServeCmd is preserved here pending the Task 6 refactor. Its real
-// implementation moved here in commit 92ecdc6 (Foundation M3 Gin REST
-// surface). Will be moved to its own serve.go in Task 6.
+// Wave 2 Task 6 refactor (2026-05-21): newServeCmd now delegates to the
+// shared cli.ServeCmd scaffold — the previous 150-line gin.Engine
+// owner (pherald/internal/http/server.go) is gone; pherald owns only
+// its flavor-specific Routes + RequestIDMiddleware which are injected
+// into cli.ServeCmd via ServeOpts.
 
 package main
 
 import (
-	"context"
-	"fmt"
-	"os"
-	"os/signal"
-	"runtime"
-	"syscall"
-
+	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
 
+	"github.com/vasic-digital/herald/commons"
 	"github.com/vasic-digital/herald/commons/cli"
 	httpsrv "github.com/vasic-digital/herald/pherald/internal/http"
 )
@@ -38,56 +35,16 @@ func registerStubs(root *cobra.Command) {
 	root.AddCommand(cli.StubCmd("pre-push", "HRD-053", "Fetch + investigate + integrate hook (§11.4.71)"))
 }
 
-func newServeCmd() *cobra.Command {
-	var (
-		configFile string
-		httpPort   int
-		adminPort  int
-	)
-	cmd := &cobra.Command{
-		Use:   "serve",
-		Short: "Daemon: HTTP ingress + per-channel subscriber loops (spec §3.1)",
-		Long: `Long-running daemon that:
-
-  - exposes HTTP ingress on --http-port (default 24091) accepting
-    CloudEvents (binary + structured mode) at POST /v1/events;
-  - exposes admin endpoints on --admin-port (default 24090) for
-    /livez, /readyz, /startupz, /metrics, /admin/version;
-  - polls upstream channels per spec §32.2 (30 s minimum cadence);
-  - dispatches inbound work through the §32 7-stage Worker pipeline;
-  - traps SIGTERM/SIGINT for graceful drain per §3.1.
-
-Foundation M3 status (2026-05-20): the Gin REST surface + middleware chain
-are live. /v1/healthz + /metrics work end-to-end. /v1/events and
-/v1/compliance return 501 with HRD-016 pointers until the Runner wiring
-lands.`,
-		RunE: func(_ *cobra.Command, _ []string) error {
-			srv := httpsrv.New(httpsrv.Config{
-				Addr: fmt.Sprintf("0.0.0.0:%d", httpPort),
-				Build: httpsrv.BuildInfo{
-					Version:   version,
-					GitCommit: commit,
-					GoVersion: runtime.Version(),
-				},
-			})
-
-			// Graceful shutdown per §3.1.
-			ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-			defer stop()
-			errCh := make(chan error, 1)
-			go func() { errCh <- srv.Start() }()
-			fmt.Fprintf(os.Stderr, "pherald serve: listening on :%d\n", httpPort)
-			select {
-			case <-ctx.Done():
-				fmt.Fprintln(os.Stderr, "pherald serve: shutdown signal received, draining...")
-				return srv.Shutdown(context.Background())
-			case err := <-errCh:
-				return err
-			}
-		},
-	}
-	cmd.Flags().StringVarP(&configFile, "config", "c", "config.toml", "path to TOML config file")
-	cmd.Flags().IntVar(&httpPort, "http-port", 24091, "HTTP ingress port")
-	cmd.Flags().IntVar(&adminPort, "admin-port", 24090, "admin port (probes + metrics)")
-	return cmd
+// newServeCmd returns pherald's `serve` subcommand. Wave 2 Task 6:
+// delegates to cli.ServeCmd with pherald's two flavor-specific routes
+// (/v1/events + /v1/compliance, both 501-stubs under HRD-016) and the
+// pherald RequestIDMiddleware injected through ServeOpts.Middleware.
+// All graceful-shutdown / port-binding / healthz wiring lives in
+// cli.ServeCmd now — no duplicate engine ownership in pherald.
+func newServeCmd(br commons.Branding) *cobra.Command {
+	return cli.ServeCmd(cli.ServeOpts{
+		Branding:   br,
+		Routes:     httpsrv.Routes(),
+		Middleware: []gin.HandlerFunc{httpsrv.RequestIDMiddleware()},
+	})
 }

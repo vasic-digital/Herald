@@ -23,16 +23,22 @@ var version = "0.0.0-dev"
 var commit = "unknown"
 
 func main() {
+	// Wave 2 Task 6: propagate ldflags-injected build info into
+	// commons/cli so VersionCmd's JSON output and MetricsHandler's
+	// build_info gauge surface the real values (not the defaults).
+	cli.BuildVersion = version
+	cli.BuildCommit = commit
+
 	branding := commons.DefaultBranding("p", version)
 
 	root := cli.NewRootCmd(branding)
 	root.Version = version + " (" + commit + ")"
 
 	root.AddCommand(cli.VersionCmd(branding))
-	root.AddCommand(newServeCmd())   // preserved real impl (Task 6 will refactor to cli.ServeCmd)
-	root.AddCommand(newMigrateCmd()) // real impl (HRD-010) — unchanged
-	root.AddCommand(newWizardCmd())  // real impl (HRD-011/012 setup) — unchanged
-	registerStubs(root)              // §43 GitOps stubs via cli.StubCmd
+	root.AddCommand(newServeCmd(branding)) // Task 6: delegates to cli.ServeCmd
+	root.AddCommand(newMigrateCmd())       // real impl (HRD-010) — unchanged
+	root.AddCommand(newWizardCmd())        // real impl (HRD-011/012 setup) — unchanged
+	registerStubs(root)                    // §43 GitOps stubs via cli.StubCmd
 
 	if err := root.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, "pherald:", err)

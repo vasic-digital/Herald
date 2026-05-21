@@ -17,10 +17,14 @@ import (
 
 // ServeOpts configures ServeCmd. Branding drives the default port +
 // healthz/metrics gauge name. Routes are flavor-specific routes
-// appended after the base healthz/readyz/metrics.
+// appended after the base healthz/readyz/metrics. Middleware is the
+// optional flavor-specific Gin middleware chain registered immediately
+// after gin.Recovery() and before any handler — typical use is request-
+// ID propagation, tenant extraction, OTel tracing. Nil/empty is fine.
 type ServeOpts struct {
-	Branding commons.Branding
-	Routes   []Route
+	Branding   commons.Branding
+	Routes     []Route
+	Middleware []gin.HandlerFunc
 }
 
 // ServeCmd is the `<flavor>herald serve` subcommand for serving flavors.
@@ -45,6 +49,11 @@ func ServeCmd(opts ServeOpts) *cobra.Command {
 			gin.SetMode(gin.ReleaseMode)
 			r := gin.New()
 			r.Use(gin.Recovery())
+			for _, mw := range opts.Middleware {
+				if mw != nil {
+					r.Use(mw)
+				}
+			}
 			r.GET("/v1/healthz", HealthzHandler(opts.Branding))
 			r.GET("/v1/readyz", ReadyzHandler(opts.Branding))
 			r.GET("/metrics", MetricsHandler(opts.Branding))
