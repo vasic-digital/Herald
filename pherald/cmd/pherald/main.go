@@ -52,6 +52,7 @@ Run "pherald <subcommand> --help" for per-subcommand documentation.`,
 	root.AddCommand(newMigrateCmd())
 	root.AddCommand(newSubscriberCmd())
 	root.AddCommand(newDeadletterCmd())
+	root.AddCommand(newWizardCmd())
 
 	if err := root.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, "pherald:", err)

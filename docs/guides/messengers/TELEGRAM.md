@@ -109,14 +109,36 @@ Paste the chat ID into a temporary file or note. You'll set it as `HERALD_TGRAM_
 
 **This is the #1 reason new operators get stuck.** Skip it and you will waste hours wondering why `getUpdates` returns empty.
 
-When you create a bot via @BotFather, Telegram defaults its **Privacy Mode** to **ON**. With Privacy Mode ON, the bot CAN be added to a group but Telegram filters incoming group messages **before they ever reach the bot's update stream**. The bot only sees:
+Per the [official Telegram Bot API docs](https://core.telegram.org/bots/features#privacy-mode), when you create a bot via @BotFather, Telegram defaults its **Privacy Mode** to **ON**. With Privacy Mode ON, the bot CAN be added to a group but Telegram filters incoming group messages **before they ever reach the bot's update stream**. The bot only sees:
 
-- Slash commands (`/start`, `/anything`)
-- Messages that contain `@<bot-username>` (literal `@`-mention of the bot's username)
-- Replies to messages the bot itself sent
-- Service messages (member joins, etc.)
+- **`/command@bot_name`** — slash commands explicitly addressed to the bot (always delivered)
+- **General `/commands`** — only AFTER the bot has sent at least one message in the group (subtle: a never-spoken bot can't see bare `/commands` yet)
+- **Mentions and inline replies** — messages where the bot is `@`-mentioned, or that reply to one of the bot's own messages
+- **Service messages** — member joins/leaves, group renames, etc. (always delivered, regardless of Privacy Mode)
 
 **Plain chat messages from group members are INVISIBLE to the bot in Privacy Mode**. This is why `getUpdates` is often empty even though messages clearly exist in the group.
+
+> **Update buffer is 24h.** Per the Bot API spec, updates the bot is entitled to see are stored server-side for **up to 24 hours**. So if a message DID reach the bot's queue, you can call `getUpdates` later within that window to retrieve it.
+
+### Bot-admin shortcut (RECOMMENDED for Herald — bypasses Privacy Mode entirely)
+
+Per the [official docs](https://core.telegram.org/bots/features#privacy-mode): **"Bot admins always receive all messages and bypass privacy restrictions."**
+
+If your bot is an **administrator** of the group, Privacy Mode is irrelevant. The bot sees every message. This is the simplest and most reliable setup for Herald's vertical-slice routing (Telegram → Claude Code → Telegram) because every group message routes to Claude Code, not just `@`-mentions.
+
+To promote the bot to admin:
+
+1. Open the group in Telegram.
+2. Tap the group title to open group info.
+3. Tap **Administrators** (or `Edit` → `Administrators`).
+4. Tap **Add Admin** (or the `+` icon).
+5. Search for your bot's username (e.g. `@atmosphere_worker_bot`) and select it.
+6. Grant at minimum: **Pin Messages** + **Add New Admins** OFF, others can stay at defaults. (Telegram requires at least one permission for the admin role to be created. Even read-only admin works for our use case since we're using the admin status to bypass Privacy Mode, not to grant write powers beyond the bot's normal ones.)
+7. Tap the **✓** confirmation.
+8. **Send any message in the group.**
+9. Run `bash scripts/tgram_diagnose.sh` — the chat ID should appear.
+
+This works regardless of the Privacy Mode setting in @BotFather.
 
 ### Check your Privacy Mode state
 
