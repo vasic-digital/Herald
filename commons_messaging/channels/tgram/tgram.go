@@ -16,7 +16,6 @@
 package tgram
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"net/url"
@@ -93,13 +92,6 @@ func (a *Adapter) Capabilities() commons.Capabilities {
 
 // Send is implemented in send.go (live Bot API sendMessage).
 
-// Subscribe is NOT YET IMPLEMENTED (HRD-011).
-//
-// The real implementation runs Bot API getUpdates long-poll (25 s
-// timeout) per spec §32.2, with a 30 s safety-net timer that re-fires
-// getUpdates if the long-poll thread stalls.
-func (a *Adapter) Subscribe(ctx context.Context, h commons.InboundHandler) error {
-	return errors.New("tgram adapter: not implemented (HRD-011)")
-}
+// Subscribe is implemented in subscribe.go (live Bot API getUpdates long-poll).
 
 // HealthCheck is implemented in healthcheck.go (live Bot API getMe).
