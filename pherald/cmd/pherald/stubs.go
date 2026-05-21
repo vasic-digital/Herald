@@ -1,16 +1,20 @@
-// Stub subcommands for pherald. Each one is wired up so `--help` works
-// and the operator sees the spec section that will implement it; the
-// actual body returns a "not implemented" error pointing at the HRD
-// that tracks the work.
+// §43 GitOps stub commands for pherald.
 //
-// This keeps the binary buildable + the CLI surface complete from r1
-// while the implementation work lands incrementally.
+// Wave 2 r1 refactor (2026-05-21): replaced the previous one-off
+// newSendCmd / newDoctorCmd / newSubscriberCmd / newDeadletterCmd
+// stubs (none of which had real bodies anyway) with the §43 mandate
+// commands that pherald actually owns per spec V3 §43. Each is
+// registered as a cli.StubCmd that returns a 501-style error with an
+// HRD pointer so the operator knows where the implementation is tracked.
+//
+// newServeCmd is preserved here pending the Task 6 refactor. Its real
+// implementation moved here in commit 92ecdc6 (Foundation M3 Gin REST
+// surface). Will be moved to its own serve.go in Task 6.
 
 package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"os/signal"
@@ -19,39 +23,19 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/vasic-digital/herald/commons/cli"
 	httpsrv "github.com/vasic-digital/herald/pherald/internal/http"
 )
 
-func newSendCmd() *cobra.Command {
-	var (
-		eventType  string
-		source     string
-		dataInline string
-		dataFile   string
-		tags       []string
-		idemKey    string
-		priority   int
-	)
-	cmd := &cobra.Command{
-		Use:   "send",
-		Short: "One-shot: ingest a CloudEvent and exit (spec §3.1)",
-		Long: `Build a CloudEvents v1.0 envelope from flags + optional JSON data,
-post it to the local serve daemon (or in-process router when --inline),
-and exit non-zero on delivery failure within the deadline.
-
-NOT YET IMPLEMENTED (HRD-008 / HRD-010 / HRD-011 dependencies).`,
-		RunE: func(_ *cobra.Command, _ []string) error {
-			return errors.New("pherald send: not implemented (HRD-008/HRD-010/HRD-011)")
-		},
-	}
-	cmd.Flags().StringVar(&eventType, "type", "", "CloudEvents type (e.g. digital.vasic.herald.ci.failed)")
-	cmd.Flags().StringVar(&source, "source", "", "CloudEvents source URI")
-	cmd.Flags().StringVar(&dataInline, "data", "", "inline JSON data payload")
-	cmd.Flags().StringVar(&dataFile, "data-file", "", "read data payload from file")
-	cmd.Flags().StringSliceVar(&tags, "tag", nil, "routing tag (repeatable)")
-	cmd.Flags().StringVar(&idemKey, "idempotency-key", "", "explicit idempotency key (default: derived from event ID)")
-	cmd.Flags().IntVar(&priority, "priority", 3, "ntfy-style priority 1..5")
-	return cmd
+// registerStubs adds every §43 GitOps command targeted at pherald as a
+// 501-stub. HRD pointers track implementation status.
+func registerStubs(root *cobra.Command) {
+	root.AddCommand(cli.StubCmd("commit-push", "HRD-029", "Single-entrypoint locked commit + multi-mirror push (§2)"))
+	root.AddCommand(cli.StubCmd("submodule-propagate", "HRD-030", "Owned-submodule walk in propagation order (§3)"))
+	root.AddCommand(cli.StubCmd("install-upstreams", "HRD-043", "install_upstreams wrapper (§11.4.36)"))
+	root.AddCommand(cli.StubCmd("fetch-guard", "HRD-044", "Pre-edit fetch + rebase enforcement (§11.4.37)"))
+	root.AddCommand(cli.StubCmd("reopen", "HRD-049", "Issues→Fixed reversal + Reopens history (§11.4.55)"))
+	root.AddCommand(cli.StubCmd("pre-push", "HRD-053", "Fetch + investigate + integrate hook (§11.4.71)"))
 }
 
 func newServeCmd() *cobra.Command {
@@ -105,81 +89,5 @@ lands.`,
 	cmd.Flags().StringVarP(&configFile, "config", "c", "config.toml", "path to TOML config file")
 	cmd.Flags().IntVar(&httpPort, "http-port", 24091, "HTTP ingress port")
 	cmd.Flags().IntVar(&adminPort, "admin-port", 24090, "admin port (probes + metrics)")
-	return cmd
-}
-
-func newDoctorCmd() *cobra.Command {
-	var asJSON bool
-	cmd := &cobra.Command{
-		Use:   "doctor",
-		Short: "Verify environment health (Postgres / Redis / channels / DNS) (spec §17.6)",
-		Long: `Battery of environment checks:
-
-  - Postgres connectivity + RLS policy presence
-  - Redis connectivity + tenant ACL
-  - Channel credentials valid (probes API per channel)
-  - DKIM / SPF / DMARC DNS records for the configured sending domain
-  - OTLP collector reachable
-  - Disk space, port availability
-
-Exits non-zero on any failure; with --json emits a structured report.
-
-NOT YET IMPLEMENTED (HRD-010 / HRD-011 dependencies).`,
-		RunE: func(_ *cobra.Command, _ []string) error {
-			return errors.New("pherald doctor: not implemented (HRD-010/HRD-011)")
-		},
-	}
-	cmd.Flags().BoolVar(&asJSON, "json", false, "emit machine-readable JSON report")
-	return cmd
-}
-
-func newSubscriberCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "subscriber",
-		Short: "Manage subscribers (list / add / verify / link / forget) (spec §7)",
-	}
-	cmd.AddCommand(&cobra.Command{
-		Use:   "list",
-		Short: "list subscribers for the active tenant",
-		RunE:  func(_ *cobra.Command, _ []string) error { return errors.New("subscriber list: not implemented (HRD-010)") },
-	})
-	cmd.AddCommand(&cobra.Command{
-		Use:   "add",
-		Short: "add a new subscriber",
-		RunE:  func(_ *cobra.Command, _ []string) error { return errors.New("subscriber add: not implemented (HRD-010)") },
-	})
-	cmd.AddCommand(&cobra.Command{
-		Use:   "verify <token>",
-		Short: "complete the self-claim flow",
-		RunE:  func(_ *cobra.Command, _ []string) error { return errors.New("subscriber verify: not implemented (HRD-010)") },
-	})
-	cmd.AddCommand(&cobra.Command{
-		Use:   "forget <id>",
-		Short: "initiate GDPR right-to-erasure (§16.1)",
-		RunE:  func(_ *cobra.Command, _ []string) error { return errors.New("subscriber forget: not implemented (HRD-010)") },
-	})
-	return cmd
-}
-
-func newDeadletterCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "deadletter",
-		Short: "Inspect / replay / purge dead-lettered messages (§5.4)",
-	}
-	cmd.AddCommand(&cobra.Command{
-		Use:   "list",
-		Short: "list dead-lettered messages",
-		RunE:  func(_ *cobra.Command, _ []string) error { return errors.New("deadletter list: not implemented (HRD-010)") },
-	})
-	cmd.AddCommand(&cobra.Command{
-		Use:   "replay <id>",
-		Short: "replay a single dead-lettered message",
-		RunE:  func(_ *cobra.Command, _ []string) error { return errors.New("deadletter replay: not implemented (HRD-010)") },
-	})
-	cmd.AddCommand(&cobra.Command{
-		Use:   "purge",
-		Short: "delete dead-lettered messages past retention (§16.1)",
-		RunE:  func(_ *cobra.Command, _ []string) error { return errors.New("deadletter purge: not implemented (HRD-010)") },
-	})
 	return cmd
 }

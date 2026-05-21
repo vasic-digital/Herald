@@ -1,20 +1,17 @@
-// pherald — Project Herald CLI per spec V3 §3 + §18.2.
+// pherald — Project Herald CLI per spec V3 §3 + §18.2 (Wave 2 r1).
 //
-// Single-binary, two-mode design (V3 R-02):
-//
-//   pherald send  …  — one-shot: ingest a CloudEvent and exit.
-//   pherald serve     — daemon: HTTP ingress + per-channel subscriber loops.
-//
-// Plus the standard admin subcommands documented in §3.1.
+// Refactored 2026-05-21 to consume the shared commons/cli/ scaffold
+// (Wave 2 design §3): NewRootCmd + VersionCmd come from there; pherald
+// owns only the flavor-specific subcommands (serve, migrate, wizard) +
+// the §43 GitOps stubs registered via registerStubs.
 package main
 
 import (
 	"fmt"
 	"os"
 
-	"github.com/spf13/cobra"
-
 	"github.com/vasic-digital/herald/commons"
+	"github.com/vasic-digital/herald/commons/cli"
 )
 
 // version is overridden at build time:
@@ -28,31 +25,14 @@ var commit = "unknown"
 func main() {
 	branding := commons.DefaultBranding("p", version)
 
-	root := &cobra.Command{
-		Use:   "pherald",
-		Short: branding.AppName + " — event fan-out + LLM-dispatched reply pipeline",
-		Long: branding.AppName + ` is the Project Herald flavor (spec V3 §18.2).
+	root := cli.NewRootCmd(branding)
+	root.Version = version + " (" + commit + ")"
 
-It ingests software-project lifecycle events (Git hooks, VCS webhooks,
-AI CLI agents, code-review tools) and fans them out to messaging
-channels (Telegram, Slack, Email, …). Subscriber replies trigger the
-Investigation-before-Fixing flow (§18.2.1) with Claude Code as the
-default LLM dispatcher (§33).
-
-Run "pherald <subcommand> --help" for per-subcommand documentation.`,
-		Version: version + " (" + commit + ")",
-		SilenceUsage: true,
-		SilenceErrors: true,
-	}
-
-	root.AddCommand(newVersionCmd(branding))
-	root.AddCommand(newSendCmd())
-	root.AddCommand(newServeCmd())
-	root.AddCommand(newDoctorCmd())
-	root.AddCommand(newMigrateCmd())
-	root.AddCommand(newSubscriberCmd())
-	root.AddCommand(newDeadletterCmd())
-	root.AddCommand(newWizardCmd())
+	root.AddCommand(cli.VersionCmd(branding))
+	root.AddCommand(newServeCmd())   // preserved real impl (Task 6 will refactor to cli.ServeCmd)
+	root.AddCommand(newMigrateCmd()) // real impl (HRD-010) — unchanged
+	root.AddCommand(newWizardCmd())  // real impl (HRD-011/012 setup) — unchanged
+	registerStubs(root)              // §43 GitOps stubs via cli.StubCmd
 
 	if err := root.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, "pherald:", err)

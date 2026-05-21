@@ -30,8 +30,15 @@ func VersionCmd(br commons.Branding) *cobra.Command {
 		Use:   "version",
 		Short: "Print " + br.DisplayName + " version + build info",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			// binary defaults to BinaryName (e.g. "pherald") so e2e_bluff_hunt
+			// E2 can assert d["binary"]=="pherald"; falls back to Flavor when
+			// BinaryName is not populated (e.g. in lightweight unit tests).
+			binary := br.BinaryName
+			if binary == "" {
+				binary = br.Flavor
+			}
 			info := map[string]string{
-				"binary":     br.Flavor,
+				"binary":     binary,
 				"flavor":     br.Flavor,
 				"version":    BuildVersion,
 				"commit":     BuildCommit,
