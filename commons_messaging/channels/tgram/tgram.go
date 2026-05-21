@@ -18,17 +18,39 @@ package tgram
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/url"
+	"sync"
 
 	"github.com/vasic-digital/herald/commons"
 	telebot "gopkg.in/telebot.v3"
 )
 
-// Adapter is the (stub) Telegram Bot API channel adapter.
+// Adapter is the Telegram Bot API channel adapter.
 type Adapter struct {
 	botToken string
 	chatID   string
 	bot      *telebot.Bot // lazy-initialized on first live call (HealthCheck/Send/Subscribe)
+	botOnce  sync.Once    // guards bot construction across goroutines (Task 2 review carry-forward)
+	botErr   error        // captured by botOnce if NewBot fails
+}
+
+// ensureBot lazily constructs a.bot exactly once across all goroutines.
+// Subsequent calls return the cached error if init failed.
+//
+// telebot.NewBot itself dispatches getMe during construction (see
+// telebot/bot.go:58: `user, err := bot.getMe()`), so this IS the live
+// roundtrip — callers can then rely on a.bot.Me being populated.
+func (a *Adapter) ensureBot() error {
+	a.botOnce.Do(func() {
+		bot, err := telebot.NewBot(telebot.Settings{Token: a.botToken})
+		if err != nil {
+			a.botErr = fmt.Errorf("tgram.ensureBot: connect to Bot API (getMe): %w", err)
+			return
+		}
+		a.bot = bot
+	})
+	return a.botErr
 }
 
 // New parses tgram://<bot_token>/<chat_id>?tags=... and returns a stub
@@ -61,7 +83,7 @@ func (a *Adapter) Capabilities() commons.Capabilities {
 		Markdown:         true, // MarkdownV2
 		HTML:             true,
 		Attachments:      true,
-		AttachmentMaxMiB: 50, // Telegram Bot API limit
+		AttachmentMaxMiB: 50,   // Telegram Bot API limit
 		Threads:          true, // forum-topic via message_thread_id
 		InteractiveURL:   true,
 		InteractiveCall:  false, // V2 advanced (HRD-011 follow-up)
@@ -69,19 +91,7 @@ func (a *Adapter) Capabilities() commons.Capabilities {
 	}
 }
 
-// Send is NOT YET IMPLEMENTED (HRD-011).
-//
-// The real implementation:
-//
-//  1. Build a sendMessage / sendPhoto / sendDocument call from msg.Body
-//     + msg.Attachments.
-//  2. Apply MarkdownV2 escaping where msg.Body.Markdown is present.
-//  3. Render msg.Actions as InlineKeyboardMarkup (URL + callback_data).
-//  4. Honor msg.Thread.ThreadID as message_thread_id when set.
-//  5. Map Bot API response → commons.Receipt (Evidence=Routed).
-func (a *Adapter) Send(ctx context.Context, msg commons.OutboundMessage) (commons.Receipt, error) {
-	return commons.Receipt{}, errors.New("tgram adapter: not implemented (HRD-011)")
-}
+// Send is implemented in send.go (live Bot API sendMessage).
 
 // Subscribe is NOT YET IMPLEMENTED (HRD-011).
 //

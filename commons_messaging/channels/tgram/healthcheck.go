@@ -3,8 +3,6 @@ package tgram
 import (
 	"context"
 	"fmt"
-
-	telebot "gopkg.in/telebot.v3"
 )
 
 // HealthCheck verifies the bot token by issuing a getMe call against the
@@ -22,20 +20,17 @@ import (
 // impossible — Offline:true would yield bot.Me = &User{} with empty
 // Username, which fails the assertion.
 //
-// The bot is lazy-initialized on first call so unit tests that don't
-// exercise HealthCheck never open a Bot API connection.
+// Bot construction is delegated to ensureBot() which uses sync.Once so
+// concurrent HealthCheck/Send/Subscribe calls share a single Bot API
+// roundtrip instead of racing (Task 2 review carry-forward).
 //
 // The ctx parameter is reserved for future use (telebot.v3.3.8 does not
 // thread ctx through getMe; later versions or a Raw("getMe", nil) +
 // http.Client with ctx may be wired here when telebot exposes it).
 func (a *Adapter) HealthCheck(ctx context.Context) error {
 	_ = ctx // reserved — see doc comment
-	if a.bot == nil {
-		bot, err := telebot.NewBot(telebot.Settings{Token: a.botToken})
-		if err != nil {
-			return fmt.Errorf("tgram.HealthCheck: getMe via NewBot: %w", err)
-		}
-		a.bot = bot
+	if err := a.ensureBot(); err != nil {
+		return fmt.Errorf("tgram.HealthCheck: %w", err)
 	}
 	if a.bot.Me == nil {
 		return fmt.Errorf("tgram.HealthCheck: getMe returned nil User (§107 bluff guard)")
