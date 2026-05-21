@@ -11,7 +11,7 @@
 # "compiles and tests green" but doesn't work for the user will FAIL
 # at least one assertion here.
 #
-# Eighteen invariants (each is the "captured-evidence" for one feature
+# Twenty-one invariants (each is the "captured-evidence" for one feature
 # class per §11.4.5 + §11.4.69):
 #
 #   E1.  pherald binary builds (compile-level — necessary, not sufficient).
@@ -33,8 +33,14 @@
 #   E14. commons_storage RLS tenant-isolation round-trip (HRD-010 Wave 1).
 #   E15. commons_infra queue enqueue/dequeue round-trip against live PG.
 #   E16. commons_infra redis TTL round-trip against live Redis.
+#   E17. Telegram Send delivers + outbound_delivery_evidence persisted
+#        (HRD-011 Wave 1 — live Bot API + live PG).
+#   E18. Claude Code Dispatch round-trip + claude_code_sessions persisted
+#        (HRD-012 Wave 1 — live CLI + live PG).
+#   E19. Full vertical slice — operator hand-sent Telegram inbound →
+#        Claude Code → Telegram outbound (HRD-011 + HRD-012 Wave 1).
 #
-# Exit 0 only when E1..E12 (plus E13..E16 if attempted) all pass.
+# Exit 0 only when E1..E12 (plus E13..E19 if attempted) all pass.
 # Failure prints the offending invariant so the operator knows EXACTLY
 # which feature is bluffing.
 
@@ -220,6 +226,47 @@ if command -v docker >/dev/null 2>&1 || command -v podman >/dev/null 2>&1; then
         "go test ./commons_infra/ -tags=integration -run TestUp_PopulatesRedis_TTLRoundTrip -count=1 -timeout=180s"
 else
     echo "SKIP  E14-E16 (no docker/podman on PATH — §11.4.3 explicit SKIP-with-reason)"
+fi
+
+# ----------------------------------------------------------------------
+# E17-E19: HRD-011 + HRD-012 live channel + dispatcher (Wave 1 vertical
+# slice). Each SKIPs with explicit §11.4.3 reason if its prerequisite
+# is absent — never PASS-by-default.
+echo ""
+echo "== E17-E19: HRD-011 Telegram + HRD-012 Claude Code live integration =="
+
+# E17: Telegram Send + outbound_delivery_evidence persistence.
+if [ -n "${HERALD_TGRAM_BOT_TOKEN:-}" ] && [ -n "${HERALD_TGRAM_CHAT_ID:-}" ] && (command -v docker >/dev/null 2>&1 || command -v podman >/dev/null 2>&1); then
+    check "E17 Telegram Send delivers + persists evidence (live Bot API + live PG)" \
+        "go test ./commons_messaging/channels/tgram/ -tags=integration -run TestSend_PersistsDeliveryEvidence -count=1 -timeout=300s"
+else
+    echo "SKIP  E17 (HERALD_TGRAM_BOT_TOKEN+_CHAT_ID or container runtime absent — §11.4.3 explicit SKIP-with-reason)"
+fi
+
+# E18: Claude Code Dispatch + session_state persistence.
+CLAUDE_BIN_FOR_E18="${HERALD_CLAUDE_BIN:-claude}"
+if command -v "${CLAUDE_BIN_FOR_E18}" >/dev/null 2>&1 \
+   && [ -n "${HERALD_CLAUDE_PROJECT_NAME:-}" ] \
+   && [ -n "${HERALD_CLAUDE_SESSION_UUID:-}" ] \
+   && (command -v docker >/dev/null 2>&1 || command -v podman >/dev/null 2>&1); then
+    check "E18 Claude Code Dispatch round-trip + session_state persist (live CLI + live PG)" \
+        "go test ./commons_messaging/dispatch/claude_code/ -tags=integration -run TestDispatch_PersistsSessionState -count=1 -timeout=600s"
+else
+    echo "SKIP  E18 (claude binary OR HERALD_CLAUDE_PROJECT_NAME/SESSION_UUID OR container runtime absent — §11.4.3 explicit SKIP-with-reason)"
+fi
+
+# E19: Full vertical slice — operator hand-sent Telegram inbound → Claude → Telegram outbound.
+if [ -n "${HERALD_TGRAM_BOT_TOKEN:-}" ] \
+   && [ -n "${HERALD_TGRAM_CHAT_ID:-}" ] \
+   && [ "${HERALD_TGRAM_LIVE_INBOUND:-}" = "1" ] \
+   && command -v "${CLAUDE_BIN_FOR_E18}" >/dev/null 2>&1 \
+   && [ -n "${HERALD_CLAUDE_PROJECT_NAME:-}" ] \
+   && [ -n "${HERALD_CLAUDE_SESSION_UUID:-}" ] \
+   && (command -v docker >/dev/null 2>&1 || command -v podman >/dev/null 2>&1); then
+    check "E19 full vertical slice — Telegram inbound → Claude Code → Telegram outbound" \
+        "go test ./commons_messaging/ -tags=integration -run TestVerticalSlice_TelegramClaudeRoundTrip -count=1 -timeout=600s"
+else
+    echo "SKIP  E19 (HERALD_TGRAM_LIVE_INBOUND=1 + Telegram creds + claude + container runtime + project/session env required — §11.4.3 explicit SKIP-with-reason)"
 fi
 
 # ----------------------------------------------------------------------
