@@ -21,12 +21,14 @@ import (
 	"net/url"
 
 	"github.com/vasic-digital/herald/commons"
+	telebot "gopkg.in/telebot.v3"
 )
 
 // Adapter is the (stub) Telegram Bot API channel adapter.
 type Adapter struct {
 	botToken string
 	chatID   string
+	bot      *telebot.Bot // lazy-initialized on first live call (HealthCheck/Send/Subscribe)
 }
 
 // New parses tgram://<bot_token>/<chat_id>?tags=... and returns a stub
@@ -90,7 +92,4 @@ func (a *Adapter) Subscribe(ctx context.Context, h commons.InboundHandler) error
 	return errors.New("tgram adapter: not implemented (HRD-011)")
 }
 
-// HealthCheck calls Bot API getMe — NOT YET IMPLEMENTED.
-func (a *Adapter) HealthCheck(ctx context.Context) error {
-	return errors.New("tgram adapter: not implemented (HRD-011)")
-}
+// HealthCheck is implemented in healthcheck.go (live Bot API getMe).
