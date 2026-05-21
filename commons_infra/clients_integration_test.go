@@ -219,6 +219,42 @@ func TestUp_PopulatesQueue_EnqueueDequeueRoundTrip(t *testing.T) {
 		t.Fatal("Queue() returned nil without error — §107 PASS-bluff guard")
 	}
 
+	// §107 test-isolation guard: the persistent Postgres volume retains
+	// `background_tasks` rows across test runs. If a prior run left a
+	// PENDING task (test crash, host kill, podman runaway), that leftover
+	// will be dequeued BEFORE the row we're about to enqueue — silently
+	// turning this test into a flaky PASS on fresh CI but FAIL on a
+	// developer host with accumulated state. The cure is to TRUNCATE the
+	// queue tables before each run so the test starts from a known-empty
+	// state. This is a TEST fix, not a production fix: the production
+	// Create+Dequeue path is verified by the strong assertions below.
+	//
+	// Anti-bluff §107 captured 2026-05-21: this guard was added after the
+	// E15 round-trip was discovered to PASS-bluff in environments where
+	// the volume `herald-quickstart_herald-pg` had accumulated PENDING
+	// rows from earlier failed runs.
+	pool, err := boot.Pool()
+	if err != nil {
+		t.Fatalf("Pool() after Up: %v", err)
+	}
+	// Truncate the queue + its event-log child (RESTART IDENTITY drops
+	// any sequence state; CASCADE walks the FK to background_task_events).
+	if _, err := pool.Exec(ctx, "TRUNCATE background_tasks RESTART IDENTITY CASCADE"); err != nil {
+		t.Fatalf("test-isolation TRUNCATE: %v (the schema-side §107 guard cannot run — anti-bluff invalid)", err)
+	}
+	// Confirm zero rows: read-back assertion proves the truncate landed.
+	// Pre-assertion §11.4.5 captured-evidence: a non-zero count here means
+	// the TRUNCATE silently no-op'd; we'd be running the test with leftover
+	// state — abort immediately with a loud signal rather than producing a
+	// flaky downstream FAIL.
+	var preCount int64
+	if err := pool.QueryRow(ctx, "SELECT count(*) FROM background_tasks").Scan(&preCount); err != nil {
+		t.Fatalf("pre-test row-count read: %v", err)
+	}
+	if preCount != 0 {
+		t.Fatalf("background_tasks not empty after TRUNCATE: got %d rows (§107 test-isolation guard failed; cannot trust the round-trip)", preCount)
+	}
+
 	// Construct a task using the upstream constructor so all defaults
 	// (TaskConfig, TaskStatusPending, retry counts, timestamps) are set
 	// honestly. Assign an explicit ID so we can assert round-trip identity.
@@ -230,6 +266,20 @@ func TestUp_PopulatesQueue_EnqueueDequeueRoundTrip(t *testing.T) {
 
 	if err := q.Enqueue(ctx, task); err != nil {
 		t.Fatalf("Enqueue: %v", err)
+	}
+
+	// Post-Enqueue read-back: exact-1 row, exact-ID match, status=pending.
+	// This is the §11.4.68 positive sink-side evidence step — it proves
+	// Create actually persisted the row in the SAME state Enqueue claimed,
+	// independent of the Dequeue path. A previous version of this test
+	// jumped straight from Enqueue to Dequeue, which could not distinguish
+	// "Create silently rolled back" from "Dequeue dequeued a leftover".
+	var postEnqCount int64
+	if err := pool.QueryRow(ctx, "SELECT count(*) FROM background_tasks WHERE id = $1 AND status = 'pending'", taskID).Scan(&postEnqCount); err != nil {
+		t.Fatalf("post-Enqueue row-count read: %v", err)
+	}
+	if postEnqCount != 1 {
+		t.Fatalf("post-Enqueue row count for id=%s: got %d want 1 (§107 sink-side: Enqueue did not persist the task)", taskID, postEnqCount)
 	}
 
 	// Dequeue with no resource constraints — the test task has tiny CPU/mem
@@ -251,6 +301,20 @@ func TestUp_PopulatesQueue_EnqueueDequeueRoundTrip(t *testing.T) {
 	}
 	if got.WorkerID == nil || *got.WorkerID != workerID {
 		t.Fatalf("Dequeue did not claim for the requesting worker: got %v want %s", got.WorkerID, workerID)
+	}
+
+	// Final read-back: row's terminal state matches the dequeue's RETURNING
+	// payload. Independent SELECT proves the UPDATE was committed (not just
+	// returned through a half-committed transaction). §107 sink-side.
+	var finalStatus, finalWorker string
+	if err := pool.QueryRow(ctx, "SELECT status, worker_id FROM background_tasks WHERE id = $1", taskID).Scan(&finalStatus, &finalWorker); err != nil {
+		t.Fatalf("final read-back: %v", err)
+	}
+	if finalStatus != "running" {
+		t.Fatalf("final status: got %s want running", finalStatus)
+	}
+	if finalWorker != workerID {
+		t.Fatalf("final worker_id: got %s want %s", finalWorker, workerID)
 	}
 }
 
