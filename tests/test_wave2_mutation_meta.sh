@@ -37,6 +37,14 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 cd "${REPO_ROOT}"
 
+# Wave 3a: sherald + cherald now refuse to start without a usable JWT
+# verifier (HERALD_AUTH_MODE + matching secret/URL). Set process-wide so
+# the M2 `version --json` probe and the M3 `serve` probe can boot the
+# binary. Without this the binaries exit 1 on `verifier_init` before the
+# Wave 2 invariants can even be checked.
+export HERALD_AUTH_MODE="${HERALD_AUTH_MODE:-hmac}"
+export HERALD_AUTH_HMAC_SECRET="${HERALD_AUTH_HMAC_SECRET:-test-secret-32-bytes-of-padding!!}"
+
 STUBS_GO="${REPO_ROOT}/commons/cli/stubs.go"
 VERSION_GO="${REPO_ROOT}/commons/cli/version.go"
 BRANDING_GO="${REPO_ROOT}/commons/branding.go"

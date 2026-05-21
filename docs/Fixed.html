@@ -47,7 +47,7 @@ alt="Herald" />{width=96px height=96px}</p>
 <tbody>
 <tr>
 <td>Revision</td>
-<td>7</td>
+<td>8</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -63,35 +63,41 @@ alt="Herald" />{width=96px height=96px}</p>
 </tr>
 <tr>
 <td>Status summary</td>
-<td>r7 captures Wave 2 atomic closures: HRD-092 (commons/cli/ scaffold),
-HRD-093 (sherald), HRD-094 (cherald), HRD-095 (bherald), HRD-096
-(rherald), HRD-097 (iherald + scherald paired). All 6 closed by commits
-7e0a614..eef606b with as-built evidence in §44.M of spec V3 r8. HRD-012
-Claude Code dispatcher live integration closed atomically per §107 —
-Plan 2 Tasks 6 + 7 produced two independent live PASS runs (24s + 36s)
-against real <code>claude --resume</code> with exact-match assertions on
-session_uuid, anchor_path, Outcome, and Summary. HRD-011 Telegram stays
-open ("code complete, awaiting live E17/E19 evidence") per §107 —
-operator credentials needed before live PASS captured. Prior: HRD-010
-commons_storage + the E14 RLS-bypass production bug fix; Foundation
+<td>r8 captures Wave 3a close-outs: HRD-028 (cherald
+<code>/v1/compliance</code> live), HRD-098 (sherald
+<code>/v1/safety_state</code> live), and the commons_auth/ JWT-verifier
+scaffold (catalogue-check evidence at
+<code>docs/catalogue-checks/HRD-093-commons-auth.md</code> — note:
+HRD-093 number is shared with the Wave 2 sherald-scaffold closure
+already in this file; both anchors stay valid pending an operator-side
+renumber). 8 new e2e invariants land — E35/E36 auth gate × 2 flavors +
+E43/E44 cherald compliance + E46/E47 sherald safety_state. E45 + E48
+SKIP-with-reason awaiting Wave 3b (pherald Runner + HRD-033
+destructive-guard body). Paired §1.1 mutation gate
+<code>tests/test_wave3_mutation_meta.sh</code> (3/3 PASS: M1
+strip-verify breaks E35; M5 zero-mem breaks E47; post-flight green).
+Prior r7: Wave 2 atomic closures HRD-092..097; HRD-012 Claude Code
+dispatcher live; HRD-011 code complete pending operator creds; HRD-010
+commons_storage live wiring + E14 RLS-bypass bug fix; Foundation
 M1/M2/M3.</td>
 </tr>
 <tr>
 <td>Issues</td>
-<td>see <code>Issues.md</code> — r8 adds HRD-098 (sherald
-/v1/safety_state live impl, Wave 3+).</td>
+<td>see <code>Issues.md</code> — r9 removes HRD-028 + HRD-098 from open
+(atomically Issues→Fixed in this commit).</td>
 </tr>
 <tr>
 <td>Issues summary</td>
 <td>HRD-008/-011 (code complete pending creds) /-015/-016/-018
-(in_progress) + HRD-019..HRD-056 + HRD-081 + HRD-085..HRD-090 + HRD-098
-still open.</td>
+(in_progress) + HRD-019..HRD-027 + HRD-029..HRD-056 + HRD-081 +
+HRD-085..HRD-090 still open (49 items).</td>
 </tr>
 <tr>
 <td>Fixed</td>
 <td>HRD-001..HRD-007, HRD-009, HRD-009b, HRD-010, HRD-012, HRD-013,
-HRD-014, HRD-017, HRD-080, HRD-092, HRD-093, HRD-094, HRD-095, HRD-096,
-HRD-097 (and HRD-018 partial — M1 component landed)</td>
+HRD-014, HRD-017, HRD-028, HRD-080, HRD-092, HRD-093, HRD-094, HRD-095,
+HRD-096, HRD-097, HRD-098 (and HRD-018 partial — M1 component
+landed)</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
@@ -99,7 +105,8 @@ HRD-097 (and HRD-018 partial — M1 component landed)</td>
 commons_storage live wiring; HRD-012 Claude Code dispatcher live (live
 PASS evidence captured); universal §11.4.73 + §11.4.74 mandates
 propagated; I6 gate refined; Wave 2 flavor scaffolds (HRD-092..097)
-closed atomically.</td>
+closed atomically; Wave 3a substrate (commons_auth JWT verifier) + 2
+live REST routes (HRD-028, HRD-098) closed atomically.</td>
 </tr>
 <tr>
 <td>Continuation</td>
@@ -125,6 +132,53 @@ closed atomically.</td>
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>HRD-093</td>
+<td>task</td>
+<td>low</td>
+<td>commons_auth/ JWT verifier — HMAC + JWKS hybrid + Gin middleware +
+claims helpers, vendored Herald-internal per §11.4.74 catalogue-check
+no-match. Catalogue evidence:
+<code>docs/catalogue-checks/HRD-093-commons-auth.md</code>. Note:
+HRD-093 number is shared with the Wave 2 sherald-scaffold row below —
+both anchors stay valid pending an operator-side renumber decision.</td>
+<td>2026-05-21</td>
+<td>(this commit)</td>
+<td>spec V3 §41 + Wave 3 design §4;
+docs/catalogue-checks/HRD-093-commons-auth.md</td>
+</tr>
+<tr>
+<td>HRD-098</td>
+<td>task</td>
+<td>middle</td>
+<td>sherald <code>/v1/safety_state</code> live — process-local
+Aggregator + background mem-sampler (15s tick) + Handler with JWT gate
+via commons_auth.GinMiddleware. Replaces the Wave 2 501-stub. §107
+evidence: e2e E46 (no-auth → 401), E47 (valid HMAC → 200 +
+current_mem_percent&gt;0 + last_destructive_op=null +
+uptime_seconds&gt;=1 + open_events=0). Paired mutation M5 (zero-mem
+Aggregator) proves E47 catches the regression. E48 SKIP-with-reason —
+destructive-op trigger awaits HRD-033 body.</td>
+<td>2026-05-21</td>
+<td>(this commit)</td>
+<td>spec V3 §18.0 + §41 + §44.M; e2e E46-E47</td>
+</tr>
+<tr>
+<td>HRD-028</td>
+<td>task</td>
+<td>low</td>
+<td>cherald <code>/v1/compliance</code> live — paginated + filter-aware
+<code>constitution_state</code> pull surface with JWT gate via
+commons_auth.GinMiddleware. Backed by ConstitutionStore.ListQuery
+extended with Since/Until/Offset (commit 6276437). §107 evidence: e2e
+E43 (no-auth → 401), E44 (valid HMAC + empty tenant → 200 + total=0 +
+page=1 + page_size=50). E45 SKIP-with-reason — cross-binary
+cherald-reads-pherald-writes deferred to Wave 3b (Runner not live
+yet).</td>
+<td>2026-05-21</td>
+<td>(this commit)</td>
+<td>spec V3 §42.1.5 + §41 + §44.M; e2e E43-E44</td>
+</tr>
 <tr>
 <td>HRD-092</td>
 <td>task</td>

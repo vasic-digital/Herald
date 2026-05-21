@@ -47,7 +47,7 @@ alt="Herald" />{width=96px height=96px}</p>
 <tbody>
 <tr>
 <td>Revision</td>
-<td>8</td>
+<td>9</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -63,42 +63,43 @@ alt="Herald" />{width=96px height=96px}</p>
 </tr>
 <tr>
 <td>Status summary</td>
-<td>HRD-012 Claude Code dispatcher live integration closed atomically
-per §107 (Plan 2 Tasks 6+7 produced 2 independent live PASS runs against
-real <code>claude --resume</code>). HRD-011 Telegram stays open as "code
-complete; awaiting live E17/E19 evidence" — code committed in
-92c9cb3..a254fec + 7697644 but operator credentials
-(HERALD_TGRAM_BOT_TOKEN + HERALD_TGRAM_CHAT_ID) required to capture
-E17/E19 live PASS before honest Issues→Fixed migration. Operator guide
-<code>docs/guides/OPERATOR_CREDENTIALS.md</code> added in this revision
-with step-by-step instructions for all supported messengers + LLM
-dispatchers + audit checklist. Prior context: HRD-010 closed in r6
-(commons_storage live wiring complete; §107 E14/E15/E16 invariants live;
-production RLS bypass discovered + fixed via TDD). Spec V3 r6 adds §43
-Constitution-derived flavor commands. Wave 2 flavor scaffolds landed
-(commits 7e0a614..eef606b + 24b96f2): commons/cli/ + 6 new flavor
-binaries + pherald refactor + e2e 18→33 + spec V3 r7→r8. HRD-092..097
-closed atomically in this revision; HRD-098 opened as Wave 3+ deferred
-work for sherald /v1/safety_state live implementation.</td>
+<td>r9 captures Wave 3a close-out: HRD-028 (cherald /v1/compliance live)
++ HRD-098 (sherald /v1/safety_state live) atomically Issues→Fixed
+alongside the commons_auth/ JWT-verifier scaffold (HRD-093
+catalogue-check evidence at
+<code>docs/catalogue-checks/HRD-093-commons-auth.md</code>; note:
+HRD-093 number is shared with the Wave 2 sherald-scaffold closure
+already in Fixed). 8 new e2e invariants land (E35/E36 auth gate × 2
+flavors + E43/E44 cherald compliance + E46/E47 sherald safety_state);
+E45 + E48 SKIP-with-reason awaiting Wave 3b (pherald Runner + HRD-033
+destructive-guard body). New paired §1.1 mutation meta-test
+<code>tests/test_wave3_mutation_meta.sh</code> (3/3 PASS): M1 strips JWT
+verify → E35 FAIL; M5 zeroes mem → E47 FAIL; post-flight green. Prior
+r8: HRD-012 Claude Code dispatcher closed; HRD-011 Telegram code
+complete pending live evidence; HRD-092..097 Wave 2 atomic closures;
+HRD-098 opened (now closed in this r9). Operator guide
+<code>docs/guides/OPERATOR_CREDENTIALS.md</code> remains the credential
+resolution source-of-truth.</td>
 </tr>
 <tr>
 <td>Issues</td>
 <td>HRD-008, HRD-011 (code complete; live evidence pending), HRD-015,
-HRD-016, HRD-018..HRD-028, HRD-029..HRD-056, HRD-081, HRD-085..HRD-090,
-HRD-098</td>
+HRD-016, HRD-018..HRD-027, HRD-029..HRD-056, HRD-081,
+HRD-085..HRD-090</td>
 </tr>
 <tr>
 <td>Issues summary</td>
-<td>51 open / in-progress workable items. HRD-012 was closed atomically
-in r7 with live PASS evidence; HRD-011 code complete but
-live-evidence-pending per §107 (no PASS-bluff). r8 adds HRD-098 (sherald
-/v1/safety_state live impl, Wave 3+).</td>
+<td>49 open / in-progress workable items. r9: HRD-028 (cherald
+compliance) + HRD-098 (sherald safety_state) closed atomically by Wave
+3a (commits dbbea95..this). Carry-over to Wave 3b: HRD-016 (pherald
+Runner), HRD-024 (iherald paging), HRD-033 (destructive-guard body), and
+the rest of the §43 command catalogue.</td>
 </tr>
 <tr>
 <td>Fixed</td>
 <td>HRD-001..HRD-007, HRD-009, HRD-009b, HRD-010, HRD-012, HRD-013,
-HRD-014, HRD-017, HRD-080, HRD-092, HRD-093, HRD-094, HRD-095, HRD-096,
-HRD-097</td>
+HRD-014, HRD-017, HRD-028, HRD-080, HRD-092, HRD-093, HRD-094, HRD-095,
+HRD-096, HRD-097, HRD-098</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
@@ -312,18 +313,6 @@ without redeploy)</td>
 <td>2026-05-20</td>
 <td>2026-05-20</td>
 <td>spec V3 §42.1.4; Catalogue-Check: TBD</td>
-</tr>
-<tr>
-<td>HRD-028</td>
-<td>task</td>
-<td>open</td>
-<td>low</td>
-<td><code>/v1/compliance</code> pull surface — Gin handler returning
-<code>constitution_state</code> rows filtered by rule / subject /
-decision; paginated</td>
-<td>2026-05-20</td>
-<td>2026-05-20</td>
-<td>spec V3 §42.1.5 + §41; Catalogue-Check: TBD</td>
 </tr>
 <tr>
 <td>HRD-029</td>
@@ -803,25 +792,6 @@ extend
 <code>digital.vasic.background.TaskRepository@2d46dd60b2ffcb9d3b584b029b711a6fbc71b296</code>
 (failure-terminal surface — composes with HRD-085 GetByID + HRD-018
 cherald event emission).</td>
-</tr>
-<tr>
-<td>HRD-098</td>
-<td>task</td>
-<td>open</td>
-<td>middle</td>
-<td><code>sherald /v1/safety_state</code> live implementation — daemon
-status surface returning open events, current host mem%, and last
-destructive-op log. Wave 2 (commit 7e0a614..eef606b) landed sherald
-flavor binary serving :24793 with <code>/v1/safety_state</code>
-returning honest 501 + HRD-098 pointer; this HRD opens the live
-implementation. Deferred to Wave 3+ alongside HRD-016 (pherald Runner
-wiring), HRD-024 (iherald paging), HRD-028 (cherald compliance), and the
-28 §43 command bodies.</td>
-<td>2026-05-21</td>
-<td>2026-05-21</td>
-<td>spec V3 §18.0 + §41 + §44.M; Catalogue-Check: no-match (Wave 3+
-scope) — likely composes with HRD-018 cherald event-store reads +
-<code>commons_infra</code> host-resource probes.</td>
 </tr>
 </tbody>
 </table>

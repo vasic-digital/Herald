@@ -8,15 +8,15 @@
 
 | Field | Value |
 |---|---|
-| Revision | 7 |
+| Revision | 8 |
 | Created | 2026-05-20 |
 | Last modified | 2026-05-21 |
 | Status | active |
-| Status summary | r7 captures Wave 2 atomic closures: HRD-092 (commons/cli/ scaffold), HRD-093 (sherald), HRD-094 (cherald), HRD-095 (bherald), HRD-096 (rherald), HRD-097 (iherald + scherald paired). All 6 closed by commits 7e0a614..eef606b with as-built evidence in §44.M of spec V3 r8. HRD-012 Claude Code dispatcher live integration closed atomically per §107 — Plan 2 Tasks 6 + 7 produced two independent live PASS runs (24s + 36s) against real `claude --resume` with exact-match assertions on session_uuid, anchor_path, Outcome, and Summary. HRD-011 Telegram stays open ("code complete, awaiting live E17/E19 evidence") per §107 — operator credentials needed before live PASS captured. Prior: HRD-010 commons_storage + the E14 RLS-bypass production bug fix; Foundation M1/M2/M3. |
-| Issues | see `Issues.md` — r8 adds HRD-098 (sherald /v1/safety_state live impl, Wave 3+). |
-| Issues summary | HRD-008/-011 (code complete pending creds) /-015/-016/-018 (in_progress) + HRD-019..HRD-056 + HRD-081 + HRD-085..HRD-090 + HRD-098 still open. |
-| Fixed | HRD-001..HRD-007, HRD-009, HRD-009b, HRD-010, HRD-012, HRD-013, HRD-014, HRD-017, HRD-080, HRD-092, HRD-093, HRD-094, HRD-095, HRD-096, HRD-097 (and HRD-018 partial — M1 component landed) |
-| Fixed summary | spec V1→V3 r8; Go module foundation + Foundation M1/M2/M3; HRD-010 commons_storage live wiring; HRD-012 Claude Code dispatcher live (live PASS evidence captured); universal §11.4.73 + §11.4.74 mandates propagated; I6 gate refined; Wave 2 flavor scaffolds (HRD-092..097) closed atomically. |
+| Status summary | r8 captures Wave 3a close-outs: HRD-028 (cherald `/v1/compliance` live), HRD-098 (sherald `/v1/safety_state` live), and the commons_auth/ JWT-verifier scaffold (catalogue-check evidence at `docs/catalogue-checks/HRD-093-commons-auth.md` — note: HRD-093 number is shared with the Wave 2 sherald-scaffold closure already in this file; both anchors stay valid pending an operator-side renumber). 8 new e2e invariants land — E35/E36 auth gate × 2 flavors + E43/E44 cherald compliance + E46/E47 sherald safety_state. E45 + E48 SKIP-with-reason awaiting Wave 3b (pherald Runner + HRD-033 destructive-guard body). Paired §1.1 mutation gate `tests/test_wave3_mutation_meta.sh` (3/3 PASS: M1 strip-verify breaks E35; M5 zero-mem breaks E47; post-flight green). Prior r7: Wave 2 atomic closures HRD-092..097; HRD-012 Claude Code dispatcher live; HRD-011 code complete pending operator creds; HRD-010 commons_storage live wiring + E14 RLS-bypass bug fix; Foundation M1/M2/M3. |
+| Issues | see `Issues.md` — r9 removes HRD-028 + HRD-098 from open (atomically Issues→Fixed in this commit). |
+| Issues summary | HRD-008/-011 (code complete pending creds) /-015/-016/-018 (in_progress) + HRD-019..HRD-027 + HRD-029..HRD-056 + HRD-081 + HRD-085..HRD-090 still open (49 items). |
+| Fixed | HRD-001..HRD-007, HRD-009, HRD-009b, HRD-010, HRD-012, HRD-013, HRD-014, HRD-017, HRD-028, HRD-080, HRD-092, HRD-093, HRD-094, HRD-095, HRD-096, HRD-097, HRD-098 (and HRD-018 partial — M1 component landed) |
+| Fixed summary | spec V1→V3 r8; Go module foundation + Foundation M1/M2/M3; HRD-010 commons_storage live wiring; HRD-012 Claude Code dispatcher live (live PASS evidence captured); universal §11.4.73 + §11.4.74 mandates propagated; I6 gate refined; Wave 2 flavor scaffolds (HRD-092..097) closed atomically; Wave 3a substrate (commons_auth JWT verifier) + 2 live REST routes (HRD-028, HRD-098) closed atomically. |
 | Continuation | see `CONTINUATION.md`. |
 
 ## Table of contents
@@ -27,6 +27,9 @@
 
 | ID | Type | Criticality | Title | Closed | Commit | Reference |
 |---|---|---|---|---|---|---|
+| HRD-093 | task | low | commons_auth/ JWT verifier — HMAC + JWKS hybrid + Gin middleware + claims helpers, vendored Herald-internal per §11.4.74 catalogue-check no-match. Catalogue evidence: `docs/catalogue-checks/HRD-093-commons-auth.md`. Note: HRD-093 number is shared with the Wave 2 sherald-scaffold row below — both anchors stay valid pending an operator-side renumber decision. | 2026-05-21 | (this commit) | spec V3 §41 + Wave 3 design §4; docs/catalogue-checks/HRD-093-commons-auth.md |
+| HRD-098 | task | middle | sherald `/v1/safety_state` live — process-local Aggregator + background mem-sampler (15s tick) + Handler with JWT gate via commons_auth.GinMiddleware. Replaces the Wave 2 501-stub. §107 evidence: e2e E46 (no-auth → 401), E47 (valid HMAC → 200 + current_mem_percent>0 + last_destructive_op=null + uptime_seconds>=1 + open_events=0). Paired mutation M5 (zero-mem Aggregator) proves E47 catches the regression. E48 SKIP-with-reason — destructive-op trigger awaits HRD-033 body. | 2026-05-21 | (this commit) | spec V3 §18.0 + §41 + §44.M; e2e E46-E47 |
+| HRD-028 | task | low | cherald `/v1/compliance` live — paginated + filter-aware `constitution_state` pull surface with JWT gate via commons_auth.GinMiddleware. Backed by ConstitutionStore.ListQuery extended with Since/Until/Offset (commit 6276437). §107 evidence: e2e E43 (no-auth → 401), E44 (valid HMAC + empty tenant → 200 + total=0 + page=1 + page_size=50). E45 SKIP-with-reason — cross-binary cherald-reads-pherald-writes deferred to Wave 3b (Runner not live yet). | 2026-05-21 | (this commit) | spec V3 §42.1.5 + §41 + §44.M; e2e E43-E44 |
 | HRD-092 | task | middle | commons/cli/ shared CLI scaffold (Wave 2) — NewRootCmd + VersionCmd + ServeCmd (with Middleware hook) + StubCmd + healthz/readyz/metrics handlers. Vendored as Herald-internal per §11.4.74 catalogue-check no-match. As-built evidence: §44.M of spec V3 r8 + docs/catalogue-checks/HRD-092-commons-cli.md. | 2026-05-21 | (this commit) | spec V3 §44.M; Catalogue-Check: no-match → vendor |
 | HRD-093 | task | middle | sherald flavor scaffold — System Herald binary serving :24793 with cli.ServeCmd, 5 §43 stubs (HRD-033/034/040/046/056) + /v1/safety_state 501 stub → HRD-098. | 2026-05-21 | (this commit) | spec V3 §18.0 + §44.M; Catalogue-Check: no-match → vendor |
 | HRD-094 | task | middle | cherald flavor scaffold — Constitution Herald binary serving :24792 with cli.ServeCmd, 11 §43 stubs + /v1/compliance 501 stub → HRD-028. | 2026-05-21 | (this commit) | spec V3 §18.0 + §44.M; Catalogue-Check: no-match → vendor |

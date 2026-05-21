@@ -47,7 +47,7 @@ alt="Herald" />{width=96px height=96px}</p>
 <tbody>
 <tr>
 <td>Revision</td>
-<td>9</td>
+<td>10</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -63,41 +63,49 @@ alt="Herald" />{width=96px height=96px}</p>
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>Wave 2 flavor scaffolds + spec V3 r8 landed (commits
-7e0a614..eef606b + 24b96f2 logo branding parallel work).</strong> Shared
-<code>commons/cli/</code> package + 6 new flavor binaries (sherald,
-cherald, bherald, rherald, iherald, scherald) + pherald refactor
-(consumes cli.ServeCmd with RequestIDMiddleware hook). Branding struct
-extended with 5 per-flavor fields
-(Flavor/Prefix/DisplayName/DefaultPort/Mission); DefaultBranding factory
-populates them. e2e_bluff_hunt grew 18 → 33 invariants; paired mutation
-gate <code>tests/test_wave2_mutation_meta.sh</code> (4/4 PASS) proves
-the new invariants catch the regressions they claim. Spec V3 r7 → r8
-captured §6.3 Branding extension + §18.0 Wave 2 catalogue + §41 REST
-routes + §44.M milestone + §43.2 catalogue-check addendum. HRD-092..097
-atomically Issues→Fixed in r8 Issues / r7 Fixed; HRD-098 opened as Wave
-3+ deferred (sherald /v1/safety_state live).</td>
+<td><strong>Wave 3a substrate + 2 live REST routes landed (commits
+<code>dbbea95..this</code>).</strong> New top-level
+<code>commons_auth/</code> Go module — JWT verifier (HMAC + JWKS hybrid)
++ Gin middleware + claims helpers (catalogue-check no-match → vendored
+Herald-internal; evidence at
+<code>docs/catalogue-checks/HRD-093-commons-auth.md</code>).
+<code>events_processed</code> migration (000012) for inbound idempotency
+archive. <code>ConstitutionStore.ListQuery</code> extended with
+Since/Until/Offset. cherald + sherald each grew an
+<code>internal/</code> package wiring the live route:
+<code>cherald/internal/compliance</code> (paginated
+<code>constitution_state</code> pull) and
+<code>sherald/internal/safety</code> (process-local Aggregator + 15s
+mem-sampler goroutine). Both flavors' <code>serve</code> plane now
+refuses to start without HERALD_AUTH_MODE per §107 (silent
+unauthenticated serve would be a bluff). e2e_bluff_hunt grew 33 → 41
+invariants (E35/E36 auth gate × 2 + E43/E44 cherald + E46/E47 sherald).
+E45 + E48 SKIP-with-reason awaiting Wave 3b. New paired §1.1 mutation
+gate <code>tests/test_wave3_mutation_meta.sh</code> (3/3 PASS: M1
+strip-verify → E35 FAIL; M5 zero-mem → E47 FAIL; post-flight green).
+Atomic Issues→Fixed for HRD-028 (cherald compliance), HRD-098 (sherald
+safety_state), and HRD-093 (commons_auth; number shared with Wave 2
+sherald scaffold pending renumber).</td>
 </tr>
 <tr>
 <td>Issues</td>
 <td>HRD-008, HRD-011, HRD-015, HRD-016, HRD-018 (in_progress),
-HRD-019..HRD-028, HRD-029..HRD-056, HRD-081, HRD-085..HRD-090,
-HRD-098</td>
+HRD-019..HRD-027, HRD-029..HRD-056, HRD-081, HRD-085..HRD-090</td>
 </tr>
 <tr>
 <td>Issues summary</td>
-<td>see <code>Issues.md</code> — 51 open items spanning live channel
+<td>see <code>Issues.md</code> — 49 open items spanning live channel
 integrations (HRD-011), REST surface (HRD-016), §42 constitution
-bindings (HRD-018..028), §43 command-catalogue (HRD-029..056), HRD-081
+bindings (HRD-018..027), §43 command-catalogue (HRD-029..056), HRD-081
 (containers podman-compose adapter refinement), HRD-085..090
-(queue-repository stub-completion surface opened during HRD-010), and
-HRD-098 (sherald /v1/safety_state live impl, Wave 3+).</td>
+(queue-repository stub-completion surface opened during HRD-010).
+HRD-028 + HRD-098 closed atomically in Wave 3a.</td>
 </tr>
 <tr>
 <td>Fixed</td>
 <td>HRD-001..HRD-007, HRD-009, HRD-009b, HRD-010, HRD-012, HRD-013,
-HRD-014, HRD-017, HRD-080, HRD-092, HRD-093, HRD-094, HRD-095, HRD-096,
-HRD-097</td>
+HRD-014, HRD-017, HRD-028, HRD-080, HRD-092, HRD-093, HRD-094, HRD-095,
+HRD-096, HRD-097, HRD-098</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
@@ -105,12 +113,15 @@ HRD-097</td>
 </tr>
 <tr>
 <td>Continuation</td>
-<td>Wave 3 priorities: HRD-016 (pherald Runner wiring), HRD-024 (iherald
-paging live), HRD-028 (cherald compliance live), HRD-098 (sherald
-safety_state live), and the 28 §43 command bodies. Operator priorities
-remain: HRD-008 (quickstart e2e validation) and HRD-011 (Telegram live
-evidence pending operator creds). Each milestone followed by
-multi-mirror push + full anti-bluff verification (audit + gate + e2e
+<td>Wave 3b priorities: HRD-016 (pherald Runner wiring + live
+<code>/v1/events</code> POST surface), HRD-024 (iherald
+<code>/v1/webhooks/page</code> live), HRD-033 (sherald destructive-guard
+body — unlocks E48), and the rest of the §43 command catalogue.
+Cross-binary E45 invariant (cherald reads pherald-written
+constitution_state rows) lights up once Runner lands. Operator
+priorities remain: HRD-008 (quickstart e2e validation) + HRD-011
+(Telegram live evidence pending operator creds). Each milestone followed
+by multi-mirror push + full anti-bluff verification (audit + gate + e2e
 bluff-hunt).</td>
 </tr>
 </tbody>
@@ -230,16 +241,30 @@ pointers.</td>
 </tr>
 <tr>
 <td><code>sherald</code> (CLI)</td>
-<td>✅ scaffolded (Wave 2 / HRD-093)</td>
-<td>System Herald binary serving :24793 via cli.ServeCmd. 5 §43 stubs
-(HRD-033/034/040/046/056). <code>/v1/safety_state</code> returns honest
-501 + HRD-098.</td>
+<td>✅ live (Wave 3a / HRD-098)</td>
+<td>System Herald binary serving :24793 via cli.ServeCmd +
+commons_auth.GinMiddleware (JWT gate). <code>/v1/safety_state</code> now
+LIVE — backed by <code>sherald/internal/safety</code> (process-local
+Aggregator + 15s mem-sampler goroutine, lifecycle bound to
+SIGTERM-cancelled context). 5 §43 stubs (HRD-033/034/040/046/056) still
+return honest non-zero + HRD pointer.</td>
 </tr>
 <tr>
 <td><code>cherald</code> (CLI)</td>
-<td>✅ scaffolded (Wave 2 / HRD-094)</td>
-<td>Constitution Herald binary serving :24792 via cli.ServeCmd. 11 §43
-stubs. <code>/v1/compliance</code> returns honest 501 + HRD-028.</td>
+<td>✅ live (Wave 3a / HRD-028)</td>
+<td>Constitution Herald binary serving :24792 via cli.ServeCmd +
+commons_auth.GinMiddleware (JWT gate). <code>/v1/compliance</code> now
+LIVE — backed by <code>cherald/internal/compliance</code> (paginated +
+filter-aware ConstitutionStore reads; tenant scope extracted from JWT
+claims). 11 §43 stubs still return honest non-zero + HRD pointer.</td>
+</tr>
+<tr>
+<td><code>commons_auth</code></td>
+<td>✅ landed (Wave 3a / HRD-093)</td>
+<td>JWT verifier — HMAC (HS256) + JWKS (RS256/ES256) hybrid;
+Redis-cached keys with in-memory fallback; Gin middleware + claims
+helpers. Catalogue-Check: no-match → vendored Herald-internal
+(<code>docs/catalogue-checks/HRD-093-commons-auth.md</code>).</td>
 </tr>
 <tr>
 <td><code>bherald</code> (CLI)</td>
@@ -276,19 +301,22 @@ SKIP</strong> (was 14; HRD-011 telebot.v3 third-party SKIP-with-reason
 per §11.4.74; I8 paired meta-test included).</li>
 <li><strong>CodeGraph validate:</strong> 7 PASS / 0 FAIL / 2 SKIP
 (HRD-091 documented submodule-traversal gap).</li>
-<li><strong>E2E bluff-hunt against real services:</strong> <strong>33
-PASS / 0 FAIL / 3 SKIP</strong> (was 18; Wave 2 added E19-E33 covering 6
-new flavor binaries: version --json shape, serving flavors healthz on
-:249NN, /v1/safety_state 501, /v1/compliance 501, /v1/webhooks/page 501,
-sherald SIGTERM graceful-shutdown, §43 stub exit-code, pherald
-regression sentinel). SKIPs are E17/E18/E34 (Telegram live, claude live,
-full inbound) requiring operator credentials. Real Gin server, live
-<code>/v1/*</code> endpoints, real Postgres + Redis containers via
-<code>containers/</code> submodule, M2 RLS integration tests + HRD-010
-storage tests against the live stack, SIGTERM-graceful-shutdowns. Paired
-§1.1 mutation gate <code>tests/test_wave2_mutation_meta.sh</code> (4/4
-PASS) proves the new Wave 2 invariants catch the regressions they claim.
-This is the canonical §107 evidence per Herald §107.</li>
+<li><strong>E2E bluff-hunt against real services:</strong> <strong>41
+PASS / 0 FAIL / 5 SKIP</strong> (was 33; Wave 3a added 8 new PASSes:
+E35/E36 auth gate × 2 flavors + E43/E44 cherald compliance live +
+E46/E47 sherald safety_state live; updated E28/E29 from "501 stub" →
+"401 JWT-gated" to reflect Wave 3a route swap). SKIPs are E17/E18/E34
+(Telegram live, claude live, full inbound — requires operator
+credentials) + E45 (cross-binary cherald-reads-pherald-writes — Wave 3b
+once Runner lands) + E48 (sherald destructive-op trigger — HRD-033 body
+not implemented). Real Gin server, live <code>/v1/*</code> endpoints,
+real Postgres + Redis containers via <code>containers/</code> submodule,
+M2 RLS integration tests + HRD-010 storage tests against the live stack,
+SIGTERM-graceful-shutdowns. Paired §1.1 mutation gates:
+<code>tests/test_wave2_mutation_meta.sh</code> (4/4 PASS — Wave 2
+invariants) + <code>tests/test_wave3_mutation_meta.sh</code> (3/3 PASS —
+Wave 3a invariants M1+M5+post-flight, M6 SKIP). This is the canonical
+§107 evidence per Herald §107.</li>
 <li><strong>Submodules:</strong> 12 vendored — 11 Helix-stack capability
 modules under <code>submodules/</code> (<code>auth</code>,
 <code>background</code>, <code>cache</code>, <code>config</code>,
@@ -346,6 +374,68 @@ The §107 covenant directly prevented this from shipping; the lesson is
 "EXACT-N row count, never &gt;=N" for any isolation test.</li>
 </ul>
 <h2 id="recent-activity">Recent activity</h2>
+<h3 id="wave-3a--substrate--2-live-rest-routes-closed-2026-05-21">Wave
+3a — substrate + 2 live REST routes (closed 2026-05-21)</h3>
+<p>8-step workstream commits <code>dbbea95..this</code> shipped:</p>
+<ul>
+<li><strong><code>commons_auth/</code> JWT verifier scaffold</strong>
+(HRD-093, commit <code>dbbea95</code>) — new top-level Go module: HMAC
+(HS256) + JWKS (RS256/ES256) hybrid verifier with Redis-cached keys +
+in-memory fallback; Gin middleware (<code>GinMiddleware</code>) that
+gates every request behind the verifier and sets
+<code>ContextKeyClaims</code> on success; <code>claims.go</code> helpers
+(<code>TenantFromClaims</code>, <code>SubjectFromClaims</code>);
+<code>verifier_test.go</code> exercises both modes incl. expired-token +
+wrong-signature paths. Catalogue-Check: no-match → vendor
+Herald-internal
+(<code>docs/catalogue-checks/HRD-093-commons-auth.md</code>).</li>
+<li><strong><code>events_processed</code> migration</strong> (commit
+<code>3f8daed</code>) —
+<code>commons_storage/migrations/000012_events_processed.{up,down}.sql</code>;
+RLS-enforced 30-day TTL inbound idempotency archive per V3 §32.2.</li>
+<li><strong><code>ConstitutionStore.ListQuery</code> extension</strong>
+(commit <code>6276437</code>) — Since/Until/Offset fields added; both
+Memory + Postgres backends honour them.</li>
+<li><strong><code>cherald/internal/compliance/</code> Handler +
+tests</strong> (commit <code>a2ef831</code>) — paginated + filter-aware
+<code>/v1/compliance</code> handler; tenant scope from JWT claims;
+defaults <code>page=1, page_size=50</code> (max 200).</li>
+<li><strong>cherald wiring + route swap</strong> (HRD-028 close-out,
+commit <code>bfca740</code>) — <code>cherald/cmd/cherald/main.go</code>
+builds the Verifier from env, instantiates the ConstitutionStore
+(Postgres if <code>HERALD_PG_DSN</code> else Memory), and wires
+<code>commons_auth.GinMiddleware</code> +
+<code>compliance.Handler</code> via
+<code>cli.ServeOpts.Middleware</code>. The 501-stub for
+<code>/v1/compliance</code> is gone.</li>
+<li><strong><code>sherald/internal/safety/</code> Aggregator + Handler +
+sampler</strong> (commit <code>1016b96</code>) — process-local
+<code>Aggregator</code> tracks lastMemPercent + lastDestructiveOp +
+uptime; <code>StartMemSampler</code> goroutine ticks every 15s; Handler
+returns the snapshot as JSON; tests cover the Aggregator surface.</li>
+<li><strong>sherald wiring + sampler start</strong> (HRD-098 close-out,
+commit <code>bfa82bc</code>) — <code>sherald/cmd/sherald/main.go</code>
+instantiates the Aggregator + starts the sampler under a SIGTERM-bound
+context; wires the Verifier + Handler via
+<code>cli.ServeOpts.Middleware</code>. The 501-stub for
+<code>/v1/safety_state</code> is gone.</li>
+<li><strong>e2e + mutation gate + docs sync (this commit)</strong> — 8
+new e2e invariants (E35/E36/E43/E44/E46/E47 PASS; E45/E48
+SKIP-with-reason); E28/E29 updated from "501 stub" to "401 JWT-gated";
+e2e header set process-wide HERALD_AUTH_MODE +
+CODEGRAPH_ALLOW_UNSAFE_NODE; new paired §1.1 mutation gate
+<code>tests/test_wave3_mutation_meta.sh</code> (3/3 PASS); atomic
+Issues→Fixed for HRD-028, HRD-098, HRD-093; Status.md r9 → r10;
+Issues.md r8 → r9; Fixed.md r7 → r8.</li>
+</ul>
+<p>Anti-bluff battery sign-off (this commit): inheritance gate 15/15
+PASS; meta-tests (I6, I8, Wave2, Wave3) all green;
+<code>audit_antibluff.sh</code> 16 PASS / 0 FAIL / 1 SKIP (commons_auth
+not added to the audit's <code>submodules/</code> walk —
+workspace-internal module by design); <code>codegraph_validate.sh</code>
+7 PASS / 0 FAIL / 2 SKIP (with
+<code>CODEGRAPH_ALLOW_UNSAFE_NODE=1</code> for Node 25 environment);
+<code>e2e_bluff_hunt.sh</code> 41 PASS / 0 FAIL / 5 SKIP.</p>
 <h3 id="wave-2--flavor-scaffold-sweep-closed-2026-05-21">Wave 2 —
 flavor-scaffold sweep (closed 2026-05-21)</h3>
 <p>15-step workstream commits <code>7e0a614..eef606b</code> (with

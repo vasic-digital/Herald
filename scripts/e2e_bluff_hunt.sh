@@ -11,8 +11,8 @@
 # "compiles and tests green" but doesn't work for the user will FAIL
 # at least one assertion here.
 #
-# Thirty-three invariants (each is the "captured-evidence" for one feature
-# class per §11.4.5 + §11.4.69):
+# Forty-one invariants (E1..E48; E37-E42 land in Wave 3b; each is the
+# "captured-evidence" for one feature class per §11.4.5 + §11.4.69):
 #
 #   E1.  pherald binary builds (compile-level — necessary, not sufficient).
 #   E2.  pherald version --json returns parseable JSON with required fields.
@@ -43,10 +43,11 @@
 #            rherald, iherald, scherald — each --json shape valid + flavor field matches).
 #   E25-E27. Serving flavors actually bind + healthz returns 200
 #            (sherald, cherald, iherald).
-#   E28-E30. Flavor-specific 501 routes return HRD pointer in body
-#            (sherald GET /v1/safety_state → HRD-098,
-#             cherald GET /v1/compliance → HRD-028,
-#             iherald POST /v1/webhooks/page → HRD-024).
+#   E28-E30. Flavor-specific routes return expected status. Wave 3a
+#            close-out: sherald GET /v1/safety_state + cherald GET
+#            /v1/compliance went LIVE → assert 401 (JWT-gated). iherald
+#            POST /v1/webhooks/page stays 501 + HRD-024 until that HRD
+#            lands. Body-200 evidence for the live routes is in E44+E47.
 #   E31. Representative §43 stub exits non-zero with HRD pointer
 #        (sherald destructive-guard → HRD-033 in stderr).
 #   E32. New serving flavor graceful-shuts on SIGTERM (sherald).
@@ -71,6 +72,20 @@ cd "${REPO_ROOT}"
 PHERALD_BIN="/tmp/pherald-bluff-$$"
 HTTP_PORT="${HERALD_E2E_PORT:-24791}"
 PHERALD_PID=""
+
+# Wave 3a: cherald + sherald refuse to start without a usable JWT verifier
+# (HERALD_AUTH_MODE + matching secret). Set process-wide so the existing
+# E19-E32 flavor probes (version --json, serve healthz, §43 stubs) also
+# work after the auth-required-at-startup design from T5/T7. Override on
+# the wire via Authorization header is the only path that yields 200.
+export HERALD_AUTH_MODE="${HERALD_AUTH_MODE:-hmac}"
+export HERALD_AUTH_HMAC_SECRET="${HERALD_AUTH_HMAC_SECRET:-test-secret-32-bytes-of-padding!!}"
+
+# Wave 3a: codegraph (npx @colbymchenry/codegraph) refuses Node ≥ 23 by
+# default; the operator's Mac runs Node 25 and downgrade is out of scope.
+# The override flag is documented in the upstream tool itself and validates
+# correctly on the indexed graph. Set globally so E5 PASSes.
+export CODEGRAPH_ALLOW_UNSAFE_NODE="${CODEGRAPH_ALLOW_UNSAFE_NODE:-1}"
 
 cleanup() {
     if [ -n "${PHERALD_PID}" ]; then
@@ -321,9 +336,14 @@ done
 
 echo ""
 echo "== E25-E30 + E32: Serving flavors bind healthz/route + sherald SIGTERM =="
+# Wave 3a close-out: sherald /v1/safety_state + cherald /v1/compliance
+# went LIVE — E28/E29 now assert the route is JWT-gated (no-auth → 401)
+# instead of the Wave 2 "501 stub + HRD pointer" check. iherald
+# /v1/webhooks/page stays 501 until HRD-024 lands. The "200 + body" path
+# is covered by E43-E47 below.
 serve_idx=25
 route_idx=28
-for entry in "sherald:24993:HRD-098:safety_state:GET" "cherald:24992:HRD-028:compliance:GET" "iherald:24994:HRD-024:webhooks/page:POST"; do
+for entry in "sherald:24993:HRD-098:safety_state:GET:401" "cherald:24992:HRD-028:compliance:GET:401" "iherald:24994:HRD-024:webhooks/page:POST:501"; do
     flavor="${entry%%:*}"
     rest="${entry#*:}"
     port="${rest%%:*}"
@@ -331,7 +351,9 @@ for entry in "sherald:24993:HRD-098:safety_state:GET" "cherald:24992:HRD-028:com
     hrd="${rest%%:*}"
     rest="${rest#*:}"
     route_short="${rest%%:*}"
-    method="${rest##*:}"
+    rest="${rest#*:}"
+    method="${rest%%:*}"
+    expected_code="${rest##*:}"
     serve_label="E${serve_idx}(${flavor})"
     route_label="E${route_idx}(${flavor})"
     bin="/tmp/${flavor}-serve-$$"
@@ -360,8 +382,13 @@ for entry in "sherald:24993:HRD-098:safety_state:GET" "cherald:24992:HRD-028:com
         tail -5 /tmp/${flavor}-serve.log 2>&1 | sed 's/^/      /'
         fail=$((fail+1)); fail_names+=("${serve_label}")
     fi
-    check "${route_label} /v1/${route_short} returns 501 + ${hrd} in body" \
-        "curl -sS -o /tmp/route-body -w '%{http_code}' -X '${method}' 'http://127.0.0.1:${port}/v1/${route_short}' | grep -q '^501$' && grep -q '${hrd}' /tmp/route-body"
+    if [ "${expected_code}" = "501" ]; then
+        check "${route_label} /v1/${route_short} returns 501 + ${hrd} in body (Wave 2 honesty stub)" \
+            "curl -sS -o /tmp/route-body -w '%{http_code}' -X '${method}' 'http://127.0.0.1:${port}/v1/${route_short}' | grep -q '^501$' && grep -q '${hrd}' /tmp/route-body"
+    else
+        check "${route_label} /v1/${route_short} returns 401 (Wave 3a — route went live, JWT-gated)" \
+            "[ \"\$(curl -sS -o /dev/null -w '%{http_code}' -X '${method}' 'http://127.0.0.1:${port}/v1/${route_short}')\" = '401' ]"
+    fi
 
     # E32 only for sherald: SIGTERM graceful exit.
     if [ "${flavor}" = "sherald" ]; then
@@ -419,6 +446,145 @@ else
     echo "FAIL  E33 pherald build"
     tail -5 /tmp/e2e_out | sed 's/^/      /'
     fail=$((fail+1)); fail_names+=("E33-build")
+fi
+
+# ----------------------------------------------------------------------
+# E35-E36 + E43-E48: Wave 3a substrate + cherald/sherald live routes.
+# ----------------------------------------------------------------------
+
+echo ""
+echo "== E35-E36: Auth gate (cherald + sherald reject bad/missing JWT) =="
+# HERALD_AUTH_MODE + HERALD_AUTH_HMAC_SECRET are exported at the top
+# of the script so the auth-required-at-startup wiring lets the binary
+# boot. Bad/missing JWT then exercises the GinMiddleware reject path.
+
+for flavor in cherald sherald; do
+    case "${flavor}" in
+        cherald) port=24992; route="/v1/compliance"; method="GET";;
+        sherald) port=24993; route="/v1/safety_state"; method="GET";;
+    esac
+    bin="/tmp/${flavor}-bluff-$$"
+    if go build -o "${bin}" "./${flavor}/cmd/${flavor}" > /tmp/e2e_out 2>&1; then
+        "${bin}" serve --http-port "${port}" > /tmp/${flavor}-e35.log 2>&1 &
+        serve_pid=$!
+        # Wait up to 5s for the port to be live.
+        ready=0
+        for i in $(seq 1 10); do
+            if curl -fsS "http://127.0.0.1:${port}/v1/healthz" >/dev/null 2>&1; then
+                ready=1; break
+            fi
+            sleep 0.5
+        done
+        if [ "${ready}" = 1 ]; then
+            check "E35(${flavor}) ${method} ${route} no auth → 401" \
+                "[ \"\$(curl -sS -o /dev/null -w '%{http_code}' -X '${method}' http://127.0.0.1:${port}${route})\" = '401' ]"
+            check "E36(${flavor}) ${method} ${route} wrong HMAC → 401" \
+                "BAD_TOKEN=\$(HMAC_SECRET='wrong-secret-32-bytes-padding!!!' python3 -c 'import hmac,hashlib,base64,json,time,os; s=os.environ[\"HMAC_SECRET\"].encode(); h=base64.urlsafe_b64encode(b\"{\\\"alg\\\":\\\"HS256\\\",\\\"typ\\\":\\\"JWT\\\"}\").rstrip(b\"=\"); p=base64.urlsafe_b64encode(json.dumps({\"tenant\":\"550e8400-e29b-41d4-a716-446655440000\",\"sub\":\"t\",\"exp\":int(time.time())+300}).encode()).rstrip(b\"=\"); sig=base64.urlsafe_b64encode(hmac.new(s,h+b\".\"+p,hashlib.sha256).digest()).rstrip(b\"=\"); print((h+b\".\"+p+b\".\"+sig).decode())') && [ \"\$(curl -sS -o /dev/null -w '%{http_code}' -X '${method}' -H \"Authorization: Bearer \${BAD_TOKEN}\" http://127.0.0.1:${port}${route})\" = '401' ]"
+        else
+            echo "FAIL  E35(${flavor}) serve never accepted HTTP within 5s on :${port}"
+            tail -5 /tmp/${flavor}-e35.log 2>&1 | sed 's/^/      /'
+            fail=$((fail+2))
+            fail_names+=("E35-${flavor}" "E36-${flavor}")
+        fi
+        kill "${serve_pid}" 2>/dev/null || true
+        wait "${serve_pid}" 2>/dev/null || true
+        rm -f "${bin}"
+    else
+        echo "FAIL  E35/E36(${flavor}) build"
+        tail -5 /tmp/e2e_out | sed 's/^/      /'
+        fail=$((fail+2))
+        fail_names+=("E35-${flavor}-build" "E36-${flavor}-build")
+    fi
+done
+
+echo ""
+echo "== E43-E45: cherald /v1/compliance live (HRD-028 close-out) =="
+bin="/tmp/cherald-compliance-$$"
+if go build -o "${bin}" ./cherald/cmd/cherald > /tmp/e2e_out 2>&1; then
+    "${bin}" serve --http-port 24992 > /tmp/cherald-e43.log 2>&1 &
+    serve_pid=$!
+    ready=0
+    for i in $(seq 1 10); do
+        if curl -fsS "http://127.0.0.1:24992/v1/healthz" >/dev/null 2>&1; then
+            ready=1; break
+        fi
+        sleep 0.5
+    done
+    if [ "${ready}" = 1 ]; then
+        TOKEN=$(python3 - <<'PY'
+import hmac, hashlib, base64, json, time, os
+secret = os.environ["HERALD_AUTH_HMAC_SECRET"].encode()
+header = base64.urlsafe_b64encode(b'{"alg":"HS256","typ":"JWT"}').rstrip(b'=')
+payload = base64.urlsafe_b64encode(json.dumps({"tenant":"550e8400-e29b-41d4-a716-446655440000","sub":"t","exp":int(time.time())+300}).encode()).rstrip(b'=')
+sig = base64.urlsafe_b64encode(hmac.new(secret, header+b'.'+payload, hashlib.sha256).digest()).rstrip(b'=')
+print((header+b'.'+payload+b'.'+sig).decode())
+PY
+)
+        check "E43 GET /v1/compliance no auth → 401" \
+            "[ \"\$(curl -sS -o /dev/null -w '%{http_code}' http://127.0.0.1:24992/v1/compliance)\" = '401' ]"
+        check "E44 GET /v1/compliance valid JWT empty tenant → 200 + total=0" \
+            "curl -fsS -H 'Authorization: Bearer ${TOKEN}' http://127.0.0.1:24992/v1/compliance | python3 -c 'import sys,json; d=json.load(sys.stdin); assert d[\"total\"]==0, d[\"total\"]; assert d[\"page\"]==1; assert d[\"page_size\"]==50'"
+        echo "SKIP  E45 (cross-binary integration — pherald Runner not live yet; runs in Wave 3b)"
+    else
+        echo "FAIL  E43/E44 cherald serve never accepted HTTP within 5s on :24992"
+        tail -5 /tmp/cherald-e43.log 2>&1 | sed 's/^/      /'
+        fail=$((fail+2))
+        fail_names+=("E43" "E44")
+    fi
+    kill "${serve_pid}" 2>/dev/null || true
+    wait "${serve_pid}" 2>/dev/null || true
+    rm -f "${bin}"
+else
+    echo "FAIL  E43/E44 cherald build"
+    tail -5 /tmp/e2e_out | sed 's/^/      /'
+    fail=$((fail+2))
+    fail_names+=("E43-build" "E44-build")
+fi
+
+echo ""
+echo "== E46-E48: sherald /v1/safety_state live (HRD-098 close-out) =="
+bin="/tmp/sherald-safety-$$"
+if go build -o "${bin}" ./sherald/cmd/sherald > /tmp/e2e_out 2>&1; then
+    "${bin}" serve --http-port 24993 > /tmp/sherald-e47.log 2>&1 &
+    serve_pid=$!
+    ready=0
+    for i in $(seq 1 10); do
+        if curl -fsS "http://127.0.0.1:24993/v1/healthz" >/dev/null 2>&1; then
+            ready=1; break
+        fi
+        sleep 0.5
+    done
+    if [ "${ready}" = 1 ]; then
+        # Give the mem-sampler a moment to publish its first sample.
+        sleep 1.2
+        TOKEN=$(python3 - <<'PY'
+import hmac, hashlib, base64, json, time, os
+secret = os.environ["HERALD_AUTH_HMAC_SECRET"].encode()
+header = base64.urlsafe_b64encode(b'{"alg":"HS256","typ":"JWT"}').rstrip(b'=')
+payload = base64.urlsafe_b64encode(json.dumps({"tenant":"550e8400-e29b-41d4-a716-446655440000","sub":"t","exp":int(time.time())+300}).encode()).rstrip(b'=')
+sig = base64.urlsafe_b64encode(hmac.new(secret, header+b'.'+payload, hashlib.sha256).digest()).rstrip(b'=')
+print((header+b'.'+payload+b'.'+sig).decode())
+PY
+)
+        check "E46 GET /v1/safety_state no auth → 401" \
+            "[ \"\$(curl -sS -o /dev/null -w '%{http_code}' http://127.0.0.1:24993/v1/safety_state)\" = '401' ]"
+        check "E47 GET /v1/safety_state fresh sherald → 200 + mem>0 + last_destructive_op=null + uptime>=1" \
+            "curl -fsS -H 'Authorization: Bearer ${TOKEN}' http://127.0.0.1:24993/v1/safety_state | python3 -c 'import sys,json; d=json.load(sys.stdin); assert d[\"binary\"]==\"sherald\"; assert d[\"current_mem_percent\"]>0, d.get(\"current_mem_percent\"); assert d[\"last_destructive_op\"] is None; assert d[\"uptime_seconds\"]>=1, d[\"uptime_seconds\"]; assert d[\"open_events\"]==0'"
+        echo "SKIP  E48 (destructive-op trigger — HRD-033 stub body not implemented)"
+    else
+        echo "FAIL  E46/E47 sherald serve never accepted HTTP within 5s on :24993"
+        tail -5 /tmp/sherald-e47.log 2>&1 | sed 's/^/      /'
+        fail=$((fail+2))
+        fail_names+=("E46" "E47")
+    fi
+    kill "${serve_pid}" 2>/dev/null || true
+    wait "${serve_pid}" 2>/dev/null || true
+    rm -f "${bin}"
+else
+    echo "FAIL  E46/E47 sherald build"
+    tail -5 /tmp/e2e_out | sed 's/^/      /'
+    fail=$((fail+2))
+    fail_names+=("E46-build" "E47-build")
 fi
 
 # ----------------------------------------------------------------------
