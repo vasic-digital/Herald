@@ -8,14 +8,14 @@
 
 | Field | Value |
 |---|---|
-| Revision | 9 |
+| Revision | 10 |
 | Created | 2026-05-20 |
 | Last modified | 2026-05-21 |
 | Status | active |
-| Status summary | r9 captures Wave 3a close-out: HRD-028 (cherald /v1/compliance live) + HRD-098 (sherald /v1/safety_state live) atomically Issues→Fixed alongside the commons_auth/ JWT-verifier scaffold (HRD-093 catalogue-check evidence at `docs/catalogue-checks/HRD-093-commons-auth.md`; note: HRD-093 number is shared with the Wave 2 sherald-scaffold closure already in Fixed). 8 new e2e invariants land (E35/E36 auth gate × 2 flavors + E43/E44 cherald compliance + E46/E47 sherald safety_state); E45 + E48 SKIP-with-reason awaiting Wave 3b (pherald Runner + HRD-033 destructive-guard body). New paired §1.1 mutation meta-test `tests/test_wave3_mutation_meta.sh` (3/3 PASS): M1 strips JWT verify → E35 FAIL; M5 zeroes mem → E47 FAIL; post-flight green. Prior r8: HRD-012 Claude Code dispatcher closed; HRD-011 Telegram code complete pending live evidence; HRD-092..097 Wave 2 atomic closures; HRD-098 opened (now closed in this r9). Operator guide `docs/guides/OPERATOR_CREDENTIALS.md` remains the credential resolution source-of-truth. |
+| Status summary | r10 doc-cleanup: renumbers the Wave 3a commons_auth scaffold HRD-093 → **HRD-099** to resolve the collision with Wave 2's HRD-093 (sherald flavor scaffold). Catalogue-check evidence relocated to `docs/catalogue-checks/HRD-099-commons-auth.md`; Wave 3a commits (`dbbea95..0cc6fad`) retain HRD-093 in their messages as executing-time history. r9 captured Wave 3a close-out: HRD-028 (cherald /v1/compliance live) + HRD-098 (sherald /v1/safety_state live) atomically Issues→Fixed alongside the commons_auth scaffold (now HRD-099). 8 new e2e invariants land (E35/E36 auth gate × 2 flavors + E43/E44 cherald compliance + E46/E47 sherald safety_state); E45 + E48 SKIP-with-reason awaiting Wave 3b. New paired §1.1 mutation meta-test `tests/test_wave3_mutation_meta.sh` (3/3 PASS). Prior r8: HRD-012 Claude Code dispatcher closed; HRD-011 Telegram code complete pending live evidence; HRD-092..097 Wave 2 atomic closures; HRD-098 opened (now closed). Operator guide `docs/guides/OPERATOR_CREDENTIALS.md` remains the credential resolution source-of-truth. |
 | Issues | HRD-008, HRD-011 (code complete; live evidence pending), HRD-015, HRD-016, HRD-018..HRD-027, HRD-029..HRD-056, HRD-081, HRD-085..HRD-090 |
-| Issues summary | 49 open / in-progress workable items. r9: HRD-028 (cherald compliance) + HRD-098 (sherald safety_state) closed atomically by Wave 3a (commits dbbea95..this). Carry-over to Wave 3b: HRD-016 (pherald Runner), HRD-024 (iherald paging), HRD-033 (destructive-guard body), and the rest of the §43 command catalogue. |
-| Fixed | HRD-001..HRD-007, HRD-009, HRD-009b, HRD-010, HRD-012, HRD-013, HRD-014, HRD-017, HRD-028, HRD-080, HRD-092, HRD-093, HRD-094, HRD-095, HRD-096, HRD-097, HRD-098 |
+| Issues summary | 49 open / in-progress workable items. r10 doc-cleanup renumbers HRD-093 (commons_auth) → HRD-099 (no scope change). r9: HRD-028 (cherald compliance) + HRD-098 (sherald safety_state) closed atomically by Wave 3a (commits dbbea95..0cc6fad). Carry-over to Wave 3b: HRD-016 (pherald Runner), HRD-024 (iherald paging), HRD-033 (destructive-guard body), and the rest of the §43 command catalogue. |
+| Fixed | HRD-001..HRD-007, HRD-009, HRD-009b, HRD-010, HRD-012, HRD-013, HRD-014, HRD-017, HRD-028, HRD-080, HRD-092, HRD-093, HRD-094, HRD-095, HRD-096, HRD-097, HRD-098, HRD-099 |
 | Fixed summary | see `Fixed.md`. |
 | Continuation | see `CONTINUATION.md`. |
 

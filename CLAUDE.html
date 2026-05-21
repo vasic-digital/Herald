@@ -112,7 +112,7 @@ alt="Herald" />{width=96px height=96px}</p>
 <tbody>
 <tr>
 <td>Revision</td>
-<td>6</td>
+<td>7</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -120,7 +120,7 @@ alt="Herald" />{width=96px height=96px}</p>
 </tr>
 <tr>
 <td>Last modified</td>
-<td>2026-05-20</td>
+<td>2026-05-21</td>
 </tr>
 <tr>
 <td>Status</td>
@@ -128,10 +128,13 @@ alt="Herald" />{width=96px height=96px}</p>
 </tr>
 <tr>
 <td>Status summary</td>
-<td>r5: added §107 End-user-usability covenant section restating the
-verbatim operator mandate at Herald level + ToC entry; ties to
-HERALD_CONSTITUTION.md §107 + inheritance-gate invariant I8a (paired
-with I8b/c on AGENTS.md + HERALD_CONSTITUTION.md).</td>
+<td>r7: workspace module count corrected 7 → 14 (Wave 2 added 6 flavor
+binaries + Wave 3a added commons_auth); anti-bluff verification section
+gains a brief Wave 2/3a status pointer. Prior r5/r6: §107
+End-user-usability covenant section restating the verbatim operator
+mandate at Herald level + ToC entry; ties to HERALD_CONSTITUTION.md §107
++ inheritance-gate invariant I8a (paired with I8b/c on AGENTS.md +
+HERALD_CONSTITUTION.md).</td>
 </tr>
 <tr>
 <td>Issues</td>
@@ -145,7 +148,8 @@ with I8b/c on AGENTS.md + HERALD_CONSTITUTION.md).</td>
 <td>Fixed</td>
 <td>spec-path references (r2), pre-implementation-language update (r3),
 submodules + HRD-docs + codegraph-index enumeration (r4), §107 mandate
-restatement + I8a anchor (r5)</td>
+restatement + I8a anchor (r5), Wave-2/3a workspace-module-count refresh
+(r7)</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
@@ -154,12 +158,15 @@ commit; r4 closes the discoverability gaps observed during a fresh
 <code>/init</code> review; r5 closes the Herald-level
 explicit-restatement gap identified by the 2026-05-20 audit (Helix root
 + 10 submodules had the verbatim mandate; only Herald's three root docs
-lacked it).</td>
+lacked it); r7 closes the doc drift observed during the Wave 3a final
+review (CLAUDE.md claimed 7 modules; actual 14 post-Wave 2 + Wave
+3a).</td>
 </tr>
 <tr>
 <td>Continuation</td>
-<td>bump again when first-implementation cycle completes
-HRD-010..HRD-012/HRD-016 live integrations.</td>
+<td>bump again when Wave 3b completes HRD-016 (pherald Runner) + HRD-011
+(Telegram live evidence) + remaining HRD-018..028 constitution
+bindings.</td>
 </tr>
 </tbody>
 </table>
@@ -305,11 +312,19 @@ Redis + OTel up on-demand.</li>
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> build ./commons/... ./commons_prefix/... ./commons_messaging/... ./commons_storage/... ./commons_constitution/... ./commons_infra/... ./pherald/...</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test <span class="at">-race</span> <span class="at">-count</span><span class="op">=</span>1 ./commons/... ./commons_prefix/... ./commons_messaging/... ./commons_storage/... ./commons_constitution/... ./commons_infra/... ./pherald/...</span></code></pre></div>
 <p>Tests pass on Go 1.25+ (verified on 1.26). Workspace is configured
-via <code>go.work</code> listing 7 Herald modules (<code>commons</code>,
+via <code>go.work</code> listing <strong>14</strong> Herald modules: the
+7 foundation modules (<code>commons</code>,
 <code>commons_constitution</code>, <code>commons_infra</code>,
 <code>commons_messaging</code>, <code>commons_prefix</code>,
-<code>commons_storage</code>, <code>pherald</code>). The 9 Helix-stack
-submodules under <code>submodules/</code> are referenced via
+<code>commons_storage</code>, <code>pherald</code>) plus
+<code>commons_auth</code> (Wave 3a JWT verifier / Gin middleware) and
+the 6 Wave 2 flavor binaries (<code>sherald</code>,
+<code>cherald</code>, <code>bherald</code>, <code>rherald</code>,
+<code>iherald</code>, <code>scherald</code>). <code>go.work</code>
+itself is gitignored per spec §9.1; a fresh clone needs
+<code>go work init &amp;&amp; go work use ./...</code> (or copy the
+existing snippet from the project's local working tree). The 9
+Helix-stack submodules under <code>submodules/</code> are referenced via
 <code>replace</code> directives in the consuming modules'
 <code>go.mod</code>, not via <code>go.work</code>.</p>
 <p><strong>Anti-bluff verification (run before any release tag or risky
@@ -552,8 +567,9 @@ repo): <code>auth</code>, <code>background</code>, <code>cache</code>,
 <code>middleware</code>, <code>observability</code>,
 <code>recovery</code>. They are referenced via <code>replace</code>
 directives in the consuming Herald modules' <code>go.mod</code>, NOT via
-<code>go.work</code> (which only lists the 7 Herald-owned modules). Do
-not add them to <code>go.work</code>.</li>
+<code>go.work</code> (which lists the <strong>14</strong> Herald-owned
+modules — 7 foundation + <code>commons_auth</code> + 6 flavor binaries).
+Do not add the Helix-stack submodules to <code>go.work</code>.</li>
 <li>The repo is in <code>main</code> branch and committed under "Milos
 Vasic" — no other contributors yet.</li>
 <li><code>.claude/</code> exists but is empty; project-local Claude

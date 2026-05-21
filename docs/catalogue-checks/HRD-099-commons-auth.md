@@ -4,7 +4,9 @@
 
 </div>
 
-# Catalogue-Check — HRD-093 commons_auth/
+# Catalogue-Check — HRD-099 commons_auth/
+
+> **Renumbered 2026-05-21**: Originally tracked as HRD-093 during Wave 3a design + implementation; renumbered to HRD-099 in the post-Wave-3a doc-cleanup pass to resolve a collision with Wave 2's HRD-093 (sherald flavor scaffold, commit `6145cec`). All Wave 3a commits (`dbbea95..0cc6fad`) still reference HRD-093 in their messages — that's the executing-time history; HRD-099 is the canonical anchor going forward.
 
 | Field | Value |
 |---|---|
@@ -12,7 +14,7 @@
 | Target | `commons_auth/` (JWT verifier + Gin middleware) |
 | Orgs queried | `vasic-digital/*`, `HelixDevelopment/*` |
 | Verdict | **no-match → vendor as Herald-internal package** |
-| Evidence commits | Wave 3a task 1 (this commit) |
+| Evidence commits | Wave 3a task 1 (commit `dbbea95`) |
 
 ## Search performed
 

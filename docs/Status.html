@@ -47,7 +47,7 @@ alt="Herald" />{width=96px height=96px}</p>
 <tbody>
 <tr>
 <td>Revision</td>
-<td>10</td>
+<td>11</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -63,29 +63,28 @@ alt="Herald" />{width=96px height=96px}</p>
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>Wave 3a substrate + 2 live REST routes landed (commits
-<code>dbbea95..this</code>).</strong> New top-level
+<td><strong>r11 doc-cleanup: renumbers commons_auth HRD-093 → HRD-099,
+refreshes CLAUDE.md + CONTINUATION.md to post-Wave-3a reality.</strong>
+Resolves the HRD-093 collision (Wave 3a commons_auth + Wave 2
+sherald-scaffold both held the number). Catalogue-check evidence
+relocated to <code>docs/catalogue-checks/HRD-099-commons-auth.md</code>;
+Wave 3a commits (<code>dbbea95..0cc6fad</code>) retain HRD-093 in their
+messages as executing-time history. CLAUDE.md bumped r6 → r7 (workspace
+module count corrected 7 → 14; Wave 2 + Wave 3a paragraphs added).
+CONTINUATION.md bumped r5 → r6 (refreshes stale "M1 landed, M2 next"
+status; now points at Wave 3b Runner + HRD-016). Prior r10: <strong>Wave
+3a substrate + 2 live REST routes landed (commits
+<code>dbbea95..0cc6fad</code>).</strong> New top-level
 <code>commons_auth/</code> Go module — JWT verifier (HMAC + JWKS hybrid)
-+ Gin middleware + claims helpers (catalogue-check no-match → vendored
-Herald-internal; evidence at
-<code>docs/catalogue-checks/HRD-093-commons-auth.md</code>).
-<code>events_processed</code> migration (000012) for inbound idempotency
-archive. <code>ConstitutionStore.ListQuery</code> extended with
++ Gin middleware + claims helpers. <code>events_processed</code>
+migration (000012) for inbound idempotency archive.
+<code>ConstitutionStore.ListQuery</code> extended with
 Since/Until/Offset. cherald + sherald each grew an
-<code>internal/</code> package wiring the live route:
-<code>cherald/internal/compliance</code> (paginated
-<code>constitution_state</code> pull) and
-<code>sherald/internal/safety</code> (process-local Aggregator + 15s
-mem-sampler goroutine). Both flavors' <code>serve</code> plane now
-refuses to start without HERALD_AUTH_MODE per §107 (silent
-unauthenticated serve would be a bluff). e2e_bluff_hunt grew 33 → 41
-invariants (E35/E36 auth gate × 2 + E43/E44 cherald + E46/E47 sherald).
-E45 + E48 SKIP-with-reason awaiting Wave 3b. New paired §1.1 mutation
-gate <code>tests/test_wave3_mutation_meta.sh</code> (3/3 PASS: M1
-strip-verify → E35 FAIL; M5 zero-mem → E47 FAIL; post-flight green).
-Atomic Issues→Fixed for HRD-028 (cherald compliance), HRD-098 (sherald
-safety_state), and HRD-093 (commons_auth; number shared with Wave 2
-sherald scaffold pending renumber).</td>
+<code>internal/</code> package wiring the live route. e2e_bluff_hunt
+grew 33 → 41 invariants; paired §1.1 mutation gate
+<code>tests/test_wave3_mutation_meta.sh</code> (3/3 PASS). Atomic
+Issues→Fixed for HRD-028 (cherald compliance), HRD-098 (sherald
+safety_state), and HRD-099 (commons_auth).</td>
 </tr>
 <tr>
 <td>Issues</td>
@@ -105,7 +104,7 @@ HRD-028 + HRD-098 closed atomically in Wave 3a.</td>
 <td>Fixed</td>
 <td>HRD-001..HRD-007, HRD-009, HRD-009b, HRD-010, HRD-012, HRD-013,
 HRD-014, HRD-017, HRD-028, HRD-080, HRD-092, HRD-093, HRD-094, HRD-095,
-HRD-096, HRD-097, HRD-098</td>
+HRD-096, HRD-097, HRD-098, HRD-099</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
@@ -260,11 +259,11 @@ claims). 11 §43 stubs still return honest non-zero + HRD pointer.</td>
 </tr>
 <tr>
 <td><code>commons_auth</code></td>
-<td>✅ landed (Wave 3a / HRD-093)</td>
+<td>✅ landed (Wave 3a / HRD-099, renumbered from HRD-093)</td>
 <td>JWT verifier — HMAC (HS256) + JWKS (RS256/ES256) hybrid;
 Redis-cached keys with in-memory fallback; Gin middleware + claims
 helpers. Catalogue-Check: no-match → vendored Herald-internal
-(<code>docs/catalogue-checks/HRD-093-commons-auth.md</code>).</td>
+(<code>docs/catalogue-checks/HRD-099-commons-auth.md</code>).</td>
 </tr>
 <tr>
 <td><code>bherald</code> (CLI)</td>
@@ -379,16 +378,16 @@ The §107 covenant directly prevented this from shipping; the lesson is
 <p>8-step workstream commits <code>dbbea95..this</code> shipped:</p>
 <ul>
 <li><strong><code>commons_auth/</code> JWT verifier scaffold</strong>
-(HRD-093, commit <code>dbbea95</code>) — new top-level Go module: HMAC
-(HS256) + JWKS (RS256/ES256) hybrid verifier with Redis-cached keys +
-in-memory fallback; Gin middleware (<code>GinMiddleware</code>) that
-gates every request behind the verifier and sets
-<code>ContextKeyClaims</code> on success; <code>claims.go</code> helpers
-(<code>TenantFromClaims</code>, <code>SubjectFromClaims</code>);
-<code>verifier_test.go</code> exercises both modes incl. expired-token +
-wrong-signature paths. Catalogue-Check: no-match → vendor
-Herald-internal
-(<code>docs/catalogue-checks/HRD-093-commons-auth.md</code>).</li>
+(HRD-099, renumbered from HRD-093; commit <code>dbbea95</code>) — new
+top-level Go module: HMAC (HS256) + JWKS (RS256/ES256) hybrid verifier
+with Redis-cached keys + in-memory fallback; Gin middleware
+(<code>GinMiddleware</code>) that gates every request behind the
+verifier and sets <code>ContextKeyClaims</code> on success;
+<code>claims.go</code> helpers (<code>TenantFromClaims</code>,
+<code>SubjectFromClaims</code>); <code>verifier_test.go</code> exercises
+both modes incl. expired-token + wrong-signature paths. Catalogue-Check:
+no-match → vendor Herald-internal
+(<code>docs/catalogue-checks/HRD-099-commons-auth.md</code>).</li>
 <li><strong><code>events_processed</code> migration</strong> (commit
 <code>3f8daed</code>) —
 <code>commons_storage/migrations/000012_events_processed.{up,down}.sql</code>;
@@ -419,14 +418,15 @@ instantiates the Aggregator + starts the sampler under a SIGTERM-bound
 context; wires the Verifier + Handler via
 <code>cli.ServeOpts.Middleware</code>. The 501-stub for
 <code>/v1/safety_state</code> is gone.</li>
-<li><strong>e2e + mutation gate + docs sync (this commit)</strong> — 8
-new e2e invariants (E35/E36/E43/E44/E46/E47 PASS; E45/E48
-SKIP-with-reason); E28/E29 updated from "501 stub" to "401 JWT-gated";
-e2e header set process-wide HERALD_AUTH_MODE +
-CODEGRAPH_ALLOW_UNSAFE_NODE; new paired §1.1 mutation gate
-<code>tests/test_wave3_mutation_meta.sh</code> (3/3 PASS); atomic
-Issues→Fixed for HRD-028, HRD-098, HRD-093; Status.md r9 → r10;
-Issues.md r8 → r9; Fixed.md r7 → r8.</li>
+<li><strong>e2e + mutation gate + docs sync (commit
+<code>0cc6fad</code>)</strong> — 8 new e2e invariants
+(E35/E36/E43/E44/E46/E47 PASS; E45/E48 SKIP-with-reason); E28/E29
+updated from "501 stub" to "401 JWT-gated"; e2e header set process-wide
+HERALD_AUTH_MODE + CODEGRAPH_ALLOW_UNSAFE_NODE; new paired §1.1 mutation
+gate <code>tests/test_wave3_mutation_meta.sh</code> (3/3 PASS); atomic
+Issues→Fixed for HRD-028, HRD-098, HRD-099 (commons_auth, renumbered
+from HRD-093 in this r11 cleanup); Status.md r9 → r10 → r11; Issues.md
+r8 → r9 → r10; Fixed.md r7 → r8 → r9.</li>
 </ul>
 <p>Anti-bluff battery sign-off (this commit): inheritance gate 15/15
 PASS; meta-tests (I6, I8, Wave2, Wave3) all green;

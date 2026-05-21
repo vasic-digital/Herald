@@ -8,16 +8,16 @@
 
 | Field | Value |
 |---|---|
-| Revision | 5 |
+| Revision | 6 |
 | Created | 2026-05-20 |
-| Last modified | 2026-05-20 |
+| Last modified | 2026-05-21 |
 | Status | active |
-| Status summary | **Foundation M1 landed.** `commons_constitution` (14 files, ~2.9k LOC) green under -race. Spec V3 r7 with §44. HRD-080 opened (I6 gate refinement for git-submodule support). Next: M2 Postgres + `digital.vasic.background` + RLS wiring. |
-| Issues | HRD-008, HRD-010, HRD-011, HRD-012, HRD-015, HRD-016, HRD-018 (in_progress), HRD-019..HRD-028, HRD-029..HRD-056 |
-| Issues summary | see `Issues.md` |
-| Fixed | HRD-001..HRD-007, HRD-009, HRD-009b, HRD-013, HRD-014, HRD-017 |
+| Status summary | **Wave 3a + Wave 2 + Foundation M1/M2/M3 all landed.** Workspace at 14 Go modules (`go.work` gitignored): commons + commons_auth + commons_constitution + commons_infra + commons_messaging + commons_prefix + commons_storage + pherald + 6 Wave-2 flavor binaries (sherald, cherald, bherald, rherald, iherald, scherald). Three live REST surfaces (pherald serve plumbing + cherald `/v1/compliance` + sherald `/v1/safety_state`); pherald `/v1/events` ingest still 501 pending Wave 3b Runner. Anti-bluff battery green: e2e_bluff_hunt 41 PASS / 0 FAIL / 5 SKIP; audit_antibluff 16/0/1; codegraph_validate 7/0/2; inheritance gate 15/15 + META-PASS; 5 paired §1.1 mutation gates green. Spec V3 at r8 (r9 owns Wave 3b spec capture). Doc-cleanup pass (this commit): Status r10→r11, Issues r9→r10, Fixed r8→r9 renumbered Wave 3a commons_auth HRD-093 → HRD-099 to resolve collision with Wave 2 sherald-scaffold HRD-093. |
+| Issues | HRD-008, HRD-011 (code complete; live evidence pending), HRD-015, HRD-016, HRD-018 (in_progress), HRD-019..HRD-027, HRD-029..HRD-056, HRD-081, HRD-085..HRD-090 |
+| Issues summary | see `Issues.md` — 49 open items |
+| Fixed | HRD-001..HRD-007, HRD-009, HRD-009b, HRD-010, HRD-012, HRD-013, HRD-014, HRD-017, HRD-028, HRD-080, HRD-092..HRD-099 (HRD-018 partial — M1 + M2 components landed) |
 | Fixed summary | see `Fixed.md` |
-| Continuation | M1 scaffold of `commons_constitution` (Evaluator + 12 emit helpers + BundleHash + ModeLadder + in-memory ConstitutionStore) composed atop the 9 Helix-stack submodules. Then M2 (Postgres + `digital.vasic.background` queue) then M3 (Gin REST + Redis cache). Each milestone closes its own end-to-end smoke. Multi-mirror push after each. After Foundation lands: codegraph integration per https://github.com/colbymchenry/codegraph for Claude Code + OpenCode + Kimi CLI + Crush + Qwen Code. Update on every non-trivial commit (per Universal §12.10). |
+| Continuation | **Wave 3b next**: pherald Runner (`pherald/internal/runner/` — 7 stages from §32) + live `POST /v1/events` ingest (HRD-016 close-out) + Telegram live evidence (HRD-011 — operator exports HERALD_TGRAM_BOT_TOKEN + HERALD_TGRAM_CHAT_ID; e2e E40 flips SKIP→PASS). Wave 3b plan still to be written (next `superpowers:writing-plans` invocation). After Wave 3b: §43 command-catalogue rollout (HRD-029..056), iherald `/v1/webhooks/page` live (HRD-024), sherald destructive-guard body (HRD-033 — unlocks E48), HRD-091 codegraph submodule-traversal gap. Spec V3 r9 bump owned by Wave 3b. Multi-mirror push after each milestone. Update on every non-trivial commit (per Universal §12.10). |
 
 ## Table of contents
 

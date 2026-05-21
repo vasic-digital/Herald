@@ -8,16 +8,16 @@
 
 | Field | Value |
 |---|---|
-| Revision | 6 |
+| Revision | 7 |
 | Created | 2026-05-15 |
-| Last modified | 2026-05-20 |
+| Last modified | 2026-05-21 |
 | Status | active |
-| Status summary | r5: added §107 End-user-usability covenant section restating the verbatim operator mandate at Herald level + ToC entry; ties to HERALD_CONSTITUTION.md §107 + inheritance-gate invariant I8a (paired with I8b/c on AGENTS.md + HERALD_CONSTITUTION.md). |
+| Status summary | r7: workspace module count corrected 7 → 14 (Wave 2 added 6 flavor binaries + Wave 3a added commons_auth); anti-bluff verification section gains a brief Wave 2/3a status pointer. Prior r5/r6: §107 End-user-usability covenant section restating the verbatim operator mandate at Herald level + ToC entry; ties to HERALD_CONSTITUTION.md §107 + inheritance-gate invariant I8a (paired with I8b/c on AGENTS.md + HERALD_CONSTITUTION.md). |
 | Issues | none |
 | Issues summary | — |
-| Fixed | spec-path references (r2), pre-implementation-language update (r3), submodules + HRD-docs + codegraph-index enumeration (r4), §107 mandate restatement + I8a anchor (r5) |
-| Fixed summary | aligned with HRD-009/HRD-009b/HRD-013/HRD-014 landing in the same commit; r4 closes the discoverability gaps observed during a fresh `/init` review; r5 closes the Herald-level explicit-restatement gap identified by the 2026-05-20 audit (Helix root + 10 submodules had the verbatim mandate; only Herald's three root docs lacked it). |
-| Continuation | bump again when first-implementation cycle completes HRD-010..HRD-012/HRD-016 live integrations. |
+| Fixed | spec-path references (r2), pre-implementation-language update (r3), submodules + HRD-docs + codegraph-index enumeration (r4), §107 mandate restatement + I8a anchor (r5), Wave-2/3a workspace-module-count refresh (r7) |
+| Fixed summary | aligned with HRD-009/HRD-009b/HRD-013/HRD-014 landing in the same commit; r4 closes the discoverability gaps observed during a fresh `/init` review; r5 closes the Herald-level explicit-restatement gap identified by the 2026-05-20 audit (Helix root + 10 submodules had the verbatim mandate; only Herald's three root docs lacked it); r7 closes the doc drift observed during the Wave 3a final review (CLAUDE.md claimed 7 modules; actual 14 post-Wave 2 + Wave 3a). |
+| Continuation | bump again when Wave 3b completes HRD-016 (pherald Runner) + HRD-011 (Telegram live evidence) + remaining HRD-018..028 constitution bindings. |
 
 ## Table of contents
 
@@ -100,7 +100,7 @@ go build ./commons/... ./commons_prefix/... ./commons_messaging/... ./commons_st
 go test -race -count=1 ./commons/... ./commons_prefix/... ./commons_messaging/... ./commons_storage/... ./commons_constitution/... ./commons_infra/... ./pherald/...
 ```
 
-Tests pass on Go 1.25+ (verified on 1.26). Workspace is configured via `go.work` listing 7 Herald modules (`commons`, `commons_constitution`, `commons_infra`, `commons_messaging`, `commons_prefix`, `commons_storage`, `pherald`). The 9 Helix-stack submodules under `submodules/` are referenced via `replace` directives in the consuming modules' `go.mod`, not via `go.work`.
+Tests pass on Go 1.25+ (verified on 1.26). Workspace is configured via `go.work` listing **14** Herald modules: the 7 foundation modules (`commons`, `commons_constitution`, `commons_infra`, `commons_messaging`, `commons_prefix`, `commons_storage`, `pherald`) plus `commons_auth` (Wave 3a JWT verifier / Gin middleware) and the 6 Wave 2 flavor binaries (`sherald`, `cherald`, `bherald`, `rherald`, `iherald`, `scherald`). `go.work` itself is gitignored per spec §9.1; a fresh clone needs `go work init && go work use ./...` (or copy the existing snippet from the project's local working tree). The 9 Helix-stack submodules under `submodules/` are referenced via `replace` directives in the consuming modules' `go.mod`, not via `go.work`.
 
 **Anti-bluff verification (run before any release tag or risky commit):**
 
@@ -196,7 +196,7 @@ The HRD-lifecycle docs in `docs/` also ship as PDF/HTML/DOCX quadruples: `Issues
 
 ## Notes for future scaffolding
 
-- `submodules/` holds 9 vendored Helix-stack modules (each its own `git@github.com:vasic-digital/<name>.git` repo): `auth`, `background`, `cache`, `config`, `database`, `eventbus`, `middleware`, `observability`, `recovery`. They are referenced via `replace` directives in the consuming Herald modules' `go.mod`, NOT via `go.work` (which only lists the 7 Herald-owned modules). Do not add them to `go.work`.
+- `submodules/` holds 9 vendored Helix-stack modules (each its own `git@github.com:vasic-digital/<name>.git` repo): `auth`, `background`, `cache`, `config`, `database`, `eventbus`, `middleware`, `observability`, `recovery`. They are referenced via `replace` directives in the consuming Herald modules' `go.mod`, NOT via `go.work` (which lists the **14** Herald-owned modules — 7 foundation + `commons_auth` + 6 flavor binaries). Do not add the Helix-stack submodules to `go.work`.
 - The repo is in `main` branch and committed under "Milos Vasic" — no other contributors yet.
 - `.claude/` exists but is empty; project-local Claude config can go there.
 - `LICENSE` is present (do not overwrite without asking).
