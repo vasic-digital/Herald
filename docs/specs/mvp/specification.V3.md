@@ -1,3 +1,9 @@
+<div align="center">
+
+![Herald](../../../assets/logo/herald_logo_square_128.png){width=96px height=96px}
+
+</div>
+
 # Herald — Specification V3
 
 | Field | Value |

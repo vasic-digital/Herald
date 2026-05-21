@@ -1,3 +1,9 @@
+<div align="center">
+
+![Herald](assets/logo/herald_logo_square_128.png){width=96px height=96px}
+
+</div>
+
 # CLAUDE.md
 
 | Field | Value |
@@ -180,6 +186,13 @@ The empty `constitutable/` directory at the repo root is intentional. Per the sp
 `docs/guides/HERALD_CONSTITUTION.md` and `docs/guides/CONSTITUTION_INHERITANCE.md` each ship with a committed `.pdf` sibling. When you edit one of these Markdown files, the PDF goes stale — flag it; do not regenerate silently unless the operator asks.
 
 The HRD-lifecycle docs in `docs/` also ship as PDF/HTML/DOCX quadruples: `Issues.md` (open HRDs per V3 §8.3), `Fixed.md` (closed-HRD log per §11.4.19 atomic migration), `Status.md` (status summary), `CONTINUATION.md` (live-test handoff prompt for operator-supplied credentials). The `*_Summary.md` variants are derived; do not hand-edit.
+
+**Logo branding (added 2026-05-21).** Every tracked Markdown doc now leads with a centered Herald logo header (pandoc-friendly `<div align="center">` wrapping a `![Herald](...){width=96px height=96px}` image reference to `assets/logo/herald_logo_square_128.png`). The export pipeline propagates that logo into the HTML, PDF, and DOCX siblings:
+
+- Logo source: `assets/logo/herald_logo.png` (1664x928 RGB master). Square + transparent variants live under `assets/logo/herald_logo_square_{32,64,128,256,512,1024}.png` (chroma-keyed white → alpha). `assets/logo/herald_logo.svg` is a vector wrapper around the 512px PNG. `assets/logo/print.css` carries print/screen styling for the HTML/PDF route.
+- Injection: idempotent re-runnable via `python3 scripts/branding_inject_logo.py <md ...>` — skips submodules/, containers/, constitutable/, docs/diary/, LICENSE; respects YAML front-matter; computes the relative path per doc depth.
+- Export: `bash scripts/export_docs.sh [<md>...]` regenerates HTML (pandoc), PDF (`--pdf-engine=weasyprint`), DOCX (pandoc-native) for every `.md` that already has at least one sibling artefact committed. Pass no args to regenerate everything.
+- When you add a new `.md`, run the injector once; when you edit one whose sibling exports are tracked, run the exporter for that one file.
 
 ## Notes for future scaffolding
 

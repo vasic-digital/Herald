@@ -1,0 +1,31 @@
+/*
+ * Herald branding — print + screen CSS for HTML/PDF document headers.
+ * Applied to pandoc-generated artefacts via --css=assets/logo/print.css.
+ */
+
+.logo-header {
+    text-align: center;
+    margin: 0 auto 1.5em auto;
+}
+
+.logo-header img {
+    max-width: 96px;
+    height: auto;
+    margin: 0 auto 1em auto;
+    display: block;
+}
+
+/* Pandoc emits centered <p>...<img>...</p> blocks too — catch them. */
+p > img[src*="herald_logo_square"] {
+    max-width: 96px;
+    height: auto;
+    display: block;
+    margin: 0 auto 1em auto;
+}
+
+@media print {
+    .logo-header img,
+    p > img[src*="herald_logo_square"] {
+        max-width: 80px;
+    }
+}

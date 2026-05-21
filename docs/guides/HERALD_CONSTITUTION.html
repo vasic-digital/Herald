@@ -4,157 +4,11 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>Herald Constitution</title>
+  <title>Herald</title>
   <style>
     /* Default styles provided by pandoc.
     ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
     */
-    html {
-      color: #1a1a1a;
-      background-color: #fdfdfd;
-    }
-    body {
-      margin: 0 auto;
-      max-width: 36em;
-      padding-left: 50px;
-      padding-right: 50px;
-      padding-top: 50px;
-      padding-bottom: 50px;
-      hyphens: auto;
-      overflow-wrap: break-word;
-      text-rendering: optimizeLegibility;
-      font-kerning: normal;
-    }
-    @media (max-width: 600px) {
-      body {
-        font-size: 0.9em;
-        padding: 12px;
-      }
-      h1 {
-        font-size: 1.8em;
-      }
-    }
-    @media print {
-      html {
-        background-color: white;
-      }
-      body {
-        background-color: transparent;
-        color: black;
-        font-size: 12pt;
-      }
-      p, h2, h3 {
-        orphans: 3;
-        widows: 3;
-      }
-      h2, h3, h4 {
-        page-break-after: avoid;
-      }
-    }
-    p {
-      margin: 1em 0;
-    }
-    a {
-      color: #1a1a1a;
-    }
-    a:visited {
-      color: #1a1a1a;
-    }
-    img {
-      max-width: 100%;
-    }
-    svg {
-      height: auto;
-      max-width: 100%;
-    }
-    h1, h2, h3, h4, h5, h6 {
-      margin-top: 1.4em;
-    }
-    h5, h6 {
-      font-size: 1em;
-      font-style: italic;
-    }
-    h6 {
-      font-weight: normal;
-    }
-    ol, ul {
-      padding-left: 1.7em;
-      margin-top: 1em;
-    }
-    li > ol, li > ul {
-      margin-top: 0;
-    }
-    blockquote {
-      margin: 1em 0 1em 1.7em;
-      padding-left: 1em;
-      border-left: 2px solid #e6e6e6;
-      color: #606060;
-    }
-    code {
-      white-space: pre-wrap;
-      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
-      font-size: 85%;
-      margin: 0;
-      hyphens: manual;
-    }
-    pre {
-      margin: 1em 0;
-      overflow: auto;
-    }
-    pre code {
-      padding: 0;
-      overflow: visible;
-      overflow-wrap: normal;
-    }
-    .sourceCode {
-     background-color: transparent;
-     overflow: visible;
-    }
-    hr {
-      border: none;
-      border-top: 1px solid #1a1a1a;
-      height: 1px;
-      margin: 1em 0;
-    }
-    table {
-      margin: 1em 0;
-      border-collapse: collapse;
-      width: 100%;
-      overflow-x: auto;
-      display: block;
-      font-variant-numeric: lining-nums tabular-nums;
-    }
-    table caption {
-      margin-bottom: 0.75em;
-    }
-    tbody {
-      margin-top: 0.5em;
-      border-top: 1px solid #1a1a1a;
-      border-bottom: 1px solid #1a1a1a;
-    }
-    th {
-      border-top: 1px solid #1a1a1a;
-      padding: 0.25em 0.5em 0.25em 0.5em;
-    }
-    td {
-      padding: 0.125em 0.5em 0.25em 0.5em;
-    }
-    header {
-      margin-bottom: 4em;
-      text-align: center;
-    }
-    #TOC li {
-      list-style: none;
-    }
-    #TOC ul {
-      padding-left: 1.3em;
-    }
-    #TOC > ul {
-      padding-left: 0;
-    }
-    #TOC a:not(:hover) {
-      text-decoration: none;
-    }
     span.smallcaps{font-variant: small-caps;}
     div.columns{display: flex; gap: min(4vw, 1.5em);}
     div.column{flex: auto; overflow-x: auto;}
@@ -235,62 +89,20 @@
     code span.vs { color: #4070a0; } /* VerbatimString */
     code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
   </style>
+  <link rel="stylesheet" href="../../assets/logo/print.css" />
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">Herald Constitution</h1>
+<h1 class="title">Herald</h1>
 </header>
-<nav id="TOC" role="doc-toc">
-<ul>
-<li><a href="#herald-constitution" id="toc-herald-constitution">Herald
-Constitution</a>
-<ul>
-<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
-contents</a></li>
-<li><a href="#project-articles" id="toc-project-articles">Project
-Articles</a>
-<ul>
-<li><a href="#pre-implementation-status"
-id="toc-pre-implementation-status">§101. Pre-implementation
-status</a></li>
-<li><a href="#mission-boundary" id="toc-mission-boundary">§102. Mission
-boundary</a></li>
-<li><a href="#mirror-parity-extends-universal-2.1"
-id="toc-mirror-parity-extends-universal-2.1">§103. Mirror parity
-(extends Universal §2.1)</a></li>
-<li><a href="#no-embedded-constitution-extends-universal-3"
-id="toc-no-embedded-constitution-extends-universal-3">§104. No embedded
-constitution (extends Universal §3)</a></li>
-<li><a href="#inheritance-gate-extends-universal-1.1"
-id="toc-inheritance-gate-extends-universal-1.1">§105. Inheritance gate
-(extends Universal §1.1)</a></li>
-<li><a href="#spec-change-rule-extends-universal-11.4"
-id="toc-spec-change-rule-extends-universal-11.4">§106. Spec-change rule
-(extends Universal §11.4)</a></li>
-<li><a
-href="#end-user-usability-covenant-extends-universal-11.4-mandatory-anti-bluff"
-id="toc-end-user-usability-covenant-extends-universal-11.4-mandatory-anti-bluff">§107.
-End-user-usability covenant (extends Universal §11.4 — MANDATORY
-ANTI-BLUFF)</a></li>
-</ul></li>
-<li><a href="#overrides-of-universal-constitution"
-id="toc-overrides-of-universal-constitution">Overrides of Universal
-Constitution</a></li>
-<li><a href="#owned-submodule-set-per-universal-4"
-id="toc-owned-submodule-set-per-universal-4">Owned-submodule set (per
-Universal §4)</a></li>
-<li><a href="#project-specific-remotes"
-id="toc-project-specific-remotes">Project-specific remotes</a></li>
-<li><a href="#notes" id="toc-notes">Notes</a></li>
-</ul></li>
-</ul>
-</nav>
+<div align="center">
+
+<p><img src="../../assets/logo/herald_logo_square_128.png"
+alt="Herald" />{width=96px height=96px}</p>
+</div>
+
 <h1 id="herald-constitution">Herald Constitution</h1>
 <table>
-<colgroup>
-<col style="width: 50%" />
-<col style="width: 50%" />
-</colgroup>
 <thead>
 <tr>
 <th>Field</th>
@@ -318,7 +130,7 @@ id="toc-project-specific-remotes">Project-specific remotes</a></li>
 <td>Status summary</td>
 <td>r4: added §107 End-user-usability covenant (verbatim operator
 mandate restated at Herald level per §1.1 propagation) + paired gate
-invariant I8a–c; corrected stale “Owned-submodule set: (none)” to
+invariant I8a–c; corrected stale "Owned-submodule set: (none)" to
 reflect the 10 vendored modules (9 Helix-stack + containers).</td>
 </tr>
 <tr>
@@ -337,7 +149,7 @@ owned-submodule list (r4)</td>
 <tr>
 <td>Fixed summary</td>
 <td>§106 spec-change rule retargeted to V3 path; gate-checked anchor
-‘comprehensive planning and implementation’ unchanged so I7 stays green.
+'comprehensive planning and implementation' unchanged so I7 stays green.
 r4 adds the end-user-usability covenant at Herald level (Helix §11.4 is
 the canonical authority; Herald restates per §1.1 multi-file propagation
 discipline) and the I8 gate invariant that asserts the mandate is
@@ -378,7 +190,7 @@ remotes</a></li>
 <li><a href="#notes">Notes</a></li>
 </ul>
 <p>This constitution <strong>extends</strong> the Helix Universal
-Constitution provided by the <strong>parent project’s</strong>
+Constitution provided by the <strong>parent project's</strong>
 <code>constitution/</code> submodule. Herald does not carry its own copy
 — see <code>docs/guides/CONSTITUTION_INHERITANCE.md</code> for the
 discovery contract.</p>
@@ -387,35 +199,35 @@ discovery contract.</p>
 overridden below with an explicit <code>Override §X.Y</code>
 section.</p>
 <p>Canonical constitution repo: <a
-href="https://github.com/HelixDevelopment/HelixConstitution"
-class="uri">https://github.com/HelixDevelopment/HelixConstitution</a></p>
+href="https://github.com/HelixDevelopment/HelixConstitution">https://github.com/HelixDevelopment/HelixConstitution</a></p>
 <h2 id="project-articles">Project Articles</h2>
-<h3 id="pre-implementation-status">§101. Pre-implementation status</h3>
+<h3 id="101-pre-implementation-status">§101. Pre-implementation
+status</h3>
 <p>Herald is pre-implementation. Until a <code>go.mod</code> is
 committed, no clause below may be interpreted as authorizing the agent
-to fabricate build/test infrastructure that doesn’t yet exist. Confirm
-the disambiguation (scaffold vs. fill spec) with the operator before
+to fabricate build/test infrastructure that doesn't yet exist. Confirm
+the disambiguation (scaffold vs. fill spec) with the operator before
 writing code, per Universal §11.4.6 (no-guessing).</p>
-<h3 id="mission-boundary">§102. Mission boundary</h3>
+<h3 id="102-mission-boundary">§102. Mission boundary</h3>
 <p>Herald ingests system events and fans them out to multiple
 notification channels. Anything outside event ingestion or notification
 fan-out is <strong>out of scope</strong> for this repo and belongs in a
 different submodule of the consuming project.</p>
-<h3 id="mirror-parity-extends-universal-2.1">§103. Mirror parity
+<h3 id="103-mirror-parity-extends-universal-21">§103. Mirror parity
 (extends Universal §2.1)</h3>
 <p>Every commit on <code>main</code> MUST land on all four upstream
 hosts (GitHub, GitLab, GitFlic, GitVerse) in a single fan-out push. The
-repo’s <code>origin</code> remote already aggregates the four push URLs;
+repo's <code>origin</code> remote already aggregates the four push URLs;
 do not bypass <code>origin</code> with per-host pushes unless rebuilding
 the fan-out configuration.</p>
-<h3 id="no-embedded-constitution-extends-universal-3">§104. No embedded
-constitution (extends Universal §3)</h3>
+<h3 id="104-no-embedded-constitution-extends-universal-3">§104. No
+embedded constitution (extends Universal §3)</h3>
 <p>Herald <strong>MUST NOT</strong> carry its own
 <code>constitution/</code> submodule. Herald is consumed as a submodule
 of a parent project that already provides the constitution; a duplicated
 copy would diverge in pinning, cause confusion about which is
-authoritative, and violate the “submodule commits propagate first”
-propagation order (Universal §3). The inheritance gate’s invariant
+authoritative, and violate the "submodule commits propagate first"
+propagation order (Universal §3). The inheritance gate's invariant
 <code>I6</code> enforces this: it FAILs if
 <code>&lt;repo-root&gt;/constitution/</code> or <code>.gitmodules</code>
 reappears.</p>
@@ -424,17 +236,13 @@ constitution <strong>alongside</strong> Herald, not inside it:</p>
 <div class="sourceCode" id="cb1"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone git@github.com:HelixDevelopment/HelixConstitution.git <span class="dt">\</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="va">$(</span><span class="fu">dirname</span> <span class="st">&quot;</span><span class="va">$PWD</span><span class="st">&quot;</span><span class="va">)</span>/constitution</span></code></pre></div>
-<h3 id="inheritance-gate-extends-universal-1.1">§105. Inheritance gate
-(extends Universal §1.1)</h3>
+<h3 id="105-inheritance-gate-extends-universal-11">§105. Inheritance
+gate (extends Universal §1.1)</h3>
 <p><code>tests/test_constitution_inheritance.sh</code> discovers the
 parent-provided constitution via inline parent-walk (mirrors
 <code>find_constitution.sh</code> Phase 1), then asserts six
 invariants:</p>
 <table>
-<colgroup>
-<col style="width: 50%" />
-<col style="width: 50%" />
-</colgroup>
 <thead>
 <tr>
 <th>#</th>
@@ -445,7 +253,7 @@ invariants:</p>
 <tr>
 <td>I1</td>
 <td>A <code>constitution/Constitution.md</code> is reachable by walking
-up the parent chain from Herald’s repo root.</td>
+up the parent chain from Herald's repo root.</td>
 </tr>
 <tr>
 <td>I2</td>
@@ -465,24 +273,24 @@ up the parent chain from Herald’s repo root.</td>
 </tr>
 <tr>
 <td>I5a–d</td>
-<td>Herald’s root docs (<code>CLAUDE.md</code>, <code>AGENTS.md</code>,
+<td>Herald's root docs (<code>CLAUDE.md</code>, <code>AGENTS.md</code>,
 this file, and <code>README.md</code>) all declare the parent-discovery
 inheritance contract.</td>
 </tr>
 <tr>
 <td>I6</td>
 <td>No <code>constitution/</code> directory or <code>.gitmodules</code>
-file exists at Herald’s root (the §104 invariant).</td>
+file exists at Herald's root (the §104 invariant).</td>
 </tr>
 <tr>
 <td>I7a–c</td>
-<td>Herald’s <code>CLAUDE.md</code>, <code>AGENTS.md</code>, and this
+<td>Herald's <code>CLAUDE.md</code>, <code>AGENTS.md</code>, and this
 file all contain the §106 spec-change rule anchor (per §1.1 propagation,
 mutation-paired).</td>
 </tr>
 <tr>
 <td>I8a–c</td>
-<td>Herald’s <code>CLAUDE.md</code>, <code>AGENTS.md</code>, and this
+<td>Herald's <code>CLAUDE.md</code>, <code>AGENTS.md</code>, and this
 file all contain the §107 end-user-usability covenant anchor (the
 verbatim operator-mandate quote — per §1.1 propagation,
 mutation-paired).</td>
@@ -490,14 +298,14 @@ mutation-paired).</td>
 </tbody>
 </table>
 <p><code>tests/test_constitution_inheritance_meta.sh</code> delegates to
-the discovered constitution’s <code>meta_test_inheritance.sh</code>,
+the discovered constitution's <code>meta_test_inheritance.sh</code>,
 which strips the §11.4 anchor from <code>Constitution.md</code>, runs
 the gate, and asserts FAIL — proving the gate is not a bluff (Universal
 §1.1).</p>
 <p>Both scripts run as a precondition to any commit that touches root
 docs or the discovery contract.</p>
-<h3 id="spec-change-rule-extends-universal-11.4">§106. Spec-change rule
-(extends Universal §11.4)</h3>
+<h3 id="106-spec-change-rule-extends-universal-114">§106. Spec-change
+rule (extends Universal §11.4)</h3>
 <p>Any modification to <code>docs/specs/mvp/specification.V3.md</code>
 or any file under <code>docs/specs/</code> (any depth) triggers
 <strong>mandatory comprehensive planning and implementation of all
@@ -508,16 +316,16 @@ logical work effort.</p>
 <p>This rule does NOT apply to creating or renaming files; for those,
 the operator must explicitly tell the worker (CLI agent or human
 contributor) what to do with the newly created or copied files.</p>
-<p><strong>Propagation.</strong> The same rule is restated in Herald’s
+<p><strong>Propagation.</strong> The same rule is restated in Herald's
 <code>CLAUDE.md</code> and <code>AGENTS.md</code> (per §1.1 multi-file
-propagation discipline). The inheritance gate’s invariant
-<strong>I7a–c</strong> asserts the rule’s anchor literal
+propagation discipline). The inheritance gate's invariant
+<strong>I7a–c</strong> asserts the rule's anchor literal
 (<code>comprehensive planning and implementation</code>) is present in
 all three files; a missing copy is a propagation bluff and the gate
 FAILs.</p>
 <p><strong>Anchor (forensic):</strong> the literal text
 <code>Whenever this document (\</code>docs/specs/mvp/specification.V3.md`)<code>MUST appear in</code>docs/specs/mvp/specification.V3.md`
-§“Specification documents” — that line is the source of truth that all
+§"Specification documents" — that line is the source of truth that all
 three propagated copies summarize.</p>
 <p><strong>Paired §1.1 mutation (planned).</strong> Removing the
 spec-change anchor from any of the three propagation files MUST cause
@@ -525,27 +333,27 @@ spec-change anchor from any of the three propagation files MUST cause
 <code>test_constitution_inheritance_meta.sh</code> is generalised beyond
 its current single-anchor mutation.</p>
 <h3
-id="end-user-usability-covenant-extends-universal-11.4-mandatory-anti-bluff">§107.
+id="107-end-user-usability-covenant-extends-universal-114--mandatory-anti-bluff">§107.
 End-user-usability covenant (extends Universal §11.4 — MANDATORY
 ANTI-BLUFF)</h3>
 <p><strong>Forensic anchor — verbatim operator mandate (first declared
 2026-04-28, reasserted 2026-05-19 and 2026-05-20):</strong></p>
 <blockquote>
-<p>“all existing tests and Challenges do work in anti-bluff manner -
+<p>"all existing tests and Challenges do work in anti-bluff manner -
 they MUST confirm that all tested codebase really works as expected! We
 had been in position that all tests do execute with success and all
 Challenges as well, but in reality the most of the features does not
-work and can’t be used! This MUST NOT be the case and execution of tests
+work and can't be used! This MUST NOT be the case and execution of tests
 and Challenges MUST guarantee the quality, the completition and full
 usability by end users of the product! This MUST BE part of Constitution
 of our project, its CLAUDE.MD and AGENTS.MD if it is not there already,
-and to be applied to all Submodules’s Constitution, CLAUDE.MD and
-AGENTS.MD as well (if not there already)!”</p>
+and to be applied to all Submodules's Constitution, CLAUDE.MD and
+AGENTS.MD as well (if not there already)!"</p>
 </blockquote>
 <p><strong>Canonical authority.</strong> Helix Universal Constitution
-§11.4 + §11.4.1..§11.4.16, restated at the parent’s
-<code>constitution/CLAUDE.md</code> “MANDATORY ANTI-BLUFF COVENANT —
-END-USER QUALITY GUARANTEE” section and at the parent’s
+§11.4 + §11.4.1..§11.4.16, restated at the parent's
+<code>constitution/CLAUDE.md</code> "MANDATORY ANTI-BLUFF COVENANT —
+END-USER QUALITY GUARANTEE" section and at the parent's
 <code>constitution/AGENTS.md</code> matching section. Herald inherits
 the covenant unconditionally; §107 exists to make the restatement
 explicit at Herald level and to bind every Herald binary
@@ -555,13 +363,13 @@ explicit at Herald level and to bind every Herald binary
 <p><strong>Operative rule (Herald-binding).</strong></p>
 <ol type="1">
 <li>The bar for shipping any Herald feature is <strong>NOT</strong>
-“tests pass” or “the binary compiles” — it is <strong>“the end user of
+"tests pass" or "the binary compiles" — it is <strong>"the end user of
 <code>&lt;flavor&gt;herald</code> can actually use the
-feature.”</strong></li>
+feature."</strong></li>
 <li>Every PASS — unit test, integration test, gate, Challenge, smoke
 test, e2e — MUST carry positive runtime evidence that the user-visible
 behaviour works. Metadata-only PASS, configuration-only PASS,
-“absence-of-error” PASS, and grep-only PASS without runtime evidence are
+"absence-of-error" PASS, and grep-only PASS without runtime evidence are
 §11.4 PASS-bluffs and constitute critical defects regardless of how
 green the summary line looks.</li>
 <li>Tests AND Challenges are bound <strong>equally</strong>. A Challenge
@@ -574,7 +382,7 @@ runs the full test suite, starts a real Gin server, hits every
 container via the <code>containers/</code> submodule, runs the M2
 integration tests against the live DB, and SIGTERM-graceful-shutdowns. A
 single FAIL invariant means a real feature is broken for end users; no
-release tag, no risky commit, and no “implementation milestone landed”
+release tag, no risky commit, and no "implementation milestone landed"
 claim may be made while it FAILs.</li>
 <li>New user-visible Herald features (V3 §§11, 33, 41, 42, 43 and
 beyond) MUST extend <code>e2e_bluff_hunt.sh</code> with a new
@@ -584,11 +392,11 @@ evidence and violates §107.</li>
 </ol>
 <p><strong>Propagation.</strong> This §107 is restated verbatim (in
 summary form, citing this section as the canonical Herald source) in
-Herald’s <code>CLAUDE.md</code> and <code>AGENTS.md</code> per §1.1
-multi-file propagation discipline. The inheritance gate’s invariant
+Herald's <code>CLAUDE.md</code> and <code>AGENTS.md</code> per §1.1
+multi-file propagation discipline. The inheritance gate's invariant
 <code>I8a–c</code> asserts the anchor literal
-(<code>End-user-usability covenant</code> or the verbatim “all tests do
-execute with success” operator quote) is present in all three files; a
+(<code>End-user-usability covenant</code> or the verbatim "all tests do
+execute with success" operator quote) is present in all three files; a
 missing copy is a propagation bluff and the gate FAILs.</p>
 <p><strong>Paired §1.1 mutation.</strong> A future generalised
 mutation-meta will assert that removing the §107 anchor from any of the
@@ -619,7 +427,7 @@ submodules/recovery      → git@github.com:vasic-digital/recovery.git
 containers               → git@github.com:vasic-digital/containers.git</code></pre>
 <p>Herald owns 10 vendored submodules — 9 Helix-stack capability modules
 under <code>submodules/</code> (referenced via <code>replace</code>
-directives in consuming Herald modules’ <code>go.mod</code>, NOT via
+directives in consuming Herald modules' <code>go.mod</code>, NOT via
 <code>go.work</code>) plus <code>containers/</code> (runtime
 auto-detection + on-demand container boot, consumed directly by
 Foundation tests + <code>pherald doctor</code>). Every one of them
@@ -630,10 +438,6 @@ constitution itself is provided by the parent project, not vendored here
 <hr />
 <h2 id="project-specific-remotes">Project-specific remotes</h2>
 <table>
-<colgroup>
-<col style="width: 50%" />
-<col style="width: 50%" />
-</colgroup>
 <thead>
 <tr>
 <th>Repo</th>
@@ -651,7 +455,7 @@ four)</td>
 </table>
 <hr />
 <h2 id="notes">Notes</h2>
-<p>Herald’s spec is now in V3
+<p>Herald's spec is now in V3
 (<code>docs/specs/mvp/specification.V3.md</code>, ~3900 lines, active) —
 V1 and V2 are preserved under <code>docs/specs/mvp/archive/</code> for
 historical reference. As project-specific articles mature toward

@@ -4,157 +4,11 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>Herald — CLAUDE_CODE</title>
+  <title>Herald</title>
   <style>
     /* Default styles provided by pandoc.
     ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
     */
-    html {
-      color: #1a1a1a;
-      background-color: #fdfdfd;
-    }
-    body {
-      margin: 0 auto;
-      max-width: 36em;
-      padding-left: 50px;
-      padding-right: 50px;
-      padding-top: 50px;
-      padding-bottom: 50px;
-      hyphens: auto;
-      overflow-wrap: break-word;
-      text-rendering: optimizeLegibility;
-      font-kerning: normal;
-    }
-    @media (max-width: 600px) {
-      body {
-        font-size: 0.9em;
-        padding: 12px;
-      }
-      h1 {
-        font-size: 1.8em;
-      }
-    }
-    @media print {
-      html {
-        background-color: white;
-      }
-      body {
-        background-color: transparent;
-        color: black;
-        font-size: 12pt;
-      }
-      p, h2, h3 {
-        orphans: 3;
-        widows: 3;
-      }
-      h2, h3, h4 {
-        page-break-after: avoid;
-      }
-    }
-    p {
-      margin: 1em 0;
-    }
-    a {
-      color: #1a1a1a;
-    }
-    a:visited {
-      color: #1a1a1a;
-    }
-    img {
-      max-width: 100%;
-    }
-    svg {
-      height: auto;
-      max-width: 100%;
-    }
-    h1, h2, h3, h4, h5, h6 {
-      margin-top: 1.4em;
-    }
-    h5, h6 {
-      font-size: 1em;
-      font-style: italic;
-    }
-    h6 {
-      font-weight: normal;
-    }
-    ol, ul {
-      padding-left: 1.7em;
-      margin-top: 1em;
-    }
-    li > ol, li > ul {
-      margin-top: 0;
-    }
-    blockquote {
-      margin: 1em 0 1em 1.7em;
-      padding-left: 1em;
-      border-left: 2px solid #e6e6e6;
-      color: #606060;
-    }
-    code {
-      white-space: pre-wrap;
-      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
-      font-size: 85%;
-      margin: 0;
-      hyphens: manual;
-    }
-    pre {
-      margin: 1em 0;
-      overflow: auto;
-    }
-    pre code {
-      padding: 0;
-      overflow: visible;
-      overflow-wrap: normal;
-    }
-    .sourceCode {
-     background-color: transparent;
-     overflow: visible;
-    }
-    hr {
-      border: none;
-      border-top: 1px solid #1a1a1a;
-      height: 1px;
-      margin: 1em 0;
-    }
-    table {
-      margin: 1em 0;
-      border-collapse: collapse;
-      width: 100%;
-      overflow-x: auto;
-      display: block;
-      font-variant-numeric: lining-nums tabular-nums;
-    }
-    table caption {
-      margin-bottom: 0.75em;
-    }
-    tbody {
-      margin-top: 0.5em;
-      border-top: 1px solid #1a1a1a;
-      border-bottom: 1px solid #1a1a1a;
-    }
-    th {
-      border-top: 1px solid #1a1a1a;
-      padding: 0.25em 0.5em 0.25em 0.5em;
-    }
-    td {
-      padding: 0.125em 0.5em 0.25em 0.5em;
-    }
-    header {
-      margin-bottom: 4em;
-      text-align: center;
-    }
-    #TOC li {
-      list-style: none;
-    }
-    #TOC ul {
-      padding-left: 1.3em;
-    }
-    #TOC > ul {
-      padding-left: 0;
-    }
-    #TOC a:not(:hover) {
-      text-decoration: none;
-    }
     span.smallcaps{font-variant: small-caps;}
     div.columns{display: flex; gap: min(4vw, 1.5em);}
     div.column{flex: auto; overflow-x: auto;}
@@ -235,64 +89,21 @@
     code span.vs { color: #4070a0; } /* VerbatimString */
     code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
   </style>
+  <link rel="stylesheet" href="../../../assets/logo/print.css" />
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">Herald — CLAUDE_CODE</h1>
+<h1 class="title">Herald</h1>
 </header>
-<nav id="TOC" role="doc-toc">
-<ul>
-<li><a href="#herald-claude-code-dispatcher-setup-guide"
-id="toc-herald-claude-code-dispatcher-setup-guide">Herald — Claude Code
-Dispatcher Setup Guide</a>
-<ul>
-<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
-contents</a></li>
-<li><a href="#pre-requisites"
-id="toc-pre-requisites">Pre-requisites</a></li>
-<li><a href="#step-1-install-claude-code"
-id="toc-step-1-install-claude-code">Step 1 — Install Claude
-Code</a></li>
-<li><a href="#step-2-choose-a-project-name"
-id="toc-step-2-choose-a-project-name">Step 2 — Choose a project
-name</a></li>
-<li><a href="#step-3-bootstrap-a-session-auto-or-manual"
-id="toc-step-3-bootstrap-a-session-auto-or-manual">Step 3 — Bootstrap a
-session (auto OR manual)</a>
-<ul>
-<li><a href="#path-a-auto-bootstrap-recommended"
-id="toc-path-a-auto-bootstrap-recommended">Path A — auto-bootstrap
-(recommended)</a></li>
-<li><a href="#path-b-pre-create-a-session-manually"
-id="toc-path-b-pre-create-a-session-manually">Path B — pre-create a
-session manually</a></li>
-</ul></li>
-<li><a href="#step-4-provide-credentials-to-herald"
-id="toc-step-4-provide-credentials-to-herald">Step 4 — Provide
-credentials to Herald</a></li>
-<li><a href="#step-5-verify-dispatch-e18-part-a"
-id="toc-step-5-verify-dispatch-e18-part-a">Step 5 — Verify Dispatch (E18
-part A)</a></li>
-<li><a href="#step-6-verify-session-persistence-e18-part-b"
-id="toc-step-6-verify-session-persistence-e18-part-b">Step 6 — Verify
-session persistence (E18 part B)</a></li>
-<li><a href="#step-7-optional-test-the-full-vertical-slice-e19"
-id="toc-step-7-optional-test-the-full-vertical-slice-e19">Step 7 —
-(Optional) Test the full vertical slice (E19)</a></li>
-<li><a href="#troubleshooting"
-id="toc-troubleshooting">Troubleshooting</a></li>
-<li><a href="#spec-code-references" id="toc-spec-code-references">Spec +
-code references</a></li>
-</ul></li>
-</ul>
-</nav>
-<h1 id="herald-claude-code-dispatcher-setup-guide">Herald — Claude Code
+<div align="center">
+
+<p><img src="../../../assets/logo/herald_logo_square_128.png"
+alt="Herald" />{width=96px height=96px}</p>
+</div>
+
+<h1 id="herald--claude-code-dispatcher-setup-guide">Herald — Claude Code
 Dispatcher Setup Guide</h1>
 <table>
-<colgroup>
-<col style="width: 50%" />
-<col style="width: 50%" />
-</colgroup>
 <thead>
 <tr>
 <th>Field</th>
@@ -326,7 +137,7 @@ evidence captured)</td>
 </tr>
 </tbody>
 </table>
-<p>The Claude Code dispatcher is Herald’s LLM/agent dispatch surface. It
+<p>The Claude Code dispatcher is Herald's LLM/agent dispatch surface. It
 takes an inbound message + context, invokes
 <code>claude --resume &lt;session&gt; --print "&lt;envelope&gt;"</code>,
 parses the structured <code>&lt;&lt;&lt;HERALD-REPLY&gt;&gt;&gt;</code>
@@ -364,19 +175,19 @@ npm).</li>
 <li>For E18 part B (persistence): container runtime (podman or docker)
 available.</li>
 </ul>
-<h2 id="step-1-install-claude-code">Step 1 — Install Claude Code</h2>
-<p>Follow Anthropic’s official Claude Code install guide. Quick
+<h2 id="step-1--install-claude-code">Step 1 — Install Claude Code</h2>
+<p>Follow Anthropic's official Claude Code install guide. Quick
 verification:</p>
 <div class="sourceCode" id="cb1"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">claude</span> <span class="at">--version</span></span></code></pre></div>
 <p>Expected: <code>claude 1.x.y</code> (or similar — any version that
 responds with a string is fine).</p>
-<p>If <code>claude</code> is not on <code>$PATH</code> (e.g. you
+<p>If <code>claude</code> is not on <code>$PATH</code> (e.g. you
 installed to a non-standard location), set
 <code>HERALD_CLAUDE_BIN</code> to the absolute path:</p>
 <div class="sourceCode" id="cb2"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">HERALD_CLAUDE_BIN</span><span class="op">=</span>/Users/you/.local/bin/claude</span></code></pre></div>
-<h2 id="step-2-choose-a-project-name">Step 2 — Choose a project
+<h2 id="step-2--choose-a-project-name">Step 2 — Choose a project
 name</h2>
 <p>Herald uses <code>HERALD_CLAUDE_PROJECT_NAME</code> to identify the
 Claude session anchor file. It MUST be a filename-safe identifier —
@@ -385,21 +196,21 @@ repo folder name.</p>
 <p>For the Herald repo itself:</p>
 <div class="sourceCode" id="cb3"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">HERALD_CLAUDE_PROJECT_NAME</span><span class="op">=</span>Herald</span></code></pre></div>
-<p>For a consuming project (e.g. <code>ATMOSphere</code>):</p>
+<p>For a consuming project (e.g. <code>ATMOSphere</code>):</p>
 <div class="sourceCode" id="cb4"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">HERALD_CLAUDE_PROJECT_NAME</span><span class="op">=</span>ATMOSphere</span></code></pre></div>
 <p>The session anchor will live at
 <code>&lt;workdir&gt;/.herald/claude-code/sessions/&lt;HERALD_CLAUDE_PROJECT_NAME&gt;.session</code>.</p>
-<h2 id="step-3-bootstrap-a-session-auto-or-manual">Step 3 — Bootstrap a
+<h2 id="step-3--bootstrap-a-session-auto-or-manual">Step 3 — Bootstrap a
 session (auto OR manual)</h2>
 <p>Claude Code organizes work into <strong>sessions</strong> identified
-by UUIDs. Herald’s <code>ResolveSession()</code> (per spec §33.2) finds
+by UUIDs. Herald's <code>ResolveSession()</code> (per spec §33.2) finds
 or creates the right session automatically — OR you can pre-create
 one.</p>
-<h3 id="path-a-auto-bootstrap-recommended">Path A — auto-bootstrap
+<h3 id="path-a--auto-bootstrap-recommended">Path A — auto-bootstrap
 (recommended)</h3>
 <p>Just leave <code>HERALD_CLAUDE_SESSION_UUID</code> unset.</p>
-<p>When Herald’s Dispatch is invoked the first time:</p>
+<p>When Herald's Dispatch is invoked the first time:</p>
 <ol type="1">
 <li><code>ResolveSession()</code> looks for the anchor file at
 <code>&lt;workdir&gt;/.herald/claude-code/sessions/&lt;project&gt;.session</code>.</li>
@@ -413,7 +224,7 @@ in the workdir.</li>
 </ol>
 <p>This is the §33.2-canonical path. Persistent state lives in the
 anchor file; the file is per-project and per-workdir.</p>
-<h3 id="path-b-pre-create-a-session-manually">Path B — pre-create a
+<h3 id="path-b--pre-create-a-session-manually">Path B — pre-create a
 session manually</h3>
 <p>For testing, diagnostics, or if you already have a Claude session you
 want Herald to use:</p>
@@ -426,11 +237,11 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="
 <li><p>Export it:</p>
 <div class="sourceCode" id="cb6"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">HERALD_CLAUDE_SESSION_UUID</span><span class="op">=</span>3e67dcd3-c66f-4687-b936-562191437310</span></code></pre></div></li>
-<li><p>Herald’s <code>ResolveSession()</code> honors this env var if set
+<li><p>Herald's <code>ResolveSession()</code> honors this env var if set
 — it skips the auto-bootstrap and uses your provided UUID
 directly.</p></li>
 </ol>
-<h2 id="step-4-provide-credentials-to-herald">Step 4 — Provide
+<h2 id="step-4--provide-credentials-to-herald">Step 4 — Provide
 credentials to Herald</h2>
 <p>Path A (shell-export, recommended):</p>
 <div class="sourceCode" id="cb7"><pre
@@ -445,38 +256,38 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="
 <p>Path B (<code>.env</code>):</p>
 <p>Per <a
 href="../OPERATOR_CREDENTIALS.md"><code>../OPERATOR_CREDENTIALS.md</code></a>
-§“Setting credentials in .env” — these env vars do NOT contain secrets
+§"Setting credentials in .env" — these env vars do NOT contain secrets
 (the <code>claude</code> CLI handles its own Anthropic auth), so they
 are safe to put in <code>.env</code>. For consistency, follow the same
 pattern as Telegram credentials.</p>
-<h2 id="step-5-verify-dispatch-e18-part-a">Step 5 — Verify Dispatch (E18
-part A)</h2>
-<p>The Dispatch integration test exec’s
+<h2 id="step-5--verify-dispatch-e18-part-a">Step 5 — Verify Dispatch
+(E18 part A)</h2>
+<p>The Dispatch integration test exec's
 <code>claude --resume &lt;UUID&gt; --print &lt;envelope&gt;</code> and
 parses the structured reply.</p>
 <p><strong>Pre-requisite for this test</strong>: a Claude session UUID
 (<code>HERALD_CLAUDE_SESSION_UUID</code>). If you took Path A above
 (auto-bootstrap), run a one-time Path B run first to materialize the
-session, OR run the test from inside Herald’s repo so the anchor file
+session, OR run the test from inside Herald's repo so the anchor file
 persists across runs.</p>
 <div class="sourceCode" id="cb8"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> /Users/milosvasic/Projects/Herald</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test ./commons_messaging/dispatch/claude_code/ <span class="at">-tags</span><span class="op">=</span>integration <span class="at">-run</span> TestDispatch_LiveClaudeInvocation <span class="at">-count</span><span class="op">=</span>1 <span class="at">-timeout</span><span class="op">=</span>300s <span class="at">-v</span></span></code></pre></div>
-<p>Expected (after ~20-30s — Claude’s cold start is non-trivial):</p>
+<p>Expected (after ~20-30s — Claude's cold start is non-trivial):</p>
 <pre><code>--- PASS: TestDispatch_LiveClaudeInvocation (24.24s)
 PASS</code></pre>
-<p>Inside the test output you’ll see Claude’s structured reply parsed: a
+<p>Inside the test output you'll see Claude's structured reply parsed: a
 non-empty <code>Outcome</code> field, a non-empty <code>Summary</code>
 field. The §107 anti-bluff guard rejects a reply where these fields are
 empty.</p>
 <p>If the test FAILs with
 <code>no &lt;&lt;&lt;HERALD-REPLY&gt;&gt;&gt; marker found in claude stdout</code>,
-the <code>FormatEnvelope</code> text isn’t instructing Claude to emit
+the <code>FormatEnvelope</code> text isn't instructing Claude to emit
 the marker. Inspect
 <code>commons_messaging/dispatch/claude_code/claude_code.go</code>
 <code>FormatEnvelope</code> — it should include the marker template per
 §33.</p>
-<h2 id="step-6-verify-session-persistence-e18-part-b">Step 6 — Verify
+<h2 id="step-6--verify-session-persistence-e18-part-b">Step 6 — Verify
 session persistence (E18 part B)</h2>
 <p>The persistence test runs Dispatch AND reads back the
 <code>claude_code_sessions</code> row to verify the session UUID +
@@ -490,50 +301,61 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href=
 <pre><code>--- PASS: TestDispatch_PersistsSessionState (36.23s)
 PASS</code></pre>
 <p>The §107 evidence chain: the persisted <code>session_uuid</code> MUST
-equal the response’s SessionUUID exactly; the persisted
-<code>anchor_path</code> MUST equal the response’s AnchorPath; the
-persisted <code>Outcome</code> MUST equal the response’s Outcome.</p>
-<h2 id="step-7-optional-test-the-full-vertical-slice-e19">Step 7 —
+equal the response's SessionUUID exactly; the persisted
+<code>anchor_path</code> MUST equal the response's AnchorPath; the
+persisted <code>Outcome</code> MUST equal the response's Outcome.</p>
+<h2 id="step-7--optional-test-the-full-vertical-slice-e19">Step 7 —
 (Optional) Test the full vertical slice (E19)</h2>
 <p>E19 ties Telegram + Claude Code together: hand-sent Telegram message
 → Subscribe → Dispatch → reply via Send.</p>
-<p>Requires: - All of this guide’s env vars set - All of <a
+<p>Requires:</p>
+<ul>
+<li>All of this guide's env vars set</li>
+<li>All of <a
 href="../messengers/TELEGRAM.md"><code>../messengers/TELEGRAM.md</code></a>
-§3 env vars set - <code>HERALD_TGRAM_LIVE_INBOUND=1</code> - Container
-runtime</p>
+§3 env vars set</li>
+<li><code>HERALD_TGRAM_LIVE_INBOUND=1</code></li>
+<li>Container runtime</li>
+</ul>
 <p>Run it per <code>../messengers/TELEGRAM.md</code> §6.</p>
 <h2 id="troubleshooting">Troubleshooting</h2>
-<p><strong><code>claude --version</code> reports “Unsupported Node.js
-version”</strong>: Some Claude Code versions have engine-version
+<p><strong><code>claude --version</code> reports "Unsupported Node.js
+version"</strong>: Some Claude Code versions have engine-version
 restrictions. Check the warning message for the supported range and
-switch Node versions (e.g. via <code>nvm</code>) if needed. Currently
+switch Node versions (e.g. via <code>nvm</code>) if needed. Currently
 codegraph 0.8+ on Node 25.x has known incompatibilities; codegraph 0.6.8
 works.</p>
-<p><strong>Test FAILs with “no conversation found with session
-ID”</strong>: The session UUID you provided doesn’t exist in Claude’s
-local session storage. Either: - Bootstrap a fresh session per Step 3
-Path B, OR - Remove <code>HERALD_CLAUDE_SESSION_UUID</code> from your
-env and let Herald auto-bootstrap per Step 3 Path A.</p>
-<p><strong>Test FAILs with “no &lt;&lt;<HERALD-REPLY>&gt;&gt; marker
-found”</strong>: Claude is not emitting the marker. Either: - The
-envelope (per <code>FormatEnvelope</code> in
-<code>claude_code.go</code>) doesn’t instruct Claude to emit it —
-inspect + fix. - Claude refused the request (e.g. content moderation,
-rate limit). Inspect the captured stdout — if Claude responded with a
-refusal, that’s a real outcome to handle, not a parse bug.</p>
+<p><strong>Test FAILs with "no conversation found with session
+ID"</strong>: The session UUID you provided doesn't exist in Claude's
+local session storage. Either:</p>
+<ul>
+<li>Bootstrap a fresh session per Step 3 Path B, OR</li>
+<li>Remove <code>HERALD_CLAUDE_SESSION_UUID</code> from your env and let
+Herald auto-bootstrap per Step 3 Path A.</li>
+</ul>
+<p><strong>Test FAILs with "no &lt;&lt;<HERALD-REPLY>&gt;&gt; marker
+found"</strong>: Claude is not emitting the marker. Either:</p>
+<ul>
+<li>The envelope (per <code>FormatEnvelope</code> in
+<code>claude_code.go</code>) doesn't instruct Claude to emit it —
+inspect + fix.</li>
+<li>Claude refused the request (e.g. content moderation, rate limit).
+Inspect the captured stdout — if Claude responded with a refusal, that's
+a real outcome to handle, not a parse bug.</li>
+</ul>
 <p><strong><code>SQLSTATE 28P01</code></strong> when running the
-persistence test: Postgres container’s stored password hash doesn’t
+persistence test: Postgres container's stored password hash doesn't
 match <code>HERALD_DB_PASSWORD</code>. Either reset the volume
 (<code>podman-compose down -v</code> — destroys data) or run
 <code>ALTER USER herald PASSWORD '...'</code> inside the container.</p>
 <p><strong><code>HERALD_CLAUDE_BIN</code> env var has no
 effect</strong>: Confirm with <code>echo "$HERALD_CLAUDE_BIN"</code>. If
-empty, your shell didn’t pick up the export. Re-source
+empty, your shell didn't pick up the export. Re-source
 <code>~/.zshrc</code> or open a new terminal.</p>
 <p><strong>Claude session expiry</strong>: Claude Code sessions can be
 invalidated server-side (rare). If <code>--resume</code> fails for a
 session that worked before, re-bootstrap.</p>
-<h2 id="spec-code-references">Spec + code references</h2>
+<h2 id="spec--code-references">Spec + code references</h2>
 <ul>
 <li><strong>Spec</strong>: V3 §33 (LLM/agent dispatch architecture),
 §33.2 (session-resolution algorithm), §33.3 (response schema)</li>
@@ -547,7 +369,7 @@ Dispatcher struct + <code>New</code> + <code>NewWithStorage</code> +
 <code>FormatEnvelope</code> + <code>DispatchResponse</code> +
 <code>replyJSONSchema</code> + <code>HeraldSystemTenant</code></li>
 <li><code>commons_messaging/dispatch/claude_code/dispatch.go</code> —
-<code>Dispatch</code> (exec.CommandContext claude –resume) +
+<code>Dispatch</code> (exec.CommandContext claude --resume) +
 <code>parseReply</code> (marker + JSON unmarshal)</li>
 <li><code>commons_messaging/dispatch/claude_code/persist.go</code> —
 <code>PersistSessionState</code> (upsert claude_code_sessions row)</li>
@@ -566,7 +388,7 @@ UUID. Stored at
 <code>&lt;workdir&gt;/.herald/claude-code/sessions/&lt;project&gt;.session</code>.</li>
 <li><strong>Related</strong>: <a
 href="../OPERATOR_CREDENTIALS.md"><code>OPERATOR_CREDENTIALS.md</code></a>
-§“Claude Code dispatcher”; <a
+§"Claude Code dispatcher"; <a
 href="../messengers/TELEGRAM.md"><code>../messengers/TELEGRAM.md</code></a>
 for the messenger half of the vertical slice</li>
 </ul>

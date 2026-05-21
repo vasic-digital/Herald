@@ -4,157 +4,11 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>HRD-010 commons_storage Live Wiring Plan</title>
+  <title>Herald</title>
   <style>
     /* Default styles provided by pandoc.
     ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
     */
-    html {
-      color: #1a1a1a;
-      background-color: #fdfdfd;
-    }
-    body {
-      margin: 0 auto;
-      max-width: 36em;
-      padding-left: 50px;
-      padding-right: 50px;
-      padding-top: 50px;
-      padding-bottom: 50px;
-      hyphens: auto;
-      overflow-wrap: break-word;
-      text-rendering: optimizeLegibility;
-      font-kerning: normal;
-    }
-    @media (max-width: 600px) {
-      body {
-        font-size: 0.9em;
-        padding: 12px;
-      }
-      h1 {
-        font-size: 1.8em;
-      }
-    }
-    @media print {
-      html {
-        background-color: white;
-      }
-      body {
-        background-color: transparent;
-        color: black;
-        font-size: 12pt;
-      }
-      p, h2, h3 {
-        orphans: 3;
-        widows: 3;
-      }
-      h2, h3, h4 {
-        page-break-after: avoid;
-      }
-    }
-    p {
-      margin: 1em 0;
-    }
-    a {
-      color: #1a1a1a;
-    }
-    a:visited {
-      color: #1a1a1a;
-    }
-    img {
-      max-width: 100%;
-    }
-    svg {
-      height: auto;
-      max-width: 100%;
-    }
-    h1, h2, h3, h4, h5, h6 {
-      margin-top: 1.4em;
-    }
-    h5, h6 {
-      font-size: 1em;
-      font-style: italic;
-    }
-    h6 {
-      font-weight: normal;
-    }
-    ol, ul {
-      padding-left: 1.7em;
-      margin-top: 1em;
-    }
-    li > ol, li > ul {
-      margin-top: 0;
-    }
-    blockquote {
-      margin: 1em 0 1em 1.7em;
-      padding-left: 1em;
-      border-left: 2px solid #e6e6e6;
-      color: #606060;
-    }
-    code {
-      white-space: pre-wrap;
-      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
-      font-size: 85%;
-      margin: 0;
-      hyphens: manual;
-    }
-    pre {
-      margin: 1em 0;
-      overflow: auto;
-    }
-    pre code {
-      padding: 0;
-      overflow: visible;
-      overflow-wrap: normal;
-    }
-    .sourceCode {
-     background-color: transparent;
-     overflow: visible;
-    }
-    hr {
-      border: none;
-      border-top: 1px solid #1a1a1a;
-      height: 1px;
-      margin: 1em 0;
-    }
-    table {
-      margin: 1em 0;
-      border-collapse: collapse;
-      width: 100%;
-      overflow-x: auto;
-      display: block;
-      font-variant-numeric: lining-nums tabular-nums;
-    }
-    table caption {
-      margin-bottom: 0.75em;
-    }
-    tbody {
-      margin-top: 0.5em;
-      border-top: 1px solid #1a1a1a;
-      border-bottom: 1px solid #1a1a1a;
-    }
-    th {
-      border-top: 1px solid #1a1a1a;
-      padding: 0.25em 0.5em 0.25em 0.5em;
-    }
-    td {
-      padding: 0.125em 0.5em 0.25em 0.5em;
-    }
-    header {
-      margin-bottom: 4em;
-      text-align: center;
-    }
-    #TOC li {
-      list-style: none;
-    }
-    #TOC ul {
-      padding-left: 1.3em;
-    }
-    #TOC > ul {
-      padding-left: 0;
-    }
-    #TOC a:not(:hover) {
-      text-decoration: none;
-    }
     span.smallcaps{font-variant: small-caps;}
     div.columns{display: flex; gap: min(4vw, 1.5em);}
     div.column{flex: auto; overflow-x: auto;}
@@ -235,67 +89,18 @@
     code span.vs { color: #4070a0; } /* VerbatimString */
     code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
   </style>
+  <link rel="stylesheet" href="../../../assets/logo/print.css" />
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">HRD-010 commons_storage Live Wiring Plan</h1>
+<h1 class="title">Herald</h1>
 </header>
-<nav id="TOC" role="doc-toc">
-<ul>
-<li><a href="#hrd-010-commons_storage-live-wiring-implementation-plan"
-id="toc-hrd-010-commons_storage-live-wiring-implementation-plan">HRD-010
-commons_storage Live Wiring Implementation Plan</a>
-<ul>
-<li><a href="#file-structure" id="toc-file-structure">File Structure</a>
-<ul>
-<li><a href="#files-to-create" id="toc-files-to-create">Files to
-CREATE</a></li>
-<li><a href="#files-to-modify" id="toc-files-to-modify">Files to
-MODIFY</a></li>
-<li><a href="#files-not-touched-in-this-plan-deferred-to-plan-2-later"
-id="toc-files-not-touched-in-this-plan-deferred-to-plan-2-later">Files
-NOT touched in this plan (deferred to Plan 2 / later)</a></li>
-</ul></li>
-<li><a
-href="#task-1-add-commons_infraclients.go-aggregator-skeleton-tdd-first"
-id="toc-task-1-add-commons_infraclients.go-aggregator-skeleton-tdd-first">Task
-1: Add <code>commons_infra/clients.go</code> aggregator skeleton
-(TDD-first)</a></li>
-<li><a href="#task-2-wire-pgx-pool-open-in-quickstartboot.up"
-id="toc-task-2-wire-pgx-pool-open-in-quickstartboot.up">Task 2: Wire pgx
-pool open in <code>QuickstartBoot.Up()</code></a></li>
-<li><a href="#task-3-storage-rls-tenant-isolation-live-round-trip-test"
-id="toc-task-3-storage-rls-tenant-isolation-live-round-trip-test">Task
-3: Storage RLS-tenant-isolation live round-trip test</a></li>
-<li><a href="#task-4-wire-redis-client-open-in-quickstartboot.up"
-id="toc-task-4-wire-redis-client-open-in-quickstartboot.up">Task 4: Wire
-Redis client open in <code>QuickstartBoot.Up()</code></a></li>
-<li><a
-href="#task-5-wire-background-queue-in-quickstartboot.up-enqueuedequeue-round-trip"
-id="toc-task-5-wire-background-queue-in-quickstartboot.up-enqueuedequeue-round-trip">Task
-5: Wire background queue in <code>QuickstartBoot.Up()</code> +
-enqueue/dequeue round-trip</a></li>
-<li><a href="#task-6-pherald-migrate-cobra-subcommand"
-id="toc-task-6-pherald-migrate-cobra-subcommand">Task 6:
-<code>pherald migrate</code> Cobra subcommand</a></li>
-<li><a
-href="#task-7-add-e14e15e16-invariants-to-scriptse2e_bluff_hunt.sh"
-id="toc-task-7-add-e14e15e16-invariants-to-scriptse2e_bluff_hunt.sh">Task
-7: Add E14/E15/E16 invariants to
-<code>scripts/e2e_bluff_hunt.sh</code></a></li>
-<li><a href="#task-8-update-.env.example-status.md-issues.md-fixed.md"
-id="toc-task-8-update-.env.example-status.md-issues.md-fixed.md">Task 8:
-Update <code>.env.example</code> + Status.md + Issues.md →
-Fixed.md</a></li>
-<li><a href="#task-9-final-anti-bluff-verification-multi-mirror-push"
-id="toc-task-9-final-anti-bluff-verification-multi-mirror-push">Task 9:
-Final anti-bluff verification + multi-mirror push</a></li>
-<li><a href="#self-review" id="toc-self-review">Self-Review</a></li>
-<li><a href="#execution-handoff" id="toc-execution-handoff">Execution
-Handoff</a></li>
-</ul></li>
-</ul>
-</nav>
+<div align="center">
+
+<p><img src="../../../assets/logo/herald_logo_square_128.png"
+alt="Herald" />{width=96px height=96px}</p>
+</div>
+
 <h1 id="hrd-010-commons_storage-live-wiring-implementation-plan">HRD-010
 commons_storage Live Wiring Implementation Plan</h1>
 <blockquote>
@@ -307,7 +112,7 @@ use checkbox (<code>- [ ]</code>) syntax for tracking.</p>
 <p><strong>Goal:</strong> Wire <code>commons_storage</code> from
 migration-only scaffold to fully live persistence — pgx pool surfaced
 through <code>commons_infra.QuickstartBoot</code>, background queue
-extended via <code>digital.vasic.background</code>, Redis ACL’d via
+extended via <code>digital.vasic.background</code>, Redis ACL'd via
 <code>digital.vasic.cache</code>. Add <code>pherald migrate</code>
 subcommand. Land 3 new §107 e2e invariants (E14 pool round-trip, E15
 queue round-trip, E16 redis TTL).</p>
@@ -334,24 +139,20 @@ live containers.</p>
 16 + Redis 7 (container images per
 <code>quickstart/docker-compose.quickstart.yml</code>).</p>
 <p><strong>Spec refs:</strong> HRD-010 row in
-<code>docs/Issues.md</code>; spec V3 §9.6 + §16; master roadmap §“Wave 1
-— Storage + first user-visible feature”.</p>
+<code>docs/Issues.md</code>; spec V3 §9.6 + §16; master roadmap §"Wave 1
+— Storage + first user-visible feature".</p>
 <p><strong>Catalogue-Check (Universal §11.4.74):</strong>
 <code>extend digital.vasic.database@&lt;pinned&gt;</code> for pgx +
 migrations (already in <code>commons_storage</code>);
 <code>extend digital.vasic.background@&lt;pinned&gt;</code> for queue;
 <code>extend digital.vasic.cache@&lt;pinned&gt;</code> for Redis;
 <code>no-match</code> for the <code>commons_infra</code> resolver shim
-(Herald-specific). Update HRD-010 row’s References cell with the
+(Herald-specific). Update HRD-010 row's References cell with the
 resolved catalogue-check before Issues→Fixed migration.</p>
 <hr />
 <h2 id="file-structure">File Structure</h2>
 <h3 id="files-to-create">Files to CREATE</h3>
 <table>
-<colgroup>
-<col style="width: 50%" />
-<col style="width: 50%" />
-</colgroup>
 <thead>
 <tr>
 <th>Path</th>
@@ -389,7 +190,7 @@ round-trip</td>
 </tr>
 <tr>
 <td><code>pherald/cmd/pherald/migrate.go</code></td>
-<td>Cobra subcommand: <code>pherald migrate up\|status</code></td>
+<td>Cobra subcommand: <code>pherald migrate up|status</code></td>
 </tr>
 <tr>
 <td><code>pherald/cmd/pherald/migrate_test.go</code></td>
@@ -404,10 +205,6 @@ e2e)</td>
 </table>
 <h3 id="files-to-modify">Files to MODIFY</h3>
 <table>
-<colgroup>
-<col style="width: 50%" />
-<col style="width: 50%" />
-</colgroup>
 <thead>
 <tr>
 <th>Path</th>
@@ -428,7 +225,7 @@ e2e)</td>
 </tr>
 <tr>
 <td><code>commons_storage/go.mod</code></td>
-<td>Add <code>digital.vasic.cache</code> if it’s needed for any
+<td>Add <code>digital.vasic.cache</code> if it's needed for any
 storage→cache coupling (unlikely; verify by go build)</td>
 </tr>
 <tr>
@@ -470,7 +267,7 @@ landed</td>
 </tr>
 </tbody>
 </table>
-<h3 id="files-not-touched-in-this-plan-deferred-to-plan-2-later">Files
+<h3 id="files-not-touched-in-this-plan-deferred-to-plan-2--later">Files
 NOT touched in this plan (deferred to Plan 2 / later)</h3>
 <ul>
 <li><code>commons_messaging/channels/tgram/</code> — Plan 2
@@ -482,18 +279,21 @@ under HRD-008 (Plan 3)</li>
 </ul>
 <hr />
 <h2
-id="task-1-add-commons_infraclients.go-aggregator-skeleton-tdd-first">Task
+id="task-1-add-commons_infraclientsgo-aggregator-skeleton-tdd-first">Task
 1: Add <code>commons_infra/clients.go</code> aggregator skeleton
 (TDD-first)</h2>
 <p><strong>Why first:</strong> The aggregator is the singleton consumers
 will call. Defining it first locks down the API the rest of the wiring
 satisfies.</p>
-<p><strong>Files:</strong> - Create:
-<code>commons_infra/clients.go</code> - Test:
-<code>commons_infra/clients_test.go</code> (unit, not integration)</p>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Create: <code>commons_infra/clients.go</code></li>
+<li>Test: <code>commons_infra/clients_test.go</code> (unit, not
+integration)</li>
+</ul>
 <ul class="task-list">
 <li><label><input type="checkbox" /><strong>Step 1: Write failing test
-for “Pool() before Up() returns ErrNotBooted”</strong></label></li>
+for "Pool() before Up() returns ErrNotBooted"</strong></label></li>
 </ul>
 <p>Create <code>commons_infra/clients_test.go</code>:</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">package</span> infra</span>
@@ -541,8 +341,8 @@ it fails to compile (ErrNotBooted undefined; Pool/Queue/Redis methods
 absent)</strong></label></li>
 </ul>
 <p>Run: <code>go test ./commons_infra/ -run TestClients_ -count=1</code>
-Expected: FAIL with “undefined: ErrNotBooted” or “boot.Pool
-undefined”.</p>
+Expected: FAIL with "undefined: ErrNotBooted" or "boot.Pool
+undefined".</p>
 <ul class="task-list">
 <li><label><input type="checkbox" /><strong>Step 3: Implement minimal
 <code>clients.go</code></strong></label></li>
@@ -676,15 +476,17 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="
 <span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="st">Co-Authored-By: Claude Opus 4.7 &lt;noreply@anthropic.com&gt;&quot;</span></span></code></pre></div>
 <hr />
-<h2 id="task-2-wire-pgx-pool-open-in-quickstartboot.up">Task 2: Wire pgx
+<h2 id="task-2-wire-pgx-pool-open-in-quickstartbootup">Task 2: Wire pgx
 pool open in <code>QuickstartBoot.Up()</code></h2>
-<p><strong>Files:</strong> - Modify: <code>commons_infra/boot.go</code>
-(Up method — search for the existing one; add post-orch-Up pool-open
-block)</p>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Modify: <code>commons_infra/boot.go</code> (Up method — search for
+the existing one; add post-orch-Up pool-open block)</li>
+</ul>
 <ul class="task-list">
 <li><label><input type="checkbox" /><strong>Step 1: Write failing
 integration test for live pool round-trip (Task 4 fully covers this —
-placeholder here so we don’t duplicate)</strong></label></li>
+placeholder here so we don't duplicate)</strong></label></li>
 </ul>
 <p>The actual pool round-trip test goes in
 <code>commons_storage/storage_integration_test.go</code> (Task 4). For
@@ -731,12 +533,12 @@ to verify it fails (pool not populated)</strong></label></li>
 </ul>
 <p>Run:
 <code>go test ./commons_infra/ -tags=integration -run TestUp_PopulatesPool -count=1 -timeout=180s</code>
-Expected: FAIL with “Pool() after Up(): commons_infra:
-QuickstartBoot.Up() not called or failed” (since Up exists but doesn’t
+Expected: FAIL with "Pool() after Up(): commons_infra:
+QuickstartBoot.Up() not called or failed" (since Up exists but doesn't
 yet populate pool).</p>
 <blockquote>
 <p><strong>Engineer note:</strong> This requires Docker or Podman on the
-host. If absent, the test will fail at container boot — that’s expected
+host. If absent, the test will fail at container boot — that's expected
 and indicates the host setup, NOT a code bug. The test is
 <code>//go:build integration</code> so default
 <code>go test ./...</code> skips it cleanly.</p>
@@ -834,8 +636,11 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href=
 <hr />
 <h2 id="task-3-storage-rls-tenant-isolation-live-round-trip-test">Task
 3: Storage RLS-tenant-isolation live round-trip test</h2>
-<p><strong>Files:</strong> - Create:
-<code>commons_storage/storage_integration_test.go</code></p>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Create:
+<code>commons_storage/storage_integration_test.go</code></li>
+</ul>
 <p>This is the canonical §107 evidence for HRD-010. It proves
 WithTenantContext actually isolates rows.</p>
 <ul class="task-list">
@@ -953,12 +758,12 @@ class="sourceCode go"><code class="sourceCode go"><span id="cb13-1"><a href="#cb
 <span id="cb13-107"><a href="#cb13-107" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb13-108"><a href="#cb13-108" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <blockquote>
-<p><strong>Engineer note:</strong> Imports — the test file’s package is
+<p><strong>Engineer note:</strong> Imports — the test file's package is
 <code>storage_test</code> (external test package) so it imports both
 <code>commons_storage</code> (as <code>storage</code>) and
 <code>commons_infra</code> (as <code>infra</code>). The
 <code>db.Tx</code> type comes from
-<code>digital.vasic.database/pkg/db</code>; you’ll need to add
+<code>digital.vasic.database/pkg/db</code>; you'll need to add
 <code>db "digital.vasic.database/pkg/db"</code> to the imports.</p>
 </blockquote>
 <ul class="task-list">
@@ -967,7 +772,7 @@ FAIL</strong></label></li>
 </ul>
 <p>Run:
 <code>go test ./commons_storage/ -tags=integration -run TestRLS_TenantIsolation_RoundTrip -count=1 -timeout=180s</code>
-Expected: FAIL — the test depends on Task 2’s pool wiring being live; if
+Expected: FAIL — the test depends on Task 2's pool wiring being live; if
 Task 2 was implemented correctly the test should actually PASS
 already.</p>
 <p>If it FAILs only because of the schema (column
@@ -1008,12 +813,15 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href=
 <span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a><span class="st">Co-Authored-By: Claude Opus 4.7 &lt;noreply@anthropic.com&gt;&quot;</span></span></code></pre></div>
 <hr />
-<h2 id="task-4-wire-redis-client-open-in-quickstartboot.up">Task 4: Wire
+<h2 id="task-4-wire-redis-client-open-in-quickstartbootup">Task 4: Wire
 Redis client open in <code>QuickstartBoot.Up()</code></h2>
-<p><strong>Files:</strong> - Modify: <code>commons_infra/boot.go</code>
-(Up method — add post-pool redis-open block) - Create:
-<code>commons_infra/redis.go</code> (thin adapter — already aliased
-through Pool/Queue/Redis getters in Task 1)</p>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Modify: <code>commons_infra/boot.go</code> (Up method — add
+post-pool redis-open block)</li>
+<li>Create: <code>commons_infra/redis.go</code> (thin adapter — already
+aliased through Pool/Queue/Redis getters in Task 1)</li>
+</ul>
 <ul class="task-list">
 <li><label><input type="checkbox" /><strong>Step 1: Write failing
 integration test for redis TTL round-trip</strong></label></li>
@@ -1064,11 +872,11 @@ class="sourceCode go"><code class="sourceCode go"><span id="cb15-1"><a href="#cb
 <span id="cb15-42"><a href="#cb15-42" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <ul class="task-list">
 <li><label><input type="checkbox" /><strong>Step 2: Run, expect FAIL
-with “Redis() after Up: ErrNotBooted”</strong></label></li>
+with "Redis() after Up: ErrNotBooted"</strong></label></li>
 </ul>
 <p>Run:
 <code>go test ./commons_infra/ -tags=integration -run TestUp_PopulatesRedis_TTLRoundTrip -count=1 -timeout=180s</code>
-Expected: FAIL — Up() doesn’t yet open Redis.</p>
+Expected: FAIL — Up() doesn't yet open Redis.</p>
 <ul class="task-list">
 <li><label><input type="checkbox" /><strong>Step 3: Add redis-open block
 to <code>Up()</code> in <code>boot.go</code></strong></label></li>
@@ -1126,14 +934,18 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href=
 <span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="st">Co-Authored-By: Claude Opus 4.7 &lt;noreply@anthropic.com&gt;&quot;</span></span></code></pre></div>
 <hr />
 <h2
-id="task-5-wire-background-queue-in-quickstartboot.up-enqueuedequeue-round-trip">Task
+id="task-5-wire-background-queue-in-quickstartbootup--enqueuedequeue-round-trip">Task
 5: Wire background queue in <code>QuickstartBoot.Up()</code> +
 enqueue/dequeue round-trip</h2>
-<p><strong>Files:</strong> - Modify: <code>commons_infra/boot.go</code>
-(Up method — add post-redis queue-open block) - Modify:
-<code>commons_infra/queue.go</code> (add queue constructor) - Modify:
-<code>commons_infra/clients_integration_test.go</code> (queue round-trip
-test)</p>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Modify: <code>commons_infra/boot.go</code> (Up method — add
+post-redis queue-open block)</li>
+<li>Modify: <code>commons_infra/queue.go</code> (add queue
+constructor)</li>
+<li>Modify: <code>commons_infra/clients_integration_test.go</code>
+(queue round-trip test)</li>
+</ul>
 <ul class="task-list">
 <li><label><input type="checkbox" /><strong>Step 1: Write failing
 integration test for queue enqueue/dequeue
@@ -1190,7 +1002,7 @@ class="sourceCode go"><code class="sourceCode go"><span id="cb19-1"><a href="#cb
 defined in <code>submodules/background/interfaces.go</code> and
 <code>models/*</code>. Confirm fields by reading those files before
 relying on the literal above. If field names differ, adjust — do NOT add
-Herald-side translation; we extend, we don’t reimplement.</p>
+Herald-side translation; we extend, we don't reimplement.</p>
 </blockquote>
 <ul class="task-list">
 <li><label><input type="checkbox" /><strong>Step 2: Run, expect
@@ -1198,7 +1010,7 @@ FAIL</strong></label></li>
 </ul>
 <p>Run:
 <code>go test ./commons_infra/ -tags=integration -run TestUp_PopulatesQueue_EnqueueDequeueRoundTrip -count=1 -timeout=180s</code>
-Expected: FAIL — Up() doesn’t yet open queue.</p>
+Expected: FAIL — Up() doesn't yet open queue.</p>
 <ul class="task-list">
 <li><label><input type="checkbox" /><strong>Step 3: Add queue-open block
 to <code>Up()</code> in <code>boot.go</code></strong></label></li>
@@ -1248,10 +1060,13 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb22-1"><a href=
 <hr />
 <h2 id="task-6-pherald-migrate-cobra-subcommand">Task 6:
 <code>pherald migrate</code> Cobra subcommand</h2>
-<p><strong>Files:</strong> - Create:
-<code>pherald/cmd/pherald/migrate.go</code> - Create:
-<code>pherald/cmd/pherald/migrate_test.go</code> - Modify:
-<code>pherald/cmd/pherald/main.go</code> (register subcommand)</p>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Create: <code>pherald/cmd/pherald/migrate.go</code></li>
+<li>Create: <code>pherald/cmd/pherald/migrate_test.go</code></li>
+<li>Modify: <code>pherald/cmd/pherald/main.go</code> (register
+subcommand)</li>
+</ul>
 <ul class="task-list">
 <li><label><input type="checkbox" /><strong>Step 1: Write failing unit
 test for argument parsing</strong></label></li>
@@ -1296,7 +1111,7 @@ class="sourceCode go"><code class="sourceCode go"><span id="cb23-1"><a href="#cb
 <span id="cb23-36"><a href="#cb23-36" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <ul class="task-list">
 <li><label><input type="checkbox" /><strong>Step 2: Run, expect compile
-FAIL “newMigrateCmd undefined”</strong></label></li>
+FAIL "newMigrateCmd undefined"</strong></label></li>
 </ul>
 <p>Run:
 <code>go test ./pherald/cmd/pherald/ -run TestMigrateCommand -count=1</code>
@@ -1392,7 +1207,7 @@ class="sourceCode go"><code class="sourceCode go"><span id="cb24-1"><a href="#cb
 <blockquote>
 <p><strong>Engineer note:</strong> This requires
 <code>storage.ParseDSN</code> and <code>storage.CurrentVersion</code> to
-exist in <code>commons_storage</code>. If they don’t, add them as tiny
+exist in <code>commons_storage</code>. If they don't, add them as tiny
 helpers in <code>commons_storage/postgres.go</code> and
 <code>commons_storage/migrator.go</code> respectively.
 <code>ParseDSN</code> converts a
@@ -1411,8 +1226,8 @@ existing subcommands (<code>version</code>, etc.) are registered (look
 for <code>rootCmd.AddCommand</code>). Add:</p>
 <div class="sourceCode" id="cb25"><pre
 class="sourceCode go"><code class="sourceCode go"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>    rootCmd<span class="op">.</span>AddCommand<span class="op">(</span>newMigrateCmd<span class="op">())</span></span></code></pre></div>
-<p>If the existing 501-stub for “migrate” exists (per the current
-<code>stubs.go</code>), remove that stub entry so it doesn’t shadow the
+<p>If the existing 501-stub for "migrate" exists (per the current
+<code>stubs.go</code>), remove that stub entry so it doesn't shadow the
 new real subcommand.</p>
 <ul class="task-list">
 <li><label><input type="checkbox" /><strong>Step 5: Run unit tests,
@@ -1433,7 +1248,7 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb26-1"><a href=
 <p>(Assumes the quickstart compose stack is up. If not, expect a
 connection refused which proves error handling works.)</p>
 <p>Expected with live stack: <code>schema version: 8</code> Expected
-without: error containing “connection refused” — that’s HONEST (matches
+without: error containing "connection refused" — that's HONEST (matches
 §107 — no bluff).</p>
 <ul class="task-list">
 <li><label><input type="checkbox" /><strong>Step 7:
@@ -1452,12 +1267,13 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb27-1"><a href=
 <span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a><span class="st">Co-Authored-By: Claude Opus 4.7 &lt;noreply@anthropic.com&gt;&quot;</span></span></code></pre></div>
 <hr />
-<h2
-id="task-7-add-e14e15e16-invariants-to-scriptse2e_bluff_hunt.sh">Task 7:
-Add E14/E15/E16 invariants to
+<h2 id="task-7-add-e14e15e16-invariants-to-scriptse2e_bluff_huntsh">Task
+7: Add E14/E15/E16 invariants to
 <code>scripts/e2e_bluff_hunt.sh</code></h2>
-<p><strong>Files:</strong> - Modify:
-<code>scripts/e2e_bluff_hunt.sh</code></p>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Modify: <code>scripts/e2e_bluff_hunt.sh</code></li>
+</ul>
 <ul class="task-list">
 <li><label><input type="checkbox" /><strong>Step 1: Find the E13 block
 (live Postgres M2 integration) and add E14-E16 after
@@ -1493,9 +1309,9 @@ comments to mention E14/E15/E16.</p>
 <li><label><input type="checkbox" /><strong>Step 3: Update the totals at
 the bottom of the file</strong></label></li>
 </ul>
-<p>Find the final summary block. The current expected total is “15 PASS
-/ 0 FAIL”; after Wave 1 it should be “18 PASS / 0 FAIL” (or “15 PASS / 0
-FAIL / 3 SKIP” if no container runtime). Adjust any hardcoded count
+<p>Find the final summary block. The current expected total is "15 PASS
+/ 0 FAIL"; after Wave 1 it should be "18 PASS / 0 FAIL" (or "15 PASS / 0
+FAIL / 3 SKIP" if no container runtime). Adjust any hardcoded count
 assertions accordingly.</p>
 <ul class="task-list">
 <li><label><input type="checkbox" /><strong>Step 4: Run e2e_bluff_hunt
@@ -1504,7 +1320,7 @@ locally with container runtime</strong></label></li>
 <p>Run:
 <code>bash scripts/e2e_bluff_hunt.sh 2&gt;&amp;1 | tail -30</code>
 Expected: 18 PASS / 0 FAIL (or 15 PASS / 0 FAIL with 3 SKIPs on a host
-without docker/podman — that’s STILL §107-acceptable per §11.4.3).</p>
+without docker/podman — that's STILL §107-acceptable per §11.4.3).</p>
 <ul class="task-list">
 <li><label><input type="checkbox" /><strong>Step 5:
 Commit</strong></label></li>
@@ -1525,13 +1341,16 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb29-1"><a href=
 <span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb29-14"><a href="#cb29-14" aria-hidden="true" tabindex="-1"></a><span class="st">Co-Authored-By: Claude Opus 4.7 &lt;noreply@anthropic.com&gt;&quot;</span></span></code></pre></div>
 <hr />
-<h2 id="task-8-update-.env.example-status.md-issues.md-fixed.md">Task 8:
+<h2 id="task-8-update-envexample--statusmd--issuesmd--fixedmd">Task 8:
 Update <code>.env.example</code> + Status.md + Issues.md → Fixed.md</h2>
-<p><strong>Files:</strong> - Modify:
-<code>quickstart/.env.example</code> - Modify:
-<code>docs/Issues.md</code> - Modify: <code>docs/Fixed.md</code> -
-Modify: <code>docs/Status.md</code> - Regenerate:
-<code>docs/Status.{html,docx,pdf}</code></p>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Modify: <code>quickstart/.env.example</code></li>
+<li>Modify: <code>docs/Issues.md</code></li>
+<li>Modify: <code>docs/Fixed.md</code></li>
+<li>Modify: <code>docs/Status.md</code></li>
+<li>Regenerate: <code>docs/Status.{html,docx,pdf}</code></li>
+</ul>
 <ul class="task-list">
 <li><label><input type="checkbox" /><strong>Step 1: Add new env vars to
 <code>quickstart/.env.example</code></strong></label></li>
@@ -1562,16 +1381,13 @@ HRD-010 row Issues → Fixed</strong></label></li>
 <p>This is the §11.4.19 atomic move — the row must NOT exist in both
 files at any instant.</p>
 <p>Use a single <code>git mv</code>-style sequence:</p>
-<ol type="a">
-<li>Open <code>docs/Issues.md</code>. Locate the line beginning
-<code>| HRD-010 |</code>. Cut it (remember the full row).</li>
-<li>Open <code>docs/Fixed.md</code>. Insert the row at the top of the
-“Recently fixed” table, with <code>Closed</code> = today’s date,
-<code>Commit</code> = <code>(this commit)</code>.</li>
-<li>Update the Issues field count in both files’ header tables —
-Issues.md drops HRD-010 from its open list; Fixed.md adds it to its
-closed list.</li>
-</ol>
+<p>a. Open <code>docs/Issues.md</code>. Locate the line beginning
+<code>| HRD-010 |</code>. Cut it (remember the full row). b. Open
+<code>docs/Fixed.md</code>. Insert the row at the top of the "Recently
+fixed" table, with <code>Closed</code> = today's date,
+<code>Commit</code> = <code>(this commit)</code>. c. Update the Issues
+field count in both files' header tables — Issues.md drops HRD-010 from
+its open list; Fixed.md adds it to its closed list.</p>
 <p>The Fixed.md row template:</p>
 <pre><code>| HRD-010 | task | middle | commons_storage live wiring — pgx pool + RLS + migrations + background queue (digital.vasic.background) + redis (digital.vasic.cache) + pherald migrate up/status subcommand + E14/E15/E16 e2e invariants | 2026-05-XX | (this commit) | spec V3 §9.6 + §16; Catalogue-Check: extend digital.vasic.database@&lt;pinned&gt; + digital.vasic.background@&lt;pinned&gt; + digital.vasic.cache@&lt;pinned&gt; |</code></pre>
 <ul class="task-list">
@@ -1581,9 +1397,12 @@ closed list.</li>
 <p>Bump revision; update Implementation table row for
 <code>commons_storage</code>:</p>
 <pre><code>| `commons_storage` (L1) | ✅ landed (M2 + HRD-010) | 9 SQL migrations + pgx pool live; RLS tenant-isolation proven (E14); background queue + Redis adapters live via commons_infra (E15/E16); pherald migrate up/status subcommand. |</code></pre>
-<p>Update Operations block: - <code>e2e_bluff_hunt</code>: <strong>18
-PASS / 0 FAIL</strong> (was 15). - Status summary updated to mention
-HRD-010 closure.</p>
+<p>Update Operations block:</p>
+<ul>
+<li><code>e2e_bluff_hunt</code>: <strong>18 PASS / 0 FAIL</strong> (was
+15).</li>
+<li>Status summary updated to mention HRD-010 closure.</li>
+</ul>
 <ul class="task-list">
 <li><label><input type="checkbox" /><strong>Step 4: Regenerate Status.md
 + Issues.md + Fixed.md sibling formats</strong></label></li>
@@ -1618,7 +1437,7 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb34-1"><a href=
 <span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb34-11"><a href="#cb34-11" aria-hidden="true" tabindex="-1"></a><span class="st">Co-Authored-By: Claude Opus 4.7 &lt;noreply@anthropic.com&gt;&quot;</span></span></code></pre></div>
 <hr />
-<h2 id="task-9-final-anti-bluff-verification-multi-mirror-push">Task 9:
+<h2 id="task-9-final-anti-bluff-verification--multi-mirror-push">Task 9:
 Final anti-bluff verification + multi-mirror push</h2>
 <p><strong>Files:</strong> none modified — this task validates and
 ships.</p>
@@ -1672,10 +1491,6 @@ closed table. Confirm <code>docs/Status.md</code> r7 reports
 HRD-010 covers: pgx pool, RLS, migrations, River queue (=
 digital.vasic.background), Redis ACL, pherald migrate. Map:</p>
 <table>
-<colgroup>
-<col style="width: 50%" />
-<col style="width: 50%" />
-</colgroup>
 <thead>
 <tr>
 <th>Roadmap requirement</th>
@@ -1700,7 +1515,7 @@ digital.vasic.background), Redis ACL, pherald migrate. Map:</p>
 <td>Task 5 (E15)</td>
 </tr>
 <tr>
-<td>Redis ACL’d via digital.vasic.cache</td>
+<td>Redis ACL'd via digital.vasic.cache</td>
 <td>Task 4 (E16)</td>
 </tr>
 <tr>
@@ -1724,7 +1539,7 @@ digital.vasic.background), Redis ACL, pherald migrate. Map:</p>
 <td>Task 9</td>
 </tr>
 <tr>
-<td>§107 evidence (E14 captured: tenant-A reads only tenant-A’s
+<td>§107 evidence (E14 captured: tenant-A reads only tenant-A's
 row)</td>
 <td>Task 3</td>
 </tr>
@@ -1742,8 +1557,8 @@ ID)</td>
 <p><strong>No coverage gaps.</strong></p>
 <p><strong>2. Placeholder scan.</strong></p>
 <ul>
-<li>“HRD-NNN” — appears in honest-stub 501 references; legitimate</li>
-<li>“TBD” — appears only in references to the upstream Catalogue-Check
+<li>"HRD-NNN" — appears in honest-stub 501 references; legitimate</li>
+<li>"TBD" — appears only in references to the upstream Catalogue-Check
 field that must be resolved before the HRD closes; legitimate</li>
 <li><code>&lt;flavor&gt;</code> — appears in shell command templates;
 legitimate</li>
@@ -1763,15 +1578,11 @@ across Tasks 1-5 ✓</li>
 <li><code>Task</code> alias for <code>BackgroundTask</code> declared in
 Task 1; used in Task 5 ✓</li>
 <li><code>ParseDSN</code> + <code>CurrentVersion</code> are added in
-Task 6’s “Engineer note” if they don’t exist — flagged for the
+Task 6's "Engineer note" if they don't exist — flagged for the
 engineer</li>
 </ul>
 <p><strong>4. Anti-bluff trap coverage.</strong></p>
 <table>
-<colgroup>
-<col style="width: 50%" />
-<col style="width: 50%" />
-</colgroup>
 <thead>
 <tr>
 <th>Trap from master roadmap C-tables</th>

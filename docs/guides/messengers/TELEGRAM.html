@@ -4,157 +4,11 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>Herald — TELEGRAM</title>
+  <title>Herald</title>
   <style>
     /* Default styles provided by pandoc.
     ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
     */
-    html {
-      color: #1a1a1a;
-      background-color: #fdfdfd;
-    }
-    body {
-      margin: 0 auto;
-      max-width: 36em;
-      padding-left: 50px;
-      padding-right: 50px;
-      padding-top: 50px;
-      padding-bottom: 50px;
-      hyphens: auto;
-      overflow-wrap: break-word;
-      text-rendering: optimizeLegibility;
-      font-kerning: normal;
-    }
-    @media (max-width: 600px) {
-      body {
-        font-size: 0.9em;
-        padding: 12px;
-      }
-      h1 {
-        font-size: 1.8em;
-      }
-    }
-    @media print {
-      html {
-        background-color: white;
-      }
-      body {
-        background-color: transparent;
-        color: black;
-        font-size: 12pt;
-      }
-      p, h2, h3 {
-        orphans: 3;
-        widows: 3;
-      }
-      h2, h3, h4 {
-        page-break-after: avoid;
-      }
-    }
-    p {
-      margin: 1em 0;
-    }
-    a {
-      color: #1a1a1a;
-    }
-    a:visited {
-      color: #1a1a1a;
-    }
-    img {
-      max-width: 100%;
-    }
-    svg {
-      height: auto;
-      max-width: 100%;
-    }
-    h1, h2, h3, h4, h5, h6 {
-      margin-top: 1.4em;
-    }
-    h5, h6 {
-      font-size: 1em;
-      font-style: italic;
-    }
-    h6 {
-      font-weight: normal;
-    }
-    ol, ul {
-      padding-left: 1.7em;
-      margin-top: 1em;
-    }
-    li > ol, li > ul {
-      margin-top: 0;
-    }
-    blockquote {
-      margin: 1em 0 1em 1.7em;
-      padding-left: 1em;
-      border-left: 2px solid #e6e6e6;
-      color: #606060;
-    }
-    code {
-      white-space: pre-wrap;
-      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
-      font-size: 85%;
-      margin: 0;
-      hyphens: manual;
-    }
-    pre {
-      margin: 1em 0;
-      overflow: auto;
-    }
-    pre code {
-      padding: 0;
-      overflow: visible;
-      overflow-wrap: normal;
-    }
-    .sourceCode {
-     background-color: transparent;
-     overflow: visible;
-    }
-    hr {
-      border: none;
-      border-top: 1px solid #1a1a1a;
-      height: 1px;
-      margin: 1em 0;
-    }
-    table {
-      margin: 1em 0;
-      border-collapse: collapse;
-      width: 100%;
-      overflow-x: auto;
-      display: block;
-      font-variant-numeric: lining-nums tabular-nums;
-    }
-    table caption {
-      margin-bottom: 0.75em;
-    }
-    tbody {
-      margin-top: 0.5em;
-      border-top: 1px solid #1a1a1a;
-      border-bottom: 1px solid #1a1a1a;
-    }
-    th {
-      border-top: 1px solid #1a1a1a;
-      padding: 0.25em 0.5em 0.25em 0.5em;
-    }
-    td {
-      padding: 0.125em 0.5em 0.25em 0.5em;
-    }
-    header {
-      margin-bottom: 4em;
-      text-align: center;
-    }
-    #TOC li {
-      list-style: none;
-    }
-    #TOC ul {
-      padding-left: 1.3em;
-    }
-    #TOC > ul {
-      padding-left: 0;
-    }
-    #TOC a:not(:hover) {
-      text-decoration: none;
-    }
     span.smallcaps{font-variant: small-caps;}
     div.columns{display: flex; gap: min(4vw, 1.5em);}
     div.column{flex: auto; overflow-x: auto;}
@@ -235,89 +89,21 @@
     code span.vs { color: #4070a0; } /* VerbatimString */
     code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
   </style>
+  <link rel="stylesheet" href="../../../assets/logo/print.css" />
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">Herald — TELEGRAM</h1>
+<h1 class="title">Herald</h1>
 </header>
-<nav id="TOC" role="doc-toc">
-<ul>
-<li><a href="#herald-telegram-channel-setup-guide"
-id="toc-herald-telegram-channel-setup-guide">Herald — Telegram Channel
-Setup Guide</a>
-<ul>
-<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
-contents</a></li>
-<li><a href="#pre-requisites"
-id="toc-pre-requisites">Pre-requisites</a></li>
-<li><a href="#step-1-create-a-bot-via-botfather"
-id="toc-step-1-create-a-bot-via-botfather">Step 1 — Create a bot via
-<span class="citation" data-cites="BotFather">@BotFather</span></a></li>
-<li><a href="#step-2-get-the-chat-id"
-id="toc-step-2-get-the-chat-id">Step 2 — Get the chat ID</a>
-<ul>
-<li><a href="#option-a-direct-messages-you-bot-works-always"
-id="toc-option-a-direct-messages-you-bot-works-always">Option A — Direct
-messages (you ↔︎ bot) — works ALWAYS</a></li>
-<li><a href="#option-b-group-chat-bot-in-a-group-see-step-2.5-first"
-id="toc-option-b-group-chat-bot-in-a-group-see-step-2.5-first">Option B
-— Group chat (bot in a group) — see Step 2.5 first</a></li>
-<li><a href="#option-c-channel-one-way-broadcast"
-id="toc-option-c-channel-one-way-broadcast">Option C — Channel (one-way
-broadcast)</a></li>
-<li><a href="#confirm-the-chat-id" id="toc-confirm-the-chat-id">Confirm
-the chat ID</a></li>
-</ul></li>
-<li><a href="#step-2.5-privacy-mode-load-bearing-for-groups"
-id="toc-step-2.5-privacy-mode-load-bearing-for-groups">Step 2.5 —
-Privacy Mode (LOAD-BEARING for groups)</a>
-<ul>
-<li><a href="#check-your-privacy-mode-state"
-id="toc-check-your-privacy-mode-state">Check your Privacy Mode
-state</a></li>
-<li><a href="#two-paths-to-fix" id="toc-two-paths-to-fix">Two paths to
-fix</a></li>
-<li><a href="#when-neither-path-works"
-id="toc-when-neither-path-works">When neither path works</a></li>
-<li><a href="#diagnostic-command-canonical-helper"
-id="toc-diagnostic-command-canonical-helper">Diagnostic command
-(canonical helper)</a></li>
-</ul></li>
-<li><a href="#step-3-provide-the-credentials-to-herald"
-id="toc-step-3-provide-the-credentials-to-herald">Step 3 — Provide the
-credentials to Herald</a>
-<ul>
-<li><a href="#path-a-shell-export-recommended-for-personal-workstation"
-id="toc-path-a-shell-export-recommended-for-personal-workstation">Path A
-— Shell-export (recommended for personal workstation)</a></li>
-<li><a href="#path-b-project-local-.env"
-id="toc-path-b-project-local-.env">Path B — Project-local
-<code>.env</code></a></li>
-</ul></li>
-<li><a href="#step-4-verify-healthcheck"
-id="toc-step-4-verify-healthcheck">Step 4 — Verify HealthCheck</a></li>
-<li><a href="#step-5-verify-send-e17"
-id="toc-step-5-verify-send-e17">Step 5 — Verify Send (E17)</a></li>
-<li><a href="#step-6-optional-verify-subscribe-vertical-slice-e19"
-id="toc-step-6-optional-verify-subscribe-vertical-slice-e19">Step 6 —
-(Optional) Verify Subscribe + Vertical Slice (E19)</a></li>
-<li><a href="#step-7-future-webhook-ingress-for-production"
-id="toc-step-7-future-webhook-ingress-for-production">Step 7 — (Future)
-Webhook ingress for production</a></li>
-<li><a href="#troubleshooting"
-id="toc-troubleshooting">Troubleshooting</a></li>
-<li><a href="#spec-code-references" id="toc-spec-code-references">Spec +
-code references</a></li>
-</ul></li>
-</ul>
-</nav>
-<h1 id="herald-telegram-channel-setup-guide">Herald — Telegram Channel
+<div align="center">
+
+<p><img src="../../../assets/logo/herald_logo_square_128.png"
+alt="Herald" />{width=96px height=96px}</p>
+</div>
+
+<h1 id="herald--telegram-channel-setup-guide">Herald — Telegram Channel
 Setup Guide</h1>
 <table>
-<colgroup>
-<col style="width: 50%" />
-<col style="width: 50%" />
-</colgroup>
 <thead>
 <tr>
 <th>Field</th>
@@ -362,8 +148,7 @@ close HRD-011 with live E17/E19 evidence.</p>
 <ul>
 <li><a href="#pre-requisites">Pre-requisites</a></li>
 <li><a href="#step-1--create-a-bot-via-botfather">Step 1 — Create a bot
-via <span class="citation"
-data-cites="BotFather">@BotFather</span></a></li>
+via @BotFather</a></li>
 <li><a href="#step-2--get-the-chat-id">Step 2 — Get the chat ID</a></li>
 <li><a href="#step-3--provide-the-credentials-to-herald">Step 3 —
 Provide the credentials to Herald</a></li>
@@ -391,20 +176,20 @@ it).</li>
 <ul>
 <li><code>podman</code> or <code>docker</code> available locally (for
 the quickstart compose stack), OR</li>
-<li>a reachable Postgres instance per the §“Postgres” entries in <a
+<li>a reachable Postgres instance per the §"Postgres" entries in <a
 href="../OPERATOR_CREDENTIALS.md"><code>OPERATOR_CREDENTIALS.md</code></a>.</li>
 </ul></li>
 </ul>
-<h2 id="step-1-create-a-bot-via-botfather">Step 1 — Create a bot via
-<span class="citation" data-cites="BotFather">@BotFather</span></h2>
-<p>Telegram’s official “create-a-bot” interface is a bot called
-BotFather. You’ll chat with it to create your bot.</p>
+<h2 id="step-1--create-a-bot-via-botfather">Step 1 — Create a bot via
+@BotFather</h2>
+<p>Telegram's official "create-a-bot" interface is a bot called
+BotFather. You'll chat with it to create your bot.</p>
 <ol type="1">
 <li><p>Open Telegram → tap the search icon → type
 <code>BotFather</code>.</p></li>
 <li><p>Tap the result with the verified-blue-checkmark next to its
 username (the real one is <code>@BotFather</code>).
-<strong>Don’t</strong> tap any imposter accounts; they cannot create
+<strong>Don't</strong> tap any imposter accounts; they cannot create
 real bots and may phish you.</p></li>
 <li><p>Start the chat with <code>/start</code>.</p></li>
 <li><p>Send <code>/newbot</code> to BotFather.</p></li>
@@ -424,7 +209,7 @@ examples:</p>
 <li><p>BotFather replies with a <strong>bot token</strong> of the
 form:</p>
 <pre><code>1234567890:AAH1lab2c3d4e5f6g7h8i9j0kK_LmN3oPqR4S5t</code></pre>
-<p>This token is the bot’s password. Treat it like one — never paste it
+<p>This token is the bot's password. Treat it like one — never paste it
 into a PR, a Slack channel, a commit message, or anywhere
 indexed.</p></li>
 <li><p><strong>Copy the token immediately</strong> and put it somewhere
@@ -436,43 +221,42 @@ safe (password manager, secrets vault, secure note).</p></li>
 token + receive a new one. This is the only fix — git history scrubbing
 alone does NOT invalidate a leaked Telegram token.</p>
 </blockquote>
-<h2 id="step-2-get-the-chat-id">Step 2 — Get the chat ID</h2>
+<h2 id="step-2--get-the-chat-id">Step 2 — Get the chat ID</h2>
 <p>Your bot needs to know <strong>where</strong> to send messages. That
 destination is identified by a numeric <strong>chat ID</strong> — a chat
 is a one-on-one DM, a group, or a channel.</p>
 <blockquote>
 <p><strong>⚠ Read Step 2.5 FIRST</strong> if you intend to use a group.
-Group chat IDs require working around Telegram’s Privacy Mode, which is
+Group chat IDs require working around Telegram's Privacy Mode, which is
 <strong>ON by default</strong> on new bots. Operators routinely waste
 time wondering why <code>getUpdates</code> returns empty until they
 learn this.</p>
 </blockquote>
 <p><strong>Choose your chat type</strong>:</p>
-<h3 id="option-a-direct-messages-you-bot-works-always">Option A — Direct
-messages (you ↔︎ bot) — works ALWAYS</h3>
+<h3 id="option-a--direct-messages-you--bot--works-always">Option A —
+Direct messages (you ↔︎ bot) — works ALWAYS</h3>
 <p>This path bypasses Privacy Mode entirely. <strong>Use it
-first</strong> if Step 2.5 below hasn’t yet been completed.</p>
+first</strong> if Step 2.5 below hasn't yet been completed.</p>
 <ol type="1">
-<li><p>In Telegram, search for your bot’s username
-(e.g. <code>@herald_operator_bot</code>).</p></li>
-<li><p>Tap <strong>Start</strong> to open a DM with it. (The /start
-command is what introduces YOU as a chat the bot knows about.)</p></li>
-<li><p>Send any message (e.g. <code>hello</code>).</p></li>
-<li><p>Run the diagnostic script (recommended):</p>
+<li>In Telegram, search for your bot's username (e.g.
+<code>@herald_operator_bot</code>).</li>
+<li>Tap <strong>Start</strong> to open a DM with it. (The /start command
+is what introduces YOU as a chat the bot knows about.)</li>
+<li>Send any message (e.g. <code>hello</code>).</li>
+<li>Run the diagnostic script (recommended):
 <div class="sourceCode" id="cb2"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/tgram_diagnose.sh</span></code></pre></div>
-<p>Or open in a browser:</p>
+Or open in a browser:
 <pre><code>https://api.telegram.org/bot&lt;YOUR-BOT-TOKEN&gt;/getUpdates</code></pre></li>
-<li><p>The output shows
+<li>The output shows
 <code>chat_id=123456789  type=private  name=YourName</code>. The
-<code>id</code> value (positive integer for DMs) is your chat
-ID.</p></li>
+<code>id</code> value (positive integer for DMs) is your chat ID.</li>
 </ol>
-<h3 id="option-b-group-chat-bot-in-a-group-see-step-2.5-first">Option B
+<h3 id="option-b--group-chat-bot-in-a-group--see-step-25-first">Option B
 — Group chat (bot in a group) — see Step 2.5 first</h3>
 <ol type="1">
 <li>Create a Telegram group (or use an existing one).</li>
-<li>Add your bot to the group via the group’s <strong>Add
+<li>Add your bot to the group via the group's <strong>Add
 Member</strong> menu.</li>
 <li><strong>Complete Step 2.5 below</strong> to ensure the bot can
 actually see group messages.</li>
@@ -486,14 +270,14 @@ OR a <code>/command</code> if Privacy Mode is ON).</li>
 <li>The <code>id</code> for groups is a <strong>negative number</strong>
 like <code>-1001234567890</code>.</li>
 </ol>
-<h3 id="option-c-channel-one-way-broadcast">Option C — Channel (one-way
+<h3 id="option-c--channel-one-way-broadcast">Option C — Channel (one-way
 broadcast)</h3>
 <p>Channels are one-way: the bot can post but cannot read messages.
 Useful for notifications without two-way interaction.</p>
 <ol type="1">
 <li>Create a Telegram channel.</li>
 <li>Add your bot as an <strong>Administrator</strong> (a regular member
-does NOT have post permission). Grant at least “Post Messages”.</li>
+does NOT have post permission). Grant at least "Post Messages".</li>
 <li>Send any message to the channel (from your own account, since the
 bot is admin not subscriber).</li>
 <li>Run <code>bash scripts/tgram_diagnose.sh</code>.</li>
@@ -501,29 +285,74 @@ bot is admin not subscriber).</li>
 number.</li>
 </ol>
 <h3 id="confirm-the-chat-id">Confirm the chat ID</h3>
-<p>Paste the chat ID into a temporary file or note. You’ll set it as
+<p>Paste the chat ID into a temporary file or note. You'll set it as
 <code>HERALD_TGRAM_CHAT_ID</code> in the next step.</p>
-<h2 id="step-2.5-privacy-mode-load-bearing-for-groups">Step 2.5 —
+<h2 id="step-25--privacy-mode-load-bearing-for-groups">Step 2.5 —
 Privacy Mode (LOAD-BEARING for groups)</h2>
 <p><strong>This is the #1 reason new operators get stuck.</strong> Skip
 it and you will waste hours wondering why <code>getUpdates</code>
 returns empty.</p>
-<p>When you create a bot via <span class="citation"
-data-cites="BotFather">@BotFather</span>, Telegram defaults its
-<strong>Privacy Mode</strong> to <strong>ON</strong>. With Privacy Mode
-ON, the bot CAN be added to a group but Telegram filters incoming group
-messages <strong>before they ever reach the bot’s update
-stream</strong>. The bot only sees:</p>
+<p>Per the <a
+href="https://core.telegram.org/bots/features#privacy-mode">official
+Telegram Bot API docs</a>, when you create a bot via @BotFather,
+Telegram defaults its <strong>Privacy Mode</strong> to
+<strong>ON</strong>. With Privacy Mode ON, the bot CAN be added to a
+group but Telegram filters incoming group messages <strong>before they
+ever reach the bot's update stream</strong>. The bot only sees:</p>
 <ul>
-<li>Slash commands (<code>/start</code>, <code>/anything</code>)</li>
-<li>Messages that contain <code>@&lt;bot-username&gt;</code> (literal
-<code>@</code>-mention of the bot’s username)</li>
-<li>Replies to messages the bot itself sent</li>
-<li>Service messages (member joins, etc.)</li>
+<li><strong><code>/command@bot_name</code></strong> — slash commands
+explicitly addressed to the bot (always delivered)</li>
+<li><strong>General <code>/commands</code></strong> — only AFTER the bot
+has sent at least one message in the group (subtle: a never-spoken bot
+can't see bare <code>/commands</code> yet)</li>
+<li><strong>Mentions and inline replies</strong> — messages where the
+bot is <code>@</code>-mentioned, or that reply to one of the bot's own
+messages</li>
+<li><strong>Service messages</strong> — member joins/leaves, group
+renames, etc. (always delivered, regardless of Privacy Mode)</li>
 </ul>
 <p><strong>Plain chat messages from group members are INVISIBLE to the
 bot in Privacy Mode</strong>. This is why <code>getUpdates</code> is
 often empty even though messages clearly exist in the group.</p>
+<blockquote>
+<p><strong>Update buffer is 24h.</strong> Per the Bot API spec, updates
+the bot is entitled to see are stored server-side for <strong>up to 24
+hours</strong>. So if a message DID reach the bot's queue, you can call
+<code>getUpdates</code> later within that window to retrieve it.</p>
+</blockquote>
+<h3
+id="bot-admin-shortcut-recommended-for-herald--bypasses-privacy-mode-entirely">Bot-admin
+shortcut (RECOMMENDED for Herald — bypasses Privacy Mode entirely)</h3>
+<p>Per the <a
+href="https://core.telegram.org/bots/features#privacy-mode">official
+docs</a>: <strong>"Bot admins always receive all messages and bypass
+privacy restrictions."</strong></p>
+<p>If your bot is an <strong>administrator</strong> of the group,
+Privacy Mode is irrelevant. The bot sees every message. This is the
+simplest and most reliable setup for Herald's vertical-slice routing
+(Telegram → Claude Code → Telegram) because every group message routes
+to Claude Code, not just <code>@</code>-mentions.</p>
+<p>To promote the bot to admin:</p>
+<ol type="1">
+<li>Open the group in Telegram.</li>
+<li>Tap the group title to open group info.</li>
+<li>Tap <strong>Administrators</strong> (or <code>Edit</code> →
+<code>Administrators</code>).</li>
+<li>Tap <strong>Add Admin</strong> (or the <code>+</code> icon).</li>
+<li>Search for your bot's username (e.g.
+<code>@atmosphere_worker_bot</code>) and select it.</li>
+<li>Grant at minimum: <strong>Pin Messages</strong> + <strong>Add New
+Admins</strong> OFF, others can stay at defaults. (Telegram requires at
+least one permission for the admin role to be created. Even read-only
+admin works for our use case since we're using the admin status to
+bypass Privacy Mode, not to grant write powers beyond the bot's normal
+ones.)</li>
+<li>Tap the <strong>✓</strong> confirmation.</li>
+<li><strong>Send any message in the group.</strong></li>
+<li>Run <code>bash scripts/tgram_diagnose.sh</code> — the chat ID should
+appear.</li>
+</ol>
+<p>This works regardless of the Privacy Mode setting in @BotFather.</p>
 <h3 id="check-your-privacy-mode-state">Check your Privacy Mode
 state</h3>
 <p>Run:</p>
@@ -531,40 +360,41 @@ state</h3>
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/tgram_diagnose.sh</span></code></pre></div>
 <p>The <code>getMe</code> output includes
 <code>can_read_all_group_messages</code>. If it says <code>False</code>,
-Privacy Mode is <strong>ON</strong>. If <code>True</code>, it’s OFF.</p>
+Privacy Mode is <strong>ON</strong>. If <code>True</code>, it's OFF.</p>
 <h3 id="two-paths-to-fix">Two paths to fix</h3>
-<h4 id="path-a-quick-workaround-no-settings-change">Path A — Quick
+<h4 id="path-a--quick-workaround-no-settings-change">Path A — Quick
 workaround (no settings change)</h4>
-<p>In the group, send a message that EXPLICITLY contains the bot’s
+<p>In the group, send a message that EXPLICITLY contains the bot's
 username:</p>
 <pre><code>@atmosphere_worker_bot hi</code></pre>
 <p>(Substitute your real bot username from <code>getMe</code>.) Telegram
-delivers this to the bot regardless of Privacy Mode because it’s a
+delivers this to the bot regardless of Privacy Mode because it's a
 mention.</p>
 <p>After sending, run <code>bash scripts/tgram_diagnose.sh</code> again
 — the chat should appear.</p>
-<p><strong>Common gotchas</strong>: - Auto-correct on mobile sometimes
-“corrects” the bot username. Verify exactly:
-<code>@&lt;your-bot-username&gt;</code> — must match
-<code>getMe</code>’s <code>username</code> field verbatim. - Slash
-command <code>/start@&lt;bot-username&gt;</code> also works (it’s both a
-command and a mention). - A reply to one of the bot’s previous messages
-works too.</p>
+<p><strong>Common gotchas</strong>:</p>
+<ul>
+<li>Auto-correct on mobile sometimes "corrects" the bot username. Verify
+exactly: <code>@&lt;your-bot-username&gt;</code> — must match
+<code>getMe</code>'s <code>username</code> field verbatim.</li>
+<li>Slash command <code>/start@&lt;bot-username&gt;</code> also works
+(it's both a command and a mention).</li>
+<li>A reply to one of the bot's previous messages works too.</li>
+</ul>
 <h4
-id="path-b-disable-privacy-mode-in-botfather-best-for-production-use">Path
-B — Disable Privacy Mode in <span class="citation"
-data-cites="BotFather">@BotFather</span> (best for production use)</h4>
+id="path-b--disable-privacy-mode-in-botfather-best-for-production-use">Path
+B — Disable Privacy Mode in @BotFather (best for production use)</h4>
 <p>If you want Herald to <strong>route ALL group messages</strong> to
 Claude Code (not just <code>@</code>-mentions), disable Privacy
 Mode:</p>
 <ol type="1">
 <li>Open Telegram → chat with <code>@BotFather</code></li>
 <li>Send <code>/mybots</code></li>
-<li>Select your bot (e.g. <code>@atmosphere_worker_bot</code>)</li>
+<li>Select your bot (e.g. <code>@atmosphere_worker_bot</code>)</li>
 <li>Tap <strong>Bot Settings</strong></li>
 <li>Tap <strong>Group Privacy</strong></li>
 <li>Tap <strong>Turn off</strong></li>
-<li>BotFather replies: “Done. The bot will see all messages.”</li>
+<li>BotFather replies: "Done. The bot will see all messages."</li>
 <li><strong>Important — the change takes effect only for new
 sessions</strong>: REMOVE the bot from the group, then RE-ADD it.</li>
 <li>Send any plain message in the group.</li>
@@ -572,19 +402,19 @@ sessions</strong>: REMOVE the bot from the group, then RE-ADD it.</li>
 appear.</li>
 </ol>
 <h3 id="when-neither-path-works">When neither path works</h3>
-<p>If you’ve completed Path A or B and <code>getUpdates</code> is still
+<p>If you've completed Path A or B and <code>getUpdates</code> is still
 empty:</p>
 <ul>
 <li><strong>Verify the bot is actually in the group</strong>: open the
-group’s member list. If the bot is missing, re-add it.</li>
+group's member list. If the bot is missing, re-add it.</li>
 <li><strong>Verify you sent the message AFTER the privacy
-change</strong> (Path B): privacy changes don’t retroactively re-deliver
+change</strong> (Path B): privacy changes don't retroactively re-deliver
 historic messages.</li>
 <li><strong>Verify you sent the message AFTER adding the bot</strong>
 (always): updates from before the bot joined are never delivered.</li>
 <li><strong>Try a DM <code>/start</code> first</strong> (Option A
 above): DMs ALWAYS work. If the DM chat_id appears but the group chat_id
-doesn’t, the issue is isolated to the group’s privacy
+doesn't, the issue is isolated to the group's privacy
 configuration.</li>
 <li><strong>Check if a previous <code>getUpdates</code> consumed the
 update</strong>: Telegram acks updates after each poll. Send a NEW
@@ -619,13 +449,13 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="
   chat_id=-1001234567890  type=supergroup  name=Herald Notifications  source=message</code></pre>
 <p>If <code>updates received: 0</code> with explanation, follow the
 suggested fix.</p>
-<h2 id="step-3-provide-the-credentials-to-herald">Step 3 — Provide the
+<h2 id="step-3--provide-the-credentials-to-herald">Step 3 — Provide the
 credentials to Herald</h2>
 <p>Choose ONE of these two paths (or both — the resolution order in <a
 href="../OPERATOR_CREDENTIALS.md"><code>OPERATOR_CREDENTIALS.md</code></a>
 handles overlap correctly).</p>
-<h3 id="path-a-shell-export-recommended-for-personal-workstation">Path A
-— Shell-export (recommended for personal workstation)</h3>
+<h3 id="path-a--shell-export-recommended-for-personal-workstation">Path
+A — Shell-export (recommended for personal workstation)</h3>
 <p>Add to your <code>~/.zshrc</code> (macOS default) or
 <code>~/.bashrc</code> (Linux default):</p>
 <div class="sourceCode" id="cb8"><pre
@@ -638,7 +468,7 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="
 <div class="sourceCode" id="cb9"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&quot;</span><span class="va">${HERALD_TGRAM_BOT_TOKEN</span><span class="op">:</span><span class="dv">0</span><span class="op">:</span><span class="dv">10</span><span class="va">}</span><span class="st">...&quot;</span>   <span class="co"># should print the first 10 chars</span></span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&quot;</span><span class="va">${HERALD_TGRAM_CHAT_ID}</span><span class="st">&quot;</span>             <span class="co"># should print the chat ID</span></span></code></pre></div>
-<h3 id="path-b-project-local-.env">Path B — Project-local
+<h3 id="path-b--project-local-env">Path B — Project-local
 <code>.env</code></h3>
 <p>Edit (or create)
 <code>/Users/milosvasic/Projects/Herald/.env</code>:</p>
@@ -655,9 +485,9 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href=
 <p>For compose runs, <code>docker-compose</code> reads <code>.env</code>
 automatically.</p>
 <p><strong>Per §11.4.10</strong>: never <code>git add .env</code>. The
-repo’s <code>.gitignore</code> already covers it (line 28), but always
+repo's <code>.gitignore</code> already covers it (line 28), but always
 double-check before committing.</p>
-<h2 id="step-4-verify-healthcheck">Step 4 — Verify HealthCheck</h2>
+<h2 id="step-4--verify-healthcheck">Step 4 — Verify HealthCheck</h2>
 <p>The HealthCheck integration test issues a real <code>getMe</code>
 call against the Bot API. It proves the token is valid and the bot is
 enabled.</p>
@@ -667,7 +497,7 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href=
 <p>Expected:</p>
 <pre><code>--- PASS: TestHealthCheck_LiveBotAPI (1.x s)
 PASS</code></pre>
-<p>If you see <code>SKIP</code>, the env vars aren’t visible to
+<p>If you see <code>SKIP</code>, the env vars aren't visible to
 <code>go test</code>. Re-source your shell or run the command with the
 env vars inline:</p>
 <div class="sourceCode" id="cb15"><pre
@@ -676,7 +506,7 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href=
 <p>If you see <code>FAIL</code> with
 <code>getMe returned empty body</code> or HTTP errors, the token is
 invalid. Re-check Step 1.</p>
-<h2 id="step-5-verify-send-e17">Step 5 — Verify Send (E17)</h2>
+<h2 id="step-5--verify-send-e17">Step 5 — Verify Send (E17)</h2>
 <p>The E17 evidence test sends a real Telegram message to your
 configured chat AND persists a row in the
 <code>outbound_delivery_evidence</code> table. It proves the full Send +
@@ -690,18 +520,20 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href=
 <pre><code>--- PASS: TestSend_PersistsDeliveryEvidence (Xs)
 PASS</code></pre>
 <p>You should also see the test message arrive in your Telegram chat —
-something like: &gt;
-<code>Herald E17 persist test 2026-05-21T11:23:45.789Z</code></p>
+something like:</p>
+<blockquote>
+<p><code>Herald E17 persist test 2026-05-21T11:23:45.789Z</code></p>
+</blockquote>
 <p>The §107 anti-bluff guard asserts the persisted
 <code>channel_message_id</code> equals the Telegram-side
 <code>MessageID</code> exactly — not a Herald-generated UUID. A spoofed
 adapter that returned a fake ID would fail this test.</p>
-<h2 id="step-6-optional-verify-subscribe-vertical-slice-e19">Step 6 —
+<h2 id="step-6--optional-verify-subscribe--vertical-slice-e19">Step 6 —
 (Optional) Verify Subscribe + Vertical Slice (E19)</h2>
 <p>E19 is the canonical Telegram → Claude Code → Telegram round-trip. It
 requires:</p>
 <ol type="1">
-<li>All of Step 3’s env vars set.</li>
+<li>All of Step 3's env vars set.</li>
 <li><code>HERALD_CLAUDE_BIN</code> resolves to a working
 <code>claude</code> CLI (default: looked up via
 <code>$PATH</code>).</li>
@@ -722,44 +554,45 @@ Code, (c) parse the reply, (d) send the reply back to your chat.</p>
 <pre><code>E19 PASS: tenant=...; inbound=1; dispatch ok; outbound ok (channel_id=...)
 --- PASS: TestVerticalSlice_TelegramClaudeRoundTrip (Xs)</code></pre>
 <p>You should see TWO messages in your Telegram chat: yours, then
-Claude’s reply.</p>
-<h2 id="step-7-future-webhook-ingress-for-production">Step 7 — (Future)
+Claude's reply.</p>
+<h2 id="step-7--future-webhook-ingress-for-production">Step 7 — (Future)
 Webhook ingress for production</h2>
 <p>Long-poll (Steps 1-6) is what Herald uses today. For lower latency in
 production, Telegram supports webhook ingress — Telegram POSTs each
 update to your endpoint.</p>
 <p><strong>Status</strong>: NOT YET IMPLEMENTED — reserved for
 HRD-NNN.</p>
-<p>When webhook ingress lands, you’ll:</p>
+<p>When webhook ingress lands, you'll:</p>
 <ol type="1">
-<li><p>Generate a 256-bit hex secret:</p>
+<li>Generate a 256-bit hex secret:
 <div class="sourceCode" id="cb20"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="ex">openssl</span> rand <span class="at">-hex</span> 32</span></code></pre></div></li>
-<li><p>Set
-<code>HERALD_TGRAM_WEBHOOK_SECRET=&lt;the-hex&gt;</code>.</p></li>
-<li><p>Configure the bot’s webhook URL via the Bot API:</p>
+<li>Set <code>HERALD_TGRAM_WEBHOOK_SECRET=&lt;the-hex&gt;</code>.</li>
+<li>Configure the bot's webhook URL via the Bot API:
 <pre><code>https://api.telegram.org/bot&lt;TOKEN&gt;/setWebhook?url=https://your-herald.example.com/v1/webhooks/tgram&amp;secret_token=&lt;the-hex&gt;</code></pre></li>
-<li><p>Telegram POSTs each update to <code>/v1/webhooks/tgram</code>
-with the secret in the <code>X-Telegram-Bot-Api-Secret-Token</code>
-header for verification.</p></li>
+<li>Telegram POSTs each update to <code>/v1/webhooks/tgram</code> with
+the secret in the <code>X-Telegram-Bot-Api-Secret-Token</code> header
+for verification.</li>
 </ol>
 <p>Until webhook ingress lands, leave
 <code>HERALD_TGRAM_WEBHOOK_SECRET</code> unset and rely on
 long-poll.</p>
 <h2 id="troubleshooting">Troubleshooting</h2>
-<p><strong>“401 Unauthorized” from <code>getMe</code></strong>: Token is
+<p><strong>"401 Unauthorized" from <code>getMe</code></strong>: Token is
 wrong. Re-copy from BotFather; check no trailing whitespace.</p>
 <p><strong><code>getUpdates</code> returns
 <code>409 Conflict</code></strong>: A webhook is configured for this
 bot. Either use the webhook path (Step 7) OR delete the webhook to
 switch back to long-poll:</p>
 <pre><code>https://api.telegram.org/bot&lt;TOKEN&gt;/deleteWebhook</code></pre>
-<p><strong>Bot doesn’t see group messages</strong>: For groups, you must
-DISABLE “Privacy Mode” in BotFather: 1. Chat with
-<code>@BotFather</code> → <code>/mybots</code> → select your bot → “Bot
-Settings” → “Group Privacy” → “Turn off”. 2. Re-add the bot to the group
-if it was already added (the privacy change takes effect for new
-sessions).</p>
+<p><strong>Bot doesn't see group messages</strong>: For groups, you must
+DISABLE "Privacy Mode" in BotFather:</p>
+<ol type="1">
+<li>Chat with <code>@BotFather</code> → <code>/mybots</code> → select
+your bot → "Bot Settings" → "Group Privacy" → "Turn off".</li>
+<li>Re-add the bot to the group if it was already added (the privacy
+change takes effect for new sessions).</li>
+</ol>
 <p><strong>Test SKIPs despite env vars set</strong>: Some test runners
 scope env vars per-process. Run with inline env:
 <code>HERALD_TGRAM_BOT_TOKEN='...' go test ...</code>.</p>
@@ -772,10 +605,10 @@ mode by default (spec §11.1). Telegram requires specific escaping for
 <code>.</code>, <code>!</code>. If a message contains unescaped
 versions, the Send returns 400. Use <code>commons.Body.Plain</code> for
 plain-text without parse mode interpretation.</p>
-<p><strong>“chat not found”</strong>: The bot was removed from the
-group, or you’re using the wrong chat ID. Re-run <code>getUpdates</code>
+<p><strong>"chat not found"</strong>: The bot was removed from the
+group, or you're using the wrong chat ID. Re-run <code>getUpdates</code>
 to confirm the chat exists.</p>
-<h2 id="spec-code-references">Spec + code references</h2>
+<h2 id="spec--code-references">Spec + code references</h2>
 <ul>
 <li><strong>Spec</strong>: V3 §11.1 (Telegram capabilities + Bot API
 surface), §32.2 (subscriber-reply long-poll loop 25s + 30s
@@ -814,7 +647,7 @@ E19 full slice</li>
 <code>gopkg.in/telebot.v3</code> import-path stable per §11.4.74)</li>
 <li><strong>Related</strong>: <a
 href="../OPERATOR_CREDENTIALS.md"><code>OPERATOR_CREDENTIALS.md</code></a>
-§“Telegram”; <a
+§"Telegram"; <a
 href="../dispatchers/CLAUDE_CODE.md"><code>../dispatchers/CLAUDE_CODE.md</code></a>
 for the LLM dispatch half of the vertical slice</li>
 </ul>

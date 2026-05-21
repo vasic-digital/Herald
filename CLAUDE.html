@@ -4,157 +4,11 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>Herald — CLAUDE</title>
+  <title>Herald</title>
   <style>
     /* Default styles provided by pandoc.
     ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
     */
-    html {
-      color: #1a1a1a;
-      background-color: #fdfdfd;
-    }
-    body {
-      margin: 0 auto;
-      max-width: 36em;
-      padding-left: 50px;
-      padding-right: 50px;
-      padding-top: 50px;
-      padding-bottom: 50px;
-      hyphens: auto;
-      overflow-wrap: break-word;
-      text-rendering: optimizeLegibility;
-      font-kerning: normal;
-    }
-    @media (max-width: 600px) {
-      body {
-        font-size: 0.9em;
-        padding: 12px;
-      }
-      h1 {
-        font-size: 1.8em;
-      }
-    }
-    @media print {
-      html {
-        background-color: white;
-      }
-      body {
-        background-color: transparent;
-        color: black;
-        font-size: 12pt;
-      }
-      p, h2, h3 {
-        orphans: 3;
-        widows: 3;
-      }
-      h2, h3, h4 {
-        page-break-after: avoid;
-      }
-    }
-    p {
-      margin: 1em 0;
-    }
-    a {
-      color: #1a1a1a;
-    }
-    a:visited {
-      color: #1a1a1a;
-    }
-    img {
-      max-width: 100%;
-    }
-    svg {
-      height: auto;
-      max-width: 100%;
-    }
-    h1, h2, h3, h4, h5, h6 {
-      margin-top: 1.4em;
-    }
-    h5, h6 {
-      font-size: 1em;
-      font-style: italic;
-    }
-    h6 {
-      font-weight: normal;
-    }
-    ol, ul {
-      padding-left: 1.7em;
-      margin-top: 1em;
-    }
-    li > ol, li > ul {
-      margin-top: 0;
-    }
-    blockquote {
-      margin: 1em 0 1em 1.7em;
-      padding-left: 1em;
-      border-left: 2px solid #e6e6e6;
-      color: #606060;
-    }
-    code {
-      white-space: pre-wrap;
-      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
-      font-size: 85%;
-      margin: 0;
-      hyphens: manual;
-    }
-    pre {
-      margin: 1em 0;
-      overflow: auto;
-    }
-    pre code {
-      padding: 0;
-      overflow: visible;
-      overflow-wrap: normal;
-    }
-    .sourceCode {
-     background-color: transparent;
-     overflow: visible;
-    }
-    hr {
-      border: none;
-      border-top: 1px solid #1a1a1a;
-      height: 1px;
-      margin: 1em 0;
-    }
-    table {
-      margin: 1em 0;
-      border-collapse: collapse;
-      width: 100%;
-      overflow-x: auto;
-      display: block;
-      font-variant-numeric: lining-nums tabular-nums;
-    }
-    table caption {
-      margin-bottom: 0.75em;
-    }
-    tbody {
-      margin-top: 0.5em;
-      border-top: 1px solid #1a1a1a;
-      border-bottom: 1px solid #1a1a1a;
-    }
-    th {
-      border-top: 1px solid #1a1a1a;
-      padding: 0.25em 0.5em 0.25em 0.5em;
-    }
-    td {
-      padding: 0.125em 0.5em 0.25em 0.5em;
-    }
-    header {
-      margin-bottom: 4em;
-      text-align: center;
-    }
-    #TOC li {
-      list-style: none;
-    }
-    #TOC ul {
-      padding-left: 1.3em;
-    }
-    #TOC > ul {
-      padding-left: 0;
-    }
-    #TOC a:not(:hover) {
-      text-decoration: none;
-    }
     span.smallcaps{font-variant: small-caps;}
     div.columns{display: flex; gap: min(4vw, 1.5em);}
     div.column{flex: auto; overflow-x: auto;}
@@ -235,62 +89,20 @@
     code span.vs { color: #4070a0; } /* VerbatimString */
     code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
   </style>
+  <link rel="stylesheet" href="assets/logo/print.css" />
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">Herald — CLAUDE</h1>
+<h1 class="title">Herald</h1>
 </header>
-<nav id="TOC" role="doc-toc">
-<ul>
-<li><a href="#claude.md" id="toc-claude.md">CLAUDE.md</a>
-<ul>
-<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
-contents</a></li>
-<li><a href="#inherited-from-helix-constitution-parent-discovery"
-id="toc-inherited-from-helix-constitution-parent-discovery">INHERITED
-FROM Helix Constitution (parent-discovery)</a></li>
-<li><a href="#project-status" id="toc-project-status">Project
-status</a></li>
-<li><a
-href="#end-user-usability-covenant-herald-107-helix-11.4-mandatory-anti-bluff"
-id="toc-end-user-usability-covenant-herald-107-helix-11.4-mandatory-anti-bluff">End-user-usability
-covenant (Herald §107 / Helix §11.4 — MANDATORY ANTI-BLUFF)</a></li>
-<li><a href="#mission-from-the-spec"
-id="toc-mission-from-the-spec">Mission (from the spec)</a></li>
-<li><a href="#intended-stack" id="toc-intended-stack">Intended
-stack</a></li>
-<li><a href="#multi-host-mirror-convention"
-id="toc-multi-host-mirror-convention">Multi-host mirror
-convention</a></li>
-<li><a href="#inheritance-gate-run-before-any-commit-touching-root-docs"
-id="toc-inheritance-gate-run-before-any-commit-touching-root-docs">Inheritance
-gate (run before any commit touching root docs)</a></li>
-<li><a
-href="#spec-change-rule-load-bearing-docsspecsmvpspecification.v3.md-specification-documents"
-id="toc-spec-change-rule-load-bearing-docsspecsmvpspecification.v3.md-specification-documents">Spec-change
-rule (load-bearing — <code>docs/specs/mvp/specification.V3.md</code>
-§“Specification documents”)</a></li>
-<li><a href="#project-conventions-from-the-spec-apply-when-scaffolding"
-id="toc-project-conventions-from-the-spec-apply-when-scaffolding">Project
-conventions from the spec (apply when scaffolding)</a></li>
-<li><a href="#constitutable-directory-parent-project-extension-hook"
-id="toc-constitutable-directory-parent-project-extension-hook"><code>constitutable/</code>
-directory (parent-project extension hook)</a></li>
-<li><a href="#documentation-artefacts-pdfhtml-siblings"
-id="toc-documentation-artefacts-pdfhtml-siblings">Documentation
-artefacts (PDF/HTML siblings)</a></li>
-<li><a href="#notes-for-future-scaffolding"
-id="toc-notes-for-future-scaffolding">Notes for future
-scaffolding</a></li>
-</ul></li>
-</ul>
-</nav>
-<h1 id="claude.md">CLAUDE.md</h1>
+<div align="center">
+
+<p><img src="assets/logo/herald_logo_square_128.png"
+alt="Herald" />{width=96px height=96px}</p>
+</div>
+
+<h1 id="claudemd">CLAUDE.md</h1>
 <table>
-<colgroup>
-<col style="width: 50%" />
-<col style="width: 50%" />
-</colgroup>
 <thead>
 <tr>
 <th>Field</th>
@@ -341,7 +153,7 @@ restatement + I8a anchor (r5)</td>
 commit; r4 closes the discoverability gaps observed during a fresh
 <code>/init</code> review; r5 closes the Herald-level
 explicit-restatement gap identified by the 2026-05-20 audit (Helix root
-+ 10 submodules had the verbatim mandate; only Herald’s three root docs
++ 10 submodules had the verbatim mandate; only Herald's three root docs
 lacked it).</td>
 </tr>
 <tr>
@@ -370,7 +182,7 @@ gate (run before any commit touching root docs)</a></li>
 <li><a
 href="#spec-change-rule-load-bearing-docsspecsmvpspecificationmd-specification-documents">Spec-change
 rule (load-bearing — <code>docs/specs/mvp/specification.V3.md</code>
-§“Specification documents”)</a></li>
+§"Specification documents")</a></li>
 <li><a
 href="#project-conventions-from-the-spec-apply-when-scaffolding">Project
 conventions from the spec (apply when scaffolding)</a></li>
@@ -408,23 +220,25 @@ apply unconditionally. Herald-specific rules below extend them — they
 MUST NOT weaken any inherited rule. When this file disagrees with the
 discovered constitution, the constitution wins.</p>
 <p>Canonical: <a
-href="https://github.com/HelixDevelopment/HelixConstitution"
-class="uri">https://github.com/HelixDevelopment/HelixConstitution</a></p>
+href="https://github.com/HelixDevelopment/HelixConstitution">https://github.com/HelixDevelopment/HelixConstitution</a></p>
 <blockquote>
-<p><strong>Read order on a cold start:</strong> 1.
-<code>&lt;discovered-constitution&gt;/CLAUDE.md</code> +
+<p><strong>Read order on a cold start:</strong></p>
+<ol type="1">
+<li><code>&lt;discovered-constitution&gt;/CLAUDE.md</code> +
 <code>Constitution.md</code> — universal Helix rules. Inherited
-unconditionally. 2.
-<code>&lt;discovered-constitution&gt;/AGENTS.md</code> — agent
-guardrails (anti-bluff, no-guessing, paired mutations). 3.
-<code>README.md</code> — Herald overview + how-to. 4. This file
-(Herald-specific notes below). 5.
-<code>docs/guides/HERALD_CONSTITUTION.md</code> — Herald’s
-project-specific constitutional extensions. 6.
-<code>docs/guides/CONSTITUTION_INHERITANCE.md</code> — operator/agent
-guide for the discovery contract + the inheritance gate. 7.
-<code>docs/specs/mvp/specification.V3.md</code> — mission spec (mostly
-TBD).</p>
+unconditionally.</li>
+<li><code>&lt;discovered-constitution&gt;/AGENTS.md</code> — agent
+guardrails (anti-bluff, no-guessing, paired mutations).</li>
+<li><code>README.md</code> — Herald overview + how-to.</li>
+<li>This file (Herald-specific notes below).</li>
+<li><code>docs/guides/HERALD_CONSTITUTION.md</code> — Herald's
+project-specific constitutional extensions.</li>
+<li><code>docs/guides/CONSTITUTION_INHERITANCE.md</code> —
+operator/agent guide for the discovery contract + the inheritance
+gate.</li>
+<li><code>docs/specs/mvp/specification.V3.md</code> — mission spec
+(mostly TBD).</li>
+</ol>
 </blockquote>
 <h2 id="project-status">Project status</h2>
 <p>Herald is in <strong>first-implementation cycle (r1)</strong> as of
@@ -435,11 +249,11 @@ TBD).</p>
 contract, quickstart.</li>
 <li><code>docs/specs/mvp/specification.V3.md</code> — MVP spec stub
 (substantive sections TBD).</li>
-<li><code>docs/guides/HERALD_CONSTITUTION.md</code> — Herald’s project
+<li><code>docs/guides/HERALD_CONSTITUTION.md</code> — Herald's project
 constitution (extends Helix).</li>
 <li><code>docs/guides/CONSTITUTION_INHERITANCE.md</code> —
 operator/agent guide for parent-discovery + gate semantics.</li>
-<li><code>upstreams/</code> — Herald’s mirror declarations (see
+<li><code>upstreams/</code> — Herald's mirror declarations (see
 below).</li>
 <li><code>tests/test_constitution_inheritance.sh</code> +
 <code>_meta.sh</code> — paired inheritance gate (§1.1).</li>
@@ -496,7 +310,7 @@ via <code>go.work</code> listing 7 Herald modules (<code>commons</code>,
 <code>commons_messaging</code>, <code>commons_prefix</code>,
 <code>commons_storage</code>, <code>pherald</code>). The 9 Helix-stack
 submodules under <code>submodules/</code> are referenced via
-<code>replace</code> directives in the consuming modules’
+<code>replace</code> directives in the consuming modules'
 <code>go.mod</code>, not via <code>go.work</code>.</p>
 <p><strong>Anti-bluff verification (run before any release tag or risky
 commit):</strong></p>
@@ -516,7 +330,7 @@ submodule, runs the M2 integration tests against it, and
 graceful-shutdowns. ALL 14 invariants must PASS — a single FAIL means a
 real feature is broken for end users. At 2026-05-20 it reports 14/14
 PASS.</p>
-<p>When the user asks to “add a feature” the spec is the source of truth
+<p>When the user asks to "add a feature" the spec is the source of truth
 — find the relevant §, then the relevant module + package, then the
 relevant HRD-NNN if one is already open. New work opens a new HRD-NNN in
 <code>docs/Issues.md</code> per V3 §8.3 lifecycle.</p>
@@ -526,33 +340,33 @@ tests (Telegram bot, Claude Code session, real Postgres) require
 operator-supplied credentials — see <code>docs/CONTINUATION.md</code>
 for the live-test handoff prompt.</p>
 <h2
-id="end-user-usability-covenant-herald-107-helix-11.4-mandatory-anti-bluff">End-user-usability
+id="end-user-usability-covenant-herald-107--helix-114--mandatory-anti-bluff">End-user-usability
 covenant (Herald §107 / Helix §11.4 — MANDATORY ANTI-BLUFF)</h2>
 <p><strong>Forensic anchor — verbatim operator mandate:</strong></p>
 <blockquote>
-<p>“all existing tests and Challenges do work in anti-bluff manner -
+<p>"all existing tests and Challenges do work in anti-bluff manner -
 they MUST confirm that all tested codebase really works as expected! We
 had been in position that all tests do execute with success and all
 Challenges as well, but in reality the most of the features does not
-work and can’t be used! This MUST NOT be the case and execution of tests
+work and can't be used! This MUST NOT be the case and execution of tests
 and Challenges MUST guarantee the quality, the completition and full
 usability by end users of the product! This MUST BE part of Constitution
 of our project, its CLAUDE.MD and AGENTS.MD if it is not there already,
-and to be applied to all Submodules’s Constitution, CLAUDE.MD and
-AGENTS.MD as well (if not there already)!”</p>
+and to be applied to all Submodules's Constitution, CLAUDE.MD and
+AGENTS.MD as well (if not there already)!"</p>
 </blockquote>
 <p>The bar for shipping any Herald feature is <strong>NOT</strong>
-“tests pass” — it is <strong>“the end user of the flavor binary can
-actually use the feature.”</strong> Every PASS (unit, integration, gate,
+"tests pass" — it is <strong>"the end user of the flavor binary can
+actually use the feature."</strong> Every PASS (unit, integration, gate,
 Challenge, smoke, e2e) MUST carry positive runtime evidence that the
 user-visible behaviour works. Metadata-only / configuration-only /
-“absence-of-error” / grep-only PASS are §11.4 PASS-bluffs and constitute
+"absence-of-error" / grep-only PASS are §11.4 PASS-bluffs and constitute
 critical defects regardless of how green the summary line looks.
 Canonical Herald authority:
 <code>docs/guides/HERALD_CONSTITUTION.md</code> §107. Canonical Helix
 authority: <code>&lt;discovered&gt;/Constitution.md</code> §11.4 +
 §11.4.1..§11.4.16 and <code>&lt;discovered&gt;/CLAUDE.md</code>
-“MANDATORY ANTI-BLUFF COVENANT — END-USER QUALITY GUARANTEE”. Canonical
+"MANDATORY ANTI-BLUFF COVENANT — END-USER QUALITY GUARANTEE". Canonical
 Herald evidence: <code>scripts/e2e_bluff_hunt.sh</code> (14 invariants
 against real services; ALL must PASS). Inheritance gate invariant
 <strong>I8a</strong> asserts this covenant anchor is present in this
@@ -563,7 +377,7 @@ file.</p>
 notification channels so every alert reaches the right destination
 without confusion.</p>
 </blockquote>
-<p>The spec mentions “Integration into the Constitution” as a planned
+<p>The spec mentions "Integration into the Constitution" as a planned
 section — Herald is intended to plug into a larger governance/policy
 system that lives outside this repo. Treat that as a real constraint
 when designing interfaces, even though the details are TBD.</p>
@@ -590,8 +404,8 @@ project-specific tooling to override these yet.</p>
 <p>Each script exports a single <code>UPSTREAMABLE_REPOSITORY</code>
 variable and is meant to be <strong>sourced</strong>
 (<code>. upstreams/GitHub.sh</code>), not executed for its output. The
-naming is intentional — capitalization matches the host’s brand
-(GitFlic, GitVerse). Don’t normalize these to lowercase or collapse them
+naming is intentional — capitalization matches the host's brand
+(GitFlic, GitVerse). Don't normalize these to lowercase or collapse them
 into one file; the per-host split is the interface other tooling (likely
 external mirror-push scripts) keys on.</p>
 <p>When adding a new mirror, copy an existing script and change only the
@@ -615,9 +429,9 @@ into I5a–d (one check per root doc that must declare parent-discovery:
 <p>If either script fails, fix at root cause per Universal §11.4.4.
 Never silently accept the FAIL.</p>
 <h2
-id="spec-change-rule-load-bearing-docsspecsmvpspecification.v3.md-specification-documents">Spec-change
+id="spec-change-rule-load-bearing--docsspecsmvpspecificationv3md-specification-documents">Spec-change
 rule (load-bearing — <code>docs/specs/mvp/specification.V3.md</code>
-§“Specification documents”)</h2>
+§"Specification documents")</h2>
 <p>Any modification to a file under <code>docs/specs/</code> (any depth)
 triggers <strong>mandatory comprehensive planning and
 implementation</strong> of the implied changes — you may not edit the
@@ -631,9 +445,8 @@ conventions from the spec (apply when scaffolding)</h2>
 <p>These are declared in <code>docs/specs/mvp/specification.V3.md</code>
 and are easy to miss because no code enforces them yet:</p>
 <ul>
-<li><strong>Workable-item prefix:</strong> <code>HRD-</code>
-(e.g. <code>HRD-001</code>). Use it for issues, status entries, fix
-logs.</li>
+<li><strong>Workable-item prefix:</strong> <code>HRD-</code> (e.g.
+<code>HRD-001</code>). Use it for issues, status entries, fix logs.</li>
 <li><strong>Flavor binaries:</strong> each Herald flavor ships as its
 own CLI binary, named <code>&lt;prefix&gt;herald</code> —
 <code>pherald</code> (Project Herald), <code>sherald</code> (System
@@ -646,11 +459,11 @@ flavors inherit upward. <code>commons_messaging</code> owns the Telegram
 / Max / Slack / Email / Markdown-export integrations.</li>
 <li><strong>Messenger integration priority:</strong> Telegram → Max →
 Slack (then Email, then Markdown/PDF/HTML export). Microsoft Teams,
-Lark, Discord, WhatsApp, Viber are explicitly later iterations — don’t
+Lark, Discord, WhatsApp, Viber are explicitly later iterations — don't
 pre-implement.</li>
 <li><strong>Conversation diary:</strong> every message in/out is
 appended to <code>docs/herald/diary/main.md</code> and re-exported to
-<code>main.pdf</code> + <code>main.html</code> in sync. Don’t break this
+<code>main.pdf</code> + <code>main.html</code> in sync. Don't break this
 invariant when designing channel I/O.</li>
 <li><strong>Container stack:</strong> Postgres (main DB) + Redis
 (in-memory) bundled via the <code>containers</code> submodule
@@ -670,8 +483,8 @@ Teams, …) and dispatchers. The guide includes an audit checklist to run
 before every commit.</li>
 <li><strong>Vendored SDKs:</strong> any official/unofficial messenger
 SDK or API client we depend on goes in as a <strong>git
-submodule</strong>, e.g. <code>commons_messaging/sdk/telegram</code> or
-<code>commons_messaging/api/telegram</code> — not <code>go get</code>’d
+submodule</strong>, e.g. <code>commons_messaging/sdk/telegram</code> or
+<code>commons_messaging/api/telegram</code> — not <code>go get</code>'d
 into <code>go.mod</code>.</li>
 </ul>
 <h2
@@ -686,7 +499,7 @@ intentional. Per the spec, a parent project may drop additional
 layer extensions or overrides on top of the discovered
 <code>constitution/</code> submodule. Apply-order:
 <code>constitution/</code> submodule → <code>constitutable/</code>
-extensions → Herald’s own docs. Do not delete the directory because it’s
+extensions → Herald's own docs. Do not delete the directory because it's
 empty.</p>
 <h2 id="documentation-artefacts-pdfhtml-siblings">Documentation
 artefacts (PDF/HTML siblings)</h2>
@@ -702,6 +515,34 @@ migration), <code>Status.md</code> (status summary),
 <code>CONTINUATION.md</code> (live-test handoff prompt for
 operator-supplied credentials). The <code>*_Summary.md</code> variants
 are derived; do not hand-edit.</p>
+<p><strong>Logo branding (added 2026-05-21).</strong> Every tracked
+Markdown doc now leads with a centered Herald logo header
+(pandoc-friendly <code>&lt;div align="center"&gt;</code> wrapping a
+<code>![Herald](...){width=96px height=96px}</code> image reference to
+<code>assets/logo/herald_logo_square_128.png</code>). The export
+pipeline propagates that logo into the HTML, PDF, and DOCX siblings:</p>
+<ul>
+<li>Logo source: <code>assets/logo/herald_logo.png</code> (1664x928 RGB
+master). Square + transparent variants live under
+<code>assets/logo/herald_logo_square_{32,64,128,256,512,1024}.png</code>
+(chroma-keyed white → alpha). <code>assets/logo/herald_logo.svg</code>
+is a vector wrapper around the 512px PNG.
+<code>assets/logo/print.css</code> carries print/screen styling for the
+HTML/PDF route.</li>
+<li>Injection: idempotent re-runnable via
+<code>python3 scripts/branding_inject_logo.py &lt;md ...&gt;</code> —
+skips submodules/, containers/, constitutable/, docs/diary/, LICENSE;
+respects YAML front-matter; computes the relative path per doc
+depth.</li>
+<li>Export: <code>bash scripts/export_docs.sh [&lt;md&gt;...]</code>
+regenerates HTML (pandoc), PDF (<code>--pdf-engine=weasyprint</code>),
+DOCX (pandoc-native) for every <code>.md</code> that already has at
+least one sibling artefact committed. Pass no args to regenerate
+everything.</li>
+<li>When you add a new <code>.md</code>, run the injector once; when you
+edit one whose sibling exports are tracked, run the exporter for that
+one file.</li>
+</ul>
 <h2 id="notes-for-future-scaffolding">Notes for future scaffolding</h2>
 <ul>
 <li><code>submodules/</code> holds 9 vendored Helix-stack modules (each
@@ -710,11 +551,11 @@ repo): <code>auth</code>, <code>background</code>, <code>cache</code>,
 <code>config</code>, <code>database</code>, <code>eventbus</code>,
 <code>middleware</code>, <code>observability</code>,
 <code>recovery</code>. They are referenced via <code>replace</code>
-directives in the consuming Herald modules’ <code>go.mod</code>, NOT via
+directives in the consuming Herald modules' <code>go.mod</code>, NOT via
 <code>go.work</code> (which only lists the 7 Herald-owned modules). Do
 not add them to <code>go.work</code>.</li>
-<li>The repo is in <code>main</code> branch and committed under “Milos
-Vasic” — no other contributors yet.</li>
+<li>The repo is in <code>main</code> branch and committed under "Milos
+Vasic" — no other contributors yet.</li>
 <li><code>.claude/</code> exists but is empty; project-local Claude
 config can go there.</li>
 <li><code>LICENSE</code> is present (do not overwrite without

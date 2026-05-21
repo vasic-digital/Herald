@@ -4,157 +4,11 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>HRD-011 + HRD-012 Implementation Plan</title>
+  <title>Herald</title>
   <style>
     /* Default styles provided by pandoc.
     ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
     */
-    html {
-      color: #1a1a1a;
-      background-color: #fdfdfd;
-    }
-    body {
-      margin: 0 auto;
-      max-width: 36em;
-      padding-left: 50px;
-      padding-right: 50px;
-      padding-top: 50px;
-      padding-bottom: 50px;
-      hyphens: auto;
-      overflow-wrap: break-word;
-      text-rendering: optimizeLegibility;
-      font-kerning: normal;
-    }
-    @media (max-width: 600px) {
-      body {
-        font-size: 0.9em;
-        padding: 12px;
-      }
-      h1 {
-        font-size: 1.8em;
-      }
-    }
-    @media print {
-      html {
-        background-color: white;
-      }
-      body {
-        background-color: transparent;
-        color: black;
-        font-size: 12pt;
-      }
-      p, h2, h3 {
-        orphans: 3;
-        widows: 3;
-      }
-      h2, h3, h4 {
-        page-break-after: avoid;
-      }
-    }
-    p {
-      margin: 1em 0;
-    }
-    a {
-      color: #1a1a1a;
-    }
-    a:visited {
-      color: #1a1a1a;
-    }
-    img {
-      max-width: 100%;
-    }
-    svg {
-      height: auto;
-      max-width: 100%;
-    }
-    h1, h2, h3, h4, h5, h6 {
-      margin-top: 1.4em;
-    }
-    h5, h6 {
-      font-size: 1em;
-      font-style: italic;
-    }
-    h6 {
-      font-weight: normal;
-    }
-    ol, ul {
-      padding-left: 1.7em;
-      margin-top: 1em;
-    }
-    li > ol, li > ul {
-      margin-top: 0;
-    }
-    blockquote {
-      margin: 1em 0 1em 1.7em;
-      padding-left: 1em;
-      border-left: 2px solid #e6e6e6;
-      color: #606060;
-    }
-    code {
-      white-space: pre-wrap;
-      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
-      font-size: 85%;
-      margin: 0;
-      hyphens: manual;
-    }
-    pre {
-      margin: 1em 0;
-      overflow: auto;
-    }
-    pre code {
-      padding: 0;
-      overflow: visible;
-      overflow-wrap: normal;
-    }
-    .sourceCode {
-     background-color: transparent;
-     overflow: visible;
-    }
-    hr {
-      border: none;
-      border-top: 1px solid #1a1a1a;
-      height: 1px;
-      margin: 1em 0;
-    }
-    table {
-      margin: 1em 0;
-      border-collapse: collapse;
-      width: 100%;
-      overflow-x: auto;
-      display: block;
-      font-variant-numeric: lining-nums tabular-nums;
-    }
-    table caption {
-      margin-bottom: 0.75em;
-    }
-    tbody {
-      margin-top: 0.5em;
-      border-top: 1px solid #1a1a1a;
-      border-bottom: 1px solid #1a1a1a;
-    }
-    th {
-      border-top: 1px solid #1a1a1a;
-      padding: 0.25em 0.5em 0.25em 0.5em;
-    }
-    td {
-      padding: 0.125em 0.5em 0.25em 0.5em;
-    }
-    header {
-      margin-bottom: 4em;
-      text-align: center;
-    }
-    #TOC li {
-      list-style: none;
-    }
-    #TOC ul {
-      padding-left: 1.3em;
-    }
-    #TOC > ul {
-      padding-left: 0;
-    }
-    #TOC a:not(:hover) {
-      text-decoration: none;
-    }
     span.smallcaps{font-variant: small-caps;}
     div.columns{display: flex; gap: min(4vw, 1.5em);}
     div.column{flex: auto; overflow-x: auto;}
@@ -235,72 +89,20 @@
     code span.vs { color: #4070a0; } /* VerbatimString */
     code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
   </style>
+  <link rel="stylesheet" href="../../../assets/logo/print.css" />
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">HRD-011 + HRD-012 Implementation Plan</h1>
+<h1 class="title">Herald</h1>
 </header>
-<nav id="TOC" role="doc-toc">
-<ul>
-<li><a
-href="#hrd-011-telegram-hrd-012-claude-code-live-wiring-implementation-plan"
-id="toc-hrd-011-telegram-hrd-012-claude-code-live-wiring-implementation-plan">HRD-011
-(Telegram) + HRD-012 (Claude Code) Live Wiring Implementation Plan</a>
-<ul>
-<li><a href="#file-structure" id="toc-file-structure">File Structure</a>
-<ul>
-<li><a href="#files-to-create" id="toc-files-to-create">Files to
-CREATE</a></li>
-<li><a href="#files-to-modify" id="toc-files-to-modify">Files to
-MODIFY</a></li>
-<li><a href="#files-not-touched-deferred-to-later-hrds"
-id="toc-files-not-touched-deferred-to-later-hrds">Files NOT touched
-(deferred to later HRDs)</a></li>
-</ul></li>
-<li><a href="#task-1-vendor-telebot.v3-as-a-helix-style-submodule"
-id="toc-task-1-vendor-telebot.v3-as-a-helix-style-submodule">Task 1:
-Vendor telebot.v3 as a Helix-style submodule</a></li>
-<li><a href="#task-2-telegram-healthcheck-against-live-bot-api"
-id="toc-task-2-telegram-healthcheck-against-live-bot-api">Task 2:
-Telegram <code>HealthCheck</code> against live Bot API</a></li>
-<li><a href="#task-3-telegram-send-sendmessage-senddocument"
-id="toc-task-3-telegram-send-sendmessage-senddocument">Task 3: Telegram
-<code>Send</code> (sendMessage + sendDocument)</a></li>
-<li><a href="#task-4-telegram-subscribe-getupdates-long-poll"
-id="toc-task-4-telegram-subscribe-getupdates-long-poll">Task 4: Telegram
-<code>Subscribe</code> (getUpdates long-poll)</a></li>
-<li><a href="#task-5-telegram-persistence-outbound_delivery_evidence"
-id="toc-task-5-telegram-persistence-outbound_delivery_evidence">Task 5:
-Telegram persistence (outbound_delivery_evidence)</a></li>
-<li><a
-href="#task-6-claude-code-dispatch-live-claude---resume-invocation"
-id="toc-task-6-claude-code-dispatch-live-claude---resume-invocation">Task
-6: Claude Code <code>Dispatch</code> (live <code>claude --resume</code>
-invocation)</a></li>
-<li><a href="#task-7-claude-code-session-persistence"
-id="toc-task-7-claude-code-session-persistence">Task 7: Claude Code
-session persistence</a></li>
-<li><a href="#task-8-vertical-slice-integration-test-e19"
-id="toc-task-8-vertical-slice-integration-test-e19">Task 8:
-Vertical-slice integration test (E19)</a></li>
-<li><a href="#task-9-add-e17e18e19-to-e2e_bluff_hunt.sh"
-id="toc-task-9-add-e17e18e19-to-e2e_bluff_hunt.sh">Task 9: Add
-E17/E18/E19 to e2e_bluff_hunt.sh</a></li>
-<li><a
-href="#task-10-.env.example-atomic-issuesfixed-for-hrd-011-hrd-012"
-id="toc-task-10-.env.example-atomic-issuesfixed-for-hrd-011-hrd-012">Task
-10: .env.example + atomic Issues→Fixed for HRD-011 + HRD-012</a></li>
-<li><a href="#task-11-anti-bluff-battery-multi-mirror-push"
-id="toc-task-11-anti-bluff-battery-multi-mirror-push">Task 11:
-Anti-bluff battery + multi-mirror push</a></li>
-<li><a href="#self-review" id="toc-self-review">Self-Review</a></li>
-<li><a href="#execution-handoff" id="toc-execution-handoff">Execution
-Handoff</a></li>
-</ul></li>
-</ul>
-</nav>
+<div align="center">
+
+<p><img src="../../../assets/logo/herald_logo_square_128.png"
+alt="Herald" />{width=96px height=96px}</p>
+</div>
+
 <h1
-id="hrd-011-telegram-hrd-012-claude-code-live-wiring-implementation-plan">HRD-011
+id="hrd-011-telegram--hrd-012-claude-code-live-wiring-implementation-plan">HRD-011
 (Telegram) + HRD-012 (Claude Code) Live Wiring Implementation Plan</h1>
 <blockquote>
 <p><strong>For agentic workers:</strong> REQUIRED SUB-SKILL: Use
@@ -308,7 +110,7 @@ superpowers:subagent-driven-development (recommended) or
 superpowers:executing-plans to implement this plan task-by-task. Steps
 use checkbox (<code>- [ ]</code>) syntax for tracking.</p>
 </blockquote>
-<p><strong>Goal:</strong> Land Herald’s first true end-user-visible
+<p><strong>Goal:</strong> Land Herald's first true end-user-visible
 vertical slice: a real Telegram message arrives → Herald dispatches it
 to Claude Code via <code>claude --resume &lt;session&gt;</code> → the
 <code>&lt;&lt;&lt;HERALD-REPLY&gt;&gt;&gt;</code> is parsed → reply gets
@@ -316,7 +118,7 @@ sent back through Telegram. Closes HRD-011 + HRD-012; adds §107 E17
 (Telegram round-trip) + E18 (Claude Code round-trip) + E19 (full slice
 round-trip) invariants to <code>scripts/e2e_bluff_hunt.sh</code>.</p>
 <p><strong>Architecture:</strong> Two thin live integrations on top of
-Plan 1’s storage stack. <code>commons_messaging/channels/tgram/</code>
+Plan 1's storage stack. <code>commons_messaging/channels/tgram/</code>
 swaps its stub
 <code>Send</code>/<code>Subscribe</code>/<code>HealthCheck</code> for
 real telebot.v3 calls (vendored as <code>submodules/telebot/</code>) and
@@ -342,28 +144,27 @@ Operator-supplied env vars: <code>HERALD_TGRAM_BOT_TOKEN</code>,
 <p><strong>Spec refs:</strong> HRD-011, HRD-012 in
 <code>docs/Issues.md</code>; spec V3 §11.1 (Telegram), §32
 (subscriber-reply loops), §33 (LLM/agent dispatch), §33.2
-(session-resolution algorithm); master roadmap §“Wave 1 — Storage +
-first user-visible feature”.</p>
-<p><strong>Catalogue-Check (Universal §11.4.74):</strong> -
-<code>no-match</code> → vendor <code>gopkg.in/telebot.v3</code> as
+(session-resolution algorithm); master roadmap §"Wave 1 — Storage +
+first user-visible feature".</p>
+<p><strong>Catalogue-Check (Universal §11.4.74):</strong></p>
+<ul>
+<li><code>no-match</code> → vendor <code>gopkg.in/telebot.v3</code> as
 <code>submodules/telebot/</code> (no equivalent in
-vasic-digital/HelixDevelopment per §11.4.74 mandate) -
-<code>extend digital.vasic.database@&lt;pinned&gt;</code> (pgx +
-commons_storage live pool from Plan 1) - <code>no-match</code> →
-<code>claude</code> CLI is an external binary, not a library -
-<code>extend digital.vasic.background.TaskQueue</code> if queueing
+vasic-digital/HelixDevelopment per §11.4.74 mandate)</li>
+<li><code>extend digital.vasic.database@&lt;pinned&gt;</code> (pgx +
+commons_storage live pool from Plan 1)</li>
+<li><code>no-match</code> → <code>claude</code> CLI is an external
+binary, not a library</li>
+<li><code>extend digital.vasic.background.TaskQueue</code> if queueing
 outbound retries (deferred to a future HRD; this plan uses synchronous
-Send)</p>
-<p>The HRD-011 row’s References cell MUST be updated with the resolved
+Send)</li>
+</ul>
+<p>The HRD-011 row's References cell MUST be updated with the resolved
 Catalogue-Check value before HRD-011 closes in Task 11.</p>
 <hr />
 <h2 id="file-structure">File Structure</h2>
 <h3 id="files-to-create">Files to CREATE</h3>
 <table>
-<colgroup>
-<col style="width: 50%" />
-<col style="width: 50%" />
-</colgroup>
 <thead>
 <tr>
 <th>Path</th>
@@ -373,7 +174,8 @@ Catalogue-Check value before HRD-011 closes in Task 11.</p>
 <tbody>
 <tr>
 <td><code>submodules/telebot/</code></td>
-<td>NEW git submodule pointing at https://github.com/tucnak/telebot.git
+<td>NEW git submodule pointing at <a
+href="https://github.com/tucnak/telebot.git">https://github.com/tucnak/telebot.git</a>
 (the <code>gopkg.in/telebot.v3</code> repo)</td>
 </tr>
 <tr>
@@ -429,10 +231,6 @@ slice (E19)</td>
 </table>
 <h3 id="files-to-modify">Files to MODIFY</h3>
 <table>
-<colgroup>
-<col style="width: 50%" />
-<col style="width: 50%" />
-</colgroup>
 <thead>
 <tr>
 <th>Path</th>
@@ -443,7 +241,7 @@ slice (E19)</td>
 <tr>
 <td><code>commons_messaging/channels/tgram/tgram.go</code></td>
 <td>Inject the live <code>*telebot.Bot</code> client into
-<code>Adapter</code>; remove “not implemented” stubs and delegate to
+<code>Adapter</code>; remove "not implemented" stubs and delegate to
 <code>send.go</code> / <code>subscribe.go</code> /
 <code>healthcheck.go</code></td>
 </tr>
@@ -519,18 +317,21 @@ lists these as later iterations</li>
 <li>§42 constitution bindings (Wave 3) — not touched by Plan 2</li>
 </ul>
 <hr />
-<h2 id="task-1-vendor-telebot.v3-as-a-helix-style-submodule">Task 1:
+<h2 id="task-1-vendor-telebotv3-as-a-helix-style-submodule">Task 1:
 Vendor telebot.v3 as a Helix-style submodule</h2>
-<p><strong>Why first:</strong> Per §11.4.74 + CLAUDE.md’s “Vendored
-SDKs” rule, the Telegram SDK MUST be a git submodule (not
-<code>go get</code>’d into go.mod). Vendor it first so all subsequent
+<p><strong>Why first:</strong> Per §11.4.74 + CLAUDE.md's "Vendored
+SDKs" rule, the Telegram SDK MUST be a git submodule (not
+<code>go get</code>'d into go.mod). Vendor it first so all subsequent
 tasks can use the real type.</p>
-<p><strong>Files:</strong> - New submodule:
-<code>submodules/telebot/</code> - Modify: <code>.gitmodules</code> -
-Modify: <code>commons_messaging/channels/tgram/go.mod</code> (require +
-replace)</p>
+<p><strong>Files:</strong></p>
+<ul>
+<li>New submodule: <code>submodules/telebot/</code></li>
+<li>Modify: <code>.gitmodules</code></li>
+<li>Modify: <code>commons_messaging/channels/tgram/go.mod</code>
+(require + replace)</li>
+</ul>
 <ul class="task-list">
-<li><label><input type="checkbox" /><strong>Step 1: Verify telebot.v3’s
+<li><label><input type="checkbox" /><strong>Step 1: Verify telebot.v3's
 upstream repo is accessible</strong></label></li>
 </ul>
 <p>Run:</p>
@@ -552,7 +353,7 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ../..</span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> submodule update <span class="at">--init</span> <span class="at">--recursive</span></span></code></pre></div>
 <p>NOTE: Use a tagged version, NOT <code>main</code>. Tagged versions
-are reproducible. If <code>v3.3.8</code> doesn’t exist, pick the highest
+are reproducible. If <code>v3.3.8</code> doesn't exist, pick the highest
 <code>v3.*.*</code> tag.</p>
 <ul class="task-list">
 <li><label><input type="checkbox" /><strong>Step 3: Add require +
@@ -620,10 +421,13 @@ Telegram <code>HealthCheck</code> against live Bot API</h2>
 <p><strong>Why second:</strong> HealthCheck is the smallest live
 integration — proves token works before Send/Subscribe touch the
 wire.</p>
-<p><strong>Files:</strong> - Create:
-<code>commons_messaging/channels/tgram/healthcheck.go</code> - Modify:
-<code>commons_messaging/channels/tgram/tgram.go</code> (inject
-telebot.Bot; rewire HealthCheck)</p>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Create:
+<code>commons_messaging/channels/tgram/healthcheck.go</code></li>
+<li>Modify: <code>commons_messaging/channels/tgram/tgram.go</code>
+(inject telebot.Bot; rewire HealthCheck)</li>
+</ul>
 <ul class="task-list">
 <li><label><input type="checkbox" /><strong>Step 1: Write failing
 integration test</strong></label></li>
@@ -663,7 +467,7 @@ integration test</strong></label></li>
 <span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <ul class="task-list">
 <li><label><input type="checkbox" /><strong>Step 2: Run, expect FAIL
-(“not implemented”)</strong></label></li>
+("not implemented")</strong></label></li>
 </ul>
 <p>Run:</p>
 <div class="sourceCode" id="cb9"><pre
@@ -671,7 +475,7 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="va">HERALD_TGRAM_BOT_TOKEN</span><span class="op">=</span><span class="va">$HERALD_TGRAM_BOT_TOKEN</span> <span class="va">HERALD_TGRAM_CHAT_ID</span><span class="op">=</span><span class="va">$HERALD_TGRAM_CHAT_ID</span> <span class="dt">\</span></span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test ./commons_messaging/channels/tgram/ <span class="at">-tags</span><span class="op">=</span>integration <span class="at">-run</span> TestHealthCheck_LiveBotAPI <span class="at">-count</span><span class="op">=</span>1 <span class="at">-timeout</span><span class="op">=</span>60s</span></code></pre></div>
 <p>If no operator-supplied credentials: SKIP cleanly per the build-tag
-dance. If credentials present: expect FAIL with “not implemented”.</p>
+dance. If credentials present: expect FAIL with "not implemented".</p>
 <ul class="task-list">
 <li><label><input type="checkbox" /><strong>Step 3: Inject telebot.Bot
 into Adapter</strong></label></li>
@@ -731,7 +535,7 @@ class="sourceCode go"><code class="sourceCode go"><span id="cb12-1"><a href="#cb
 <span id="cb12-34"><a href="#cb12-34" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb12-35"><a href="#cb12-35" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="ot">nil</span></span>
 <span id="cb12-36"><a href="#cb12-36" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
-<p>NOTE: telebot.v3’s API: confirm
+<p>NOTE: telebot.v3's API: confirm
 <code>Bot.Raw(method, params interface{}) ([]byte, error)</code> exists.
 If the API surface differs (e.g., <code>Bot.Me()</code> returns a
 <code>*User</code> directly), use that and assert
@@ -754,11 +558,15 @@ integration tests</strong></label></li>
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test <span class="at">-race</span> <span class="at">-count</span><span class="op">=</span>1 ./commons_messaging/channels/tgram/  <span class="co"># unit only</span></span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="va">HERALD_TGRAM_BOT_TOKEN</span><span class="op">=</span><span class="va">$HERALD_TGRAM_BOT_TOKEN</span> <span class="va">HERALD_TGRAM_CHAT_ID</span><span class="op">=</span><span class="va">$HERALD_TGRAM_CHAT_ID</span> <span class="dt">\</span></span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test ./commons_messaging/channels/tgram/ <span class="at">-tags</span><span class="op">=</span>integration <span class="at">-run</span> TestHealthCheck_LiveBotAPI <span class="at">-count</span><span class="op">=</span>1 <span class="at">-timeout</span><span class="op">=</span>60s</span></code></pre></div>
-<p>Expected: - Unit tests: still PASS (HealthCheck has no unit test
-currently — and we’re NOT adding one for the live wire since
-unit-testing real network calls is meaningless mocking) - Integration
-test (with creds): PASS — getMe succeeds, non-empty body - Integration
-test (without creds): SKIP-with-reason</p>
+<p>Expected:</p>
+<ul>
+<li>Unit tests: still PASS (HealthCheck has no unit test currently — and
+we're NOT adding one for the live wire since unit-testing real network
+calls is meaningless mocking)</li>
+<li>Integration test (with creds): PASS — getMe succeeds, non-empty
+body</li>
+<li>Integration test (without creds): SKIP-with-reason</li>
+</ul>
 <ul class="task-list">
 <li><label><input type="checkbox" /><strong>Step 7:
 Commit</strong></label></li>
@@ -777,11 +585,14 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href=
 <span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a><span class="st">Co-Authored-By: Claude Opus 4.7 &lt;noreply@anthropic.com&gt;&quot;</span></span></code></pre></div>
 <hr />
-<h2 id="task-3-telegram-send-sendmessage-senddocument">Task 3: Telegram
+<h2 id="task-3-telegram-send-sendmessage--senddocument">Task 3: Telegram
 <code>Send</code> (sendMessage + sendDocument)</h2>
-<p><strong>Files:</strong> - Create:
-<code>commons_messaging/channels/tgram/send.go</code> - Modify:
-<code>commons_messaging/channels/tgram/tgram.go</code> (rewire Send)</p>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Create: <code>commons_messaging/channels/tgram/send.go</code></li>
+<li>Modify: <code>commons_messaging/channels/tgram/tgram.go</code>
+(rewire Send)</li>
+</ul>
 <ul class="task-list">
 <li><label><input type="checkbox" /><strong>Step 1: Write failing
 integration test</strong></label></li>
@@ -835,12 +646,12 @@ class="sourceCode go"><code class="sourceCode go"><span id="cb15-1"><a href="#cb
 <span id="cb15-43"><a href="#cb15-43" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <ul class="task-list">
 <li><label><input type="checkbox" /><strong>Step 2: Run, expect FAIL
-(“not implemented”)</strong></label></li>
+("not implemented")</strong></label></li>
 </ul>
 <div class="sourceCode" id="cb16"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="va">HERALD_TGRAM_BOT_TOKEN</span><span class="op">=</span><span class="va">$HERALD_TGRAM_BOT_TOKEN</span> <span class="va">HERALD_TGRAM_CHAT_ID</span><span class="op">=</span><span class="va">$HERALD_TGRAM_CHAT_ID</span> <span class="dt">\</span></span>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test ./commons_messaging/channels/tgram/ <span class="at">-tags</span><span class="op">=</span>integration <span class="at">-run</span> TestSend_LiveBotAPI <span class="at">-count</span><span class="op">=</span>1 <span class="at">-timeout</span><span class="op">=</span>60s</span></code></pre></div>
-<p>Expected: FAIL with “not implemented” or SKIP without creds.</p>
+<p>Expected: FAIL with "not implemented" or SKIP without creds.</p>
 <ul class="task-list">
 <li><label><input type="checkbox" /><strong>Step 3: Create
 <code>commons_messaging/channels/tgram/send.go</code></strong></label></li>
@@ -905,7 +716,7 @@ exists with this signature. Look at
 differs, adjust.</p>
 <p>NOTE: <code>commons.DeliveryEvidence</code> is an int enum. Use the
 proper constant from <code>commons/types.go</code> instead of
-<code>1</code> — look up the value for “delivered” (likely
+<code>1</code> — look up the value for "delivered" (likely
 <code>commons.DeliveryDelivered</code> or similar). DO NOT hardcode the
 integer.</p>
 <ul class="task-list">
@@ -921,8 +732,8 @@ from <code>tgram.go</code></strong></label></li>
 <div class="sourceCode" id="cb18"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="va">HERALD_TGRAM_BOT_TOKEN</span><span class="op">=</span><span class="va">$HERALD_TGRAM_BOT_TOKEN</span> <span class="va">HERALD_TGRAM_CHAT_ID</span><span class="op">=</span><span class="va">$HERALD_TGRAM_CHAT_ID</span> <span class="dt">\</span></span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test ./commons_messaging/channels/tgram/ <span class="at">-tags</span><span class="op">=</span>integration <span class="at">-run</span> TestSend_LiveBotAPI <span class="at">-count</span><span class="op">=</span>1 <span class="at">-timeout</span><span class="op">=</span>60s</span></code></pre></div>
-<p>Expected: PASS. The test bot’s chat receives the test message; the
-receipt’s MessageID is a non-empty Telegram-side integer string.</p>
+<p>Expected: PASS. The test bot's chat receives the test message; the
+receipt's MessageID is a non-empty Telegram-side integer string.</p>
 <ul class="task-list">
 <li><label><input type="checkbox" /><strong>Step 6:
 Commit</strong></label></li>
@@ -940,10 +751,13 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb19-1"><a href=
 <hr />
 <h2 id="task-4-telegram-subscribe-getupdates-long-poll">Task 4: Telegram
 <code>Subscribe</code> (getUpdates long-poll)</h2>
-<p><strong>Files:</strong> - Create:
-<code>commons_messaging/channels/tgram/subscribe.go</code> - Modify:
-<code>commons_messaging/channels/tgram/tgram.go</code> (rewire
-Subscribe)</p>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Create:
+<code>commons_messaging/channels/tgram/subscribe.go</code></li>
+<li>Modify: <code>commons_messaging/channels/tgram/tgram.go</code>
+(rewire Subscribe)</li>
+</ul>
 <p><strong>Spec ref:</strong> §32.2 — 25s long-poll timeout, 30s
 safety-net timer for stalled polls.</p>
 <ul class="task-list">
@@ -1018,7 +832,7 @@ FAIL</strong></label></li>
 <div class="sourceCode" id="cb21"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="va">HERALD_TGRAM_BOT_TOKEN</span><span class="op">=</span><span class="va">$HERALD_TGRAM_BOT_TOKEN</span> <span class="va">HERALD_TGRAM_CHAT_ID</span><span class="op">=</span><span class="va">$HERALD_TGRAM_CHAT_ID</span> <span class="va">HERALD_TGRAM_LIVE_INBOUND</span><span class="op">=</span>1 <span class="dt">\</span></span>
 <span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test ./commons_messaging/channels/tgram/ <span class="at">-tags</span><span class="op">=</span>integration <span class="at">-run</span> TestSubscribe_LiveBotAPI <span class="at">-count</span><span class="op">=</span>1 <span class="at">-timeout</span><span class="op">=</span>90s</span></code></pre></div>
-<p>Expected: FAIL with “not implemented” (without the inbound flag:
+<p>Expected: FAIL with "not implemented" (without the inbound flag:
 SKIP).</p>
 <ul class="task-list">
 <li><label><input type="checkbox" /><strong>Step 3: Create
@@ -1093,13 +907,13 @@ class="sourceCode go"><code class="sourceCode go"><span id="cb22-1"><a href="#cb
 <span id="cb22-66"><a href="#cb22-66" aria-hidden="true" tabindex="-1"></a>    <span class="op">&lt;-</span>ctx<span class="op">.</span>Done<span class="op">()</span></span>
 <span id="cb22-67"><a href="#cb22-67" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> ctx<span class="op">.</span>Err<span class="op">()</span></span>
 <span id="cb22-68"><a href="#cb22-68" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
-<p>NOTE: The above mixes goroutines + telebot’s Start. Verify
-telebot.Start’s semantics — is it blocking or non-blocking? Adjust the
+<p>NOTE: The above mixes goroutines + telebot's Start. Verify
+telebot.Start's semantics — is it blocking or non-blocking? Adjust the
 goroutine wiring to match. If <code>Start</code> is blocking, run it in
 a goroutine and wait on ctx.</p>
 <p>NOTE: <code>commons.InboundHandler.Handle(ctx, ev) error</code> is
 the interface method — verify the exact method name via
-<code>grep -A 3 'type InboundHandler' commons/types.go</code>. If it’s
+<code>grep -A 3 'type InboundHandler' commons/types.go</code>. If it's
 <code>OnInbound</code> or <code>Receive</code>, use that name.</p>
 <ul class="task-list">
 <li><p><label><input type="checkbox" /><strong>Step 4: Remove stub
@@ -1133,12 +947,15 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb24-1"><a href=
 <hr />
 <h2 id="task-5-telegram-persistence-outbound_delivery_evidence">Task 5:
 Telegram persistence (outbound_delivery_evidence)</h2>
-<p><strong>Files:</strong> - Create:
-<code>commons_messaging/channels/tgram/persist.go</code> - Modify:
-<code>commons_messaging/channels/tgram/send.go</code> (call Persist
-after successful Send) - Verify migration exists:
-<code>commons_storage/migrations/</code> for
-<code>outbound_delivery_evidence</code> table</p>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Create:
+<code>commons_messaging/channels/tgram/persist.go</code></li>
+<li>Modify: <code>commons_messaging/channels/tgram/send.go</code> (call
+Persist after successful Send)</li>
+<li>Verify migration exists: <code>commons_storage/migrations/</code>
+for <code>outbound_delivery_evidence</code> table</li>
+</ul>
 <ul class="task-list">
 <li><label><input type="checkbox" /><strong>Step 1: Verify the
 outbound_delivery_evidence schema</strong></label></li>
@@ -1146,15 +963,21 @@ outbound_delivery_evidence schema</strong></label></li>
 <div class="sourceCode" id="cb25"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> /Users/milosvasic/Projects/Herald</span>
 <span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-rln</span> <span class="st">&#39;outbound_delivery&#39;</span> commons_storage/migrations/</span></code></pre></div>
-<p>If a migration already declares the table (likely from Plan 1’s M2
+<p>If a migration already declares the table (likely from Plan 1's M2
 work), inspect its columns. If NOT present, create a new migration
 <code>000010_outbound_delivery_evidence.up.sql</code>.</p>
-<p>Required columns at minimum: - id UUID PK - tenant_id UUID NOT NULL -
-channel_id TEXT NOT NULL - channel_message_id TEXT NOT NULL (the
-Telegram-side ID returned by sendMessage) - evidence INT NOT NULL
-(commons.DeliveryEvidence enum) - sent_at TIMESTAMPTZ DEFAULT now()</p>
+<p>Required columns at minimum:</p>
+<ul>
+<li>id UUID PK</li>
+<li>tenant_id UUID NOT NULL</li>
+<li>channel_id TEXT NOT NULL</li>
+<li>channel_message_id TEXT NOT NULL (the Telegram-side ID returned by
+sendMessage)</li>
+<li>evidence INT NOT NULL (commons.DeliveryEvidence enum)</li>
+<li>sent_at TIMESTAMPTZ DEFAULT now()</li>
+</ul>
 <p>If you create the migration, bump
-<code>commons_storage/migrations_test.go</code>’s expected count by
+<code>commons_storage/migrations_test.go</code>'s expected count by
 1.</p>
 <ul class="task-list">
 <li><label><input type="checkbox" /><strong>Step 2: Write failing
@@ -1238,7 +1061,7 @@ class="sourceCode go"><code class="sourceCode go"><span id="cb26-1"><a href="#cb
 <span id="cb26-73"><a href="#cb26-73" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb26-74"><a href="#cb26-74" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <p>NOTE: <code>NewWithStorage</code> and <code>SendForTenant</code> are
-new APIs you’ll define in Step 3. The existing <code>Send</code> doesn’t
+new APIs you'll define in Step 3. The existing <code>Send</code> doesn't
 know about tenants or pools — we need a tenant-scoped variant for
 persistence.</p>
 <p>NOTE: Import paths: <code>exec "os/exec"</code>,
@@ -1342,11 +1165,14 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb30-1"><a href=
 id="task-6-claude-code-dispatch-live-claude---resume-invocation">Task 6:
 Claude Code <code>Dispatch</code> (live <code>claude --resume</code>
 invocation)</h2>
-<p><strong>Files:</strong> - Create:
-<code>commons_messaging/dispatch/claude_code/dispatch.go</code> -
-Modify:
+<p><strong>Files:</strong></p>
+<ul>
+<li>Create:
+<code>commons_messaging/dispatch/claude_code/dispatch.go</code></li>
+<li>Modify:
 <code>commons_messaging/dispatch/claude_code/claude_code.go</code>
-(rewire Dispatch)</p>
+(rewire Dispatch)</li>
+</ul>
 <ul class="task-list">
 <li><label><input type="checkbox" /><strong>Step 1: Write integration
 test</strong></label></li>
@@ -1404,12 +1230,12 @@ class="sourceCode go"><code class="sourceCode go"><span id="cb31-1"><a href="#cb
 <span id="cb31-48"><a href="#cb31-48" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <ul class="task-list">
 <li><label><input type="checkbox" /><strong>Step 2: Run, expect FAIL
-(“not implemented”)</strong></label></li>
+("not implemented")</strong></label></li>
 </ul>
 <div class="sourceCode" id="cb32"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="va">HERALD_CLAUDE_PROJECT_NAME</span><span class="op">=</span>Herald <span class="va">HERALD_CLAUDE_BIN</span><span class="op">=</span>claude <span class="dt">\</span></span>
 <span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test ./commons_messaging/dispatch/claude_code/ <span class="at">-tags</span><span class="op">=</span>integration <span class="at">-run</span> TestDispatch_LiveClaudeInvocation <span class="at">-count</span><span class="op">=</span>1 <span class="at">-timeout</span><span class="op">=</span>300s</span></code></pre></div>
-<p>Expected: FAIL with “not implemented” if <code>claude</code>
+<p>Expected: FAIL with "not implemented" if <code>claude</code>
 available; SKIP otherwise.</p>
 <ul class="task-list">
 <li><label><input type="checkbox" /><strong>Step 3: Create
@@ -1515,9 +1341,9 @@ envelope, replies with a
 <code>&lt;&lt;&lt;HERALD-REPLY&gt;&gt;&gt;</code> line, the JSON
 decodes, Outcome + Summary are non-empty.</p>
 <p>NOTE: This requires Claude Code being correctly configured for the
-test machine. If the test FAILs with “no marker found”, the issue is
-likely that the operator-side claude session doesn’t honour the envelope
-schema yet — that’s a real bug worth investigating (NOT a §107
+test machine. If the test FAILs with "no marker found", the issue is
+likely that the operator-side claude session doesn't honour the envelope
+schema yet — that's a real bug worth investigating (NOT a §107
 PASS-bluff to paper over).</p>
 <ul class="task-list">
 <li><label><input type="checkbox" /><strong>Step 7:
@@ -1536,12 +1362,17 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb35-1"><a href=
 <hr />
 <h2 id="task-7-claude-code-session-persistence">Task 7: Claude Code
 session persistence</h2>
-<p><strong>Files:</strong> - Create:
-<code>commons_messaging/dispatch/claude_code/persist.go</code> - Modify:
+<p><strong>Files:</strong></p>
+<ul>
+<li>Create:
+<code>commons_messaging/dispatch/claude_code/persist.go</code></li>
+<li>Modify:
 <code>commons_messaging/dispatch/claude_code/dispatch.go</code> (persist
-session_state after each Dispatch) - Possibly create:
+session_state after each Dispatch)</li>
+<li>Possibly create:
 <code>commons_storage/migrations/000011_session_state.up.sql</code>
-(verify if not already present)</p>
+(verify if not already present)</li>
+</ul>
 <ul class="task-list">
 <li><label><input type="checkbox" /><strong>Step 1: Verify or create the
 session_state migration</strong></label></li>
@@ -1659,8 +1490,11 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb42-1"><a href=
 <hr />
 <h2 id="task-8-vertical-slice-integration-test-e19">Task 8:
 Vertical-slice integration test (E19)</h2>
-<p><strong>Files:</strong> - Create:
-<code>commons_messaging/vertical_slice_integration_test.go</code></p>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Create:
+<code>commons_messaging/vertical_slice_integration_test.go</code></li>
+</ul>
 <p><strong>The slice:</strong> operator hand-sends a Telegram message →
 tgram.Subscribe receives it → handler calls claude_code.Dispatch →
 response parsed → handler calls tgram.SendForTenant → operator sees the
@@ -1725,8 +1559,8 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb44-1"><a href=
 <span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a><span class="va">HERALD_TGRAM_LIVE_INBOUND</span><span class="op">=</span>1 <span class="dt">\</span></span>
 <span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a><span class="va">HERALD_CLAUDE_BIN</span><span class="op">=</span>claude <span class="va">HERALD_CLAUDE_PROJECT_NAME</span><span class="op">=</span>Herald <span class="dt">\</span></span>
 <span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test ./commons_messaging/ <span class="at">-tags</span><span class="op">=</span>integration <span class="at">-run</span> TestVerticalSlice_TelegramClaudeRoundTrip <span class="at">-count</span><span class="op">=</span>1 <span class="at">-timeout</span><span class="op">=</span>300s <span class="at">-v</span></span></code></pre></div>
-<p>Expected: PASS — the operator’s Telegram chat receives a reply
-derived from Claude’s <code>&lt;&lt;&lt;HERALD-REPLY&gt;&gt;&gt;</code>
+<p>Expected: PASS — the operator's Telegram chat receives a reply
+derived from Claude's <code>&lt;&lt;&lt;HERALD-REPLY&gt;&gt;&gt;</code>
 Summary.</p>
 <ul class="task-list">
 <li><label><input type="checkbox" /><strong>Step 3:
@@ -1742,10 +1576,12 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb45-1"><a href=
 <span id="cb45-7"><a href="#cb45-7" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb45-8"><a href="#cb45-8" aria-hidden="true" tabindex="-1"></a><span class="st">Co-Authored-By: Claude Opus 4.7 &lt;noreply@anthropic.com&gt;&quot;</span></span></code></pre></div>
 <hr />
-<h2 id="task-9-add-e17e18e19-to-e2e_bluff_hunt.sh">Task 9: Add
+<h2 id="task-9-add-e17e18e19-to-e2e_bluff_huntsh">Task 9: Add
 E17/E18/E19 to e2e_bluff_hunt.sh</h2>
-<p><strong>Files:</strong> - Modify:
-<code>scripts/e2e_bluff_hunt.sh</code></p>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Modify: <code>scripts/e2e_bluff_hunt.sh</code></li>
+</ul>
 <ul class="task-list">
 <li><label><input type="checkbox" /><strong>Step 1: Add the three
 invariants</strong></label></li>
@@ -1776,16 +1612,19 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb46-1"><a href=
 <span id="cb46-22"><a href="#cb46-22" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span></code></pre></div>
 <ul class="task-list">
 <li><p><label><input type="checkbox" /><strong>Step 2: Update the header
-comment “Eighteen invariants” → “Twenty-one invariants”</strong> and add
+comment "Eighteen invariants" → "Twenty-one invariants"</strong> and add
 E17/E18/E19 to the list.</label></p></li>
 <li><p><label><input type="checkbox" /><strong>Step 3: Run the
 script</strong></label></p></li>
 </ul>
 <div class="sourceCode" id="cb47"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/e2e_bluff_hunt.sh <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span> <span class="kw">|</span> <span class="fu">tail</span> <span class="at">-30</span></span></code></pre></div>
-<p>Expected outcomes: - All creds + claude available: 21 PASS / 0 FAIL -
-No creds: 18 PASS / 0 FAIL + 3 SKIP (still considered a PASS
-overall)</p>
+<p>Expected outcomes:</p>
+<ul>
+<li>All creds + claude available: 21 PASS / 0 FAIL</li>
+<li>No creds: 18 PASS / 0 FAIL + 3 SKIP (still considered a PASS
+overall)</li>
+</ul>
 <ul class="task-list">
 <li><label><input type="checkbox" /><strong>Step 4:
 Commit</strong></label></li>
@@ -1805,12 +1644,15 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb48-1"><a href=
 <span id="cb48-12"><a href="#cb48-12" aria-hidden="true" tabindex="-1"></a><span class="st">Co-Authored-By: Claude Opus 4.7 &lt;noreply@anthropic.com&gt;&quot;</span></span></code></pre></div>
 <hr />
 <h2
-id="task-10-.env.example-atomic-issuesfixed-for-hrd-011-hrd-012">Task
+id="task-10-envexample--atomic-issuesfixed-for-hrd-011--hrd-012">Task
 10: .env.example + atomic Issues→Fixed for HRD-011 + HRD-012</h2>
-<p><strong>Files:</strong> - Modify:
-<code>quickstart/.env.example</code> - Modify:
-<code>docs/Issues.md</code>, <code>docs/Fixed.md</code>,
-<code>docs/Status.md</code> - Regenerate: all 9 sibling formats</p>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Modify: <code>quickstart/.env.example</code></li>
+<li>Modify: <code>docs/Issues.md</code>, <code>docs/Fixed.md</code>,
+<code>docs/Status.md</code></li>
+<li>Regenerate: all 9 sibling formats</li>
+</ul>
 <ul class="task-list">
 <li><label><input type="checkbox" /><strong>Step 1: Add new env vars to
 <code>.env.example</code></strong></label></li>
@@ -1834,28 +1676,28 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb49-1"><a href=
 migration for HRD-011 AND HRD-012</strong></label></li>
 </ul>
 <p>Per §11.4.19 atomic — both rows move in the same commit.</p>
-<ol type="a">
-<li>Open <code>docs/Issues.md</code>. Cut the HRD-011 row AND the
-HRD-012 row.</li>
-<li>Open <code>docs/Fixed.md</code>. Insert both rows at the TOP of the
-“Recently fixed” table.</li>
-<li>Update headers of both files.</li>
-</ol>
+<p>a. Open <code>docs/Issues.md</code>. Cut the HRD-011 row AND the
+HRD-012 row. b. Open <code>docs/Fixed.md</code>. Insert both rows at the
+TOP of the "Recently fixed" table. c. Update headers of both files.</p>
 <p>HRD-011 row template for Fixed.md (adjust commit refs):</p>
 <pre><code>| HRD-011 | task | middle | Telegram channel live integration — sendMessage MarkdownV2 + getUpdates long-poll (25s/30s safety-net per §32.2) + outbound_delivery_evidence persistence; 3 new §107 e2e invariants (E17 send+persist) | 2026-05-XX | (this commit) | spec V3 §11.1 + §32; Catalogue-Check: no-match (no vasic-digital Telegram SDK); vendored gopkg.in/telebot.v3 as submodules/telebot |</code></pre>
 <p>HRD-012 row template:</p>
 <pre><code>| HRD-012 | task | middle | Claude Code dispatcher live integration — `claude --resume &lt;UUID&gt; --print &lt;envelope&gt;` exec + &lt;&lt;&lt;HERALD-REPLY&gt;&gt;&gt; JSON parse + claude_code_sessions persistence per §33; E18 round-trip + E19 vertical slice (combined with HRD-011) | 2026-05-XX | (this commit) | spec V3 §33 + §33.2; Catalogue-Check: no-match (claude is an external binary, not a library) |</code></pre>
+<ul class="task-list">
+<li><label><input type="checkbox" /><strong>Step 3: Update Status.md
+r7→r8</strong></label></li>
+</ul>
 <ul>
-<li><p><label><input type="checkbox" /><strong>Step 3: Update Status.md
-r7→r8</strong></label></p></li>
-<li><p>e2e_bluff_hunt: 21 PASS / 0 FAIL (was 18)</p></li>
-<li><p>Submodules: 13 vendored (was 12 — added telebot)</p></li>
-<li><p>Implementation table: commons_messaging now ✅ landed (was
-partial)</p></li>
-<li><p>Continuation: Wave 1 complete; HRD-008 operator-side e2e
-validation next</p></li>
-<li><p><label><input type="checkbox" /><strong>Step 4: Regenerate
-siblings</strong></label></p></li>
+<li>e2e_bluff_hunt: 21 PASS / 0 FAIL (was 18)</li>
+<li>Submodules: 13 vendored (was 12 — added telebot)</li>
+<li>Implementation table: commons_messaging now ✅ landed (was
+partial)</li>
+<li>Continuation: Wave 1 complete; HRD-008 operator-side e2e validation
+next</li>
+</ul>
+<ul class="task-list">
+<li><label><input type="checkbox" /><strong>Step 4: Regenerate
+siblings</strong></label></li>
 </ul>
 <div class="sourceCode" id="cb52"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> f <span class="kw">in</span> docs/Issues.md docs/Fixed.md docs/Status.md<span class="kw">;</span> <span class="cf">do</span></span>
@@ -1891,7 +1733,7 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb54-1"><a href=
 <span id="cb54-11"><a href="#cb54-11" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb54-12"><a href="#cb54-12" aria-hidden="true" tabindex="-1"></a><span class="st">Co-Authored-By: Claude Opus 4.7 &lt;noreply@anthropic.com&gt;&quot;</span></span></code></pre></div>
 <hr />
-<h2 id="task-11-anti-bluff-battery-multi-mirror-push">Task 11:
+<h2 id="task-11-anti-bluff-battery--multi-mirror-push">Task 11:
 Anti-bluff battery + multi-mirror push</h2>
 <p><strong>Files:</strong> none modified — validates and ships.</p>
 <ul class="task-list">
@@ -1929,16 +1771,12 @@ verification</strong></label></li>
 </ul>
 <div class="sourceCode" id="cb58"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> log <span class="at">-15</span> <span class="at">--oneline</span></span></code></pre></div>
-<p>Should show this plan’s commits on top of HEAD. Confirm Issues.md no
+<p>Should show this plan's commits on top of HEAD. Confirm Issues.md no
 longer contains HRD-011 or HRD-012 in the open table.</p>
 <hr />
 <h2 id="self-review">Self-Review</h2>
 <p><strong>1. Spec coverage check.</strong></p>
 <table>
-<colgroup>
-<col style="width: 50%" />
-<col style="width: 50%" />
-</colgroup>
 <thead>
 <tr>
 <th>Spec requirement</th>
@@ -1972,7 +1810,7 @@ follow-up)</td>
 <td>Task 5</td>
 </tr>
 <tr>
-<td>§33 claude –resume invocation</td>
+<td>§33 claude --resume invocation</td>
 <td>Task 6</td>
 </tr>
 <tr>
@@ -2022,28 +1860,30 @@ follow-up)</td>
 webhook ingress are deferred to a follow-up HRD. Both are spec-mandated
 for the FULL §11.1 capability, but the long-poll + sendMessage path
 covers the canonical E17 evidence. Note this in the HRD-011 Fixed.md
-row’s title.</p>
-<p><strong>2. Placeholder scan:</strong> - <code>2026-05-XX</code> —
-parametric close-date for the engineer to fill at Task 10. Legitimate. -
-<code>(this commit)</code> — Fixed.md convention. Legitimate. -
-<code>&lt;UUID&gt;</code> — protocol literal in
+row's title.</p>
+<p><strong>2. Placeholder scan:</strong></p>
+<ul>
+<li><code>2026-05-XX</code> — parametric close-date for the engineer to
+fill at Task 10. Legitimate.</li>
+<li><code>(this commit)</code> — Fixed.md convention. Legitimate.</li>
+<li><code>&lt;UUID&gt;</code> — protocol literal in
 <code>&lt;&lt;&lt;HERALD-REPLY&gt;&gt;&gt;</code> discussion.
-Legitimate.</p>
+Legitimate.</li>
+</ul>
 <p>No genuine TBDs.</p>
-<p><strong>3. Type consistency:</strong> - <code>NewWithStorage</code>
-(Task 5) + <code>SendForTenant</code> (Task 5) — same naming used
-consistently. - <code>HeraldSystemTenant</code> (Task 7) — declared
-once, referenced in <code>persist.go</code>. -
-<code>DispatchResponse</code> Outcome + Summary + SessionUUID +
-AnchorPath — added consistently in Tasks 6 + 7. -
-<code>parseReply</code> (Task 6) — internal helper, single
-definition.</p>
+<p><strong>3. Type consistency:</strong></p>
+<ul>
+<li><code>NewWithStorage</code> (Task 5) + <code>SendForTenant</code>
+(Task 5) — same naming used consistently.</li>
+<li><code>HeraldSystemTenant</code> (Task 7) — declared once, referenced
+in <code>persist.go</code>.</li>
+<li><code>DispatchResponse</code> Outcome + Summary + SessionUUID +
+AnchorPath — added consistently in Tasks 6 + 7.</li>
+<li><code>parseReply</code> (Task 6) — internal helper, single
+definition.</li>
+</ul>
 <p><strong>4. Anti-bluff trap coverage:</strong></p>
 <table>
-<colgroup>
-<col style="width: 50%" />
-<col style="width: 50%" />
-</colgroup>
 <thead>
 <tr>
 <th>Trap</th>

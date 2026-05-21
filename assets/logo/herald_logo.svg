@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Herald logo wrapper for hi-DPI / vector embedding contexts.
+  References herald_logo_square_512.png for crisp rendering at any size.
+  For pure-vector consumers, replace the <image> with the original vector source if available.
+-->
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     viewBox="0 0 512 512"
+     width="512" height="512"
+     preserveAspectRatio="xMidYMid meet"
+     role="img"
+     aria-label="Herald">
+  <title>Herald</title>
+  <image href="herald_logo_square_512.png" xlink:href="herald_logo_square_512.png"
+         x="0" y="0" width="512" height="512" />
+</svg>

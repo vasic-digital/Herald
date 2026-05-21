@@ -4,157 +4,11 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>Spec Completion Roadmap</title>
+  <title>Herald</title>
   <style>
     /* Default styles provided by pandoc.
     ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
     */
-    html {
-      color: #1a1a1a;
-      background-color: #fdfdfd;
-    }
-    body {
-      margin: 0 auto;
-      max-width: 36em;
-      padding-left: 50px;
-      padding-right: 50px;
-      padding-top: 50px;
-      padding-bottom: 50px;
-      hyphens: auto;
-      overflow-wrap: break-word;
-      text-rendering: optimizeLegibility;
-      font-kerning: normal;
-    }
-    @media (max-width: 600px) {
-      body {
-        font-size: 0.9em;
-        padding: 12px;
-      }
-      h1 {
-        font-size: 1.8em;
-      }
-    }
-    @media print {
-      html {
-        background-color: white;
-      }
-      body {
-        background-color: transparent;
-        color: black;
-        font-size: 12pt;
-      }
-      p, h2, h3 {
-        orphans: 3;
-        widows: 3;
-      }
-      h2, h3, h4 {
-        page-break-after: avoid;
-      }
-    }
-    p {
-      margin: 1em 0;
-    }
-    a {
-      color: #1a1a1a;
-    }
-    a:visited {
-      color: #1a1a1a;
-    }
-    img {
-      max-width: 100%;
-    }
-    svg {
-      height: auto;
-      max-width: 100%;
-    }
-    h1, h2, h3, h4, h5, h6 {
-      margin-top: 1.4em;
-    }
-    h5, h6 {
-      font-size: 1em;
-      font-style: italic;
-    }
-    h6 {
-      font-weight: normal;
-    }
-    ol, ul {
-      padding-left: 1.7em;
-      margin-top: 1em;
-    }
-    li > ol, li > ul {
-      margin-top: 0;
-    }
-    blockquote {
-      margin: 1em 0 1em 1.7em;
-      padding-left: 1em;
-      border-left: 2px solid #e6e6e6;
-      color: #606060;
-    }
-    code {
-      white-space: pre-wrap;
-      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
-      font-size: 85%;
-      margin: 0;
-      hyphens: manual;
-    }
-    pre {
-      margin: 1em 0;
-      overflow: auto;
-    }
-    pre code {
-      padding: 0;
-      overflow: visible;
-      overflow-wrap: normal;
-    }
-    .sourceCode {
-     background-color: transparent;
-     overflow: visible;
-    }
-    hr {
-      border: none;
-      border-top: 1px solid #1a1a1a;
-      height: 1px;
-      margin: 1em 0;
-    }
-    table {
-      margin: 1em 0;
-      border-collapse: collapse;
-      width: 100%;
-      overflow-x: auto;
-      display: block;
-      font-variant-numeric: lining-nums tabular-nums;
-    }
-    table caption {
-      margin-bottom: 0.75em;
-    }
-    tbody {
-      margin-top: 0.5em;
-      border-top: 1px solid #1a1a1a;
-      border-bottom: 1px solid #1a1a1a;
-    }
-    th {
-      border-top: 1px solid #1a1a1a;
-      padding: 0.25em 0.5em 0.25em 0.5em;
-    }
-    td {
-      padding: 0.125em 0.5em 0.25em 0.5em;
-    }
-    header {
-      margin-bottom: 4em;
-      text-align: center;
-    }
-    #TOC li {
-      list-style: none;
-    }
-    #TOC ul {
-      padding-left: 1.3em;
-    }
-    #TOC > ul {
-      padding-left: 0;
-    }
-    #TOC a:not(:hover) {
-      text-decoration: none;
-    }
     span.smallcaps{font-variant: small-caps;}
     div.columns{display: flex; gap: min(4vw, 1.5em);}
     div.column{flex: auto; overflow-x: auto;}
@@ -170,163 +24,21 @@
     }
     .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
+  <link rel="stylesheet" href="../../../assets/logo/print.css" />
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">Spec Completion Roadmap</h1>
+<h1 class="title">Herald</h1>
 </header>
-<nav id="TOC" role="doc-toc">
-<ul>
-<li><a href="#spec-v3-fully-implemented-roadmap-master-design"
-id="toc-spec-v3-fully-implemented-roadmap-master-design">Spec V3 →
-fully-implemented Roadmap (Master Design)</a>
-<ul>
-<li><a href="#constitutional-anchors"
-id="toc-constitutional-anchors">Constitutional anchors</a></li>
-<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
-contents</a></li>
-<li><a href="#starting-state-2026-05-20"
-id="toc-starting-state-2026-05-20">Starting state (2026-05-20)</a></li>
-<li><a href="#wave-overview" id="toc-wave-overview">Wave overview</a>
-<ul>
-<li><a href="#hard-dependency-rules" id="toc-hard-dependency-rules">Hard
-dependency rules</a></li>
-</ul></li>
-<li><a href="#wave-1-storage-first-user-visible-feature"
-id="toc-wave-1-storage-first-user-visible-feature">Wave 1 — Storage +
-first user-visible feature</a>
-<ul>
-<li><a href="#hrd-010-commons_storage-live-wiring"
-id="toc-hrd-010-commons_storage-live-wiring">HRD-010 —
-<code>commons_storage</code> live wiring</a></li>
-<li><a href="#hrd-011-telegram-channel-live-integration"
-id="toc-hrd-011-telegram-channel-live-integration">HRD-011 — Telegram
-channel live integration</a></li>
-<li><a href="#hrd-012-claude-code-dispatcher-live-integration"
-id="toc-hrd-012-claude-code-dispatcher-live-integration">HRD-012 —
-Claude Code dispatcher live integration</a></li>
-<li><a
-href="#hrd-008-operator-side-quickstart-e2e-validation-already-in_progress"
-id="toc-hrd-008-operator-side-quickstart-e2e-validation-already-in_progress">HRD-008
-— Operator-side quickstart e2e validation (already in_progress)</a></li>
-<li><a href="#wave-1-dependency-graph"
-id="toc-wave-1-dependency-graph">Wave 1 dependency graph</a></li>
-<li><a href="#wave-1-gate" id="toc-wave-1-gate">Wave 1 gate</a></li>
-</ul></li>
-<li><a href="#wave-2-flavor-scaffolds-6-honest-stub-binaries"
-id="toc-wave-2-flavor-scaffolds-6-honest-stub-binaries">Wave 2 — Flavor
-scaffolds (6 honest-stub binaries)</a>
-<ul>
-<li><a href="#per-flavor-scope-107-evidence"
-id="toc-per-flavor-scope-107-evidence">Per-flavor scope + §107
-evidence</a></li>
-<li><a href="#build-ship-layout" id="toc-build-ship-layout">Build + ship
-layout</a></li>
-<li><a href="#new-e2e_bluff_hunt-invariants"
-id="toc-new-e2e_bluff_hunt-invariants">New e2e_bluff_hunt
-invariants</a></li>
-<li><a href="#wave-2-anti-bluff-traps"
-id="toc-wave-2-anti-bluff-traps">Wave 2 anti-bluff traps</a></li>
-<li><a href="#wave-2-dependency" id="toc-wave-2-dependency">Wave 2
-dependency</a></li>
-<li><a href="#wave-2-gate" id="toc-wave-2-gate">Wave 2 gate</a></li>
-</ul></li>
-<li><a href="#wave-3-42-constitution-binding-rollout-hrd-018..028"
-id="toc-wave-3-42-constitution-binding-rollout-hrd-018..028">Wave 3 —
-§42 Constitution binding rollout (HRD-018..028)</a>
-<ul>
-<li><a href="#sub-wave-3a-high-criticality-3-hrds"
-id="toc-sub-wave-3a-high-criticality-3-hrds">Sub-wave 3a — “high”
-criticality (3 HRDs)</a></li>
-<li><a href="#sub-wave-3b-middle-criticality-6-hrds"
-id="toc-sub-wave-3b-middle-criticality-6-hrds">Sub-wave 3b — “middle”
-criticality (6 HRDs)</a></li>
-<li><a href="#sub-wave-3c-low-criticality-2-hrds"
-id="toc-sub-wave-3c-low-criticality-2-hrds">Sub-wave 3c — “low”
-criticality (2 HRDs)</a></li>
-<li><a href="#wave-3-shared-design-constraints"
-id="toc-wave-3-shared-design-constraints">Wave 3 shared design
-constraints</a></li>
-<li><a href="#wave-3-dependency-graph"
-id="toc-wave-3-dependency-graph">Wave 3 dependency graph</a></li>
-<li><a href="#wave-3-gate" id="toc-wave-3-gate">Wave 3 gate</a></li>
-</ul></li>
-<li><a
-href="#wave-4-43-constitution-derived-command-catalogue-hrd-029..056"
-id="toc-wave-4-43-constitution-derived-command-catalogue-hrd-029..056">Wave
-4 — §43 Constitution-derived command catalogue (HRD-029..056)</a>
-<ul>
-<li><a href="#sub-wave-4a-high-criticality-9-commands"
-id="toc-sub-wave-4a-high-criticality-9-commands">Sub-wave 4a — “high”
-criticality (9 commands)</a></li>
-<li><a href="#sub-wave-4b-middle-criticality-13-commands"
-id="toc-sub-wave-4b-middle-criticality-13-commands">Sub-wave 4b —
-“middle” criticality (13 commands)</a></li>
-<li><a href="#sub-wave-4c-low-criticality-6-commands"
-id="toc-sub-wave-4c-low-criticality-6-commands">Sub-wave 4c — “low”
-criticality (6 commands)</a></li>
-<li><a href="#wave-4-shared-design-constraints"
-id="toc-wave-4-shared-design-constraints">Wave 4 shared design
-constraints</a></li>
-<li><a href="#wave-4-dependency" id="toc-wave-4-dependency">Wave 4
-dependency</a></li>
-<li><a href="#wave-4-gate" id="toc-wave-4-gate">Wave 4 gate</a></li>
-</ul></li>
-<li><a href="#cross-cutting-design-constraints"
-id="toc-cross-cutting-design-constraints">Cross-cutting design
-constraints</a>
-<ul>
-<li><a
-href="#c1.-11.4.74-catalogue-check-is-mandatory-before-writing-new-code"
-id="toc-c1.-11.4.74-catalogue-check-is-mandatory-before-writing-new-code">C1.
-§11.4.74 Catalogue-Check is mandatory before writing new code</a></li>
-<li><a href="#c2.-multi-mirror-push-parity-on-every-wave-closing-commit"
-id="toc-c2.-multi-mirror-push-parity-on-every-wave-closing-commit">C2.
-Multi-mirror push parity on every wave-closing commit</a></li>
-<li><a href="#c3.-spec-revision-bump-on-wave-close-11.4.73"
-id="toc-c3.-spec-revision-bump-on-wave-close-11.4.73">C3. Spec revision
-bump on wave close (§11.4.73)</a></li>
-<li><a href="#c4.-hardlinked-backup-before-destructive-ops-9"
-id="toc-c4.-hardlinked-backup-before-destructive-ops-9">C4. Hardlinked
-backup before destructive ops (§9)</a></li>
-<li><a href="#c5.-60-ram-cap-on-heavy-work-12.6"
-id="toc-c5.-60-ram-cap-on-heavy-work-12.6">C5. 60% RAM cap on heavy work
-(§12.6)</a></li>
-<li><a
-href="#c6.-end-to-end-evidence-stays-in-scriptse2e_bluff_hunt.sh-not-in-_test.go"
-id="toc-c6.-end-to-end-evidence-stays-in-scriptse2e_bluff_hunt.sh-not-in-_test.go">C6.
-End-to-end evidence stays in <code>scripts/e2e_bluff_hunt.sh</code>, not
-in <code>_test.go</code></a></li>
-<li><a href="#c7.-honest-stub-501s-with-hrd-pointers-not-200s-or-panics"
-id="toc-c7.-honest-stub-501s-with-hrd-pointers-not-200s-or-panics">C7.
-Honest-stub 501s with HRD pointers (not 200s or panics)</a></li>
-<li><a href="#c8.-skip-with-reason-for-credential-dependent-tests"
-id="toc-c8.-skip-with-reason-for-credential-dependent-tests">C8.
-SKIP-with-reason for credential-dependent tests</a></li>
-<li><a href="#c9.-paired-1.1-mutation-meta-test-per-new-gate"
-id="toc-c9.-paired-1.1-mutation-meta-test-per-new-gate">C9. Paired §1.1
-mutation meta-test per new gate</a></li>
-</ul></li>
-<li><a href="#anti-bluff-trap-matrix-summary-across-all-waves"
-id="toc-anti-bluff-trap-matrix-summary-across-all-waves">Anti-bluff trap
-matrix (summary across all waves)</a></li>
-<li><a href="#roadmap-totals" id="toc-roadmap-totals">Roadmap
-totals</a></li>
-<li><a href="#open-questions-decisions-deferred-to-per-wave-designs"
-id="toc-open-questions-decisions-deferred-to-per-wave-designs">Open
-questions / decisions deferred to per-wave designs</a></li>
-<li><a href="#next-steps-after-approval"
-id="toc-next-steps-after-approval">Next steps after approval</a></li>
-</ul></li>
-</ul>
-</nav>
-<h1 id="spec-v3-fully-implemented-roadmap-master-design">Spec V3 →
+<div align="center">
+
+<p><img src="../../../assets/logo/herald_logo_square_128.png"
+alt="Herald" />{width=96px height=96px}</p>
+</div>
+
+<h1 id="spec-v3--fully-implemented-roadmap-master-design">Spec V3 →
 fully-implemented Roadmap (Master Design)</h1>
 <table>
-<colgroup>
-<col style="width: 50%" />
-<col style="width: 50%" />
-</colgroup>
 <thead>
 <tr>
 <th>Field</th>
@@ -388,23 +100,23 @@ brainstorm + plan cycles.</td>
 <p>This design treats the <strong>Herald §107 End-user-usability
 covenant</strong> (commit <code>2d4e829</code>, 2026-05-20) as a
 structural constraint, not a checklist item. Per §107 (which extends
-Helix Universal Constitution §11.4 + §11.4.1..§11.4.16), every wave’s
-“done” gate is captured runtime evidence that an end user of the
+Helix Universal Constitution §11.4 + §11.4.1..§11.4.16), every wave's
+"done" gate is captured runtime evidence that an end user of the
 relevant <code>&lt;flavor&gt;herald</code> binary can actually use the
 feature.</p>
 <p>Verbatim operator mandate this design must honor (first declared
 2026-04-28, reasserted multiple times across 2026-05):</p>
 <blockquote>
-<p>“all existing tests and Challenges do work in anti-bluff manner -
+<p>"all existing tests and Challenges do work in anti-bluff manner -
 they MUST confirm that all tested codebase really works as expected! We
 had been in position that all tests do execute with success and all
 Challenges as well, but in reality the most of the features does not
-work and can’t be used! This MUST NOT be the case and execution of tests
+work and can't be used! This MUST NOT be the case and execution of tests
 and Challenges MUST guarantee the quality, the completition and full
 usability by end users of the product! This MUST BE part of Constitution
 of our project, its CLAUDE.MD and AGENTS.MD if it is not there already,
-and to be applied to all Submodules’s Constitution, CLAUDE.MD and
-AGENTS.MD as well (if not there already)!”</p>
+and to be applied to all Submodules's Constitution, CLAUDE.MD and
+AGENTS.MD as well (if not there already)!"</p>
 </blockquote>
 <p>The mandate is fully propagated as of commit
 <code>2d4e829</code>:</p>
@@ -558,10 +270,6 @@ r4:</p>
    └────────────────────────────────────────────────────────────────────────────────────┘</code></pre>
 <h3 id="hard-dependency-rules">Hard dependency rules</h3>
 <table>
-<colgroup>
-<col style="width: 50%" />
-<col style="width: 50%" />
-</colgroup>
 <thead>
 <tr>
 <th>Rule</th>
@@ -584,25 +292,21 @@ introduces</td>
 </tr>
 <tr>
 <td>Every wave grows <code>scripts/e2e_bluff_hunt.sh</code> BEFORE the
-wave can be declared “done”</td>
+wave can be declared "done"</td>
 <td>§107 covenant — no PASS without positive runtime evidence</td>
 </tr>
 <tr>
-<td>No wave may “land” with a §107 PASS-bluff present</td>
+<td>No wave may "land" with a §107 PASS-bluff present</td>
 <td>Bluff = test green without captured runtime evidence. Per §11.4 and
 §107, this is a release blocker.</td>
 </tr>
 </tbody>
 </table>
-<h2 id="wave-1-storage-first-user-visible-feature">Wave 1 — Storage +
+<h2 id="wave-1--storage--first-user-visible-feature">Wave 1 — Storage +
 first user-visible feature</h2>
-<h3 id="hrd-010-commons_storage-live-wiring">HRD-010 —
+<h3 id="hrd-010--commons_storage-live-wiring">HRD-010 —
 <code>commons_storage</code> live wiring</h3>
 <table>
-<colgroup>
-<col style="width: 50%" />
-<col style="width: 50%" />
-</colgroup>
 <thead>
 <tr>
 <th>Dimension</th>
@@ -615,7 +319,7 @@ first user-visible feature</h2>
 <td>Replace embedded-migration-only <code>commons_storage/</code> with:
 pgx pool wired through <code>commons_infra.QuickstartBoot</code> + RLS
 context propagation; River queue (<code>digital.vasic.background</code>)
-bound to a real <code>river_queue</code> table; Redis ACL’d via
+bound to a real <code>river_queue</code> table; Redis ACL'd via
 <code>digital.vasic.cache</code> with per-tenant key prefix. Migrations
 000001..000005 (already embedded) become live.</td>
 </tr>
@@ -638,19 +342,15 @@ enqueue). <strong>E16</strong> Redis TTL respected.</td>
 </tr>
 <tr>
 <td><strong>Anti-bluff trap</strong></td>
-<td>A “PASS on connection-only” without round-trip data is forbidden.
+<td>A "PASS on connection-only" without round-trip data is forbidden.
 Each invariant MUST observe a state mutation, not just an OK from the
 driver.</td>
 </tr>
 </tbody>
 </table>
-<h3 id="hrd-011-telegram-channel-live-integration">HRD-011 — Telegram
+<h3 id="hrd-011--telegram-channel-live-integration">HRD-011 — Telegram
 channel live integration</h3>
 <table>
-<colgroup>
-<col style="width: 50%" />
-<col style="width: 50%" />
-</colgroup>
 <thead>
 <tr>
 <th>Dimension</th>
@@ -672,7 +372,7 @@ Subscriber resolution per §7. Persist
 <td><strong>§107 evidence</strong></td>
 <td>A real Telegram bot (operator-supplied token in <code>.env</code>,
 never committed) receives an inbound message → Herald processes it → a
-known outbound message is dispatched back → the bot’s chat shows it. The
+known outbound message is dispatched back → the bot's chat shows it. The
 full round-trip is captured: chat ID, message text in, message text out,
 <code>delivery_evidence.delivered_at</code> row in PG.</td>
 </tr>
@@ -685,18 +385,14 @@ SKIP-with-reason, NEVER PASS-by-default per §11.4.3 + §107).</td>
 <tr>
 <td><strong>Anti-bluff trap</strong></td>
 <td>If credentials absent → SKIP with reason. If credentials present →
-PASS requires captured Telegram API response body + DB row. A “PASS
-because we mocked the API” is forbidden.</td>
+PASS requires captured Telegram API response body + DB row. A "PASS
+because we mocked the API" is forbidden.</td>
 </tr>
 </tbody>
 </table>
-<h3 id="hrd-012-claude-code-dispatcher-live-integration">HRD-012 —
+<h3 id="hrd-012--claude-code-dispatcher-live-integration">HRD-012 —
 Claude Code dispatcher live integration</h3>
 <table>
-<colgroup>
-<col style="width: 50%" />
-<col style="width: 50%" />
-</colgroup>
 <thead>
 <tr>
 <th>Dimension</th>
@@ -719,7 +415,7 @@ channel.</td>
 <td>A test inbound message routed to the Claude Code dispatcher produces
 a real <code>claude</code> CLI invocation, the reply text contains the
 marker-delimited payload, and the parsed reply is dispatched back on the
-source channel (Telegram in this wave’s vertical slice). Captured:
+source channel (Telegram in this wave's vertical slice). Captured:
 <code>claude</code> exit code, stdout transcript (sanitized), parsed
 reply body, outbound <code>delivery_evidence</code> row.</td>
 </tr>
@@ -730,20 +426,16 @@ reply body, outbound <code>delivery_evidence</code> row.</td>
 </tr>
 <tr>
 <td><strong>Anti-bluff trap</strong></td>
-<td>A “PASS because we exec’d <code>echo</code> instead of
-<code>claude</code>” is forbidden. The real <code>claude</code> binary
+<td>A "PASS because we exec'd <code>echo</code> instead of
+<code>claude</code>" is forbidden. The real <code>claude</code> binary
 or explicit SKIP.</td>
 </tr>
 </tbody>
 </table>
 <h3
-id="hrd-008-operator-side-quickstart-e2e-validation-already-in_progress">HRD-008
+id="hrd-008--operator-side-quickstart-e2e-validation-already-in_progress">HRD-008
 — Operator-side quickstart e2e validation (already in_progress)</h3>
 <table>
-<colgroup>
-<col style="width: 50%" />
-<col style="width: 50%" />
-</colgroup>
 <thead>
 <tr>
 <th>Dimension</th>
@@ -794,18 +486,11 @@ as bluff).</li>
 <code>docs/Fixed.md</code> per §11.4.19 atomic-migration.</li>
 <li>Operator signs off HRD-008 with captured transcript.</li>
 </ol>
-<h2 id="wave-2-flavor-scaffolds-6-honest-stub-binaries">Wave 2 — Flavor
+<h2 id="wave-2--flavor-scaffolds-6-honest-stub-binaries">Wave 2 — Flavor
 scaffolds (6 honest-stub binaries)</h2>
-<h3 id="per-flavor-scope-107-evidence">Per-flavor scope + §107
+<h3 id="per-flavor-scope--107-evidence">Per-flavor scope + §107
 evidence</h3>
 <table>
-<colgroup>
-<col style="width: 20%" />
-<col style="width: 20%" />
-<col style="width: 20%" />
-<col style="width: 20%" />
-<col style="width: 20%" />
-</colgroup>
 <thead>
 <tr>
 <th>Flavor</th>
@@ -883,13 +568,13 @@ daily/weekly/monthly compliance digest</td>
 </tr>
 </tbody>
 </table>
-<h3 id="build-ship-layout">Build + ship layout</h3>
+<h3 id="build--ship-layout">Build + ship layout</h3>
 <p>Each flavor lives in its own Go module under the repo root:
 <code>sherald/</code>, <code>cherald/</code>, <code>bherald/</code>,
 <code>rherald/</code>, <code>iherald/</code>, <code>scherald/</code> —
 mirroring <code>pherald/</code>. All 6 added to <code>go.work</code>.
 Shared cobra+version+serve plumbing factored into
-<code>commons/cli/</code> (NEW) so each flavor’s
+<code>commons/cli/</code> (NEW) so each flavor's
 <code>cmd/&lt;flavor&gt;herald/main.go</code> is ~30 lines.</p>
 <p>Per Helix §11.4.74 we <strong>must</strong> Catalogue-Check
 <code>vasic-digital</code>/<code>HelixDevelopment</code> for an existing
@@ -911,15 +596,15 @@ E28      iherald /v1/healthz returns 200 with iherald build_info</code></pre>
 invariants.</strong></p>
 <h3 id="wave-2-anti-bluff-traps">Wave 2 anti-bluff traps</h3>
 <ol type="1">
-<li><strong>“Empty version field” bluff.</strong> A
+<li><strong>"Empty version field" bluff.</strong> A
 <code>version --json</code> that returns
 <code>{"flavor":"sherald","version":""}</code> is forbidden — the e2e
 probe asserts non-empty version, build, and goVersion fields.</li>
-<li><strong>“Serve returns 200 on every route” bluff.</strong> Each
-flavor’s serve MUST return 404 for unknown routes (catch-all), 501 with
+<li><strong>"Serve returns 200 on every route" bluff.</strong> Each
+flavor's serve MUST return 404 for unknown routes (catch-all), 501 with
 HRD pointer for declared-but-unimplemented routes, and 200 ONLY for
 actually-implemented routes (healthz/readyz/metrics).</li>
-<li><strong>“Build succeeds, never runs” bluff.</strong>
+<li><strong>"Build succeeds, never runs" bluff.</strong>
 <code>go build ./&lt;flavor&gt;/...</code> PASS alone is NOT sufficient.
 Every E19-E28 invariant invokes the resulting binary and asserts on its
 output.</li>
@@ -947,19 +632,12 @@ landed for all 6 new flavors.</li>
 <li>CodeGraph re-indexed (<code>scripts/codegraph_setup.sh</code>) and
 validate green for the new symbols.</li>
 </ol>
-<h2 id="wave-3-42-constitution-binding-rollout-hrd-018..028">Wave 3 —
-§42 Constitution binding rollout (HRD-018..028)</h2>
+<h2 id="wave-3--42-constitution-binding-rollout-hrd-018028">Wave 3 — §42
+Constitution binding rollout (HRD-018..028)</h2>
 <p>11 HRDs split into 3 sub-waves by criticality.</p>
-<h3 id="sub-wave-3a-high-criticality-3-hrds">Sub-wave 3a — “high”
+<h3 id="sub-wave-3a--high-criticality-3-hrds">Sub-wave 3a — "high"
 criticality (3 HRDs)</h3>
 <table>
-<colgroup>
-<col style="width: 20%" />
-<col style="width: 20%" />
-<col style="width: 20%" />
-<col style="width: 20%" />
-<col style="width: 20%" />
-</colgroup>
 <thead>
 <tr>
 <th>HRD</th>
@@ -992,7 +670,7 @@ handlers; <code>/v1/compliance</code> pull surface</td>
 <td><code>digital.vasic.herald.policy.violation</code> (CloudEvents
 v1.0)</td>
 <td><strong>E30</strong>: Inject a synthetic violation, invoke
-evaluator, assert CloudEvent on cherald’s bus +
+evaluator, assert CloudEvent on cherald's bus +
 <code>constitution_state</code> row + <code>/v1/compliance</code>
 returns the row in JSON</td>
 </tr>
@@ -1001,13 +679,13 @@ returns the row in JSON</td>
 <td>sherald: §9.1/9.2/9.3 + §12.1-3/.6 + §11.4.32/.36/.41/.71 —
 destructive-op detection hook, force-push interceptor, mem-budget
 watcher</td>
-<td>OS-level signals: process exec’ing <code>rm -rf</code>,
+<td>OS-level signals: process exec'ing <code>rm -rf</code>,
 <code>git push --force</code>, RSS over 60% threshold</td>
 <td><code>.host.safety_breach</code> /
 <code>.repo.force_push_blocked</code> /
 <code>.host.memory_breach</code></td>
 <td><strong>E31</strong>: Spawn a child process that tries
-<code>rm -rf</code> against a sandboxed temp dir under sherald’s hook +
+<code>rm -rf</code> against a sandboxed temp dir under sherald's hook +
 assert sherald intercepted + emitted + the child exit code is non-zero.
 <strong>E32</strong>: Same for force-push attempt against a sandboxed
 test repo. <strong>E33</strong>: Spawn a memory-balloon process + assert
@@ -1016,19 +694,13 @@ crossed</td>
 </tr>
 </tbody>
 </table>
-<p><strong>Sub-wave 3a §107 trap:</strong> A “PASS because we mocked the
-syscall” is forbidden. E31/E32/E33 use real <code>os/exec</code> against
+<p><strong>Sub-wave 3a §107 trap:</strong> A "PASS because we mocked the
+syscall" is forbidden. E31/E32/E33 use real <code>os/exec</code> against
 sandboxed targets, not mocks. The captured-evidence is: child exit code,
 sherald log line, DB row.</p>
-<h3 id="sub-wave-3b-middle-criticality-6-hrds">Sub-wave 3b — “middle”
+<h3 id="sub-wave-3b--middle-criticality-6-hrds">Sub-wave 3b — "middle"
 criticality (6 HRDs)</h3>
 <table>
-<colgroup>
-<col style="width: 25%" />
-<col style="width: 25%" />
-<col style="width: 25%" />
-<col style="width: 25%" />
-</colgroup>
 <thead>
 <tr>
 <th>HRD</th>
@@ -1103,17 +775,11 @@ first carries <code>mode:"warn"</code></td>
 <p><strong>Sub-wave 3b §107 trap:</strong> Each probe operates against a
 real instance — real bherald reading a real audit file, real rherald
 against a sandboxed git repo, real pherald against a sandboxed commit.
-No “we tested the function in isolation, assume it works in context”
+No "we tested the function in isolation, assume it works in context"
 PASS.</p>
-<h3 id="sub-wave-3c-low-criticality-2-hrds">Sub-wave 3c — “low”
+<h3 id="sub-wave-3c--low-criticality-2-hrds">Sub-wave 3c — "low"
 criticality (2 HRDs)</h3>
 <table>
-<colgroup>
-<col style="width: 25%" />
-<col style="width: 25%" />
-<col style="width: 25%" />
-<col style="width: 25%" />
-</colgroup>
 <thead>
 <tr>
 <th>HRD</th>
@@ -1168,7 +834,7 @@ safety bindings.</li>
 <li><strong>Paired §1.1 mutation meta-test per binding.</strong> Every
 binding HRD ships a paired test
 (<code>tests/test_binding_&lt;id&gt;_meta.sh</code>) that modifies the
-binding’s emission contract to assert the gate catches the regression.
+binding's emission contract to assert the gate catches the regression.
 11 new paired meta-tests total.</li>
 </ol>
 <h3 id="wave-3-dependency-graph">Wave 3 dependency graph</h3>
@@ -1196,20 +862,13 @@ FAIL</strong>.</li>
 §11.4.73) reflecting binding-rollout completion.</li>
 </ol>
 <h2
-id="wave-4-43-constitution-derived-command-catalogue-hrd-029..056">Wave
-4 — §43 Constitution-derived command catalogue (HRD-029..056)</h2>
+id="wave-4--43-constitution-derived-command-catalogue-hrd-029056">Wave 4
+— §43 Constitution-derived command catalogue (HRD-029..056)</h2>
 <p>28 HRDs implementing the 27-entry §43 catalogue (HRD-039 bundles
 §11.4.19 + §11.4.23 into one workable item). Grouped by criticality.</p>
-<h3 id="sub-wave-4a-high-criticality-9-commands">Sub-wave 4a — “high”
+<h3 id="sub-wave-4a--high-criticality-9-commands">Sub-wave 4a — "high"
 criticality (9 commands)</h3>
 <table>
-<colgroup>
-<col style="width: 20%" />
-<col style="width: 20%" />
-<col style="width: 20%" />
-<col style="width: 20%" />
-<col style="width: 20%" />
-</colgroup>
 <thead>
 <tr>
 <th>HRD</th>
@@ -1255,7 +914,7 @@ bundle_hash captured</td>
 <td><strong>HRD-043</strong></td>
 <td>pherald</td>
 <td><code>install-upstreams</code></td>
-<td>install_upstreams wrapper (extends constitution submodule’s existing
+<td>install_upstreams wrapper (extends constitution submodule's existing
 script per Catalogue-Check)</td>
 <td><strong>E45</strong>: Invoke against fresh sandboxed clone → assert
 origin has 4 push URLs configured (github + gitlab + gitflic +
@@ -1311,15 +970,9 @@ standalone daemon mode)</td>
 </tr>
 </tbody>
 </table>
-<h3 id="sub-wave-4b-middle-criticality-13-commands">Sub-wave 4b —
-“middle” criticality (13 commands)</h3>
+<h3 id="sub-wave-4b--middle-criticality-13-commands">Sub-wave 4b —
+"middle" criticality (13 commands)</h3>
 <table>
-<colgroup>
-<col style="width: 25%" />
-<col style="width: 25%" />
-<col style="width: 25%" />
-<col style="width: 25%" />
-</colgroup>
 <thead>
 <tr>
 <th>HRD</th>
@@ -1423,15 +1076,9 @@ lines extracted + survey runner produces report</td>
 </tr>
 </tbody>
 </table>
-<h3 id="sub-wave-4c-low-criticality-6-commands">Sub-wave 4c — “low”
+<h3 id="sub-wave-4c--low-criticality-6-commands">Sub-wave 4c — "low"
 criticality (6 commands)</h3>
 <table>
-<colgroup>
-<col style="width: 25%" />
-<col style="width: 25%" />
-<col style="width: 25%" />
-<col style="width: 25%" />
-</colgroup>
 <thead>
 <tr>
 <th>HRD</th>
@@ -1488,7 +1135,7 @@ evidence as E65 but isolated</td>
 <h3 id="wave-4-shared-design-constraints">Wave 4 shared design
 constraints</h3>
 <ol type="1">
-<li><strong>Sandbox-first.</strong> Every command’s §107 probe runs
+<li><strong>Sandbox-first.</strong> Every command's §107 probe runs
 against a sandboxed working tree (a temp directory the test owns), NEVER
 against the live Herald repo. Required to prevent test pollution and to
 make probes hermetic.</li>
@@ -1500,12 +1147,12 @@ test.</li>
 <li><strong>Shared <code>commons/cmdfx/</code></strong> (NEW,
 Catalogue-Check first). Pulls common patterns: sandbox setup/teardown,
 sandboxed-git-repo helper, hardlink-backup helper, evidence-capture
-helper. Each command’s <code>main.go</code> stays small.</li>
+helper. Each command's <code>main.go</code> stays small.</li>
 <li><strong>Plant-then-detect pattern</strong> for negative tests. For
 commands that detect drift (HRD-054 spec-version check, HRD-038
 script-docs check, HRD-039 fixed align), every probe MUST include a
-“plant the broken state → expect FAIL” subtest AND a “fix the state →
-expect PASS” subtest. Half a test (only positive) is a §107 bluff.</li>
+"plant the broken state → expect FAIL" subtest AND a "fix the state →
+expect PASS" subtest. Half a test (only positive) is a §107 bluff.</li>
 </ol>
 <h3 id="wave-4-dependency">Wave 4 dependency</h3>
 <pre><code>Wave 3 done (§42 bindings firing on real events)
@@ -1529,7 +1176,7 @@ Wave 4 gate green ⇒ spec V3 r7 fully implemented</code></pre>
 <li><code>e2e_bluff_hunt.sh</code> reports <strong>71 PASS / 0
 FAIL</strong>.</li>
 <li>All 28 HRDs migrated Issues → Fixed atomically (§11.4.19).</li>
-<li>Every command has a “plant + detect + fix + verify” probe pair
+<li>Every command has a "plant + detect + fix + verify" probe pair
 (positive + negative captured evidence).</li>
 <li><code>evidence/E_NN_&lt;command&gt;.json</code> corpus committed
 (sanitized — no real secrets).</li>
@@ -1540,60 +1187,60 @@ final spec V3 r-final declares all §43 entries implemented.</li>
 constraints</h2>
 <p>These apply to every wave and every HRD inside it.</p>
 <h3
-id="c1.-11.4.74-catalogue-check-is-mandatory-before-writing-new-code">C1.
+id="c1-11474-catalogue-check-is-mandatory-before-writing-new-code">C1.
 §11.4.74 Catalogue-Check is mandatory before writing new code</h3>
 <p>For every new module, helper, or external integration: search
 <code>vasic-digital/*</code> and <code>HelixDevelopment/*</code> for an
 existing capability. Declare
 <code>reuse|extend|no-match &lt;org/repo&gt;@&lt;sha&gt;</code> in the
-HRD’s References cell. A <code>TBD</code> Catalogue-Check is acceptable
+HRD's References cell. A <code>TBD</code> Catalogue-Check is acceptable
 for opening an HRD but MUST resolve before the HRD closes.</p>
-<h3 id="c2.-multi-mirror-push-parity-on-every-wave-closing-commit">C2.
+<h3 id="c2-multi-mirror-push-parity-on-every-wave-closing-commit">C2.
 Multi-mirror push parity on every wave-closing commit</h3>
-<p>Each wave’s closing commit fans out to GitHub + GitLab + GitFlic +
+<p>Each wave's closing commit fans out to GitHub + GitLab + GitFlic +
 GitVerse via the existing <code>origin</code> push-fan-out (per
 HERALD_CONSTITUTION §103). Per-host pushes are forbidden unless
 rebuilding fan-out configuration.</p>
-<h3 id="c3.-spec-revision-bump-on-wave-close-11.4.73">C3. Spec revision
+<h3 id="c3-spec-revision-bump-on-wave-close-11473">C3. Spec revision
 bump on wave close (§11.4.73)</h3>
-<p>Spec V3’s Revision field bumps on every wave-closing commit that
+<p>Spec V3's Revision field bumps on every wave-closing commit that
 closes spec-impacting HRDs. Minor wave-close = Revision++; the V3→V4
 jump is reserved for a true rewrite.</p>
-<h3 id="c4.-hardlinked-backup-before-destructive-ops-9">C4. Hardlinked
+<h3 id="c4-hardlinked-backup-before-destructive-ops-9">C4. Hardlinked
 backup before destructive ops (§9)</h3>
 <p>Any HRD whose implementation involves rewriting tracker docs
 (Issues→Fixed migration, Status.md regeneration) MUST take a hardlinked
 backup first.</p>
-<h3 id="c5.-60-ram-cap-on-heavy-work-12.6">C5. 60% RAM cap on heavy work
+<h3 id="c5-60-ram-cap-on-heavy-work-126">C5. 60% RAM cap on heavy work
 (§12.6)</h3>
 <p>Wave 1 (live integrations) and Wave 4 (sandbox-heavy probes) are most
 at risk. Each new test that spawns child processes (E31/E32/E33/E50)
-MUST respect the §12.6 cap — Wave 3a’s HRD-020 itself implements the
+MUST respect the §12.6 cap — Wave 3a's HRD-020 itself implements the
 watcher; until then, manual operator vigilance.</p>
 <h3
-id="c6.-end-to-end-evidence-stays-in-scriptse2e_bluff_hunt.sh-not-in-_test.go">C6.
+id="c6-end-to-end-evidence-stays-in-scriptse2e_bluff_huntsh-not-in-_testgo">C6.
 End-to-end evidence stays in <code>scripts/e2e_bluff_hunt.sh</code>, not
 in <code>_test.go</code></h3>
 <p><code>go test</code> proves unit-level correctness. The §107 covenant
-lives in <code>e2e_bluff_hunt.sh</code> because that’s what boots real
+lives in <code>e2e_bluff_hunt.sh</code> because that's what boots real
 services. New invariants land THERE first, then optionally a
-<code>_test.go</code> mirror for fast iteration. The bluff vector is “I
+<code>_test.go</code> mirror for fast iteration. The bluff vector is "I
 added the test but only to <code>_test.go</code> and the e2e script
-never sees it.”</p>
-<h3 id="c7.-honest-stub-501s-with-hrd-pointers-not-200s-or-panics">C7.
+never sees it."</p>
+<h3 id="c7-honest-stub-501s-with-hrd-pointers-not-200s-or-panics">C7.
 Honest-stub 501s with HRD pointers (not 200s or panics)</h3>
 <p>For every declared-but-unimplemented route/subcommand, return HTTP
 501 (or CLI exit 1) with a body/stderr line referencing the HRD-NNN that
-will implement it. This is the §107-faithful “absence of feature”
-representation. A 200 with a “TODO” body or a panic-on-call are both
+will implement it. This is the §107-faithful "absence of feature"
+representation. A 200 with a "TODO" body or a panic-on-call are both
 bluffs.</p>
-<h3 id="c8.-skip-with-reason-for-credential-dependent-tests">C8.
+<h3 id="c8-skip-with-reason-for-credential-dependent-tests">C8.
 SKIP-with-reason for credential-dependent tests</h3>
 <p>Tests that require operator-supplied credentials (Telegram bot token,
 Claude Code session ID, real Postgres host) MUST
 <code>SKIP-with-reason</code> when credentials are absent — per §11.4.3.
 A PASS-by-default with no credential check is a critical bluff.</p>
-<h3 id="c9.-paired-1.1-mutation-meta-test-per-new-gate">C9. Paired §1.1
+<h3 id="c9-paired-11-mutation-meta-test-per-new-gate">C9. Paired §1.1
 mutation meta-test per new gate</h3>
 <p>Every new gate invariant added across Waves 1-4 must ship with a
 paired mutation meta-test that proves the gate catches the regression it
@@ -1602,11 +1249,6 @@ PASS-bluff.</p>
 <h2 id="anti-bluff-trap-matrix-summary-across-all-waves">Anti-bluff trap
 matrix (summary across all waves)</h2>
 <table>
-<colgroup>
-<col style="width: 33%" />
-<col style="width: 33%" />
-<col style="width: 33%" />
-</colgroup>
 <thead>
 <tr>
 <th>Trap class</th>
@@ -1653,7 +1295,7 @@ declared-unimplemented</td>
 </tr>
 <tr>
 <td><strong>Gate-bluff PASS</strong></td>
-<td>Gate reports PASS but doesn’t actually check what it claims</td>
+<td>Gate reports PASS but doesn't actually check what it claims</td>
 <td>Paired §1.1 mutation meta-test required per gate</td>
 </tr>
 <tr>
@@ -1664,7 +1306,7 @@ into PASS</td>
 </tr>
 <tr>
 <td><strong>Sandbox-leakage PASS</strong></td>
-<td>Test mutates the live repo, “PASSes” but pollutes state</td>
+<td>Test mutates the live repo, "PASSes" but pollutes state</td>
 <td>Sandbox helper enforces tmpdir paths; CI hook rejects post-test
 working-tree changes</td>
 </tr>
@@ -1678,12 +1320,6 @@ paired mutation</td>
 </table>
 <h2 id="roadmap-totals">Roadmap totals</h2>
 <table>
-<colgroup>
-<col style="width: 25%" />
-<col style="width: 25%" />
-<col style="width: 25%" />
-<col style="width: 25%" />
-</colgroup>
 <thead>
 <tr>
 <th>Metric</th>
@@ -1743,7 +1379,7 @@ paired mutation</td>
 </tr>
 </tbody>
 </table>
-<h2 id="open-questions-decisions-deferred-to-per-wave-designs">Open
+<h2 id="open-questions--decisions-deferred-to-per-wave-designs">Open
 questions / decisions deferred to per-wave designs</h2>
 <p>These are intentionally NOT resolved in the master roadmap. Each
 per-wave design owns its own answer.</p>
@@ -1751,20 +1387,20 @@ per-wave design owns its own answer.</p>
 <li><strong>Wave 1</strong>: Should River queue configuration default to
 in-process worker (simpler) or external pool (more realistic)? Defer to
 the HRD-010 sub-design.</li>
-<li><strong>Wave 1</strong>: How does HRD-011’s webhook secret_token
+<li><strong>Wave 1</strong>: How does HRD-011's webhook secret_token
 rotate? Defer to HRD-011 sub-design.</li>
 <li><strong>Wave 2</strong>: Does each flavor need its own
-<code>Issues.md</code>/<code>Fixed.md</code>, or share Herald’s? Lean
+<code>Issues.md</code>/<code>Fixed.md</code>, or share Herald's? Lean
 toward shared; defer to Wave 2 sub-design.</li>
 <li><strong>Wave 3</strong>: When does
 <code>digital.vasic.eventbus</code> (Watermill) replace
 <code>MemoryBus</code> in production? Likely Wave 3b or later;
 defer.</li>
 <li><strong>Wave 4</strong>: Is <code>evidence/</code> committed to git
-or stored externally (e.g. S3-backed)? Sensitivity question —
+or stored externally (e.g. S3-backed)? Sensitivity question —
 defer.</li>
 <li><strong>Wave 4</strong>: Are the 9 high-criticality 4a commands
-enough to declare a “minimum-viable safety release”, or do we need 4b+4c
+enough to declare a "minimum-viable safety release", or do we need 4b+4c
 too? Defer to operator preference at Wave 3-close checkpoint.</li>
 </ol>
 <h2 id="next-steps-after-approval">Next steps after approval</h2>
@@ -1781,7 +1417,7 @@ doc.</li>
 <li><strong>§107 hygiene at every milestone.</strong> Every wave close
 re-runs the full anti-bluff battery: inheritance gate, I6+I8 meta-tests,
 audit, codegraph validate, e2e_bluff_hunt. ALL green or the wave is not
-“done”.</li>
+"done".</li>
 </ol>
 </body>
 </html>

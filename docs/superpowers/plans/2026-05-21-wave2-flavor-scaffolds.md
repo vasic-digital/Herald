@@ -1,3 +1,9 @@
+<div align="center">
+
+![Herald](../../../assets/logo/herald_logo_square_128.png){width=96px height=96px}
+
+</div>
+
 # Wave 2 — Flavor Scaffolds Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development per Universal Constitution §11.4.70 (subagent-driven default). Steps use checkbox (`- [ ]`) syntax for tracking.

@@ -1,3 +1,9 @@
+<div align="center">
+
+![Herald](../../../assets/logo/herald_logo_square_128.png){width=96px height=96px}
+
+</div>
+
 # Herald — OpenCode Dispatcher Setup Guide
 
 | Field | Value |

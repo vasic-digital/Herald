@@ -4,157 +4,11 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>Wave 2 Flavor Scaffolds Design</title>
+  <title>Herald</title>
   <style>
     /* Default styles provided by pandoc.
     ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
     */
-    html {
-      color: #1a1a1a;
-      background-color: #fdfdfd;
-    }
-    body {
-      margin: 0 auto;
-      max-width: 36em;
-      padding-left: 50px;
-      padding-right: 50px;
-      padding-top: 50px;
-      padding-bottom: 50px;
-      hyphens: auto;
-      overflow-wrap: break-word;
-      text-rendering: optimizeLegibility;
-      font-kerning: normal;
-    }
-    @media (max-width: 600px) {
-      body {
-        font-size: 0.9em;
-        padding: 12px;
-      }
-      h1 {
-        font-size: 1.8em;
-      }
-    }
-    @media print {
-      html {
-        background-color: white;
-      }
-      body {
-        background-color: transparent;
-        color: black;
-        font-size: 12pt;
-      }
-      p, h2, h3 {
-        orphans: 3;
-        widows: 3;
-      }
-      h2, h3, h4 {
-        page-break-after: avoid;
-      }
-    }
-    p {
-      margin: 1em 0;
-    }
-    a {
-      color: #1a1a1a;
-    }
-    a:visited {
-      color: #1a1a1a;
-    }
-    img {
-      max-width: 100%;
-    }
-    svg {
-      height: auto;
-      max-width: 100%;
-    }
-    h1, h2, h3, h4, h5, h6 {
-      margin-top: 1.4em;
-    }
-    h5, h6 {
-      font-size: 1em;
-      font-style: italic;
-    }
-    h6 {
-      font-weight: normal;
-    }
-    ol, ul {
-      padding-left: 1.7em;
-      margin-top: 1em;
-    }
-    li > ol, li > ul {
-      margin-top: 0;
-    }
-    blockquote {
-      margin: 1em 0 1em 1.7em;
-      padding-left: 1em;
-      border-left: 2px solid #e6e6e6;
-      color: #606060;
-    }
-    code {
-      white-space: pre-wrap;
-      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
-      font-size: 85%;
-      margin: 0;
-      hyphens: manual;
-    }
-    pre {
-      margin: 1em 0;
-      overflow: auto;
-    }
-    pre code {
-      padding: 0;
-      overflow: visible;
-      overflow-wrap: normal;
-    }
-    .sourceCode {
-     background-color: transparent;
-     overflow: visible;
-    }
-    hr {
-      border: none;
-      border-top: 1px solid #1a1a1a;
-      height: 1px;
-      margin: 1em 0;
-    }
-    table {
-      margin: 1em 0;
-      border-collapse: collapse;
-      width: 100%;
-      overflow-x: auto;
-      display: block;
-      font-variant-numeric: lining-nums tabular-nums;
-    }
-    table caption {
-      margin-bottom: 0.75em;
-    }
-    tbody {
-      margin-top: 0.5em;
-      border-top: 1px solid #1a1a1a;
-      border-bottom: 1px solid #1a1a1a;
-    }
-    th {
-      border-top: 1px solid #1a1a1a;
-      padding: 0.25em 0.5em 0.25em 0.5em;
-    }
-    td {
-      padding: 0.125em 0.5em 0.25em 0.5em;
-    }
-    header {
-      margin-bottom: 4em;
-      text-align: center;
-    }
-    #TOC li {
-      list-style: none;
-    }
-    #TOC ul {
-      padding-left: 1.3em;
-    }
-    #TOC > ul {
-      padding-left: 0;
-    }
-    #TOC a:not(:hover) {
-      text-decoration: none;
-    }
     span.smallcaps{font-variant: small-caps;}
     div.columns{display: flex; gap: min(4vw, 1.5em);}
     div.column{flex: auto; overflow-x: auto;}
@@ -235,66 +89,21 @@
     code span.vs { color: #4070a0; } /* VerbatimString */
     code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
   </style>
+  <link rel="stylesheet" href="../../../assets/logo/print.css" />
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">Wave 2 Flavor Scaffolds Design</h1>
+<h1 class="title">Herald</h1>
 </header>
-<nav id="TOC" role="doc-toc">
-<ul>
-<li><a href="#wave-2-flavor-scaffolds-design"
-id="toc-wave-2-flavor-scaffolds-design">Wave 2 — Flavor Scaffolds
-Design</a>
-<ul>
-<li><a href="#constitutional-anchors"
-id="toc-constitutional-anchors">Constitutional anchors</a></li>
-<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
-contents</a></li>
-<li><a href="#section-1-repo-module-layout"
-id="toc-section-1-repo-module-layout">Section 1 — Repo + module
-layout</a></li>
-<li><a
-href="#section-2-per-flavor-identity-ports-serve-surface-43-stub-mapping"
-id="toc-section-2-per-flavor-identity-ports-serve-surface-43-stub-mapping">Section
-2 — Per-flavor identity, ports, serve surface, §43 stub mapping</a>
-<ul>
-<li><a href="#serve-surface-routes-per-serving-flavor"
-id="toc-serve-surface-routes-per-serving-flavor">Serve-surface routes
-per serving flavor</a></li>
-<li><a href="#branding-per-spec-11.0-8.2"
-id="toc-branding-per-spec-11.0-8.2">Branding (per spec §11.0 +
-§8.2)</a></li>
-</ul></li>
-<li><a href="#section-3-commonscli-package-api-surface"
-id="toc-section-3-commonscli-package-api-surface">Section 3 —
-<code>commons/cli/</code> package API surface</a></li>
-<li><a href="#section-4-e2e_bluff_hunt-invariants-e19-e33"
-id="toc-section-4-e2e_bluff_hunt-invariants-e19-e33">Section 4 —
-e2e_bluff_hunt invariants (E19-E33)</a></li>
-<li><a href="#section-5-107-evidence-contract-per-flavor"
-id="toc-section-5-107-evidence-contract-per-flavor">Section 5 — §107
-evidence contract per flavor</a></li>
-<li><a href="#section-6-test-build-strategy"
-id="toc-section-6-test-build-strategy">Section 6 — Test + build
-strategy</a></li>
-<li><a href="#spec-impact-v3-r7-r8" id="toc-spec-impact-v3-r7-r8">Spec
-impact (V3 r7 → r8)</a></li>
-<li><a href="#implementation-phases"
-id="toc-implementation-phases">Implementation phases</a></li>
-<li><a href="#open-questions-deferred-to-implementation"
-id="toc-open-questions-deferred-to-implementation">Open questions
-deferred to implementation</a></li>
-<li><a href="#next-step" id="toc-next-step">Next step</a></li>
-</ul></li>
-</ul>
-</nav>
-<h1 id="wave-2-flavor-scaffolds-design">Wave 2 — Flavor Scaffolds
+<div align="center">
+
+<p><img src="../../../assets/logo/herald_logo_square_128.png"
+alt="Herald" />{width=96px height=96px}</p>
+</div>
+
+<h1 id="wave-2--flavor-scaffolds-design">Wave 2 — Flavor Scaffolds
 Design</h1>
 <table>
-<colgroup>
-<col style="width: 50%" />
-<col style="width: 50%" />
-</colgroup>
 <thead>
 <tr>
 <th>Field</th>
@@ -352,7 +161,7 @@ implementation plan, then
 <h2 id="constitutional-anchors">Constitutional anchors</h2>
 <ul>
 <li><strong>§107 end-user-usability covenant</strong> — every Wave 2
-flavor binary’s “done” is observable in <code>e2e_bluff_hunt.sh</code>
+flavor binary's "done" is observable in <code>e2e_bluff_hunt.sh</code>
 (binary builds + version returns JSON + serve binds + healthz 200 + stub
 returns 501 with HRD pointer). Compile-only PASS is forbidden.</li>
 <li><strong>§11.4.70 subagent-driven default</strong> — implementation
@@ -366,7 +175,7 @@ Disposition recorded in the implementation plan.</li>
 ARE spec changes; V3 r7 → r8 captures them in the same commit
 cycle.</li>
 <li><strong>§3 + §11.4.79</strong> — each new flavor is an own-org
-submodule conceptually (lives under Herald’s tree); included in
+submodule conceptually (lives under Herald's tree); included in
 CodeGraph index per the recently-landed mandate.</li>
 </ul>
 <h2 id="table-of-contents">Table of contents</h2>
@@ -389,7 +198,7 @@ strategy</a></li>
 <li><a href="#open-questions-deferred-to-implementation">Open questions
 deferred to implementation</a></li>
 </ul>
-<h2 id="section-1-repo-module-layout">Section 1 — Repo + module
+<h2 id="section-1--repo--module-layout">Section 1 — Repo + module
 layout</h2>
 <pre><code>Herald/
 ├── commons/                         (existing — extend with cli/ package)
@@ -419,25 +228,20 @@ layout</h2>
 <p><strong>Module count</strong>: <code>go.work</code> grows 7 → 14
 (+commons unchanged + 6 new flavors; pherald refactor stays in
 pherald/).</p>
-<p><strong>Layout rules</strong>: -
-<code>cmd/&lt;flavor&gt;herald/main.go</code> is ~30 LOC: declare
+<p><strong>Layout rules</strong>:</p>
+<ul>
+<li><code>cmd/&lt;flavor&gt;herald/main.go</code> is ~30 LOC: declare
 branding, build root via <code>cli.NewRootCmd(branding)</code>, register
-stubs, optionally call <code>cli.ServeCmd(opts)</code>. -
-<code>internal/stubs/stubs.go</code> registers every §43 command
-targeted at the flavor as a <code>cli.StubCmd(...)</code>. -
-<code>internal/http/routes.go</code> (only for serving flavors) declares
-additional 501-stub routes per flavor.</p>
+stubs, optionally call <code>cli.ServeCmd(opts)</code>.</li>
+<li><code>internal/stubs/stubs.go</code> registers every §43 command
+targeted at the flavor as a <code>cli.StubCmd(...)</code>.</li>
+<li><code>internal/http/routes.go</code> (only for serving flavors)
+declares additional 501-stub routes per flavor.</li>
+</ul>
 <h2
-id="section-2-per-flavor-identity-ports-serve-surface-43-stub-mapping">Section
+id="section-2--per-flavor-identity-ports-serve-surface-43-stub-mapping">Section
 2 — Per-flavor identity, ports, serve surface, §43 stub mapping</h2>
 <table>
-<colgroup>
-<col style="width: 20%" />
-<col style="width: 20%" />
-<col style="width: 20%" />
-<col style="width: 20%" />
-<col style="width: 20%" />
-</colgroup>
 <thead>
 <tr>
 <th>Flavor</th>
@@ -522,19 +326,17 @@ pherald 24791, cherald 24792, sherald 24793, iherald 24794. Free:
 24795..24799 for future flavors.</p>
 <h3 id="serve-surface-routes-per-serving-flavor">Serve-surface routes
 per serving flavor</h3>
-<p>Common base (provided by <code>commons/cli/routes.go</code>): -
-<code>GET /v1/healthz</code> — 200 with
-<code>{status:"ok",build:{version,go_version}}</code> -
-<code>GET /v1/readyz</code> — 200 with <code>{status:"ready"}</code> -
-<code>GET /metrics</code> — Prometheus text +
-<code>&lt;flavor&gt;_build_info</code> gauge</p>
+<p>Common base (provided by <code>commons/cli/routes.go</code>):</p>
+<ul>
+<li><code>GET /v1/healthz</code> — 200 with
+<code>{status:"ok",build:{version,go_version}}</code></li>
+<li><code>GET /v1/readyz</code> — 200 with
+<code>{status:"ready"}</code></li>
+<li><code>GET /metrics</code> — Prometheus text +
+<code>&lt;flavor&gt;_build_info</code> gauge</li>
+</ul>
 <p>Flavor-specific routes (501 stubs in Wave 2):</p>
 <table>
-<colgroup>
-<col style="width: 33%" />
-<col style="width: 33%" />
-<col style="width: 33%" />
-</colgroup>
 <thead>
 <tr>
 <th>Flavor</th>
@@ -567,9 +369,8 @@ inbound)</td>
 </tr>
 </tbody>
 </table>
-<h3 id="branding-per-spec-11.0-8.2">Branding (per spec §11.0 +
-§8.2)</h3>
-<p>Each flavor’s <code>main.go</code> constructs a
+<h3 id="branding-per-spec-110--82">Branding (per spec §11.0 + §8.2)</h3>
+<p>Each flavor's <code>main.go</code> constructs a
 <code>commons.Branding{}</code> instance:</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>commons<span class="op">.</span>Branding<span class="op">{</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    Flavor<span class="op">:</span>      <span class="st">&quot;sherald&quot;</span><span class="op">,</span></span>
@@ -580,8 +381,8 @@ inbound)</td>
 <span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <p>The Branding struct already exists in <code>commons/types.go</code>
 (HRD-009). <code>commons/cli.NewRootCmd(branding)</code> consumes
-Branding to populate Cobra’s Use/Short/Long/Version.</p>
-<h2 id="section-3-commonscli-package-api-surface">Section 3 —
+Branding to populate Cobra's Use/Short/Long/Version.</p>
+<h2 id="section-3--commonscli-package-api-surface">Section 3 —
 <code>commons/cli/</code> package API surface</h2>
 <div class="sourceCode" id="cb3"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Package cli is the shared scaffold for every Herald flavor binary.</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Per Universal §11.4.74 catalogue-check: extends nothing in the</span></span>
@@ -642,18 +443,13 @@ Branding to populate Cobra’s Use/Short/Long/Version.</p>
 <code>github.com/sirupsen/logrus</code>. All already in
 <code>pherald/go.mod</code>; the refactor moves them into
 <code>commons/go.mod</code>.</p>
-<h2 id="section-4-e2e_bluff_hunt-invariants-e19-e33">Section 4 —
+<h2 id="section-4--e2e_bluff_hunt-invariants-e19-e33">Section 4 —
 e2e_bluff_hunt invariants (E19-E33)</h2>
 <p>Wave 2 adds <strong>15 new invariants</strong> to
 <code>scripts/e2e_bluff_hunt.sh</code>. Pre-Wave-2: 18 PASS.
 Post-Wave-2: <strong>33 PASS</strong> (with creds + container runtime),
 or 18 PASS + 15 SKIP cleanly.</p>
 <table>
-<colgroup>
-<col style="width: 33%" />
-<col style="width: 33%" />
-<col style="width: 33%" />
-</colgroup>
 <thead>
 <tr>
 <th>Invariant</th>
@@ -731,9 +527,9 @@ pointer</td>
 </tr>
 <tr>
 <td><strong>E31</strong></td>
-<td>One representative §43 stub per flavor
-(e.g. <code>sherald destructive-guard</code> returns exit≠0 with
-“HRD-033” in stderr)</td>
+<td>One representative §43 stub per flavor (e.g.
+<code>sherald destructive-guard</code> returns exit≠0 with "HRD-033" in
+stderr)</td>
 <td>stub CLI exec</td>
 </tr>
 <tr>
@@ -754,9 +550,9 @@ binary</td>
 <code>version: ""</code> PASS is explicitly rejected. E28-E30 assert the
 response body contains the literal <code>HRD-NNN</code> string (not just
 status 501). E31 asserts exit code ≠ 0 AND stderr contains the HRD
-reference (catches a stub that exits 0 with “not implemented”
+reference (catches a stub that exits 0 with "not implemented"
 silently).</p>
-<h2 id="section-5-107-evidence-contract-per-flavor">Section 5 — §107
+<h2 id="section-5--107-evidence-contract-per-flavor">Section 5 — §107
 evidence contract per flavor</h2>
 <p>For each new flavor binary, the §107 PASS contract:</p>
 <ol type="1">
@@ -786,35 +582,48 @@ HRD-NNN reference.</li>
 <p><strong>For the pherald refactor</strong>: all of E1-E13 (15
 invariants from Plan 1 era) MUST stay green. The refactor introduces NO
 new e2e invariants — just changes the internals.</p>
-<h2 id="section-6-test-build-strategy">Section 6 — Test + build
+<h2 id="section-6--test--build-strategy">Section 6 — Test + build
 strategy</h2>
-<p><strong>Unit tests</strong> (default <code>go test</code>): -
-<code>commons/cli/cli_test.go</code> — table-driven tests for
+<p><strong>Unit tests</strong> (default <code>go test</code>):</p>
+<ul>
+<li><code>commons/cli/cli_test.go</code> — table-driven tests for
 <code>StubCmd</code> (exit code + stderr containment),
 <code>VersionCmd</code> (JSON shape), Route registration, branding
-plumbing. - Per-flavor
-<code>cmd/&lt;flavor&gt;herald/main_test.go</code> — minimal smoke (root
-command builds, has expected subcommands). - Per-flavor
-<code>internal/stubs/stubs_test.go</code> — verifies the expected §43
-commands are registered with the right HRDs.</p>
+plumbing.</li>
+<li>Per-flavor <code>cmd/&lt;flavor&gt;herald/main_test.go</code> —
+minimal smoke (root command builds, has expected subcommands).</li>
+<li>Per-flavor <code>internal/stubs/stubs_test.go</code> — verifies the
+expected §43 commands are registered with the right HRDs.</li>
+</ul>
 <p><strong>Integration tests</strong>
-(<code>//go:build integration</code>): - Per-serving-flavor: boot the
-binary as a subprocess, hit endpoints, verify response bodies. Same
-pattern as pherald’s existing E7-E12. - Cross-flavor smoke: run
+(<code>//go:build integration</code>):</p>
+<ul>
+<li>Per-serving-flavor: boot the binary as a subprocess, hit endpoints,
+verify response bodies. Same pattern as pherald's existing E7-E12.</li>
+<li>Cross-flavor smoke: run
 <code>&lt;flavor&gt;herald version --json</code> for each of 6 flavors,
-verify exits + non-empty fields.</p>
-<p><strong>Build verification</strong>: - <code>go build ./...</code>
-across all 14 modules — must be clean before committing. -
-<code>gofmt -l</code> must be empty across all modified packages. -
-<code>go vet</code> must be clean.</p>
-<p><strong>Anti-bluff §1.1 paired mutations</strong> (new gates): -
-Strip the HRD pointer from one stub’s error message → e2e_bluff_hunt E31
-MUST FAIL. - Make <code>version --json</code> return an empty version
-string → E19 MUST FAIL. - Make sherald’s serve bind on a random port
-instead of 24793 → E25 MUST FAIL (with explicit port mismatch).</p>
+verify exits + non-empty fields.</li>
+</ul>
+<p><strong>Build verification</strong>:</p>
+<ul>
+<li><code>go build ./...</code> across all 14 modules — must be clean
+before committing.</li>
+<li><code>gofmt -l</code> must be empty across all modified
+packages.</li>
+<li><code>go vet</code> must be clean.</li>
+</ul>
+<p><strong>Anti-bluff §1.1 paired mutations</strong> (new gates):</p>
+<ul>
+<li>Strip the HRD pointer from one stub's error message → e2e_bluff_hunt
+E31 MUST FAIL.</li>
+<li>Make <code>version --json</code> return an empty version string →
+E19 MUST FAIL.</li>
+<li>Make sherald's serve bind on a random port instead of 24793 → E25
+MUST FAIL (with explicit port mismatch).</li>
+</ul>
 <p>Each new gate gets its mutation test in
 <code>tests/test_wave2_mutation_meta.sh</code> per §1.1.</p>
-<h2 id="spec-impact-v3-r7-r8">Spec impact (V3 r7 → r8)</h2>
+<h2 id="spec-impact-v3-r7--r8">Spec impact (V3 r7 → r8)</h2>
 <p>Wave 2 changes to capture in spec V3 r8:</p>
 <ol type="1">
 <li><strong>§18 Flavors</strong> — confirm 3-serving / 4-CLI-only split.
@@ -873,17 +682,20 @@ consumers.</li>
 <li><strong>sherald <code>/v1/safety_state</code> HRD
 assignment</strong> — currently TBD. The plan opens HRD-098 (or
 appropriate number) for the live implementation of that route.</li>
-<li><strong>Per-flavor smoke test pattern</strong> — Cobra’s
+<li><strong>Per-flavor smoke test pattern</strong> — Cobra's
 <code>cmd.Execute()</code> from inside a <code>go test</code> requires
 capturing stdout/stderr via <code>cmd.SetOut()</code> /
 <code>cmd.SetErr()</code>. Plan documents the exact pattern.</li>
 </ol>
 <h2 id="next-step">Next step</h2>
-<p>After this design doc is committed + pushed: 1. Spec V3 r7 → r8
-update lands in the same commit cycle per §11.4.73. 2.
-<code>superpowers:writing-plans</code> skill is invoked to author the
-Wave 2 implementation plan with bite-sized tasks. 3.
-<code>superpowers:subagent-driven-development</code> dispatches task
-subagents per Universal §11.4.70.</p>
+<p>After this design doc is committed + pushed:</p>
+<ol type="1">
+<li>Spec V3 r7 → r8 update lands in the same commit cycle per
+§11.4.73.</li>
+<li><code>superpowers:writing-plans</code> skill is invoked to author
+the Wave 2 implementation plan with bite-sized tasks.</li>
+<li><code>superpowers:subagent-driven-development</code> dispatches task
+subagents per Universal §11.4.70.</li>
+</ol>
 </body>
 </html>

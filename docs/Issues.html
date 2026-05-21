@@ -4,157 +4,11 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>Herald — Issues</title>
+  <title>Herald</title>
   <style>
     /* Default styles provided by pandoc.
     ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
     */
-    html {
-      color: #1a1a1a;
-      background-color: #fdfdfd;
-    }
-    body {
-      margin: 0 auto;
-      max-width: 36em;
-      padding-left: 50px;
-      padding-right: 50px;
-      padding-top: 50px;
-      padding-bottom: 50px;
-      hyphens: auto;
-      overflow-wrap: break-word;
-      text-rendering: optimizeLegibility;
-      font-kerning: normal;
-    }
-    @media (max-width: 600px) {
-      body {
-        font-size: 0.9em;
-        padding: 12px;
-      }
-      h1 {
-        font-size: 1.8em;
-      }
-    }
-    @media print {
-      html {
-        background-color: white;
-      }
-      body {
-        background-color: transparent;
-        color: black;
-        font-size: 12pt;
-      }
-      p, h2, h3 {
-        orphans: 3;
-        widows: 3;
-      }
-      h2, h3, h4 {
-        page-break-after: avoid;
-      }
-    }
-    p {
-      margin: 1em 0;
-    }
-    a {
-      color: #1a1a1a;
-    }
-    a:visited {
-      color: #1a1a1a;
-    }
-    img {
-      max-width: 100%;
-    }
-    svg {
-      height: auto;
-      max-width: 100%;
-    }
-    h1, h2, h3, h4, h5, h6 {
-      margin-top: 1.4em;
-    }
-    h5, h6 {
-      font-size: 1em;
-      font-style: italic;
-    }
-    h6 {
-      font-weight: normal;
-    }
-    ol, ul {
-      padding-left: 1.7em;
-      margin-top: 1em;
-    }
-    li > ol, li > ul {
-      margin-top: 0;
-    }
-    blockquote {
-      margin: 1em 0 1em 1.7em;
-      padding-left: 1em;
-      border-left: 2px solid #e6e6e6;
-      color: #606060;
-    }
-    code {
-      white-space: pre-wrap;
-      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
-      font-size: 85%;
-      margin: 0;
-      hyphens: manual;
-    }
-    pre {
-      margin: 1em 0;
-      overflow: auto;
-    }
-    pre code {
-      padding: 0;
-      overflow: visible;
-      overflow-wrap: normal;
-    }
-    .sourceCode {
-     background-color: transparent;
-     overflow: visible;
-    }
-    hr {
-      border: none;
-      border-top: 1px solid #1a1a1a;
-      height: 1px;
-      margin: 1em 0;
-    }
-    table {
-      margin: 1em 0;
-      border-collapse: collapse;
-      width: 100%;
-      overflow-x: auto;
-      display: block;
-      font-variant-numeric: lining-nums tabular-nums;
-    }
-    table caption {
-      margin-bottom: 0.75em;
-    }
-    tbody {
-      margin-top: 0.5em;
-      border-top: 1px solid #1a1a1a;
-      border-bottom: 1px solid #1a1a1a;
-    }
-    th {
-      border-top: 1px solid #1a1a1a;
-      padding: 0.25em 0.5em 0.25em 0.5em;
-    }
-    td {
-      padding: 0.125em 0.5em 0.25em 0.5em;
-    }
-    header {
-      margin-bottom: 4em;
-      text-align: center;
-    }
-    #TOC li {
-      list-style: none;
-    }
-    #TOC ul {
-      padding-left: 1.3em;
-    }
-    #TOC > ul {
-      padding-left: 0;
-    }
-    #TOC a:not(:hover) {
-      text-decoration: none;
-    }
     span.smallcaps{font-variant: small-caps;}
     div.columns{display: flex; gap: min(4vw, 1.5em);}
     div.column{flex: auto; overflow-x: auto;}
@@ -170,30 +24,20 @@
     }
     .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
+  <link rel="stylesheet" href="../assets/logo/print.css" />
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">Herald — Issues</h1>
+<h1 class="title">Herald</h1>
 </header>
-<nav id="TOC" role="doc-toc">
-<ul>
-<li><a href="#herald-issues" id="toc-herald-issues">Herald — Issues</a>
-<ul>
-<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
-contents</a></li>
-<li><a href="#open" id="toc-open">Open</a></li>
-<li><a href="#in-progress" id="toc-in-progress">In progress</a></li>
-<li><a href="#blocked" id="toc-blocked">Blocked</a></li>
-<li><a href="#conventions" id="toc-conventions">Conventions</a></li>
-</ul></li>
-</ul>
-</nav>
-<h1 id="herald-issues">Herald — Issues</h1>
+<div align="center">
+
+<p><img src="../assets/logo/herald_logo_square_128.png"
+alt="Herald" />{width=96px height=96px}</p>
+</div>
+
+<h1 id="herald--issues">Herald — Issues</h1>
 <table>
-<colgroup>
-<col style="width: 50%" />
-<col style="width: 50%" />
-</colgroup>
 <thead>
 <tr>
 <th>Field</th>
@@ -221,8 +65,8 @@ contents</a></li>
 <td>Status summary</td>
 <td>HRD-012 Claude Code dispatcher live integration closed atomically
 per §107 (Plan 2 Tasks 6+7 produced 2 independent live PASS runs against
-real <code>claude --resume</code>). HRD-011 Telegram stays open as “code
-complete; awaiting live E17/E19 evidence” — code committed in
+real <code>claude --resume</code>). HRD-011 Telegram stays open as "code
+complete; awaiting live E17/E19 evidence" — code committed in
 92c9cb3..a254fec + 7697644 but operator credentials
 (HERALD_TGRAM_BOT_TOKEN + HERALD_TGRAM_CHAT_ID) required to capture
 E17/E19 live PASS before honest Issues→Fixed migration. Operator guide
@@ -275,16 +119,6 @@ HRDs whose catalogue-check is still pending, the row records
 <code>no-match (2026-05-20)</code> — operators reviewing the
 implementation PR will re-verify.</p>
 <table>
-<colgroup>
-<col style="width: 12%" />
-<col style="width: 12%" />
-<col style="width: 12%" />
-<col style="width: 12%" />
-<col style="width: 12%" />
-<col style="width: 12%" />
-<col style="width: 12%" />
-<col style="width: 12%" />
-</colgroup>
 <thead>
 <tr>
 <th>ID</th>
@@ -396,7 +230,7 @@ detection hook, force-push interceptor, mem-budget watcher</td>
 <td>middle</td>
 <td><code>bherald</code> CI/test bindings (§1,
 §11.4.2/.3/.4/.5/.7/.13/.14/.24/.27/.39/.43/.46/.48–.52/.67) —
-gate-result event emitters; integrates with the consuming project’s CI
+gate-result event emitters; integrates with the consuming project's CI
 workflow</td>
 <td>2026-05-20</td>
 <td>2026-05-20</td>
@@ -653,7 +487,7 @@ wrapper</td>
 <td>2026-05-20</td>
 <td>2026-05-20</td>
 <td>spec §43.2 / §11.4.36; Catalogue-Check: extend constitution
-submodule’s install_upstreams.sh</td>
+submodule's install_upstreams.sh</td>
 </tr>
 <tr>
 <td>HRD-044</td>
@@ -968,16 +802,6 @@ cherald event emission).</td>
 </table>
 <h2 id="in-progress">In progress</h2>
 <table>
-<colgroup>
-<col style="width: 12%" />
-<col style="width: 12%" />
-<col style="width: 12%" />
-<col style="width: 12%" />
-<col style="width: 12%" />
-<col style="width: 12%" />
-<col style="width: 12%" />
-<col style="width: 12%" />
-</colgroup>
 <thead>
 <tr>
 <th>ID</th>
