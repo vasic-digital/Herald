@@ -13,13 +13,9 @@ go 1.22
 // canonical CloudEvents Go SDK (for type marshaling at the boundary).
 require github.com/google/uuid v1.6.0
 
-// CloudEvents SDK is a soft-required dependency — only the envelope
-// converters in cloudevents.go reach into it. Adapters above L0 are
-// free to consume cloudevents.Event directly.
-require github.com/cloudevents/sdk-go/v2 v2.15.2
+require github.com/spf13/cobra v1.10.2
 
 require (
-	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
-	github.com/modern-go/reflect2 v1.0.2 // indirect
+	github.com/inconshreveable/mousetrap v1.1.0 // indirect
+	github.com/spf13/pflag v1.0.9 // indirect
 )

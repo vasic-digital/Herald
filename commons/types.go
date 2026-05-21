@@ -235,6 +235,15 @@ type Branding struct {
 	IconURL        string // for rich embeds
 	AccentColorHex string // "#2C7BE5"
 	DefaultFooter  string // "Sent by pherald 1.0 · github.com/vasic-digital/Herald"
+
+	// Wave 2 per-flavor identity fields (design §3.5). Populated by
+	// DefaultBranding and consumed by the shared commons/cli/ scaffold
+	// to render --version / --help and to bind the default HTTP port.
+	Flavor      string // single-letter (or short) flavor key: "p", "s", "b", "sc", ...
+	Prefix      string // 3-letter prefix per §8.2 (e.g. "PHR", "SHR")
+	DisplayName string // human-readable display name (typically == AppName)
+	DefaultPort int    // default HTTP listen port (per-flavor, 70XXX range)
+	Mission     string // one-line mission statement for --help / about
 }
 
 // ChannelID is the canonical channel identifier (spec §11.0). It MUST
