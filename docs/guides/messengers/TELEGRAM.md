@@ -60,35 +60,36 @@ Telegram's official "create-a-bot" interface is a bot called BotFather. You'll c
 
 Your bot needs to know **where** to send messages. That destination is identified by a numeric **chat ID** — a chat is a one-on-one DM, a group, or a channel.
 
+> **⚠ Read Step 2.5 FIRST** if you intend to use a group. Group chat IDs require working around Telegram's Privacy Mode, which is **ON by default** on new bots. Operators routinely waste time wondering why `getUpdates` returns empty until they learn this.
+
 **Choose your chat type**:
 
-### Option A — Direct messages (you ↔ bot)
+### Option A — Direct messages (you ↔ bot) — works ALWAYS
+
+This path bypasses Privacy Mode entirely. **Use it first** if Step 2.5 below hasn't yet been completed.
 
 1. In Telegram, search for your bot's username (e.g. `@herald_operator_bot`).
-2. Tap **Start** to open a DM with it.
+2. Tap **Start** to open a DM with it. (The /start command is what introduces YOU as a chat the bot knows about.)
 3. Send any message (e.g. `hello`).
-4. In a browser, visit:
+4. Run the diagnostic script (recommended):
+   ```bash
+   bash scripts/tgram_diagnose.sh
+   ```
+   Or open in a browser:
    ```
    https://api.telegram.org/bot<YOUR-BOT-TOKEN>/getUpdates
    ```
-   Replace `<YOUR-BOT-TOKEN>` with the real token from Step 1.
-5. You'll see a JSON response. Inside it, locate:
-   ```json
-   "chat": { "id": 123456789, "first_name": "...", "type": "private" }
-   ```
-6. The `id` value (positive integer for DMs) is your chat ID.
+5. The output shows `chat_id=123456789  type=private  name=YourName`. The `id` value (positive integer for DMs) is your chat ID.
 
-### Option B — Group chat (bot in a group)
+### Option B — Group chat (bot in a group) — see Step 2.5 first
 
 1. Create a Telegram group (or use an existing one).
 2. Add your bot to the group via the group's **Add Member** menu.
-3. Send a message inside the group (any text).
-4. In a browser, visit:
-   ```
-   https://api.telegram.org/bot<YOUR-BOT-TOKEN>/getUpdates
-   ```
-5. Find the `"chat": { "id": ..., "type": "supergroup" }` block.
-6. The `id` for groups is a **negative number** like `-1001234567890`.
+3. **Complete Step 2.5 below** to ensure the bot can actually see group messages.
+4. After completing Step 2.5, send a message inside the group (any text if Privacy Mode is OFF; an `@<bot-username> hi` mention OR a `/command` if Privacy Mode is ON).
+5. Run `bash scripts/tgram_diagnose.sh` or visit `https://api.telegram.org/bot<TOKEN>/getUpdates`.
+6. Find the `chat_id=... type=supergroup` (or `group`) block.
+7. The `id` for groups is a **negative number** like `-1001234567890`.
 
 ### Option C — Channel (one-way broadcast)
 
@@ -97,17 +98,108 @@ Channels are one-way: the bot can post but cannot read messages. Useful for noti
 1. Create a Telegram channel.
 2. Add your bot as an **Administrator** (a regular member does NOT have post permission). Grant at least "Post Messages".
 3. Send any message to the channel (from your own account, since the bot is admin not subscriber).
-4. In a browser, visit:
-   ```
-   https://api.telegram.org/bot<YOUR-BOT-TOKEN>/getUpdates
-   ```
-5. Locate `"chat": { "id": ..., "type": "channel" }`. Again a negative number.
+4. Run `bash scripts/tgram_diagnose.sh`.
+5. Locate `chat_id=... type=channel`. Again a negative number.
 
 ### Confirm the chat ID
 
 Paste the chat ID into a temporary file or note. You'll set it as `HERALD_TGRAM_CHAT_ID` in the next step.
 
-> If `getUpdates` returns an empty `result: []` array, the bot hasn't received any messages yet. Send another one and retry. If you're using webhook mode (rare for setup), `getUpdates` returns 409 — see Troubleshooting.
+## Step 2.5 — Privacy Mode (LOAD-BEARING for groups)
+
+**This is the #1 reason new operators get stuck.** Skip it and you will waste hours wondering why `getUpdates` returns empty.
+
+When you create a bot via @BotFather, Telegram defaults its **Privacy Mode** to **ON**. With Privacy Mode ON, the bot CAN be added to a group but Telegram filters incoming group messages **before they ever reach the bot's update stream**. The bot only sees:
+
+- Slash commands (`/start`, `/anything`)
+- Messages that contain `@<bot-username>` (literal `@`-mention of the bot's username)
+- Replies to messages the bot itself sent
+- Service messages (member joins, etc.)
+
+**Plain chat messages from group members are INVISIBLE to the bot in Privacy Mode**. This is why `getUpdates` is often empty even though messages clearly exist in the group.
+
+### Check your Privacy Mode state
+
+Run:
+```bash
+bash scripts/tgram_diagnose.sh
+```
+
+The `getMe` output includes `can_read_all_group_messages`. If it says `False`, Privacy Mode is **ON**. If `True`, it's OFF.
+
+### Two paths to fix
+
+#### Path A — Quick workaround (no settings change)
+
+In the group, send a message that EXPLICITLY contains the bot's username:
+
+```
+@atmosphere_worker_bot hi
+```
+
+(Substitute your real bot username from `getMe`.) Telegram delivers this to the bot regardless of Privacy Mode because it's a mention.
+
+After sending, run `bash scripts/tgram_diagnose.sh` again — the chat should appear.
+
+**Common gotchas**:
+- Auto-correct on mobile sometimes "corrects" the bot username. Verify exactly: `@<your-bot-username>` — must match `getMe`'s `username` field verbatim.
+- Slash command `/start@<bot-username>` also works (it's both a command and a mention).
+- A reply to one of the bot's previous messages works too.
+
+#### Path B — Disable Privacy Mode in @BotFather (best for production use)
+
+If you want Herald to **route ALL group messages** to Claude Code (not just `@`-mentions), disable Privacy Mode:
+
+1. Open Telegram → chat with `@BotFather`
+2. Send `/mybots`
+3. Select your bot (e.g. `@atmosphere_worker_bot`)
+4. Tap **Bot Settings**
+5. Tap **Group Privacy**
+6. Tap **Turn off**
+7. BotFather replies: "Done. The bot will see all messages."
+8. **Important — the change takes effect only for new sessions**: REMOVE the bot from the group, then RE-ADD it.
+9. Send any plain message in the group.
+10. Run `bash scripts/tgram_diagnose.sh` — the chat should appear.
+
+### When neither path works
+
+If you've completed Path A or B and `getUpdates` is still empty:
+
+- **Verify the bot is actually in the group**: open the group's member list. If the bot is missing, re-add it.
+- **Verify you sent the message AFTER the privacy change** (Path B): privacy changes don't retroactively re-deliver historic messages.
+- **Verify you sent the message AFTER adding the bot** (always): updates from before the bot joined are never delivered.
+- **Try a DM `/start` first** (Option A above): DMs ALWAYS work. If the DM chat_id appears but the group chat_id doesn't, the issue is isolated to the group's privacy configuration.
+- **Check if a previous `getUpdates` consumed the update**: Telegram acks updates after each poll. Send a NEW message to force a fresh update into the queue. The diagnostic script uses `offset=-1` (read latest without acking) to mitigate this, but a previously-acked update is gone.
+
+### Diagnostic command (canonical helper)
+
+The `scripts/tgram_diagnose.sh` helper runs all three diagnostic API calls — `getMe`, `getWebhookInfo`, `getUpdates` — and reports findings in operator-actionable form:
+
+```bash
+bash scripts/tgram_diagnose.sh
+```
+
+Output shape:
+```
+=== 1. getMe — token validity + Privacy Mode setting ===
+  bot username:                @your_bot
+  bot id:                      1234567890
+  can_read_all_group_messages: False
+  ! Privacy Mode is ON.
+    - commands (/...)
+    - @-mentions of itself
+    - replies to its own messages
+    Plain chat messages from group members are NOT delivered.
+
+=== 2. getWebhookInfo — confirm getUpdates is the live channel ===
+  no webhook configured (good)
+
+=== 3. getUpdates — list of chats the bot has received updates from ===
+  updates received: 1
+  chat_id=-1001234567890  type=supergroup  name=Herald Notifications  source=message
+```
+
+If `updates received: 0` with explanation, follow the suggested fix.
 
 ## Step 3 — Provide the credentials to Herald
 

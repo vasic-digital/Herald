@@ -256,17 +256,32 @@ id="toc-step-1-create-a-bot-via-botfather">Step 1 — Create a bot via
 <li><a href="#step-2-get-the-chat-id"
 id="toc-step-2-get-the-chat-id">Step 2 — Get the chat ID</a>
 <ul>
-<li><a href="#option-a-direct-messages-you-bot"
-id="toc-option-a-direct-messages-you-bot">Option A — Direct messages
-(you ↔︎ bot)</a></li>
-<li><a href="#option-b-group-chat-bot-in-a-group"
-id="toc-option-b-group-chat-bot-in-a-group">Option B — Group chat (bot
-in a group)</a></li>
+<li><a href="#option-a-direct-messages-you-bot-works-always"
+id="toc-option-a-direct-messages-you-bot-works-always">Option A — Direct
+messages (you ↔︎ bot) — works ALWAYS</a></li>
+<li><a href="#option-b-group-chat-bot-in-a-group-see-step-2.5-first"
+id="toc-option-b-group-chat-bot-in-a-group-see-step-2.5-first">Option B
+— Group chat (bot in a group) — see Step 2.5 first</a></li>
 <li><a href="#option-c-channel-one-way-broadcast"
 id="toc-option-c-channel-one-way-broadcast">Option C — Channel (one-way
 broadcast)</a></li>
 <li><a href="#confirm-the-chat-id" id="toc-confirm-the-chat-id">Confirm
 the chat ID</a></li>
+</ul></li>
+<li><a href="#step-2.5-privacy-mode-load-bearing-for-groups"
+id="toc-step-2.5-privacy-mode-load-bearing-for-groups">Step 2.5 —
+Privacy Mode (LOAD-BEARING for groups)</a>
+<ul>
+<li><a href="#check-your-privacy-mode-state"
+id="toc-check-your-privacy-mode-state">Check your Privacy Mode
+state</a></li>
+<li><a href="#two-paths-to-fix" id="toc-two-paths-to-fix">Two paths to
+fix</a></li>
+<li><a href="#when-neither-path-works"
+id="toc-when-neither-path-works">When neither path works</a></li>
+<li><a href="#diagnostic-command-canonical-helper"
+id="toc-diagnostic-command-canonical-helper">Diagnostic command
+(canonical helper)</a></li>
 </ul></li>
 <li><a href="#step-3-provide-the-credentials-to-herald"
 id="toc-step-3-provide-the-credentials-to-herald">Step 3 — Provide the
@@ -425,63 +440,185 @@ alone does NOT invalidate a leaked Telegram token.</p>
 <p>Your bot needs to know <strong>where</strong> to send messages. That
 destination is identified by a numeric <strong>chat ID</strong> — a chat
 is a one-on-one DM, a group, or a channel.</p>
+<blockquote>
+<p><strong>⚠ Read Step 2.5 FIRST</strong> if you intend to use a group.
+Group chat IDs require working around Telegram’s Privacy Mode, which is
+<strong>ON by default</strong> on new bots. Operators routinely waste
+time wondering why <code>getUpdates</code> returns empty until they
+learn this.</p>
+</blockquote>
 <p><strong>Choose your chat type</strong>:</p>
-<h3 id="option-a-direct-messages-you-bot">Option A — Direct messages
-(you ↔︎ bot)</h3>
+<h3 id="option-a-direct-messages-you-bot-works-always">Option A — Direct
+messages (you ↔︎ bot) — works ALWAYS</h3>
+<p>This path bypasses Privacy Mode entirely. <strong>Use it
+first</strong> if Step 2.5 below hasn’t yet been completed.</p>
 <ol type="1">
 <li><p>In Telegram, search for your bot’s username
 (e.g. <code>@herald_operator_bot</code>).</p></li>
-<li><p>Tap <strong>Start</strong> to open a DM with it.</p></li>
+<li><p>Tap <strong>Start</strong> to open a DM with it. (The /start
+command is what introduces YOU as a chat the bot knows about.)</p></li>
 <li><p>Send any message (e.g. <code>hello</code>).</p></li>
-<li><p>In a browser, visit:</p>
-<pre><code>https://api.telegram.org/bot&lt;YOUR-BOT-TOKEN&gt;/getUpdates</code></pre>
-<p>Replace <code>&lt;YOUR-BOT-TOKEN&gt;</code> with the real token from
-Step 1.</p></li>
-<li><p>You’ll see a JSON response. Inside it, locate:</p>
-<div class="sourceCode" id="cb3"><pre
-class="sourceCode json"><code class="sourceCode json"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;chat&quot;</span><span class="er">:</span> <span class="fu">{</span> <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="dv">123456789</span><span class="fu">,</span> <span class="dt">&quot;first_name&quot;</span><span class="fu">:</span> <span class="st">&quot;...&quot;</span><span class="fu">,</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;private&quot;</span> <span class="fu">}</span></span></code></pre></div></li>
-<li><p>The <code>id</code> value (positive integer for DMs) is your chat
+<li><p>Run the diagnostic script (recommended):</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/tgram_diagnose.sh</span></code></pre></div>
+<p>Or open in a browser:</p>
+<pre><code>https://api.telegram.org/bot&lt;YOUR-BOT-TOKEN&gt;/getUpdates</code></pre></li>
+<li><p>The output shows
+<code>chat_id=123456789  type=private  name=YourName</code>. The
+<code>id</code> value (positive integer for DMs) is your chat
 ID.</p></li>
 </ol>
-<h3 id="option-b-group-chat-bot-in-a-group">Option B — Group chat (bot
-in a group)</h3>
+<h3 id="option-b-group-chat-bot-in-a-group-see-step-2.5-first">Option B
+— Group chat (bot in a group) — see Step 2.5 first</h3>
 <ol type="1">
-<li><p>Create a Telegram group (or use an existing one).</p></li>
-<li><p>Add your bot to the group via the group’s <strong>Add
-Member</strong> menu.</p></li>
-<li><p>Send a message inside the group (any text).</p></li>
-<li><p>In a browser, visit:</p>
-<pre><code>https://api.telegram.org/bot&lt;YOUR-BOT-TOKEN&gt;/getUpdates</code></pre></li>
-<li><p>Find the <code>"chat": { "id": ..., "type": "supergroup" }</code>
-block.</p></li>
-<li><p>The <code>id</code> for groups is a <strong>negative
-number</strong> like <code>-1001234567890</code>.</p></li>
+<li>Create a Telegram group (or use an existing one).</li>
+<li>Add your bot to the group via the group’s <strong>Add
+Member</strong> menu.</li>
+<li><strong>Complete Step 2.5 below</strong> to ensure the bot can
+actually see group messages.</li>
+<li>After completing Step 2.5, send a message inside the group (any text
+if Privacy Mode is OFF; an <code>@&lt;bot-username&gt; hi</code> mention
+OR a <code>/command</code> if Privacy Mode is ON).</li>
+<li>Run <code>bash scripts/tgram_diagnose.sh</code> or visit
+<code>https://api.telegram.org/bot&lt;TOKEN&gt;/getUpdates</code>.</li>
+<li>Find the <code>chat_id=... type=supergroup</code> (or
+<code>group</code>) block.</li>
+<li>The <code>id</code> for groups is a <strong>negative number</strong>
+like <code>-1001234567890</code>.</li>
 </ol>
 <h3 id="option-c-channel-one-way-broadcast">Option C — Channel (one-way
 broadcast)</h3>
 <p>Channels are one-way: the bot can post but cannot read messages.
 Useful for notifications without two-way interaction.</p>
 <ol type="1">
-<li><p>Create a Telegram channel.</p></li>
-<li><p>Add your bot as an <strong>Administrator</strong> (a regular
-member does NOT have post permission). Grant at least “Post
-Messages”.</p></li>
-<li><p>Send any message to the channel (from your own account, since the
-bot is admin not subscriber).</p></li>
-<li><p>In a browser, visit:</p>
-<pre><code>https://api.telegram.org/bot&lt;YOUR-BOT-TOKEN&gt;/getUpdates</code></pre></li>
-<li><p>Locate <code>"chat": { "id": ..., "type": "channel" }</code>.
-Again a negative number.</p></li>
+<li>Create a Telegram channel.</li>
+<li>Add your bot as an <strong>Administrator</strong> (a regular member
+does NOT have post permission). Grant at least “Post Messages”.</li>
+<li>Send any message to the channel (from your own account, since the
+bot is admin not subscriber).</li>
+<li>Run <code>bash scripts/tgram_diagnose.sh</code>.</li>
+<li>Locate <code>chat_id=... type=channel</code>. Again a negative
+number.</li>
 </ol>
 <h3 id="confirm-the-chat-id">Confirm the chat ID</h3>
 <p>Paste the chat ID into a temporary file or note. You’ll set it as
 <code>HERALD_TGRAM_CHAT_ID</code> in the next step.</p>
-<blockquote>
-<p>If <code>getUpdates</code> returns an empty <code>result: []</code>
-array, the bot hasn’t received any messages yet. Send another one and
-retry. If you’re using webhook mode (rare for setup),
-<code>getUpdates</code> returns 409 — see Troubleshooting.</p>
-</blockquote>
+<h2 id="step-2.5-privacy-mode-load-bearing-for-groups">Step 2.5 —
+Privacy Mode (LOAD-BEARING for groups)</h2>
+<p><strong>This is the #1 reason new operators get stuck.</strong> Skip
+it and you will waste hours wondering why <code>getUpdates</code>
+returns empty.</p>
+<p>When you create a bot via <span class="citation"
+data-cites="BotFather">@BotFather</span>, Telegram defaults its
+<strong>Privacy Mode</strong> to <strong>ON</strong>. With Privacy Mode
+ON, the bot CAN be added to a group but Telegram filters incoming group
+messages <strong>before they ever reach the bot’s update
+stream</strong>. The bot only sees:</p>
+<ul>
+<li>Slash commands (<code>/start</code>, <code>/anything</code>)</li>
+<li>Messages that contain <code>@&lt;bot-username&gt;</code> (literal
+<code>@</code>-mention of the bot’s username)</li>
+<li>Replies to messages the bot itself sent</li>
+<li>Service messages (member joins, etc.)</li>
+</ul>
+<p><strong>Plain chat messages from group members are INVISIBLE to the
+bot in Privacy Mode</strong>. This is why <code>getUpdates</code> is
+often empty even though messages clearly exist in the group.</p>
+<h3 id="check-your-privacy-mode-state">Check your Privacy Mode
+state</h3>
+<p>Run:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/tgram_diagnose.sh</span></code></pre></div>
+<p>The <code>getMe</code> output includes
+<code>can_read_all_group_messages</code>. If it says <code>False</code>,
+Privacy Mode is <strong>ON</strong>. If <code>True</code>, it’s OFF.</p>
+<h3 id="two-paths-to-fix">Two paths to fix</h3>
+<h4 id="path-a-quick-workaround-no-settings-change">Path A — Quick
+workaround (no settings change)</h4>
+<p>In the group, send a message that EXPLICITLY contains the bot’s
+username:</p>
+<pre><code>@atmosphere_worker_bot hi</code></pre>
+<p>(Substitute your real bot username from <code>getMe</code>.) Telegram
+delivers this to the bot regardless of Privacy Mode because it’s a
+mention.</p>
+<p>After sending, run <code>bash scripts/tgram_diagnose.sh</code> again
+— the chat should appear.</p>
+<p><strong>Common gotchas</strong>: - Auto-correct on mobile sometimes
+“corrects” the bot username. Verify exactly:
+<code>@&lt;your-bot-username&gt;</code> — must match
+<code>getMe</code>’s <code>username</code> field verbatim. - Slash
+command <code>/start@&lt;bot-username&gt;</code> also works (it’s both a
+command and a mention). - A reply to one of the bot’s previous messages
+works too.</p>
+<h4
+id="path-b-disable-privacy-mode-in-botfather-best-for-production-use">Path
+B — Disable Privacy Mode in <span class="citation"
+data-cites="BotFather">@BotFather</span> (best for production use)</h4>
+<p>If you want Herald to <strong>route ALL group messages</strong> to
+Claude Code (not just <code>@</code>-mentions), disable Privacy
+Mode:</p>
+<ol type="1">
+<li>Open Telegram → chat with <code>@BotFather</code></li>
+<li>Send <code>/mybots</code></li>
+<li>Select your bot (e.g. <code>@atmosphere_worker_bot</code>)</li>
+<li>Tap <strong>Bot Settings</strong></li>
+<li>Tap <strong>Group Privacy</strong></li>
+<li>Tap <strong>Turn off</strong></li>
+<li>BotFather replies: “Done. The bot will see all messages.”</li>
+<li><strong>Important — the change takes effect only for new
+sessions</strong>: REMOVE the bot from the group, then RE-ADD it.</li>
+<li>Send any plain message in the group.</li>
+<li>Run <code>bash scripts/tgram_diagnose.sh</code> — the chat should
+appear.</li>
+</ol>
+<h3 id="when-neither-path-works">When neither path works</h3>
+<p>If you’ve completed Path A or B and <code>getUpdates</code> is still
+empty:</p>
+<ul>
+<li><strong>Verify the bot is actually in the group</strong>: open the
+group’s member list. If the bot is missing, re-add it.</li>
+<li><strong>Verify you sent the message AFTER the privacy
+change</strong> (Path B): privacy changes don’t retroactively re-deliver
+historic messages.</li>
+<li><strong>Verify you sent the message AFTER adding the bot</strong>
+(always): updates from before the bot joined are never delivered.</li>
+<li><strong>Try a DM <code>/start</code> first</strong> (Option A
+above): DMs ALWAYS work. If the DM chat_id appears but the group chat_id
+doesn’t, the issue is isolated to the group’s privacy
+configuration.</li>
+<li><strong>Check if a previous <code>getUpdates</code> consumed the
+update</strong>: Telegram acks updates after each poll. Send a NEW
+message to force a fresh update into the queue. The diagnostic script
+uses <code>offset=-1</code> (read latest without acking) to mitigate
+this, but a previously-acked update is gone.</li>
+</ul>
+<h3 id="diagnostic-command-canonical-helper">Diagnostic command
+(canonical helper)</h3>
+<p>The <code>scripts/tgram_diagnose.sh</code> helper runs all three
+diagnostic API calls — <code>getMe</code>, <code>getWebhookInfo</code>,
+<code>getUpdates</code> — and reports findings in operator-actionable
+form:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/tgram_diagnose.sh</span></code></pre></div>
+<p>Output shape:</p>
+<pre><code>=== 1. getMe — token validity + Privacy Mode setting ===
+  bot username:                @your_bot
+  bot id:                      1234567890
+  can_read_all_group_messages: False
+  ! Privacy Mode is ON.
+    - commands (/...)
+    - @-mentions of itself
+    - replies to its own messages
+    Plain chat messages from group members are NOT delivered.
+
+=== 2. getWebhookInfo — confirm getUpdates is the live channel ===
+  no webhook configured (good)
+
+=== 3. getUpdates — list of chats the bot has received updates from ===
+  updates received: 1
+  chat_id=-1001234567890  type=supergroup  name=Herald Notifications  source=message</code></pre>
+<p>If <code>updates received: 0</code> with explanation, follow the
+suggested fix.</p>
 <h2 id="step-3-provide-the-credentials-to-herald">Step 3 — Provide the
 credentials to Herald</h2>
 <p>Choose ONE of these two paths (or both — the resolution order in <a
@@ -491,30 +628,30 @@ handles overlap correctly).</p>
 — Shell-export (recommended for personal workstation)</h3>
 <p>Add to your <code>~/.zshrc</code> (macOS default) or
 <code>~/.bashrc</code> (Linux default):</p>
-<div class="sourceCode" id="cb6"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Herald — Telegram (HRD-011)</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">HERALD_TGRAM_BOT_TOKEN</span><span class="op">=</span><span class="st">&#39;1234567890:AAH1lab2c3d4e5f6g7h8i9j0kK_LmN3oPqR4S5t&#39;</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">HERALD_TGRAM_CHAT_ID</span><span class="op">=</span><span class="st">&#39;-1001234567890&#39;</span>    <span class="co"># or your DM chat ID</span></span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Herald — Telegram (HRD-011)</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">HERALD_TGRAM_BOT_TOKEN</span><span class="op">=</span><span class="st">&#39;1234567890:AAH1lab2c3d4e5f6g7h8i9j0kK_LmN3oPqR4S5t&#39;</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">HERALD_TGRAM_CHAT_ID</span><span class="op">=</span><span class="st">&#39;-1001234567890&#39;</span>    <span class="co"># or your DM chat ID</span></span></code></pre></div>
 <p>Then either run <code>source ~/.zshrc</code> (or
 <code>~/.bashrc</code>) or open a new terminal.</p>
 <p>Verify:</p>
-<div class="sourceCode" id="cb7"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&quot;</span><span class="va">${HERALD_TGRAM_BOT_TOKEN</span><span class="op">:</span><span class="dv">0</span><span class="op">:</span><span class="dv">10</span><span class="va">}</span><span class="st">...&quot;</span>   <span class="co"># should print the first 10 chars</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&quot;</span><span class="va">${HERALD_TGRAM_CHAT_ID}</span><span class="st">&quot;</span>             <span class="co"># should print the chat ID</span></span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&quot;</span><span class="va">${HERALD_TGRAM_BOT_TOKEN</span><span class="op">:</span><span class="dv">0</span><span class="op">:</span><span class="dv">10</span><span class="va">}</span><span class="st">...&quot;</span>   <span class="co"># should print the first 10 chars</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&quot;</span><span class="va">${HERALD_TGRAM_CHAT_ID}</span><span class="st">&quot;</span>             <span class="co"># should print the chat ID</span></span></code></pre></div>
 <h3 id="path-b-project-local-.env">Path B — Project-local
 <code>.env</code></h3>
 <p>Edit (or create)
 <code>/Users/milosvasic/Projects/Herald/.env</code>:</p>
-<div class="sourceCode" id="cb8"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="va">HERALD_TGRAM_BOT_TOKEN</span><span class="op">=</span>1234567890:AAH1lab2c3d4e5f6g7h8i9j0kK_LmN3oPqR4S5t</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="va">HERALD_TGRAM_CHAT_ID</span><span class="op">=</span>-1001234567890</span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="va">HERALD_TGRAM_BOT_TOKEN</span><span class="op">=</span>1234567890:AAH1lab2c3d4e5f6g7h8i9j0kK_LmN3oPqR4S5t</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="va">HERALD_TGRAM_CHAT_ID</span><span class="op">=</span>-1001234567890</span></code></pre></div>
 <p>Set restrictive permissions:</p>
-<div class="sourceCode" id="cb9"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">chmod</span> 600 .env</span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">chmod</span> 600 .env</span></code></pre></div>
 <p>For native pherald (NOT through compose), source it into your shell
 first:</p>
-<div class="sourceCode" id="cb10"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="bu">set</span> <span class="at">-a</span><span class="kw">;</span> <span class="bu">source</span> .env<span class="kw">;</span> <span class="bu">set</span> +a</span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="bu">set</span> <span class="at">-a</span><span class="kw">;</span> <span class="bu">source</span> .env<span class="kw">;</span> <span class="bu">set</span> +a</span></code></pre></div>
 <p>For compose runs, <code>docker-compose</code> reads <code>.env</code>
 automatically.</p>
 <p><strong>Per §11.4.10</strong>: never <code>git add .env</code>. The
@@ -524,18 +661,18 @@ double-check before committing.</p>
 <p>The HealthCheck integration test issues a real <code>getMe</code>
 call against the Bot API. It proves the token is valid and the bot is
 enabled.</p>
-<div class="sourceCode" id="cb11"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> /Users/milosvasic/Projects/Herald</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test ./commons_messaging/channels/tgram/ <span class="at">-tags</span><span class="op">=</span>integration <span class="at">-run</span> TestHealthCheck_LiveBotAPI <span class="at">-count</span><span class="op">=</span>1 <span class="at">-timeout</span><span class="op">=</span>60s</span></code></pre></div>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> /Users/milosvasic/Projects/Herald</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test ./commons_messaging/channels/tgram/ <span class="at">-tags</span><span class="op">=</span>integration <span class="at">-run</span> TestHealthCheck_LiveBotAPI <span class="at">-count</span><span class="op">=</span>1 <span class="at">-timeout</span><span class="op">=</span>60s</span></code></pre></div>
 <p>Expected:</p>
 <pre><code>--- PASS: TestHealthCheck_LiveBotAPI (1.x s)
 PASS</code></pre>
 <p>If you see <code>SKIP</code>, the env vars aren’t visible to
 <code>go test</code>. Re-source your shell or run the command with the
 env vars inline:</p>
-<div class="sourceCode" id="cb13"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="va">HERALD_TGRAM_BOT_TOKEN</span><span class="op">=</span><span class="st">&#39;...&#39;</span> <span class="va">HERALD_TGRAM_CHAT_ID</span><span class="op">=</span><span class="st">&#39;...&#39;</span> <span class="dt">\</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test ./commons_messaging/channels/tgram/ <span class="at">-tags</span><span class="op">=</span>integration <span class="at">-run</span> TestHealthCheck_LiveBotAPI <span class="at">-count</span><span class="op">=</span>1 <span class="at">-timeout</span><span class="op">=</span>60s</span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="va">HERALD_TGRAM_BOT_TOKEN</span><span class="op">=</span><span class="st">&#39;...&#39;</span> <span class="va">HERALD_TGRAM_CHAT_ID</span><span class="op">=</span><span class="st">&#39;...&#39;</span> <span class="dt">\</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test ./commons_messaging/channels/tgram/ <span class="at">-tags</span><span class="op">=</span>integration <span class="at">-run</span> TestHealthCheck_LiveBotAPI <span class="at">-count</span><span class="op">=</span>1 <span class="at">-timeout</span><span class="op">=</span>60s</span></code></pre></div>
 <p>If you see <code>FAIL</code> with
 <code>getMe returned empty body</code> or HTTP errors, the token is
 invalid. Re-check Step 1.</p>
@@ -546,9 +683,9 @@ configured chat AND persists a row in the
 persistence round-trip works.</p>
 <p><strong>Pre-requisite</strong>: container runtime (podman or docker)
 available. The test boots a Postgres container automatically.</p>
-<div class="sourceCode" id="cb14"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> /Users/milosvasic/Projects/Herald</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test ./commons_messaging/channels/tgram/ <span class="at">-tags</span><span class="op">=</span>integration <span class="at">-run</span> TestSend_PersistsDeliveryEvidence <span class="at">-count</span><span class="op">=</span>1 <span class="at">-timeout</span><span class="op">=</span>300s <span class="at">-v</span></span></code></pre></div>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> /Users/milosvasic/Projects/Herald</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test ./commons_messaging/channels/tgram/ <span class="at">-tags</span><span class="op">=</span>integration <span class="at">-run</span> TestSend_PersistsDeliveryEvidence <span class="at">-count</span><span class="op">=</span>1 <span class="at">-timeout</span><span class="op">=</span>300s <span class="at">-v</span></span></code></pre></div>
 <p>Expected:</p>
 <pre><code>--- PASS: TestSend_PersistsDeliveryEvidence (Xs)
 PASS</code></pre>
@@ -575,9 +712,9 @@ code path.</li>
 <li><strong>You hand-send a Telegram message to the bot during the test
 window</strong> (60s default).</li>
 </ol>
-<div class="sourceCode" id="cb16"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="va">HERALD_TGRAM_LIVE_INBOUND</span><span class="op">=</span>1 <span class="dt">\</span></span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test ./commons_messaging/ <span class="at">-tags</span><span class="op">=</span>integration <span class="at">-run</span> TestVerticalSlice_TelegramClaudeRoundTrip <span class="at">-count</span><span class="op">=</span>1 <span class="at">-timeout</span><span class="op">=</span>300s <span class="at">-v</span></span></code></pre></div>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="va">HERALD_TGRAM_LIVE_INBOUND</span><span class="op">=</span>1 <span class="dt">\</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test ./commons_messaging/ <span class="at">-tags</span><span class="op">=</span>integration <span class="at">-run</span> TestVerticalSlice_TelegramClaudeRoundTrip <span class="at">-count</span><span class="op">=</span>1 <span class="at">-timeout</span><span class="op">=</span>300s <span class="at">-v</span></span></code></pre></div>
 <p>Within the 60s window: open Telegram → send any message to your bot.
 The handler will (a) receive your message, (b) dispatch it to Claude
 Code, (c) parse the reply, (d) send the reply back to your chat.</p>
@@ -596,8 +733,8 @@ HRD-NNN.</p>
 <p>When webhook ingress lands, you’ll:</p>
 <ol type="1">
 <li><p>Generate a 256-bit hex secret:</p>
-<div class="sourceCode" id="cb18"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="ex">openssl</span> rand <span class="at">-hex</span> 32</span></code></pre></div></li>
+<div class="sourceCode" id="cb20"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="ex">openssl</span> rand <span class="at">-hex</span> 32</span></code></pre></div></li>
 <li><p>Set
 <code>HERALD_TGRAM_WEBHOOK_SECRET=&lt;the-hex&gt;</code>.</p></li>
 <li><p>Configure the bot’s webhook URL via the Bot API:</p>
