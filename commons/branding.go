@@ -56,12 +56,16 @@ func DefaultBranding(flavor string, version string) Branding {
 		b.DefaultPort = 0
 		b.Mission = "Alert / paging event fan-out (CLI-only)"
 	case "sc":
-		b.AppName = "Schedule Herald"
+		// Wave 2 §3.5: rename "Schedule Herald" → "Scheduled-audit
+		// Herald" and align Mission with design doc (periodic Status.md
+		// sweep + compliance digest). Prefix (SCR) + AccentColorHex
+		// unchanged; CLI-only (DefaultPort=0).
+		b.AppName = "Scheduled-audit Herald"
 		b.AccentColorHex = "#A66DD4"
 		b.Prefix = "SCR"
-		b.DisplayName = "Schedule Herald"
+		b.DisplayName = "Scheduled-audit Herald"
 		b.DefaultPort = 0
-		b.Mission = "Cron/scheduled event fan-out (CLI-only — no serve)"
+		b.Mission = "Periodic Status.md sweep + compliance digest"
 	case "i":
 		// Wave 2 §3.5 Mission alignment: design doc names the flavor's
 		// mission as credential-leak page-out + operator-blocked
