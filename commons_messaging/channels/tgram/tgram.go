@@ -21,6 +21,8 @@ import (
 	"net/url"
 	"sync"
 
+	db "digital.vasic.database/pkg/database"
+
 	"github.com/vasic-digital/herald/commons"
 	telebot "gopkg.in/telebot.v3"
 )
@@ -32,6 +34,7 @@ type Adapter struct {
 	bot      *telebot.Bot // lazy-initialized on first live call (HealthCheck/Send/Subscribe)
 	botOnce  sync.Once    // guards bot construction across goroutines (Task 2 review carry-forward)
 	botErr   error        // captured by botOnce if NewBot fails
+	pool     db.Database  // optional; nil = persistence disabled (Send-only adapter)
 }
 
 // ensureBot lazily constructs a.bot exactly once across all goroutines.
@@ -70,6 +73,27 @@ func New(rawURL string) (*Adapter, error) {
 		botToken: u.Host,
 		chatID:   u.Path[1:], // strip leading "/"
 	}, nil
+}
+
+// NewWithStorage constructs an Adapter that persists outbound_delivery_evidence
+// rows to the given live pool. Persistence happens AFTER a successful
+// sendMessage — a Send-then-persist failure leaves the message delivered
+// without a persistence row, which is a known limitation. Per §107 we prefer
+// dropping a persistence row over double-sending the message: the user has
+// already received the Telegram notification; silently re-sending would be
+// the bigger UX bug.
+//
+// Callers wanting persistence MUST use SendForTenant (which routes through
+// the tenant RLS context); the plain Send method on this Adapter remains
+// pool-agnostic so existing in-process callers don't accidentally pick up
+// a persistence dependency.
+func NewWithStorage(rawURL string, pool db.Database) (*Adapter, error) {
+	a, err := New(rawURL)
+	if err != nil {
+		return nil, err
+	}
+	a.pool = pool
+	return a, nil
 }
 
 // Name returns the canonical channel ID.

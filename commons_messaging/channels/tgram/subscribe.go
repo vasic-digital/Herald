@@ -51,16 +51,22 @@ func (a *Adapter) Subscribe(ctx context.Context, h commons.InboundHandler) error
 			Body: commons.Body{
 				Plain: msg.Text,
 			},
-			Thread: &commons.ConversationRef{
-				Channel:  commons.ChannelTelegram,
-				ThreadID: strconv.Itoa(msg.ThreadID), // 0 if not a forum-topic message
-			},
 			Raw: map[string]any{
 				"message_id":        msg.ID,
 				"chat_id":           msg.Chat.ID,
 				"message_thread_id": msg.ThreadID,
 				"text":              msg.Text,
 			},
+		}
+		// T4 review carry-forward: only set Thread for actual forum-topic
+		// messages. msg.ThreadID == 0 is Telegram's "no topic" sentinel and
+		// must NOT surface as ThreadID="0" — that's a bluff thread identity
+		// that would mislead downstream Slack/Discord bridges.
+		if msg.ThreadID != 0 {
+			ev.Thread = &commons.ConversationRef{
+				Channel:  commons.ChannelTelegram,
+				ThreadID: strconv.Itoa(msg.ThreadID),
+			}
 		}
 		return h.Handle(ctx, ev)
 	})

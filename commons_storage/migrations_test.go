@@ -25,9 +25,10 @@ func TestMigrationsBundle(t *testing.T) {
 		t.Fatalf("WalkDir: %v", err)
 	}
 
-	// Foundation expects exactly these 9 migrations:
+	// Foundation expects exactly these 10 migrations:
 	//   5 original + 2 for §44 + 000008 for §44.6 RLS-FORCE+app-grant
-	//   + 000009 for HRD-010 Task 5 background_tasks (E15 queue evidence).
+	//   + 000009 for HRD-010 Task 5 background_tasks (E15 queue evidence)
+	//   + 000010 for HRD-011 Task 5 outbound_delivery_evidence (E17 persist).
 	expectedNames := []string{
 		"000001_init_core",
 		"000002_idempotency_keys",
@@ -38,6 +39,7 @@ func TestMigrationsBundle(t *testing.T) {
 		"000007_constitution_bindings",
 		"000008_force_rls",
 		"000009_background_tasks",
+		"000010_outbound_delivery_evidence",
 	}
 
 	for _, name := range expectedNames {
@@ -72,7 +74,7 @@ func TestMigrationsBundle(t *testing.T) {
 	// And no unexpected files.
 	expectedCount := len(expectedNames) * 2 // up + down each
 	if len(files) != expectedCount {
-		t.Errorf("migration count = %d; want %d (5 original + 3 §44 + 1 HRD-010 = 9 × {up, down})", len(files), expectedCount)
+		t.Errorf("migration count = %d; want %d (5 original + 3 §44 + 1 HRD-010 + 1 HRD-011 = 10 × {up, down})", len(files), expectedCount)
 	}
 }
 
