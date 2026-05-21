@@ -158,6 +158,78 @@ func TestMemory_List_FilterByDecision(t *testing.T) {
 	}
 }
 
+func TestMemory_List_HonorsSinceUntilOffset(t *testing.T) {
+	// Seed 5 rows at known, monotonically increasing times via the
+	// injectable clock. Since each row has a unique (rule, subject) key
+	// the rows are first-sights → TransitionedAt is the clock value at
+	// Record time, giving us deterministic test data.
+	tid := uuid.MustParse("11111111-1111-1111-1111-111111111111")
+	ctx := context.Background()
+	now := time.Date(2026, 5, 21, 12, 0, 0, 0, time.UTC)
+
+	// Build a clock that advances by one hour on each Record call so the
+	// 5 seeded rows land at 12:00, 13:00, 14:00, 15:00, 16:00 UTC
+	// regardless of the order we walk the rules slice.
+	rules := []string{"11.4.1", "11.4.2", "11.4.3", "11.4.4", "11.4.5"}
+	clockI := 0
+	store := NewMemory().WithClock(func() time.Time {
+		t := now.Add(time.Duration(clockI) * time.Hour)
+		clockI++
+		return t
+	})
+
+	bundle := constitution.CaptureBytes([]byte("v1"))
+	for _, rule := range rules {
+		_, err := store.Record(ctx, tid, rule, "subj-"+rule,
+			mkResult(constitution.DecisionWarn, "ok-"+rule), bundle, "")
+		if err != nil {
+			t.Fatalf("Record(%s): %v", rule, err)
+		}
+	}
+
+	// Since 13:00 → expect rules 11.4.2..11.4.5 (4 rows).
+	since := now.Add(1 * time.Hour)
+	rows, err := store.List(ctx, tid, constitution.ListQuery{Since: since})
+	if err != nil {
+		t.Fatalf("List(Since): %v", err)
+	}
+	if len(rows) != 4 {
+		t.Errorf("Since filter: got %d rows, want 4", len(rows))
+	}
+
+	// Until 15:00 (inclusive) → expect rules 11.4.1..11.4.4 (4 rows).
+	until := now.Add(3 * time.Hour)
+	rows, err = store.List(ctx, tid, constitution.ListQuery{Until: until})
+	if err != nil {
+		t.Fatalf("List(Until): %v", err)
+	}
+	if len(rows) != 4 {
+		t.Errorf("Until filter: got %d rows, want 4 (inclusive)", len(rows))
+	}
+
+	// Offset 2, Limit 2 → expect rows 3 + 4 in deterministic ASC order by
+	// TransitionedAt (i.e., the rules seeded at 14:00 + 15:00).
+	rows, err = store.List(ctx, tid, constitution.ListQuery{Offset: 2, Limit: 2})
+	if err != nil {
+		t.Fatalf("List(Offset+Limit): %v", err)
+	}
+	if len(rows) != 2 {
+		t.Errorf("Offset+Limit: got %d rows, want 2", len(rows))
+	}
+	if len(rows) == 2 {
+		want0 := now.Add(2 * time.Hour)
+		want1 := now.Add(3 * time.Hour)
+		if !rows[0].TransitionedAt.Equal(want0) {
+			t.Errorf("Offset+Limit row[0].TransitionedAt = %s; want %s",
+				rows[0].TransitionedAt, want0)
+		}
+		if !rows[1].TransitionedAt.Equal(want1) {
+			t.Errorf("Offset+Limit row[1].TransitionedAt = %s; want %s",
+				rows[1].TransitionedAt, want1)
+		}
+	}
+}
+
 func TestMemory_NoChangePreservesTransitionedAt(t *testing.T) {
 	frozen := time.Date(2026, 5, 20, 12, 0, 0, 0, time.UTC)
 	m := NewMemory().WithClock(func() time.Time { return frozen })

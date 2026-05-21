@@ -220,10 +220,26 @@ func (p *Postgres) List(ctx context.Context, tenantID uuid.UUID, q constitution.
 		query += ` AND decision = $` + intToStr(len(args)+1)
 		args = append(args, int16(*q.Decision))
 	}
-	query += ` ORDER BY transitioned_at DESC`
+	if !q.Since.IsZero() {
+		query += ` AND transitioned_at >= $` + intToStr(len(args)+1)
+		args = append(args, q.Since)
+	}
+	if !q.Until.IsZero() {
+		query += ` AND transitioned_at <= $` + intToStr(len(args)+1)
+		args = append(args, q.Until)
+	}
+	// ASC so OFFSET pagination is meaningful — without an explicit
+	// ORDER BY, Postgres row order is undefined and Offset becomes
+	// non-deterministic. Wave 3a /v1/compliance walks audit windows
+	// oldest-first which matches this ordering naturally.
+	query += ` ORDER BY transitioned_at ASC`
 	if q.Limit > 0 {
 		query += ` LIMIT $` + intToStr(len(args)+1)
 		args = append(args, q.Limit)
+	}
+	if q.Offset > 0 {
+		query += ` OFFSET $` + intToStr(len(args)+1)
+		args = append(args, q.Offset)
 	}
 
 	rows, err := tx.Query(ctx, query, args...)

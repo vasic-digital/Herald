@@ -106,7 +106,16 @@ func (m *Memory) Get(_ context.Context, tenantID uuid.UUID, ruleID, subject stri
 	return row, ok, nil
 }
 
-// List returns rows matching the query, sorted by TransitionedAt desc.
+// List returns rows matching the query, sorted by TransitionedAt ASC
+// for deterministic Offset+Limit pagination (Wave 3a /v1/compliance).
+//
+// Filter order:
+//  1. Tenant scope (always).
+//  2. RuleID / Subject / Decision (exact match if non-zero).
+//  3. Since / Until time-range (inclusive on both ends).
+//  4. Sort by TransitionedAt ASC.
+//  5. Apply Offset (skip first N rows).
+//  6. Apply Limit (cap remaining rows).
 func (m *Memory) List(_ context.Context, tenantID uuid.UUID, q constitution.ListQuery) ([]constitution.StateRow, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
@@ -124,11 +133,27 @@ func (m *Memory) List(_ context.Context, tenantID uuid.UUID, q constitution.List
 		if q.Decision != nil && *q.Decision != v.Decision {
 			continue
 		}
+		if !q.Since.IsZero() && v.TransitionedAt.Before(q.Since) {
+			continue
+		}
+		if !q.Until.IsZero() && v.TransitionedAt.After(q.Until) {
+			continue
+		}
 		out = append(out, v)
 	}
+	// Sort ASC by TransitionedAt so Offset+Limit produce deterministic,
+	// predictable pages. (Previously DESC — but DESC + Offset is the
+	// same problem; ASC matches the Postgres backend's new ORDER BY and
+	// matches how cherald /v1/compliance walks an audit window.)
 	sort.Slice(out, func(i, j int) bool {
-		return out[i].TransitionedAt.After(out[j].TransitionedAt)
+		return out[i].TransitionedAt.Before(out[j].TransitionedAt)
 	})
+	if q.Offset > 0 {
+		if q.Offset >= len(out) {
+			return []constitution.StateRow{}, nil
+		}
+		out = out[q.Offset:]
+	}
 	if q.Limit > 0 && len(out) > q.Limit {
 		out = out[:q.Limit]
 	}

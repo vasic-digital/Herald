@@ -81,9 +81,29 @@ type ConstitutionStore interface {
 
 // ListQuery filters a ConstitutionStore.List call.
 // Mirrors the M3 /v1/compliance query-param surface.
+//
+// Zero values disable each filter:
+//   - RuleID / Subject == ""        → no filter on that column
+//   - Decision == nil               → no filter on decision
+//   - Limit == 0                    → no row cap
+//   - Since.IsZero() / Until.IsZero() → no lower / upper time bound
+//   - Offset == 0                   → no row skip
+//
+// Since/Until are INCLUSIVE on both ends (row.TransitionedAt >= Since
+// && row.TransitionedAt <= Until) and operate on TransitionedAt.
+//
+// Offset is applied AFTER all filters + the deterministic ASC sort by
+// TransitionedAt; Limit is applied AFTER Offset. Both backends sort
+// ASC so paginated callers walk results oldest-first, which is what
+// cherald /v1/compliance audit-window pagination expects.
 type ListQuery struct {
 	RuleID   string
 	Subject  string
 	Decision *Decision // nil = no filter
 	Limit    int       // 0 = no limit
+
+	// Wave 3a additions (cherald /v1/compliance API):
+	Since  time.Time // zero = no lower bound (inclusive)
+	Until  time.Time // zero = no upper bound (inclusive)
+	Offset int       // 0 = no offset; applied before Limit, after sort
 }
