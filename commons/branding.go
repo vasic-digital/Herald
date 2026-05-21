@@ -31,12 +31,16 @@ func DefaultBranding(flavor string, version string) Branding {
 		b.DefaultPort = 24793
 		b.Mission = "Host-level system events fan-out + safety-state guards"
 	case "b":
+		// Wave 2 §3.5 Mission alignment: design doc names the flavor's
+		// mission as CI/test bindings + test-tier verifier + evidence
+		// capture. Prefix (BHR) + AccentColorHex unchanged; DefaultPort
+		// remains 0 (CLI-only — no serve).
 		b.AppName = "Build Herald"
 		b.AccentColorHex = "#F6C343"
 		b.Prefix = "BHR"
 		b.DisplayName = "Build Herald"
 		b.DefaultPort = 0
-		b.Mission = "CI/build pipeline event fan-out (CLI-only — no serve)"
+		b.Mission = "CI/test bindings + test-tier verifier + evidence capture"
 	case "d":
 		b.AppName = "Deploy Herald"
 		b.AccentColorHex = "#42BA96"
