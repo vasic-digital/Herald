@@ -34,3 +34,6 @@
 [submodule "submodules/Concurrency"]
 	path = submodules/Concurrency
 	url = git@github.com:vasic-digital/Concurrency.git
+[submodule "submodules/telebot"]
+	path = submodules/telebot
+	url = https://github.com/tucnak/telebot.git
