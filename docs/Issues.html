@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>Issues</title>
+  <title>Herald — Issues</title>
   <style>
     /* Default styles provided by pandoc.
     ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -173,7 +173,7 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">Issues</h1>
+<h1 class="title">Herald — Issues</h1>
 </header>
 <nav id="TOC" role="doc-toc">
 <ul>
@@ -203,7 +203,7 @@ contents</a></li>
 <tbody>
 <tr>
 <td>Revision</td>
-<td>6</td>
+<td>7</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -211,7 +211,7 @@ contents</a></li>
 </tr>
 <tr>
 <td>Last modified</td>
-<td>2026-05-20</td>
+<td>2026-05-21</td>
 </tr>
 <tr>
 <td>Status</td>
@@ -219,34 +219,36 @@ contents</a></li>
 </tr>
 <tr>
 <td>Status summary</td>
-<td>HRD-010 closed atomically (commons_storage live wiring complete;
-§107 E14/E15/E16 invariants live; production RLS bypass discovered +
-fixed via TDD). Spec V3 r6 adds §43 Constitution-derived flavor commands
-+ workflows (27 entries). HRD-029..HRD-056 opened to track each
-command’s implementation. Combined with HRD-018..HRD-028 from r5, the
-constitution-flavor integration plan now spans 39 workable items rolled
-out in 4 implementation waves. r5: HRD-085..HRD-090 opened to track the
-16 stub methods in <code>commons_infra.pgxTaskRepository</code> per
-§11.4.74 catalogue-check on the upstream
-<code>digital.vasic.background.TaskRepository</code> interface.</td>
+<td>HRD-012 Claude Code dispatcher live integration closed atomically
+per §107 (Plan 2 Tasks 6+7 produced 2 independent live PASS runs against
+real <code>claude --resume</code>). HRD-011 Telegram stays open as “code
+complete; awaiting live E17/E19 evidence” — code committed in
+92c9cb3..a254fec + 7697644 but operator credentials
+(HERALD_TGRAM_BOT_TOKEN + HERALD_TGRAM_CHAT_ID) required to capture
+E17/E19 live PASS before honest Issues→Fixed migration. Operator guide
+<code>docs/guides/OPERATOR_CREDENTIALS.md</code> added in this revision
+with step-by-step instructions for all supported messengers + LLM
+dispatchers + audit checklist. Prior context: HRD-010 closed in r6
+(commons_storage live wiring complete; §107 E14/E15/E16 invariants live;
+production RLS bypass discovered + fixed via TDD). Spec V3 r6 adds §43
+Constitution-derived flavor commands.</td>
 </tr>
 <tr>
 <td>Issues</td>
-<td>HRD-008, HRD-011, HRD-012, HRD-015, HRD-016, HRD-018..HRD-028,
-HRD-029..HRD-056, HRD-081, HRD-085..HRD-090</td>
+<td>HRD-008, HRD-011 (code complete; live evidence pending), HRD-015,
+HRD-016, HRD-018..HRD-028, HRD-029..HRD-056, HRD-081,
+HRD-085..HRD-090</td>
 </tr>
 <tr>
 <td>Issues summary</td>
-<td>51 open / in-progress workable items across quickstart validation,
-live channel integrations, REST surface, the §42 binding rollout, the
-§43 command-catalogue implementation, the §44 containers-runtime
-workaround, and the §44 queue-repository extension surface. HRD-010 was
-closed in r6 (commons_storage live wiring landed).</td>
+<td>50 open / in-progress workable items. HRD-012 was closed atomically
+in r7 with live PASS evidence; HRD-011 code complete but
+live-evidence-pending per §107 (no PASS-bluff).</td>
 </tr>
 <tr>
 <td>Fixed</td>
-<td>HRD-001..HRD-007, HRD-009, HRD-009b, HRD-010, HRD-013, HRD-014,
-HRD-017, HRD-080</td>
+<td>HRD-001..HRD-007, HRD-009, HRD-009b, HRD-010, HRD-012, HRD-013,
+HRD-014, HRD-017, HRD-080</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
@@ -299,25 +301,18 @@ implementation PR will re-verify.</p>
 <tr>
 <td>HRD-011</td>
 <td>task</td>
-<td>open</td>
+<td>code complete; awaiting live E17/E19 evidence</td>
 <td>middle</td>
-<td>Telegram channel adapter live integration (telebot SDK + getUpdates
-long-poll + webhook secret_token)</td>
+<td>Telegram channel adapter live integration — code complete commits
+92c9cb3..a254fec + 7697644 (telebot v3.3.8 vendored; HealthCheck + Send
++ Subscribe + outbound_delivery_evidence persistence all live-wired with
+§107 bluff guards). §107 BLOCKS Issues→Fixed migration until operator
+provides HERALD_TGRAM_BOT_TOKEN + HERALD_TGRAM_CHAT_ID and E17 + E19
+capture live PASS. See docs/guides/OPERATOR_CREDENTIALS.md.</td>
 <td>2026-05-20</td>
-<td>2026-05-20</td>
-<td>spec V3 §11.1; Catalogue-Check: no-match (2026-05-20)</td>
-</tr>
-<tr>
-<td>HRD-012</td>
-<td>task</td>
-<td>open</td>
-<td>middle</td>
-<td>Claude Code dispatcher live integration
-(<code>claude --resume</code> + parse
-<code>&lt;&lt;&lt;HERALD-REPLY&gt;&gt;&gt;</code>)</td>
-<td>2026-05-20</td>
-<td>2026-05-20</td>
-<td>spec V3 §33; Catalogue-Check: no-match (2026-05-20)</td>
+<td>2026-05-21</td>
+<td>spec V3 §11.1; Catalogue-Check: no-match → vendor telebot.v3 as
+submodules/telebot per §11.4.74</td>
 </tr>
 <tr>
 <td>HRD-015</td>

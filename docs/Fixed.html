@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>Fixed</title>
+  <title>Herald — Fixed</title>
   <style>
     /* Default styles provided by pandoc.
     ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -173,7 +173,7 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">Fixed</h1>
+<h1 class="title">Herald — Fixed</h1>
 </header>
 <nav id="TOC" role="doc-toc">
 <ul>
@@ -201,7 +201,7 @@ fixed</a></li>
 <tbody>
 <tr>
 <td>Revision</td>
-<td>5</td>
+<td>6</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -209,7 +209,7 @@ fixed</a></li>
 </tr>
 <tr>
 <td>Last modified</td>
-<td>2026-05-20</td>
+<td>2026-05-21</td>
 </tr>
 <tr>
 <td>Status</td>
@@ -217,12 +217,14 @@ fixed</a></li>
 </tr>
 <tr>
 <td>Status summary</td>
-<td>HRD-010 commons_storage live wiring landed. §107 covenant proved its
-worth: E14 RLS test discovered + caught a production RLS-bypass bug
-(root cause: bootstrap PG user bypasses RLS regardless of FORCE). Plus
-prior: Foundation M1 (<code>commons_constitution</code>, 14 files, ~2.9k
-LOC, all green under -race); Spec V3 → Revision 7 (§44 Foundation
-contract); HRD-080 closed (I6 gate refinement + paired meta-test).</td>
+<td>HRD-012 Claude Code dispatcher live integration closed atomically
+per §107 — Plan 2 Tasks 6 + 7 produced two independent live PASS runs
+(24s + 36s) against real <code>claude --resume</code> with exact-match
+assertions on session_uuid, anchor_path, Outcome, and Summary. HRD-011
+Telegram stays open (“code complete, awaiting live E17/E19 evidence”)
+per §107 — operator credentials needed before live PASS captured. Prior:
+HRD-010 commons_storage + the E14 RLS-bypass production bug fix;
+Foundation M1/M2/M3.</td>
 </tr>
 <tr>
 <td>Issues</td>
@@ -230,20 +232,22 @@ contract); HRD-080 closed (I6 gate refinement + paired meta-test).</td>
 </tr>
 <tr>
 <td>Issues summary</td>
-<td>HRD-008/-011/-012/-015/-016/-018 (in_progress) + HRD-019..HRD-056 +
-HRD-081 + HRD-085..HRD-090 still open.</td>
+<td>HRD-008/-011 (code complete pending creds) /-015/-016/-018
+(in_progress) + HRD-019..HRD-056 + HRD-081 + HRD-085..HRD-090 still
+open.</td>
 </tr>
 <tr>
 <td>Fixed</td>
-<td>HRD-001..HRD-007, HRD-009, HRD-009b, HRD-010, HRD-013, HRD-014,
-HRD-017, HRD-080 (and HRD-018 partial — M1 component landed)</td>
+<td>HRD-001..HRD-007, HRD-009, HRD-009b, HRD-010, HRD-012, HRD-013,
+HRD-014, HRD-017, HRD-080 (and HRD-018 partial — M1 component
+landed)</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
 <td>spec V1→V3 r7; Go module foundation + Foundation M1/M2/M3; HRD-010
-commons_storage live wiring (pgx + RLS + queue + Redis + migrate CLI);
-universal §11.4.73 + §11.4.74 mandates propagated; I6 gate refined to
-allow Helix-stack submodules.</td>
+commons_storage live wiring; HRD-012 Claude Code dispatcher live (live
+PASS evidence captured); universal §11.4.73 + §11.4.74 mandates
+propagated; I6 gate refined.</td>
 </tr>
 <tr>
 <td>Continuation</td>
@@ -278,6 +282,28 @@ allow Helix-stack submodules.</td>
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>HRD-012</td>
+<td>task</td>
+<td>middle</td>
+<td>Claude Code dispatcher live integration —
+<code>claude --resume &lt;UUID&gt; --print &lt;envelope&gt;</code> exec
++ <code>&lt;&lt;&lt;HERALD-REPLY&gt;&gt;&gt;</code> JSON parse +
+<code>claude_code_sessions</code> persistence per §33. §107 evidence:
+Plan 2 Task 6 commit <code>702b5a3</code> (live PASS 24.24s — real
+claude CLI round-trip, structured reply parsed, Outcome+Summary
+non-empty) + Task 7 commit <code>4718c0e</code> (live PASS 36.23s —
+session_state upsert under HeraldSystemTenant with exact-equality
+assertions on session_uuid + anchor_path + last_response JSONB
+round-trip). HRD-085..HRD-090 stay open for upstream-defined
+TaskRepository methods not exercised by the Dispatch+session hot
+path.</td>
+<td>2026-05-21</td>
+<td>(this commit)</td>
+<td>spec V3 §33 + §33.2; Catalogue-Check: no-match → <code>claude</code>
+is external binary not library; extend digital.vasic.database@<pinned>
+for live pool.</td>
+</tr>
 <tr>
 <td>HRD-010</td>
 <td>task</td>

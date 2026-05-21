@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>AGENTS.md</title>
+  <title>Herald — AGENTS</title>
   <style>
     /* Default styles provided by pandoc.
     ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -238,7 +238,7 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">AGENTS.md</h1>
+<h1 class="title">Herald — AGENTS</h1>
 </header>
 <nav id="TOC" role="doc-toc">
 <ul>
@@ -296,7 +296,7 @@ id="toc-forbidden-in-this-project">Forbidden in this project</a></li>
 <tbody>
 <tr>
 <td>Revision</td>
-<td>5</td>
+<td>6</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -405,7 +405,11 @@ mutation proving it catches regressions. Constitution §1.1.</li>
 <code>probably</code>, <code>maybe</code>, <code>seems</code>,
 <code>appears</code>) when reporting causes. Constitution §11.4.6.</li>
 <li><strong>Credentials never tracked.</strong> <code>.env</code>
-git-ignored; runtime-load only. Constitution §11.4.10.</li>
+git-ignored; runtime-load only. Constitution §11.4.10. <strong>Operator
+step-by-step guide for every supported messenger + dispatcher</strong>:
+<code>docs/guides/OPERATOR_CREDENTIALS.md</code> (covers Postgres /
+Redis / Telegram HRD-011 / Claude Code HRD-012 + reserved env-var names
+for planned channels + audit checklist).</li>
 <li><strong>Never force-push.</strong> Requires explicit per-session
 authorization.</li>
 <li><strong>Hardlinked backup before any destructive op.</strong>

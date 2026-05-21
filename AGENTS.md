@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Revision | 5 |
+| Revision | 6 |
 | Created | 2026-05-15 |
 | Last modified | 2026-05-20 |
 | Status | active |
@@ -42,7 +42,7 @@
 - **No bluffing.** Every PASS carries positive evidence. Constitution §11.4 / §1.1.
 - **Mutation-paired gates.** Every new gate has a paired mutation proving it catches regressions. Constitution §1.1.
 - **No guessing language** (`likely`, `probably`, `maybe`, `seems`, `appears`) when reporting causes. Constitution §11.4.6.
-- **Credentials never tracked.** `.env` git-ignored; runtime-load only. Constitution §11.4.10.
+- **Credentials never tracked.** `.env` git-ignored; runtime-load only. Constitution §11.4.10. **Operator step-by-step guide for every supported messenger + dispatcher**: `docs/guides/OPERATOR_CREDENTIALS.md` (covers Postgres / Redis / Telegram HRD-011 / Claude Code HRD-012 + reserved env-var names for planned channels + audit checklist).
 - **Never force-push.** Requires explicit per-session authorization.
 - **Hardlinked backup before any destructive op.** Constitution §9.
 - **60% RAM cap on heavy work.** Constitution §12.6.

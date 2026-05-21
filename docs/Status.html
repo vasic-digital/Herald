@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>Status</title>
+  <title>Herald — Status</title>
   <style>
     /* Default styles provided by pandoc.
     ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -173,7 +173,7 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">Status</h1>
+<h1 class="title">Herald — Status</h1>
 </header>
 <nav id="TOC" role="doc-toc">
 <ul>
@@ -210,7 +210,7 @@ id="toc-implementation">Implementation</a></li>
 <tbody>
 <tr>
 <td>Revision</td>
-<td>7</td>
+<td>8</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -218,7 +218,7 @@ id="toc-implementation">Implementation</a></li>
 </tr>
 <tr>
 <td>Last modified</td>
-<td>2026-05-20</td>
+<td>2026-05-21</td>
 </tr>
 <tr>
 <td>Status</td>
@@ -226,24 +226,25 @@ id="toc-implementation">Implementation</a></li>
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>Foundation M1 + M2 + M3 all landed + HRD-010 commons_storage
-live wiring closed.</strong> M1: <code>commons_constitution</code> (14
-files, ~2.9k LOC) — Evaluator + Registry + 12 emit helpers + BundleHash
-+ ModeLadder + ConstitutionStore + MemoryBus + Runner + CloudEvents v1.0
-adapter. M2 (commit c8eed7e): Postgres backends with live
-RLS-tenant-isolation proof. M3 (commit 21593e6): Gin REST surface + 4 M3
-submodules + LIVE <code>pherald serve</code> accepting HTTP on :24791.
-HRD-010 (commits 82ea82d..13cea69): pgx pool + RLS-enforcing
-WithTenantContext (discovered + fixed a production RLS-bypass bug — the
-E14 falsifiability test caught the
-bootstrap-superuser-bypasses-FORCE-RLS class of bluff before it shipped)
-+ queue (digital.vasic.background bound via pgxTaskRepository) + Redis
-(digital.vasic.cache) +
-<code>pherald migrate up/status/down/validate</code> CLI +
-Models/Concurrency submodules added. Anti-bluff regime:
-e2e_bluff_hunt.sh now <strong>18/18 PASS</strong> against real services
-(was 14 — added E14/E15/E16 storage invariants in commit 13cea69);
-audit_antibluff.sh 14/14 PASS; inheritance gate 15/15 PASS.</td>
+<td><strong>Foundation M1+M2+M3 + HRD-010 + HRD-012 closed; HRD-011 code
+complete pending operator creds; comprehensive operator credentials
+guide shipped.</strong> Plan 2 Tasks 1-10 landed (commits 92c9cb3..[this
+commit]) — telebot.v3 vendored; Telegram code
+(HealthCheck/Send/Subscribe/persistence) complete + tests SKIP cleanly
+without creds; Claude Code Dispatch + session persistence LIVE with PASS
+evidence (24s + 36s round-trips); E15 queue test fix uncovered a
+test-isolation bluff (leftover PENDING rows from prior runs masquerading
+as just-enqueued task — production code OK; test now TRUNCATEs +
+verifies). audit_antibluff.sh strengthened to skip third-party vendored
+SDKs per §11.4.74 (telebot SKIP-with-reason; vasic-digital +
+HelixDevelopment still REQUIRE the §11.4 anchor). New
+<code>docs/guides/OPERATOR_CREDENTIALS.md</code> provides step-by-step
+setup for every supported messenger + LLM dispatcher + audit checklist.
+Prior: Foundation M1+M2+M3 + HRD-010 commons_storage (pgx + RLS + queue
++ Redis + migrate CLI; E14 caught a production RLS-bypass bug).
+Anti-bluff regime: e2e_bluff_hunt.sh <strong>18/18 PASS</strong> (E15
+now deterministic post-7697644); audit_antibluff 16 PASS / 0 FAIL / 1
+SKIP (telebot); inheritance gate 15/15 PASS.</td>
 </tr>
 <tr>
 <td>Issues</td>

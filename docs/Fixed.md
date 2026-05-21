@@ -2,15 +2,15 @@
 
 | Field | Value |
 |---|---|
-| Revision | 5 |
+| Revision | 6 |
 | Created | 2026-05-20 |
-| Last modified | 2026-05-20 |
+| Last modified | 2026-05-21 |
 | Status | active |
-| Status summary | HRD-010 commons_storage live wiring landed. §107 covenant proved its worth: E14 RLS test discovered + caught a production RLS-bypass bug (root cause: bootstrap PG user bypasses RLS regardless of FORCE). Plus prior: Foundation M1 (`commons_constitution`, 14 files, ~2.9k LOC, all green under -race); Spec V3 → Revision 7 (§44 Foundation contract); HRD-080 closed (I6 gate refinement + paired meta-test). |
+| Status summary | HRD-012 Claude Code dispatcher live integration closed atomically per §107 — Plan 2 Tasks 6 + 7 produced two independent live PASS runs (24s + 36s) against real `claude --resume` with exact-match assertions on session_uuid, anchor_path, Outcome, and Summary. HRD-011 Telegram stays open ("code complete, awaiting live E17/E19 evidence") per §107 — operator credentials needed before live PASS captured. Prior: HRD-010 commons_storage + the E14 RLS-bypass production bug fix; Foundation M1/M2/M3. |
 | Issues | see `Issues.md` |
-| Issues summary | HRD-008/-011/-012/-015/-016/-018 (in_progress) + HRD-019..HRD-056 + HRD-081 + HRD-085..HRD-090 still open. |
-| Fixed | HRD-001..HRD-007, HRD-009, HRD-009b, HRD-010, HRD-013, HRD-014, HRD-017, HRD-080 (and HRD-018 partial — M1 component landed) |
-| Fixed summary | spec V1→V3 r7; Go module foundation + Foundation M1/M2/M3; HRD-010 commons_storage live wiring (pgx + RLS + queue + Redis + migrate CLI); universal §11.4.73 + §11.4.74 mandates propagated; I6 gate refined to allow Helix-stack submodules. |
+| Issues summary | HRD-008/-011 (code complete pending creds) /-015/-016/-018 (in_progress) + HRD-019..HRD-056 + HRD-081 + HRD-085..HRD-090 still open. |
+| Fixed | HRD-001..HRD-007, HRD-009, HRD-009b, HRD-010, HRD-012, HRD-013, HRD-014, HRD-017, HRD-080 (and HRD-018 partial — M1 component landed) |
+| Fixed summary | spec V1→V3 r7; Go module foundation + Foundation M1/M2/M3; HRD-010 commons_storage live wiring; HRD-012 Claude Code dispatcher live (live PASS evidence captured); universal §11.4.73 + §11.4.74 mandates propagated; I6 gate refined. |
 | Continuation | see `CONTINUATION.md`. |
 
 ## Table of contents
@@ -21,6 +21,7 @@
 
 | ID | Type | Criticality | Title | Closed | Commit | Reference |
 |---|---|---|---|---|---|---|
+| HRD-012 | task | middle | Claude Code dispatcher live integration — `claude --resume <UUID> --print <envelope>` exec + `<<<HERALD-REPLY>>>` JSON parse + `claude_code_sessions` persistence per §33. §107 evidence: Plan 2 Task 6 commit `702b5a3` (live PASS 24.24s — real claude CLI round-trip, structured reply parsed, Outcome+Summary non-empty) + Task 7 commit `4718c0e` (live PASS 36.23s — session_state upsert under HeraldSystemTenant with exact-equality assertions on session_uuid + anchor_path + last_response JSONB round-trip). HRD-085..HRD-090 stay open for upstream-defined TaskRepository methods not exercised by the Dispatch+session hot path. | 2026-05-21 | (this commit) | spec V3 §33 + §33.2; Catalogue-Check: no-match → `claude` is external binary not library; extend digital.vasic.database@<pinned> for live pool. |
 | HRD-010 | task | middle | commons_storage live wiring — pgx pool + RLS-enforcing WithTenantContext (discovered + fixed RLS-bypass bug via E14 falsifiability) + 9 migrations + background queue (digital.vasic.background bound via pgxTaskRepository) + Redis ACL (digital.vasic.cache) + pherald migrate up/status/down/validate subcommand + 3 new §107 e2e invariants (E14/E15/E16) + HRD-085..090 registered for queue-repository stubs | 2026-05-20 | (this commit) | spec V3 §9.6 + §16; Catalogue-Check: extend digital.vasic.database@<pinned> + digital.vasic.background@2d46dd60 + digital.vasic.cache@<pinned>; Models + Concurrency submodules added |
 | HRD-080 | task | low | Refine I6 inheritance-gate invariant from blanket `.gitmodules`-forbidden to "no `constitution/` entry in `.gitmodules`" — paired meta-test `test_i6_refinement_meta.sh` with 3 anti-bluff subtests. Enables Foundation M2/M3 Helix-stack submodule installs. | 2026-05-20 | (this commit) | spec V3 §44.9 |
 | HRD-017 | task | middle | Propagate Universal §11.4.73 (main-spec versioning + revision discipline) and §11.4.74 (submodule-catalogue-first discovery) into parent constitution Constitution.md + CLAUDE.md + AGENTS.md | 2026-05-20 | constitution `34a82b3` | Universal §11.4.73, §11.4.74 |

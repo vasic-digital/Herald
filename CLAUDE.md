@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Revision | 5 |
+| Revision | 6 |
 | Created | 2026-05-15 |
 | Last modified | 2026-05-20 |
 | Status | active |
@@ -168,7 +168,7 @@ These are declared in `docs/specs/mvp/specification.V3.md` and are easy to miss 
 - **Messenger integration priority:** Telegram → Max → Slack (then Email, then Markdown/PDF/HTML export). Microsoft Teams, Lark, Discord, WhatsApp, Viber are explicitly later iterations — don't pre-implement.
 - **Conversation diary:** every message in/out is appended to `docs/herald/diary/main.md` and re-exported to `main.pdf` + `main.html` in sync. Don't break this invariant when designing channel I/O.
 - **Container stack:** Postgres (main DB) + Redis (in-memory) bundled via the `containers` submodule (`https://github.com/vasic-digital/containers`). All container names start with `herald`; all host ports start with `70XXX` (70001, 70002, …) to avoid collisions.
-- **Credentials:** `.env` (git-ignored) with a committed `.env.example`. Resolution order: exported shell vars from `.bashrc`/`.zshrc` load first, then `.env` overrides them on key collision.
+- **Credentials:** `.env` (git-ignored) with a committed `.env.example`. Resolution order: exported shell vars from `.bashrc`/`.zshrc` load first; `.env` is fallback only (never overrides shell exports). **For step-by-step setup of every supported messenger + LLM dispatcher**, see `docs/guides/OPERATOR_CREDENTIALS.md` — comprehensive guide covering Postgres, Redis, Telegram (HRD-011), Claude Code (HRD-012), plus reserved env-var names for planned channels (Slack, Email, Max, Teams, …) and dispatchers. The guide includes an audit checklist to run before every commit.
 - **Vendored SDKs:** any official/unofficial messenger SDK or API client we depend on goes in as a **git submodule**, e.g. `commons_messaging/sdk/telegram` or `commons_messaging/api/telegram` — not `go get`'d into `go.mod`.
 
 ## `constitutable/` directory (parent-project extension hook)

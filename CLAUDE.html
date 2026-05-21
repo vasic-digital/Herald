@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>CLAUDE.md</title>
+  <title>Herald — CLAUDE</title>
   <style>
     /* Default styles provided by pandoc.
     ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -238,7 +238,7 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">CLAUDE.md</h1>
+<h1 class="title">Herald — CLAUDE</h1>
 </header>
 <nav id="TOC" role="doc-toc">
 <ul>
@@ -300,7 +300,7 @@ scaffolding</a></li>
 <tbody>
 <tr>
 <td>Revision</td>
-<td>5</td>
+<td>6</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -659,8 +659,15 @@ container names start with <code>herald</code>; all host ports start
 with <code>70XXX</code> (70001, 70002, …) to avoid collisions.</li>
 <li><strong>Credentials:</strong> <code>.env</code> (git-ignored) with a
 committed <code>.env.example</code>. Resolution order: exported shell
-vars from <code>.bashrc</code>/<code>.zshrc</code> load first, then
-<code>.env</code> overrides them on key collision.</li>
+vars from <code>.bashrc</code>/<code>.zshrc</code> load first;
+<code>.env</code> is fallback only (never overrides shell exports).
+<strong>For step-by-step setup of every supported messenger + LLM
+dispatcher</strong>, see
+<code>docs/guides/OPERATOR_CREDENTIALS.md</code> — comprehensive guide
+covering Postgres, Redis, Telegram (HRD-011), Claude Code (HRD-012),
+plus reserved env-var names for planned channels (Slack, Email, Max,
+Teams, …) and dispatchers. The guide includes an audit checklist to run
+before every commit.</li>
 <li><strong>Vendored SDKs:</strong> any official/unofficial messenger
 SDK or API client we depend on goes in as a <strong>git
 submodule</strong>, e.g. <code>commons_messaging/sdk/telegram</code> or
