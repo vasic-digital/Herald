@@ -73,12 +73,16 @@ func DefaultBranding(flavor string, version string) Branding {
 		b.DefaultPort = 0
 		b.Mission = "Release-train coordination (CLI-only)"
 	case "c":
-		b.AppName = "Compliance Herald"
+		// Wave 2 §3.5 rename: "Compliance Herald" → "Constitution Herald".
+		// Per design doc the flavor is the policy evaluator + creds scan
+		// + docs sync + composite gate. Port (24792) + Prefix (CHR) +
+		// AccentColorHex unchanged.
+		b.AppName = "Constitution Herald"
 		b.AccentColorHex = "#283E59"
 		b.Prefix = "CHR"
-		b.DisplayName = "Compliance Herald"
+		b.DisplayName = "Constitution Herald"
 		b.DefaultPort = 24792
-		b.Mission = "Compliance event ingestion + audit-trail fan-out"
+		b.Mission = "Policy evaluator + creds scan + docs sync + composite gate"
 	default:
 		b.AppName = "Herald"
 		b.AccentColorHex = "#3D5170"
