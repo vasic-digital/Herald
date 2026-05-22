@@ -99,6 +99,21 @@ func DefaultBranding(flavor string, version string) Branding {
 		b.DisplayName = "Constitution Herald"
 		b.DefaultPort = 24792
 		b.Mission = "Policy evaluator + creds scan + docs sync + composite gate"
+	case "qa":
+		// Wave 5 (operator-locked, 2026-05-22): qaherald is Herald's QA
+		// bot — drives pherald ↔ Telegram round-trips end-to-end,
+		// records bidirectional transcripts + sha256-checked attachments
+		// under docs/qa/<run-id>/. CLI-only (DefaultPort=0 — qaherald
+		// drives external services, doesn't serve HTTP itself). Two-
+		// letter flavor key ("qa") matches the `qaherald` binary name's
+		// 2-char prefix; mirrors the existing two-letter "sc" key for
+		// scherald. Per §107.x docs/qa evidence mandate.
+		b.AppName = "QA Herald"
+		b.AccentColorHex = "#12B886"
+		b.Prefix = "QHR"
+		b.DisplayName = "QA Herald"
+		b.DefaultPort = 0
+		b.Mission = "QA bot — pherald ↔ Telegram round-trip automation + docs/qa/ evidence"
 	default:
 		b.AppName = "Herald"
 		b.AccentColorHex = "#3D5170"
