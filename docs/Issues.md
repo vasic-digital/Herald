@@ -8,11 +8,11 @@
 
 | Field | Value |
 |---|---|
-| Revision | 12 |
+| Revision | 13 |
 | Created | 2026-05-20 |
 | Last modified | 2026-05-22 |
 | Status | active |
-| Status summary | r12 closes **HRD-016 (pherald `/v1/events` Runner wiring)** atomically — Wave 3b lands the §32 7-stage Runner orchestrator end-to-end + the live HTTP handler at `pherald/internal/http/events.go`. 23/23 runner package tests green; 6 new e2e invariants E37-E42 (and revised E10) cover the live path under PG :24100 reachability; mutation gate gains M2/M3/M4 (M3 SKIP-with-reason pending Wave 3c deny-evaluator). Consumer-project integration is now unlocked. Prior r11 closed HRD-011 (Telegram live integration) atomically with live evidence (message_id=5). r10 renumbered HRD-093 commons_auth scaffold → HRD-099. r9 captured Wave 3a close-out (HRD-028 cherald + HRD-098 sherald). |
+| Status summary | **r13 captures Wave 4a (HTTP/3 + Brotli + Alt-Svc + TLS 1.3 transport substrate)** — every serving flavor now binds dual TCP/HTTP-2 + UDP/HTTP-3 listeners with auto-generated dev cert, Brotli q6 compression, Alt-Svc header advertising H3 to TCP clients. New commons_tls (15th workspace module). 7 new e2e invariants E49-E55; new test_wave4_mutation_meta.sh (4/4 PASS — M1 strip H3 / M2 strip Brotli / M3 downgrade TLS / post-flight). Tag v0.2.0 issued. Also includes a critical security fix (d5bd360) restoring commons_auth/middleware.go from accidental JWT-bypass mutation residue that the prior FIX-bg subagent's commit 72e81ab captured mid-flight from a concurrent mutation gate. Prior r12 closed HRD-016 (Wave 3b pherald Runner live). r11 closed HRD-011 (Telegram live, message_id=5). r10 renumbered HRD-093 → HRD-099. r9: Wave 3a close-out (HRD-028 + HRD-098). |
 | Issues | HRD-008, HRD-015, HRD-018..HRD-027, HRD-029..HRD-056, HRD-081, HRD-085..HRD-090 |
 | Issues summary | 47 open / in-progress workable items. r12: HRD-016 closed atomically (Wave 3b pherald Runner live + e2e E37-E42 PASS or honest SKIP-with-reason when PG :24100 absent). r11: HRD-011 (Telegram live) closed atomically with live message_id=5 evidence. r10 doc-cleanup renumbered HRD-093 → HRD-099. r9: HRD-028 + HRD-098 closed (Wave 3a). Carry-over to Wave 3c: HRD-024 (iherald paging), HRD-033 (destructive-guard body), HRD-018..027 flavor-specific bindings, plus the rest of the §43 command catalogue. |
 | Fixed | HRD-001..HRD-007, HRD-009, HRD-009b, HRD-010, HRD-011, HRD-012, HRD-013, HRD-014, HRD-016, HRD-017, HRD-028, HRD-080, HRD-092, HRD-093, HRD-094, HRD-095, HRD-096, HRD-097, HRD-098, HRD-099 |

@@ -8,11 +8,11 @@
 
 | Field | Value |
 |---|---|
-| Revision | 9 |
+| Revision | 10 |
 | Created | 2026-05-20 |
 | Last modified | 2026-05-22 |
 | Status | active |
-| Status summary | V3 r9 — Wave 3b lands pherald `/v1/events` LIVE end-to-end (the §32 7-stage Runner orchestrator: EventParser → IdempotencyChecker → TenantResolver → PolicyGate → SubscriberResolver → ChannelDispatcher → OutcomeRecorder; HRD-016 atomic close-out). §32 stages gain an "Implementation" column citing `pherald/internal/runner/<file>.go`. §41 `/v1/events` row flips from `501 stub (HRD-016)` to `202 Accepted + Receipt JSON (Wave 3b live)`. §44 gains §44.N Wave 3b milestone. `scripts/e2e_bluff_hunt.sh` invariants grow 41 → 47 (E37-E42 live; E45 cross-binary still SKIP-with-reason pending Wave 3c). `tests/test_wave3_mutation_meta.sh` gains M2/M3/M4 (M3 SKIP-with-reason pending deny-evaluator e2e). |
+| Status summary | V3 r10 — Wave 4a lands the transport substrate upgrade: HTTP/3 (QUIC) primary on UDP, HTTP/2 fallback on TCP, both bound to the same port; TLS 1.3 mandatory; Alt-Svc header advertises h3="<port>"; ma=2592000 to TCP clients; Brotli (quality 6 default; `HERALD_BROTLI_LEVEL` env override) compresses responses ≥256B with gzip/identity fallback per `Accept-Encoding`. New `commons_tls/` module (workspace 14 → 15) handles ECDSA P-256 dev-cert auto-generation at `~/.herald/dev-{cert,key}.pem` (SAN localhost+127.0.0.1+::1, 365-day validity) plus operator-supplied flags/env in prod. New §41.7 Transport subsection enumerates the negotiation. §44 gains §44.O Wave 4a milestone. `scripts/e2e_bluff_hunt.sh` invariants grow 47 → 54 (E49-E55; E55 SKIP-with-reason for tcpdump root requirement). New `tests/test_wave4_mutation_meta.sh` (4/4 PASS — M1 strip H3 → E50 FAIL; M2 strip Brotli → E53 FAIL; M3 downgrade TLS → E54 FAIL; post-flight). v0.2.0 release tag. Includes critical security fix (d5bd360) restoring commons_auth/middleware.go from JWT-bypass mutation residue accidentally captured in commit 72e81ab. Prior r9 — Wave 3b lands pherald `/v1/events` LIVE end-to-end (the §32 7-stage Runner). r8 — Wave 3a substrate (HRD-099 commons_auth + HRD-028 cherald + HRD-098 sherald). |
 | Issues | none |
 | Issues summary | — |
 | Fixed | V3-R9-01..V3-R9-04 (r9 Wave 3b — Runner live + e2e E37-E42 + mutation gate M2/M3/M4 + §32 implementation column + §44.N milestone); V3-R8-01..V3-R8-05 (r8 Wave 2 scaffolds + Branding extension + REST surface expansion + §44.M milestone + §43 catalogue HRD-092 entry); V3-R3-01..V3-R3-03 (r3 parent-doc spec-path sync); V3-R2-01..V3-R2-09 (r2); V3-R1-01..V3-R1-14 (r1); inherits closed V2 + V1 lineage. |
@@ -4733,8 +4733,53 @@ The §32 7-stage event-ingest pipeline lands as 7 concrete structs under `pheral
 - Deny-evaluator e2e invariant (currently M3 SKIP-with-reason).
 - Parallel-fan-out optimization in Stage 6 (current implementation is serial per recipient).
 - OpenAPI surface for `/v1/events` per §41.7.
-- `docs/INTEGRATION.md` consumer onboarding guide.
-- v0.1.0 release tag.
+- ✅ `docs/INTEGRATION.md` consumer onboarding guide — landed in commit `e89f509` post-Wave-3b.
+- ✅ v0.1.0 release tag — issued post-Wave-3b.
+
+### §44.O Wave 4a — Transport substrate: HTTP/3 + Brotli + Alt-Svc + TLS 1.3 (landed 2026-05-22)
+
+**Scope** (per [`docs/superpowers/specs/2026-05-22-http3-brotli-toon-design.md`] + [`docs/superpowers/plans/2026-05-22-wave4a-http3-brotli.md`]):
+
+Every Herald serving binary (`pherald`, `cherald`, `sherald`, `iherald`) now binds a dual TCP/HTTP-2 + UDP/HTTP-3 listener on the same port. The Wave 4a transport contract:
+
+- **HTTP/3 (QUIC) primary** on UDP via `digital.vasic.http3` (vendored as `submodules/http3` from `vasic-digital/http3@1d0df7b`), TLS 1.3 mandatory, ALPN `h3`.
+- **HTTP/2 fallback** on TCP via `net/http.Server.ListenAndServeTLS` reusing the same `tls.Certificate` (no temp file), ALPN advertises `h2`+`http/1.1`.
+- **Alt-Svc header** `alt-svc: h3="<port>"; ma=2592000` (30-day cache) on every TCP response so capable clients migrate to HTTP/3 on the next request.
+- **Brotli compression** via `commons/cli/brotli.go` wrapping `digital.vasic.middleware/pkg/brotli`, default quality 6 (`HERALD_BROTLI_LEVEL` env override clamped 0..11), `MinLength=256B`, falls through to identity for sub-threshold bodies. Honest passthrough behaviour: a request with `Accept-Encoding: br` that the middleware decides not to compress receives identical bytes to the `Accept-Encoding: identity` request.
+- **TLS cert sourcing** — new `commons_tls/` package (workspace module 15) with `LoadOrGenerate(certPath, keyPath)` + `ResolveCertSource(Config)`:
+  - **Dev mode** (`HERALD_AUTH_MODE != "jwks"`) — auto-generate ECDSA P-256 self-signed cert at `~/.herald/dev-cert.pem` + `dev-key.pem`, SAN list `[localhost, 127.0.0.1, ::1]`, 365-day validity, key chmod 600. Source label `autogen-dev`.
+  - **Prod mode** (`HERALD_AUTH_MODE == "jwks"`) — fail-loud if neither `--tls-cert`/`--tls-key` flags nor `HERALD_TLS_CERT_PATH`/`HERALD_TLS_KEY_PATH` env vars are set.
+  - **Asymmetric guard** — `LoadOrGenerate` errors if exactly one of (cert, key) exists. Never auto-pairs an operator-provided cert with an auto-generated key.
+- **`HERALD_DISABLE_HTTP3=1` escape hatch** — for environments where outbound UDP/443 (or the configured port) is blocked. TCP/HTTPS still binds; the Alt-Svc middleware becomes a no-op.
+- **New flags** on every serve subcommand (auto-wired via `cli.BindServeFlags`): `--tls-cert`, `--tls-key`, `--no-brotli`. The dual-listener body is exported as `cli.RunServe(ctx, opts, port)` so flavors with lazy dependency construction (pherald — builds Runner only at serve-time) can call it directly without going through `cli.ServeCmd`.
+
+**As-built evidence (2026-05-22):**
+
+- Commits: `b16ff89` (T1 vendor http3 submodule) → `4ffc556` (T2 commons_tls) → `78e35de` (T3 h3.go listener + real quic-go round-trip test) → `548f354` (T4 AltSvcMiddleware) → `d1aaab9` (T5 BrotliMiddleware q6 + decode-and-compare test) → `c0f1068` (T6 serve.go dual-listener refactor) → `171e55b` (T7 flag wiring for cherald/sherald/iherald) → `eebfe70` (T7.5 pherald unification onto `cli.RunServe`) → `8720c39` (T8 e2e E49-E55 + scheme flip http→https for E7-E47) → `966de65` (T9 `test_wave4_mutation_meta.sh`) → `d5bd360` (security fix restoring middleware.go from JWT-bypass mutation residue in 72e81ab) → **this commit** (T10 spec V3 r9 → r10 + Issues r12 → r13 + Fixed r11 → r12 + Status r13 → r14 + tag v0.2.0 + 4-mirror push).
+- `go build` across all 15 workspace modules: PASS clean.
+- `go test -race -count=1 ./...`: PASS workspace-wide.
+- `scripts/e2e_bluff_hunt.sh`: **54 invariants** total (E1..E55). 37 PASS / 0 FAIL on a fresh shell without containers or root; E13-E18+E34+E37-E42+E45+E48+E55 SKIP-with-reason for environmental prereqs.
+- `tests/test_wave4_mutation_meta.sh`: 4/4 PASS — M1 strip H3 → E50 (UDP listener absent) FAIL; M2 strip Brotli → E53 (Content-Encoding:br absent on ≥256B body) FAIL; M3 downgrade TLS 1.3 → 1.2 → upstream h3 server refuses to start, E49-E55 cascade FAIL with E54 captured; post-flight green after restores.
+- Full anti-bluff battery (10 gates) green: inheritance (15/15) + meta-PASS; I6 (3/3); I8 (5/5); Wave 2 mutation (4/4); Wave 3 mutation (3/3); Wave 4 mutation (4/4); audit_antibluff green; codegraph_validate (7/0/2); e2e_bluff_hunt (37/0/SKIP).
+
+**Critical security fix lesson (commits `72e81ab` → `d5bd360`):**
+
+The `FIX-bg` subagent (logo pandoc-attr → HTML `<img>` swap) committed its working tree while a Wave 3 mutation gate was concurrently running. The mutation gate had mid-flight applied the M1 mutation to `commons_auth/middleware.go` (strip JWT verification, set fake all-zero tenant). The `FIX-bg` agent's `git add` captured that mutation state and pushed it to all four mirrors — every release built from commit `72e81ab` would have authenticated nothing. Commit `d5bd360` restores the file from the last good commit and patches `tests/test_wave2_mutation_meta.sh` to probe `https://` instead of `http://` (legitimate Wave 4a follow-up given the dual-listener default scheme flip).
+
+**Constitutional addition (proposed for next propagation pass):** §107.x "Working-tree quiescence rule" — no subagent commits while a mutation gate is in flight; `git status --porcelain` must reconcile with the explicit expected change set; any unexplained file in the staging area MUST trigger an abort.
+
+**Operator-facing behavior changes from v0.1.0 → v0.2.0:**
+
+- Every flavor binary now serves HTTPS (self-signed dev cert by default) — operators must use `curl -k` against `https://` URLs (or set `--tls-cert`/`--tls-key` to a real cert).
+- Existing operator scripts using `http://127.0.0.1:24791/v1/healthz` MUST update to `https://127.0.0.1:24791/v1/healthz` (or set `HERALD_DISABLE_HTTP3=1` if they want plaintext for legacy debugging).
+- HTTP/3-aware clients (browsers, modern HTTP clients) automatically migrate to UDP on the second request after seeing the Alt-Svc header.
+
+**Open follow-ups (Wave 4b — TOON adoption):**
+
+- `digital.vasic.toon` upstream PR work (currently honest sentinel-error scaffold; needs `toon-format/toon-go` wire-up).
+- Content negotiation: `Accept: application/toon` preferred, `application/json` fallback.
+- `POST /v1/events` Receipt responses + inbound CloudEvent body MAY be TOON-encoded when both client and server advertise support.
+- Spec V3 r10 → r11 will capture Wave 4b.
 
 ---
 

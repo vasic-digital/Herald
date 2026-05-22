@@ -47,7 +47,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>11</td>
+<td>12</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -63,25 +63,29 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td>r11 closes <strong>HRD-016 (pherald <code>/v1/events</code> Runner
-wiring)</strong> atomically — Wave 3b lands the §32 7-stage Runner
-orchestrator end-to-end (EventParser → IdempotencyChecker →
-TenantResolver → PolicyGate → SubscriberResolver → ChannelDispatcher →
-OutcomeRecorder). <code>pherald/internal/http/events.go</code> exposes
-the live POST /v1/events handler (202 Accepted + Receipt JSON; 200 +
-<code>X-Herald-Replay: true</code> on replay; 401 on missing/invalid
-JWT; 400 on parse failure). 23/23 runner package tests green; 6 new e2e
-invariants E37-E42 (and revised E10) cover the live path under PG :24100
-reachability; mutation gate gains M2/M3/M4 (M2 + M4 proven; M3
-SKIP-with-reason pending deny-evaluator e2e). Consumer-project
-integration unlocked. Prior r10 closed HRD-011 (Telegram live). r9
-doc-cleanup renumbered HRD-093 → HRD-099. r8 closed Wave 3a (HRD-028 +
-HRD-098 + HRD-099).</td>
+<td><strong>r12 captures Wave 4a (HTTP/3 + Brotli + Alt-Svc + TLS 1.3
+transport substrate) — no new HRDs opened or closed; substrate-level
+upgrade tagged v0.2.0.</strong> Every serving flavor (pherald + cherald
++ sherald + iherald) now binds dual TCP/HTTP-2 + UDP/HTTP-3 listeners
+using auto-generated dev TLS cert (~/.herald/dev-cert.pem; ECDSA P-256;
+SAN localhost+127.0.0.1+::1) or operator-supplied --tls-cert/--tls-key.
+Brotli middleware (quality 6 default; HERALD_BROTLI_LEVEL override)
+compresses responses ≥256B. Alt-Svc header on TCP responses advertises
+h3="<port>"; ma=2592000. 15-module workspace (commons_tls added). 7 new
+e2e invariants E49-E55 (E55 SKIP-with-reason for tcpdump root
+requirement). New tests/test_wave4_mutation_meta.sh (M1 strip H3 → E50
+FAIL; M2 strip Brotli → E53 FAIL; M3 downgrade TLS → E54 FAIL;
+post-flight). v0.2.0 release tag. <strong>Critical security fix
+(d5bd360) restoring commons_auth/middleware.go from JWT-bypass mutation
+residue that 72e81ab captured mid-flight</strong> — lesson: subagent
+commits must audit working-tree for mutation markers before staging.
+Prior r11 closed HRD-016 (Wave 3b pherald Runner live). r10 closed
+HRD-011 (Telegram live).</td>
 </tr>
 <tr>
 <td>Issues</td>
-<td>see <code>Issues.md</code> — r12 removes HRD-016 from open
-(atomically Issues→Fixed in this r11 commit).</td>
+<td>see <code>Issues.md</code> — r13 unchanged for this revision (no
+HRDs migrated; substrate upgrade only).</td>
 </tr>
 <tr>
 <td>Issues summary</td>

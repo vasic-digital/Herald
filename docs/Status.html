@@ -47,7 +47,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>13</td>
+<td>14</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -63,22 +63,29 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>r13 closes HRD-016 (pherald <code>/v1/events</code> Runner
-wiring) atomically — Wave 3b complete.</strong> The §32 7-stage Runner
-orchestrator lands end-to-end as 7 concrete structs in
-<code>pherald/internal/runner/</code> (EventParser → IdempotencyChecker
-→ TenantResolver → PolicyGate → SubscriberResolver → ChannelDispatcher →
-OutcomeRecorder); <code>pherald/internal/http/events.go</code> exposes
-the live POST /v1/events handler (202 + Receipt JSON; 200 +
-<code>X-Herald-Replay: true</code> on replay; 401/400 on auth/parse
-failures). 23/23 runner package tests green; e2e_bluff_hunt grew 41 → 47
-invariants (E37-E42 live; E45 cross-binary still SKIP-with-reason
-pending Wave 3c); mutation gate gains M2 + M4 proven (M3
-SKIP-with-reason pending deny-evaluator e2e). Spec V3 bumped r8 → r9
-with §32.1.1 implementation map + §44.N Wave 3b milestone.
-<strong>Consumer-project integration is now unlocked.</strong> Prior r12
-closed HRD-011 (Telegram live). r10-r11 closed Wave 3a (HRD-028 cherald
-+ HRD-098 sherald + HRD-099 commons_auth).</td>
+<td><strong>r14 captures Wave 4a (HTTP/3 + Brotli + Alt-Svc + TLS 1.3
+transport substrate). v0.2.0 tag issued.</strong> Every serving flavor
+(pherald + cherald + sherald + iherald) now binds dual TCP/HTTP-2 +
+UDP/HTTP-3 listeners on the same port. Dev TLS cert auto-generated at
+<code>~/.herald/dev-{cert,key}.pem</code> (ECDSA P-256, SAN
+localhost/127.0.0.1/::1, 365-day validity, chmod 600 key); prod requires
+<code>--tls-cert</code>/<code>--tls-key</code> flags or
+<code>HERALD_TLS_CERT_PATH</code>/<code>HERALD_TLS_KEY_PATH</code> env.
+Brotli q6 default (<code>HERALD_BROTLI_LEVEL</code> env override)
+compresses responses ≥256B. Alt-Svc header
+<code>h3="&lt;port&gt;"; ma=2592000</code> advertises HTTP/3 to TCP
+clients. <code>HERALD_DISABLE_HTTP3=1</code> escape hatch for
+UDP-blocked envs. New <code>commons_tls/</code> module (workspace 14 →
+15). 7 new e2e invariants E49-E55 (E55 SKIP-with-reason for tcpdump root
+requirement). <code>tests/test_wave4_mutation_meta.sh</code> (4/4 PASS —
+M1 strip H3 → E50 FAIL; M2 strip Brotli → E53 FAIL; M3 downgrade TLS →
+E54 FAIL; post-flight). <strong>Critical security fix (d5bd360)
+restoring commons_auth/middleware.go from JWT-bypass mutation residue
+that the prior FIX-bg subagent's 72e81ab accidentally captured
+mid-flight from a concurrent mutation gate.</strong> Lesson — subagent
+commits must audit working-tree for mutation markers before staging.
+Prior r13 closed HRD-016 (Wave 3b pherald Runner live). r12 closed
+HRD-011 (Telegram live). r10-r11: Wave 3a substrate.</td>
 </tr>
 <tr>
 <td>Issues</td>
@@ -90,9 +97,10 @@ HRD-029..HRD-056, HRD-081, HRD-085..HRD-090</td>
 <td>see <code>Issues.md</code> — 47 open items spanning §42 constitution
 bindings (HRD-018..027), §43 command-catalogue (HRD-029..056), HRD-081
 (containers podman-compose adapter refinement), HRD-085..090
-(queue-repository stub-completion surface). HRD-016 (pherald Runner) +
-HRD-011 (Telegram live) + HRD-028 + HRD-098 + HRD-099 closed in r10-r13
-cycle.</td>
+(queue-repository stub-completion surface). No HRDs migrated in r14
+(substrate upgrade only). Prior cycle: HRD-016 (pherald Runner) +
+HRD-011 (Telegram live) + HRD-028 + HRD-098 + HRD-099 closed in
+r10-r13.</td>
 </tr>
 <tr>
 <td>Fixed</td>
@@ -106,15 +114,18 @@ HRD-094, HRD-095, HRD-096, HRD-097, HRD-098, HRD-099</td>
 </tr>
 <tr>
 <td>Continuation</td>
-<td><strong>Wave 3c next</strong>: cross-binary E45 wiring (pherald deny
-POST → cherald GET /v1/compliance round-trip), HRD-024 (iherald
-<code>/v1/webhooks/page</code> live), HRD-033 (sherald destructive-guard
-body — unlocks E48), HRD-018..027 flavor-specific constitution bindings,
-and the rest of the §43 command catalogue. Parallel-fan-out optimization
-in Stage 6 + OpenAPI surface for /v1/events +
-<code>docs/INTEGRATION.md</code> + v0.1.0 release tag are queued. Each
-milestone followed by multi-mirror push + full anti-bluff
-verification.</td>
+<td><strong>Wave 4b next</strong>: TOON (Token-Oriented Object Notation)
+adoption as preferred Content-Type with JSON fallback. Wave 4b design
+lives at
+<code>docs/superpowers/specs/2026-05-22-http3-brotli-toon-design.md</code>
+§5. After Wave 4b: queued QA-bot workstream — <code>qaherald</code> Go
+binary that drives full pherald ↔︎ Telegram round-trip automation with
+attached materials preserved under <code>docs/qa/&lt;run-id&gt;/</code>;
+final close-out is the v1.0.0-dev-0.0.1 (or canonical-named) release
+tag. Carry-over Wave 3c items (HRD-024 iherald paging, HRD-033
+destructive-guard body, HRD-018..027 flavor bindings, the rest of the
+§43 command catalogue) remain queued. Each milestone followed by
+multi-mirror push + full anti-bluff verification.</td>
 </tr>
 </tbody>
 </table>

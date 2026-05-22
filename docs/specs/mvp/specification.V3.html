@@ -112,7 +112,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>9</td>
+<td>10</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -128,19 +128,27 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td>V3 r9 — Wave 3b lands pherald <code>/v1/events</code> LIVE
-end-to-end (the §32 7-stage Runner orchestrator: EventParser →
-IdempotencyChecker → TenantResolver → PolicyGate → SubscriberResolver →
-ChannelDispatcher → OutcomeRecorder; HRD-016 atomic close-out). §32
-stages gain an "Implementation" column citing
-<code>pherald/internal/runner/&lt;file&gt;.go</code>. §41
-<code>/v1/events</code> row flips from <code>501 stub (HRD-016)</code>
-to <code>202 Accepted + Receipt JSON (Wave 3b live)</code>. §44 gains
-§44.N Wave 3b milestone. <code>scripts/e2e_bluff_hunt.sh</code>
-invariants grow 41 → 47 (E37-E42 live; E45 cross-binary still
-SKIP-with-reason pending Wave 3c).
-<code>tests/test_wave3_mutation_meta.sh</code> gains M2/M3/M4 (M3
-SKIP-with-reason pending deny-evaluator e2e).</td>
+<td>V3 r10 — Wave 4a lands the transport substrate upgrade: HTTP/3
+(QUIC) primary on UDP, HTTP/2 fallback on TCP, both bound to the same
+port; TLS 1.3 mandatory; Alt-Svc header advertises h3="<port>";
+ma=2592000 to TCP clients; Brotli (quality 6 default;
+<code>HERALD_BROTLI_LEVEL</code> env override) compresses responses
+≥256B with gzip/identity fallback per <code>Accept-Encoding</code>. New
+<code>commons_tls/</code> module (workspace 14 → 15) handles ECDSA P-256
+dev-cert auto-generation at <code>~/.herald/dev-{cert,key}.pem</code>
+(SAN localhost+127.0.0.1+::1, 365-day validity) plus operator-supplied
+flags/env in prod. New §41.7 Transport subsection enumerates the
+negotiation. §44 gains §44.O Wave 4a milestone.
+<code>scripts/e2e_bluff_hunt.sh</code> invariants grow 47 → 54 (E49-E55;
+E55 SKIP-with-reason for tcpdump root requirement). New
+<code>tests/test_wave4_mutation_meta.sh</code> (4/4 PASS — M1 strip H3 →
+E50 FAIL; M2 strip Brotli → E53 FAIL; M3 downgrade TLS → E54 FAIL;
+post-flight). v0.2.0 release tag. Includes critical security fix
+(d5bd360) restoring commons_auth/middleware.go from JWT-bypass mutation
+residue accidentally captured in commit 72e81ab. Prior r9 — Wave 3b
+lands pherald <code>/v1/events</code> LIVE end-to-end (the §32 7-stage
+Runner). r8 — Wave 3a substrate (HRD-099 commons_auth + HRD-028 cherald
++ HRD-098 sherald).</td>
 </tr>
 <tr>
 <td>Issues</td>
@@ -10386,8 +10394,156 @@ cross-binary wiring; post-flight green after restores.</li>
 <li>Parallel-fan-out optimization in Stage 6 (current implementation is
 serial per recipient).</li>
 <li>OpenAPI surface for <code>/v1/events</code> per §41.7.</li>
-<li><code>docs/INTEGRATION.md</code> consumer onboarding guide.</li>
-<li>v0.1.0 release tag.</li>
+<li>✅ <code>docs/INTEGRATION.md</code> consumer onboarding guide —
+landed in commit <code>e89f509</code> post-Wave-3b.</li>
+<li>✅ v0.1.0 release tag — issued post-Wave-3b.</li>
+</ul>
+<h3
+id="44o-wave-4a--transport-substrate-http3--brotli--alt-svc--tls-13-landed-2026-05-22">§44.O
+Wave 4a — Transport substrate: HTTP/3 + Brotli + Alt-Svc + TLS 1.3
+(landed 2026-05-22)</h3>
+<p><strong>Scope</strong> (per
+[<code>docs/superpowers/specs/2026-05-22-http3-brotli-toon-design.md</code>]
++
+[<code>docs/superpowers/plans/2026-05-22-wave4a-http3-brotli.md</code>]):</p>
+<p>Every Herald serving binary (<code>pherald</code>,
+<code>cherald</code>, <code>sherald</code>, <code>iherald</code>) now
+binds a dual TCP/HTTP-2 + UDP/HTTP-3 listener on the same port. The Wave
+4a transport contract:</p>
+<ul>
+<li><strong>HTTP/3 (QUIC) primary</strong> on UDP via
+<code>digital.vasic.http3</code> (vendored as
+<code>submodules/http3</code> from
+<code>vasic-digital/http3@1d0df7b</code>), TLS 1.3 mandatory, ALPN
+<code>h3</code>.</li>
+<li><strong>HTTP/2 fallback</strong> on TCP via
+<code>net/http.Server.ListenAndServeTLS</code> reusing the same
+<code>tls.Certificate</code> (no temp file), ALPN advertises
+<code>h2</code>+<code>http/1.1</code>.</li>
+<li><strong>Alt-Svc header</strong>
+<code>alt-svc: h3="&lt;port&gt;"; ma=2592000</code> (30-day cache) on
+every TCP response so capable clients migrate to HTTP/3 on the next
+request.</li>
+<li><strong>Brotli compression</strong> via
+<code>commons/cli/brotli.go</code> wrapping
+<code>digital.vasic.middleware/pkg/brotli</code>, default quality 6
+(<code>HERALD_BROTLI_LEVEL</code> env override clamped 0..11),
+<code>MinLength=256B</code>, falls through to identity for sub-threshold
+bodies. Honest passthrough behaviour: a request with
+<code>Accept-Encoding: br</code> that the middleware decides not to
+compress receives identical bytes to the
+<code>Accept-Encoding: identity</code> request.</li>
+<li><strong>TLS cert sourcing</strong> — new <code>commons_tls/</code>
+package (workspace module 15) with
+<code>LoadOrGenerate(certPath, keyPath)</code> +
+<code>ResolveCertSource(Config)</code>:
+<ul>
+<li><strong>Dev mode</strong> (<code>HERALD_AUTH_MODE != "jwks"</code>)
+— auto-generate ECDSA P-256 self-signed cert at
+<code>~/.herald/dev-cert.pem</code> + <code>dev-key.pem</code>, SAN list
+<code>[localhost, 127.0.0.1, ::1]</code>, 365-day validity, key chmod
+600. Source label <code>autogen-dev</code>.</li>
+<li><strong>Prod mode</strong> (<code>HERALD_AUTH_MODE == "jwks"</code>)
+— fail-loud if neither <code>--tls-cert</code>/<code>--tls-key</code>
+flags nor
+<code>HERALD_TLS_CERT_PATH</code>/<code>HERALD_TLS_KEY_PATH</code> env
+vars are set.</li>
+<li><strong>Asymmetric guard</strong> — <code>LoadOrGenerate</code>
+errors if exactly one of (cert, key) exists. Never auto-pairs an
+operator-provided cert with an auto-generated key.</li>
+</ul></li>
+<li><strong><code>HERALD_DISABLE_HTTP3=1</code> escape hatch</strong> —
+for environments where outbound UDP/443 (or the configured port) is
+blocked. TCP/HTTPS still binds; the Alt-Svc middleware becomes a
+no-op.</li>
+<li><strong>New flags</strong> on every serve subcommand (auto-wired via
+<code>cli.BindServeFlags</code>): <code>--tls-cert</code>,
+<code>--tls-key</code>, <code>--no-brotli</code>. The dual-listener body
+is exported as <code>cli.RunServe(ctx, opts, port)</code> so flavors
+with lazy dependency construction (pherald — builds Runner only at
+serve-time) can call it directly without going through
+<code>cli.ServeCmd</code>.</li>
+</ul>
+<p><strong>As-built evidence (2026-05-22):</strong></p>
+<ul>
+<li>Commits: <code>b16ff89</code> (T1 vendor http3 submodule) →
+<code>4ffc556</code> (T2 commons_tls) → <code>78e35de</code> (T3 h3.go
+listener + real quic-go round-trip test) → <code>548f354</code> (T4
+AltSvcMiddleware) → <code>d1aaab9</code> (T5 BrotliMiddleware q6 +
+decode-and-compare test) → <code>c0f1068</code> (T6 serve.go
+dual-listener refactor) → <code>171e55b</code> (T7 flag wiring for
+cherald/sherald/iherald) → <code>eebfe70</code> (T7.5 pherald
+unification onto <code>cli.RunServe</code>) → <code>8720c39</code> (T8
+e2e E49-E55 + scheme flip http→https for E7-E47) → <code>966de65</code>
+(T9 <code>test_wave4_mutation_meta.sh</code>) → <code>d5bd360</code>
+(security fix restoring middleware.go from JWT-bypass mutation residue
+in 72e81ab) → <strong>this commit</strong> (T10 spec V3 r9 → r10 +
+Issues r12 → r13 + Fixed r11 → r12 + Status r13 → r14 + tag v0.2.0 +
+4-mirror push).</li>
+<li><code>go build</code> across all 15 workspace modules: PASS
+clean.</li>
+<li><code>go test -race -count=1 ./...</code>: PASS workspace-wide.</li>
+<li><code>scripts/e2e_bluff_hunt.sh</code>: <strong>54
+invariants</strong> total (E1..E55). 37 PASS / 0 FAIL on a fresh shell
+without containers or root; E13-E18+E34+E37-E42+E45+E48+E55
+SKIP-with-reason for environmental prereqs.</li>
+<li><code>tests/test_wave4_mutation_meta.sh</code>: 4/4 PASS — M1 strip
+H3 → E50 (UDP listener absent) FAIL; M2 strip Brotli → E53
+(Content-Encoding:br absent on ≥256B body) FAIL; M3 downgrade TLS 1.3 →
+1.2 → upstream h3 server refuses to start, E49-E55 cascade FAIL with E54
+captured; post-flight green after restores.</li>
+<li>Full anti-bluff battery (10 gates) green: inheritance (15/15) +
+meta-PASS; I6 (3/3); I8 (5/5); Wave 2 mutation (4/4); Wave 3 mutation
+(3/3); Wave 4 mutation (4/4); audit_antibluff green; codegraph_validate
+(7/0/2); e2e_bluff_hunt (37/0/SKIP).</li>
+</ul>
+<p><strong>Critical security fix lesson (commits <code>72e81ab</code> →
+<code>d5bd360</code>):</strong></p>
+<p>The <code>FIX-bg</code> subagent (logo pandoc-attr → HTML
+<code>&lt;img&gt;</code> swap) committed its working tree while a Wave 3
+mutation gate was concurrently running. The mutation gate had mid-flight
+applied the M1 mutation to <code>commons_auth/middleware.go</code>
+(strip JWT verification, set fake all-zero tenant). The
+<code>FIX-bg</code> agent's <code>git add</code> captured that mutation
+state and pushed it to all four mirrors — every release built from
+commit <code>72e81ab</code> would have authenticated nothing. Commit
+<code>d5bd360</code> restores the file from the last good commit and
+patches <code>tests/test_wave2_mutation_meta.sh</code> to probe
+<code>https://</code> instead of <code>http://</code> (legitimate Wave
+4a follow-up given the dual-listener default scheme flip).</p>
+<p><strong>Constitutional addition (proposed for next propagation
+pass):</strong> §107.x "Working-tree quiescence rule" — no subagent
+commits while a mutation gate is in flight;
+<code>git status --porcelain</code> must reconcile with the explicit
+expected change set; any unexplained file in the staging area MUST
+trigger an abort.</p>
+<p><strong>Operator-facing behavior changes from v0.1.0 →
+v0.2.0:</strong></p>
+<ul>
+<li>Every flavor binary now serves HTTPS (self-signed dev cert by
+default) — operators must use <code>curl -k</code> against
+<code>https://</code> URLs (or set
+<code>--tls-cert</code>/<code>--tls-key</code> to a real cert).</li>
+<li>Existing operator scripts using
+<code>http://127.0.0.1:24791/v1/healthz</code> MUST update to
+<code>https://127.0.0.1:24791/v1/healthz</code> (or set
+<code>HERALD_DISABLE_HTTP3=1</code> if they want plaintext for legacy
+debugging).</li>
+<li>HTTP/3-aware clients (browsers, modern HTTP clients) automatically
+migrate to UDP on the second request after seeing the Alt-Svc
+header.</li>
+</ul>
+<p><strong>Open follow-ups (Wave 4b — TOON adoption):</strong></p>
+<ul>
+<li><code>digital.vasic.toon</code> upstream PR work (currently honest
+sentinel-error scaffold; needs <code>toon-format/toon-go</code>
+wire-up).</li>
+<li>Content negotiation: <code>Accept: application/toon</code>
+preferred, <code>application/json</code> fallback.</li>
+<li><code>POST /v1/events</code> Receipt responses + inbound CloudEvent
+body MAY be TOON-encoded when both client and server advertise
+support.</li>
+<li>Spec V3 r10 → r11 will capture Wave 4b.</li>
 </ul>
 <hr />
 <h2 id="30-v2-self-review-log">§30. V2 self-review log</h2>
