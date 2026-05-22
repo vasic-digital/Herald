@@ -112,7 +112,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>7</td>
+<td>8</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -120,7 +120,7 @@
 </tr>
 <tr>
 <td>Last modified</td>
-<td>2026-05-21</td>
+<td>2026-05-22</td>
 </tr>
 <tr>
 <td>Status</td>
@@ -128,13 +128,19 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td>r7: workspace module count corrected 7 → 14 (Wave 2 added 6 flavor
-binaries + Wave 3a added commons_auth); anti-bluff verification section
-gains a brief Wave 2/3a status pointer. Prior r5/r6: §107
-End-user-usability covenant section restating the verbatim operator
-mandate at Herald level + ToC entry; ties to HERALD_CONSTITUTION.md §107
-+ inheritance-gate invariant I8a (paired with I8b/c on AGENTS.md +
-HERALD_CONSTITUTION.md).</td>
+<td>r8: Wave 4b (TOON <code>application/toon</code> content negotiation)
+status pointer added; tag v0.3.0. Every <code>/v1/*</code> business
+route honors <code>Accept: application/toon</code> → real TOON-encoded
+body via <code>digital.vasic.toon</code> +
+<code>toon-format/toon-go</code> upstream. Workspace module count
+unchanged at 15 (Wave 4a added commons_tls; Wave 4b added no module —
+TOON glue lives in commons/cli/). E2e at 61 invariants (E1..E62; E55+E62
+SKIP-with-reason). Mutation gates: 4 (W2) + 3+SKIPs (W3) + 4 (W4a) + 5
+(W4b) = 16 paired gates. Prior r7: workspace module count corrected 7 →
+14. Prior r5/r6: §107 End-user-usability covenant section restating the
+verbatim operator mandate at Herald level + ToC entry; ties to
+HERALD_CONSTITUTION.md §107 + inheritance-gate invariant I8a (paired
+with I8b/c on AGENTS.md + HERALD_CONSTITUTION.md).</td>
 </tr>
 <tr>
 <td>Issues</td>
@@ -149,24 +155,24 @@ HERALD_CONSTITUTION.md).</td>
 <td>spec-path references (r2), pre-implementation-language update (r3),
 submodules + HRD-docs + codegraph-index enumeration (r4), §107 mandate
 restatement + I8a anchor (r5), Wave-2/3a workspace-module-count refresh
-(r7)</td>
+(r7), Wave 4a + 4b status pointer + e2e/mutation tally refresh (r8)</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
 <td>aligned with HRD-009/HRD-009b/HRD-013/HRD-014 landing in the same
 commit; r4 closes the discoverability gaps observed during a fresh
 <code>/init</code> review; r5 closes the Herald-level
-explicit-restatement gap identified by the 2026-05-20 audit (Helix root
-+ 10 submodules had the verbatim mandate; only Herald's three root docs
-lacked it); r7 closes the doc drift observed during the Wave 3a final
-review (CLAUDE.md claimed 7 modules; actual 14 post-Wave 2 + Wave
-3a).</td>
+explicit-restatement gap identified by the 2026-05-20 audit; r7 closes
+the doc drift observed during the Wave 3a final review; r8 records the
+Wave 4a→4b transport/wire-format substrate upgrades.</td>
 </tr>
 <tr>
 <td>Continuation</td>
-<td>bump again when Wave 3b completes HRD-016 (pherald Runner) + HRD-011
-(Telegram live evidence) + remaining HRD-018..028 constitution
-bindings.</td>
+<td>bump again when QA workstream completes (<code>docs/qa/</code>
+evidence mandate + qaherald binary + v1.0.0-dev-0.0.1 release tag) and
+Wave 3c carry-over lands (HRD-024 iherald paging, HRD-033
+destructive-guard body, remaining HRD-018..028 constitution bindings,
+§43 command catalogue HRD-029..056).</td>
 </tr>
 </tbody>
 </table>

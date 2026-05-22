@@ -47,7 +47,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>12</td>
+<td>13</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -63,28 +63,35 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>r12 captures Wave 4a (HTTP/3 + Brotli + Alt-Svc + TLS 1.3
-transport substrate) — no new HRDs opened or closed; substrate-level
-upgrade tagged v0.2.0.</strong> Every serving flavor (pherald + cherald
-+ sherald + iherald) now binds dual TCP/HTTP-2 + UDP/HTTP-3 listeners
-using auto-generated dev TLS cert (~/.herald/dev-cert.pem; ECDSA P-256;
-SAN localhost+127.0.0.1+::1) or operator-supplied --tls-cert/--tls-key.
-Brotli middleware (quality 6 default; HERALD_BROTLI_LEVEL override)
-compresses responses ≥256B. Alt-Svc header on TCP responses advertises
-h3="<port>"; ma=2592000. 15-module workspace (commons_tls added). 7 new
-e2e invariants E49-E55 (E55 SKIP-with-reason for tcpdump root
-requirement). New tests/test_wave4_mutation_meta.sh (M1 strip H3 → E50
-FAIL; M2 strip Brotli → E53 FAIL; M3 downgrade TLS → E54 FAIL;
-post-flight). v0.2.0 release tag. <strong>Critical security fix
-(d5bd360) restoring commons_auth/middleware.go from JWT-bypass mutation
-residue that 72e81ab captured mid-flight</strong> — lesson: subagent
-commits must audit working-tree for mutation markers before staging.
-Prior r11 closed HRD-016 (Wave 3b pherald Runner live). r10 closed
-HRD-011 (Telegram live).</td>
+<td><strong>r13 captures Wave 4b (TOON <code>application/toon</code>
+content negotiation) — no new HRDs opened or closed; substrate-level
+upgrade tagged v0.3.0.</strong> Every <code>/v1/*</code> business route
+on every serving flavor now honors <code>Accept: application/toon</code>
+→ real TOON-encoded body (via <code>digital.vasic.toon</code> +
+<code>toon-format/toon-go</code> upstream, replacing the prior
+sentinel-error scaffold from the §107 PASS-bluff revert). JSON remains
+the honest fallback. <code>POST /v1/events</code> accepts both TOON and
+JSON request bodies (Runner stays codec-agnostic — transcoding lives in
+the HTTP handler). <code>HERALD_DEFAULT_RESPONSE_CODEC=json</code> is
+the operator opt-out. TOONMiddleware auto-wired into
+<code>cli.RunServe</code>. 7 new e2e invariants E56-E62 (E62
+SKIP-with-reason — encoder-failure fallback unit-tested only). New
+<code>tests/test_wave4b_mutation_meta.sh</code> (5/5 PASS — M1 strip
+TOONMiddleware → E57 FAIL; M2 swap <code>toon.Marshal</code> →
+<code>json.Marshal</code> (recurrence of the 2026-05-17 PASS-bluff) →
+E60 FAIL; M3 no-op transcodeRequestBody → pherald unit test FAIL;
+<strong>working-tree quiescence guard</strong> (lesson from 72e81ab —
+script greps own working tree for <code>MUTATED W4B-M*</code> markers
+BEFORE declaring PASS); post-flight green). Real compression evidence:
+sherald /v1/safety_state TOON=215B vs JSON=226B (~5% saved; larger
+tabular payloads see 30-60% per upstream measurements). Tag
+<strong>v0.3.0</strong>. Prior r12 captured Wave 4a (HTTP/3 + Brotli +
+Alt-Svc + TLS 1.3). r11 closed HRD-016 (Wave 3b pherald Runner live).
+r10 closed HRD-011 (Telegram live).</td>
 </tr>
 <tr>
 <td>Issues</td>
-<td>see <code>Issues.md</code> — r13 unchanged for this revision (no
+<td>see <code>Issues.md</code> — r14 unchanged for this revision (no
 HRDs migrated; substrate upgrade only).</td>
 </tr>
 <tr>

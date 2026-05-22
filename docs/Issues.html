@@ -47,7 +47,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>13</td>
+<td>14</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -63,19 +63,27 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>r13 captures Wave 4a (HTTP/3 + Brotli + Alt-Svc + TLS 1.3
-transport substrate)</strong> — every serving flavor now binds dual
-TCP/HTTP-2 + UDP/HTTP-3 listeners with auto-generated dev cert, Brotli
-q6 compression, Alt-Svc header advertising H3 to TCP clients. New
-commons_tls (15th workspace module). 7 new e2e invariants E49-E55; new
-test_wave4_mutation_meta.sh (4/4 PASS — M1 strip H3 / M2 strip Brotli /
-M3 downgrade TLS / post-flight). Tag v0.2.0 issued. Also includes a
-critical security fix (d5bd360) restoring commons_auth/middleware.go
-from accidental JWT-bypass mutation residue that the prior FIX-bg
-subagent's commit 72e81ab captured mid-flight from a concurrent mutation
-gate. Prior r12 closed HRD-016 (Wave 3b pherald Runner live). r11 closed
-HRD-011 (Telegram live, message_id=5). r10 renumbered HRD-093 → HRD-099.
-r9: Wave 3a close-out (HRD-028 + HRD-098).</td>
+<td><strong>r14 captures Wave 4b (TOON <code>application/toon</code>
+content negotiation; tag v0.3.0). No new HRDs migrated — substrate-level
+upgrade.</strong> Every <code>/v1/*</code> business route on every
+serving flavor now honors <code>Accept: application/toon</code> → real
+TOON-encoded body (via <code>digital.vasic.toon</code> +
+<code>toon-format/toon-go</code> upstream, real wire-up replacing the
+prior sentinel-error scaffold from the §107 PASS-bluff revert). JSON
+remains the honest fallback. <code>POST /v1/events</code> accepts both
+TOON and JSON request bodies. TOONMiddleware auto-wired into
+<code>cli.RunServe</code> — every flavor inherits. 7 new e2e invariants
+E56-E62 (E62 SKIP-with-reason — encoder-failure fallback unit-tested in
+<code>commons/cli/toon_test.go</code>). New
+<code>tests/test_wave4b_mutation_meta.sh</code> (5/5 PASS — M1 strip
+TOONMiddleware → E57 FAIL; M2 swap <code>toon.Marshal</code> →
+<code>json.Marshal</code> (recurrence of the 2026-05-17 PASS-bluff) →
+E60 FAIL; M3 no-op transcodeRequestBody → pherald unit test FAIL;
+working-tree quiescence check (lesson from 72e81ab); post-flight green).
+Tag <strong>v0.3.0</strong>. Prior r13 captured Wave 4a (HTTP/3 + Brotli
++ Alt-Svc + TLS 1.3). r12 closed HRD-016 (Wave 3b pherald Runner live).
+r11 closed HRD-011 (Telegram live, message_id=5). r10 renumbered HRD-093
+→ HRD-099. r9: Wave 3a close-out (HRD-028 + HRD-098).</td>
 </tr>
 <tr>
 <td>Issues</td>

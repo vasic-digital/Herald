@@ -8,11 +8,11 @@
 
 | Field | Value |
 |---|---|
-| Revision | 10 |
+| Revision | 11 |
 | Created | 2026-05-20 |
 | Last modified | 2026-05-22 |
 | Status | active |
-| Status summary | V3 r10 — Wave 4a lands the transport substrate upgrade: HTTP/3 (QUIC) primary on UDP, HTTP/2 fallback on TCP, both bound to the same port; TLS 1.3 mandatory; Alt-Svc header advertises h3="<port>"; ma=2592000 to TCP clients; Brotli (quality 6 default; `HERALD_BROTLI_LEVEL` env override) compresses responses ≥256B with gzip/identity fallback per `Accept-Encoding`. New `commons_tls/` module (workspace 14 → 15) handles ECDSA P-256 dev-cert auto-generation at `~/.herald/dev-{cert,key}.pem` (SAN localhost+127.0.0.1+::1, 365-day validity) plus operator-supplied flags/env in prod. New §41.7 Transport subsection enumerates the negotiation. §44 gains §44.O Wave 4a milestone. `scripts/e2e_bluff_hunt.sh` invariants grow 47 → 54 (E49-E55; E55 SKIP-with-reason for tcpdump root requirement). New `tests/test_wave4_mutation_meta.sh` (4/4 PASS — M1 strip H3 → E50 FAIL; M2 strip Brotli → E53 FAIL; M3 downgrade TLS → E54 FAIL; post-flight). v0.2.0 release tag. Includes critical security fix (d5bd360) restoring commons_auth/middleware.go from JWT-bypass mutation residue accidentally captured in commit 72e81ab. Prior r9 — Wave 3b lands pherald `/v1/events` LIVE end-to-end (the §32 7-stage Runner). r8 — Wave 3a substrate (HRD-099 commons_auth + HRD-028 cherald + HRD-098 sherald). |
+| Status summary | V3 r11 — Wave 4b lands TOON (Token-Oriented Object Notation, `application/toon`) content negotiation as Herald's preferred wire format with JSON as honest fallback. Every `/v1/*` business route now honors `Accept: application/toon` (responses are real TOON bytes via the `digital.vasic.toon` submodule + `toon-format/toon-go` upstream); `Accept: application/json` keeps JSON; q-value preference honored; `*/*` and missing Accept go to the server default (TOON; `HERALD_DEFAULT_RESPONSE_CODEC=json` flips). `POST /v1/events` accepts both TOON and JSON request bodies (TOON transcoded to JSON before the Runner's EventParser; Runner stays codec-agnostic). TOONMiddleware auto-wired into `cli.RunServe` so every flavor binary (`pherald`/`cherald`/`sherald`/`bherald`/`rherald`/`iherald`/`scherald`) inherits for free. Real compression evidence — for sherald /v1/safety_state, TOON body is 215B vs 226B JSON (~5% saved on a tiny payload; larger tabular payloads see 30-60% per upstream measurements). 7 new e2e invariants (E56-E62; E62 SKIP-with-reason — encoder-failure fallback is unit-tested in `commons/cli/toon_test.go` because no Herald handler exposes a TOON-unencodable Go type). New `tests/test_wave4b_mutation_meta.sh` (5/5 PASS — M1 strip TOONMiddleware → E57 FAIL; M2 swap `toon.Marshal` → `json.Marshal` (2026-05-17 PASS-bluff recurrence) → E60 FAIL; M3 no-op transcodeRequestBody → pherald unit test FAIL; working-tree quiescence check; post-flight green). Tag **v0.3.0**. Workspace module count unchanged at 15. Prior r10 — Wave 4a HTTP/3 + Brotli + Alt-Svc + TLS 1.3 transport substrate; tag v0.2.0. Prior r9 — Wave 3b pherald `/v1/events` LIVE. r8 — Wave 3a substrate. |
 | Issues | none |
 | Issues summary | — |
 | Fixed | V3-R9-01..V3-R9-04 (r9 Wave 3b — Runner live + e2e E37-E42 + mutation gate M2/M3/M4 + §32 implementation column + §44.N milestone); V3-R8-01..V3-R8-05 (r8 Wave 2 scaffolds + Branding extension + REST surface expansion + §44.M milestone + §43 catalogue HRD-092 entry); V3-R3-01..V3-R3-03 (r3 parent-doc spec-path sync); V3-R2-01..V3-R2-09 (r2); V3-R1-01..V3-R1-14 (r1); inherits closed V2 + V1 lineage. |
@@ -4252,6 +4252,25 @@ Operators MAY use `quickstart/Dockerfile.pherald` (shipped in this commit at HRD
 
 Per §24.1, `docs/api/openapi.v1.yaml` is the source-of-truth schema. Gin-based REST handlers MUST be tagged with `openapi:"<operation_id>"` comments (custom golangci-lint analyzer `herald-openapi-tags` will enforce); the spec generator scans tags + handler signatures to keep YAML and code in lockstep. Drift triggers `CM-OPENAPI-DRIFT` gate FAIL.
 
+### 41.7.1 Content negotiation (TOON primary, JSON fallback — Wave 4b live)
+
+Every `/v1/*` business route honors the `Accept` header per the W4b policy ladder (see §44.P for as-built evidence + the full operator decision rationale):
+
+- `Accept: application/toon` → response is real TOON-encoded bytes (via `digital.vasic.toon` + `toon-format/toon-go` upstream). Content-Type: application/toon.
+- `Accept: application/json` → JSON response. Content-Type: application/json.
+- `Accept: */*` (or missing Accept) → server default. Herald default = TOON; `HERALD_DEFAULT_RESPONSE_CODEC=json` flips to JSON.
+- Both with no q params → TOON wins (Herald-default tie-break).
+- Both with q params → higher q wins.
+- Unsupported Accept (e.g., `application/xml`) → JSON honest fallback. Content-Type: application/json — the bytes match what we advertise.
+
+`POST /v1/events` additionally honors the inbound `Content-Type` header to decide how to decode the request body. TOON request bodies are transcoded to JSON before the Runner's EventParser (the Runner stays codec-agnostic — codec adaptation is a transport-layer concern). Encoder-failure fallback is observable: `X-Herald-Codec-Fallback: encoder_error` header is emitted when `toon.Marshal` fails, with the response falling back to JSON. Never a silent swap.
+
+`/healthz`, `/readyz`, `/metrics` are NOT subject to content negotiation — they're registered BEFORE the TOON middleware in `commons/cli/serve.go` and remain in their canonical formats (JSON for healthz/readyz; Prometheus text exposition for metrics) regardless of Accept header. This is intentional: load-balancer probes + Prometheus scrapers don't negotiate, and forcing them to would create paper-cut bluffs.
+
+The negotiation primitive lives in `commons/cli/contentnego.go` (pure functions over header strings + `MarshalChosen` / `UnmarshalChosen` codec dispatch). The Gin glue lives in `commons/cli/toon.go` (`TOONMiddleware` + `BindNegotiated`). Both are auto-wired into `cli.RunServe`, so every flavor binary inherits without per-flavor code changes.
+
+§107 anti-bluff guards: TOON wire bytes never start with `{` or `[` (caught by E60 + the M2 mutation gate that plants the EXACT shape of the 2026-05-17 PASS-bluff). TOON bytes round-trip via `toon.Unmarshal` to non-empty Go maps (E58). TOON body is strictly smaller than JSON for the same payload (E59 — real compression, not header-swap bluff).
+
 ### 41.8 Per-app integration patterns
 
 Two recommended integration patterns documented in `docs/integrations/`:
@@ -4774,12 +4793,46 @@ The `FIX-bg` subagent (logo pandoc-attr → HTML `<img>` swap) committed its wor
 - Existing operator scripts using `http://127.0.0.1:24791/v1/healthz` MUST update to `https://127.0.0.1:24791/v1/healthz` (or set `HERALD_DISABLE_HTTP3=1` if they want plaintext for legacy debugging).
 - HTTP/3-aware clients (browsers, modern HTTP clients) automatically migrate to UDP on the second request after seeing the Alt-Svc header.
 
-**Open follow-ups (Wave 4b — TOON adoption):**
+**Open follow-ups (Wave 4b — TOON adoption):** all closed; see §44.P below.
 
-- `digital.vasic.toon` upstream PR work (currently honest sentinel-error scaffold; needs `toon-format/toon-go` wire-up).
-- Content negotiation: `Accept: application/toon` preferred, `application/json` fallback.
-- `POST /v1/events` Receipt responses + inbound CloudEvent body MAY be TOON-encoded when both client and server advertise support.
-- Spec V3 r10 → r11 will capture Wave 4b.
+---
+
+### §44.P Wave 4b — TOON (`application/toon`) content negotiation (landed 2026-05-22)
+
+**Scope** (per [`docs/superpowers/specs/2026-05-22-http3-brotli-toon-design.md`] §5 + [`docs/superpowers/plans/2026-05-22-wave4b-toon.md`] T1..T7):
+
+Herald adopts TOON (Token-Oriented Object Notation) as the preferred wire format on every `/v1/*` business route, with JSON as the honest fallback. The negotiation is driven by the standard `Accept` header — clients in control. The `digital.vasic.toon` submodule (the prior PASS-bluff watershed surface) was extended in Wave 4b T2 with real `toon-format/toon-go` delegation; the sentinel-error scaffold from the anti-regression revert is replaced with a real codec.
+
+- **TOON adoption per W4b operator decisions** — TOON is the server-default (clients sending `Accept: */*` or missing Accept get TOON); `HERALD_DEFAULT_RESPONSE_CODEC=json` flips the default; explicit `Accept: application/json` is honored; explicit `Accept: application/toon` is honored; both present without q-params → TOON wins (Herald-default tie-break); both with q-params → higher q wins; unsupported Accept (e.g., `application/xml`) → JSON safe fallback (honest header-body match, never advertise a content-type the server doesn't speak).
+- **Inbound CloudEvents accept both** — `POST /v1/events` reads `Content-Type` and decodes TOON when it is `application/toon`, JSON when it is `application/json` (default for missing Content-Type, backwards-compat with curl `-d` usage). TOON request bodies are transcoded to JSON BEFORE the Runner's EventParser (the Runner stays codec-agnostic — transport-layer codec adaptation only).
+- **Encoder-failure fallback is observable** — if `toon.Marshal` fails (Go type the codec can't represent), the server falls back to JSON AND emits `X-Herald-Codec-Fallback: encoder_error` header AND keeps `Content-Type: application/json` (honest header-body match). Never a silent swap.
+- **`/metrics` + `/healthz` + `/readyz` stay JSON/text** — observability + LB probes don't negotiate; healthz registered BEFORE the TOON middleware in serve.go so it's structurally protected.
+- **TOONMiddleware auto-wired into `cli.RunServe`** — every serving flavor binary inherits for free (cherald + sherald + bherald + rherald + iherald + scherald via `cli.ServeCmd`; pherald via its custom cobra wrapper that also calls `cli.RunServe`). Zero per-flavor code change beyond the existing chain registration.
+
+**As-built evidence (2026-05-22):**
+
+- Commits: `e81f175` (T1 vendor `digital.vasic.toon` submodule at the sentinel-error pin) → `cca1ee2` (T2 upstream PR — replace sentinel with `toon-format/toon-go` wire-up; new submodule SHA `9ae61db`) → `0a94fb3` (T3 `commons/cli/contentnego.go` — Accept-header negotiation + MarshalChosen/UnmarshalChosen) → `de59f0a` (T4 `commons/cli/toon.go` — Gin TOONMiddleware + BindNegotiated) → `9f1d378` (T5 pherald events.go TOON-aware — request transcode + response inheritance via middleware) → `a3164e5` (T6 auto-wire TOONMiddleware into `cli.RunServe`; cherald + sherald + every flavor inherits) → **this commit** (T7 e2e E56-E62 + mutation gate + spec V3 r10 → r11 + Issues r13 → r14 + Fixed r12 → r13 + Status r14 → r15 + tag v0.3.0 + 4-mirror push).
+- `go build` across all 15 workspace modules: PASS clean.
+- `go test -race -count=1 ./...`: PASS workspace-wide.
+- `scripts/e2e_bluff_hunt.sh`: **61 invariants** total (E1..E62; E55 + E62 + container-gated invariants SKIP-with-reason on a fresh shell). 43 PASS / 0 FAIL / 18 SKIP on a fresh shell.
+- `tests/test_wave4b_mutation_meta.sh`: 5/5 PASS — M1 strip TOONMiddleware auto-wire → E57 FAIL (response stays JSON); M2 swap `toon.Marshal` → `json.Marshal` (the 2026-05-17 PASS-bluff signature) → E60 FAIL (wire byte 0 = `{` under TOON Content-Type); M3 no-op `transcodeRequestBody` → pherald `TestEventsHandler_ContentTypeTOON_RequestDecoded` FAIL; working-tree quiescence guard (lesson from 72e81ab — `git status` MUST be clean of `MUTATED W4B-M*` markers BEFORE declaring PASS); post-flight e2e green after every restore.
+- Full anti-bluff battery (11 gates) green: inheritance (15/15) + meta-PASS; I6 (3/3); I8 (5/5); Wave 2 mutation (4/4); Wave 3 mutation (3/3 + 3 SKIP); Wave 4 mutation (4/4); Wave 4b mutation (5/5); `audit_antibluff.sh` green; `codegraph_validate.sh` (7/0/2); `e2e_bluff_hunt.sh` (43/0/18).
+
+**§107 watershed lineage:**
+
+`digital.vasic.toon` is the operative cautionary tale of the entire Herald project — a prior revision silently delegated to `encoding/json` while claiming TOON encoding (caught by the round-27 audit). The revert to a sentinel-error scaffold (`ErrTOONEncodingNotImplemented`) was an anti-regression marker. Wave 4b T2 replaces the sentinel with REAL `toon-format/toon-go` delegation. The mutation gate at `tests/test_wave4b_mutation_meta.sh` plants the EXACT shape of the original bluff (M2: TOON branch silently calls json.Marshal) and asserts the e2e battery FAILs at the wire byte-0 check (E60). A recurrence cannot pass silently.
+
+**Operator-facing behavior changes from v0.2.0 → v0.3.0:**
+
+- `Accept: */*` (or missing Accept header) on any `/v1/*` business route now returns `application/toon`. Operators using `curl` to probe Herald MUST either set `Accept: application/json` explicitly or pipe through a TOON decoder. The shipped e2e probes (E44, E47) were updated in this commit to set `Accept: application/json` so they continue to validate the JSON-shaped response contract.
+- `HERALD_DEFAULT_RESPONSE_CODEC=json` is the operator opt-out — flips the server default to JSON for transition periods or legacy client compatibility.
+- `POST /v1/events` now accepts `Content-Type: application/toon` request bodies — agentic/CI callers can drop the JSON encoding step.
+
+**Token efficiency rationale (per §5.1 of the design doc):**
+
+TOON is a tabular-collection-optimized wire format that drops `[]map[string]any`-shaped collections into a header-and-row layout: `users[2]{id,name}: 1,alice 2,bob` instead of `{"users":[{"id":1,"name":"alice"},{"id":2,"name":"bob"}]}`. For Herald's tabular payloads (compliance results, safety samples, receipt logs, pagination pages), TOON saves 30-60% of bytes versus JSON. For tiny constant-shape payloads (e.g., a SafetyState snapshot), the savings are modest (~5%) but still positive. Brotli compresses on top — combined TOON+Brotli typically lands at ~25% of the original JSON-uncompressed wire footprint.
+
+**Continuation:** QA workstream (queued — `qaherald` Go binary driving pherald ↔ Telegram round-trip automation; QA evidence under `docs/qa/<run-id>/`; final close-out tag `v1.0.0-dev-0.0.1`). Wave 3c carry-over remains queued (HRD-024 iherald paging, HRD-033 destructive-guard body, HRD-018..027 flavor bindings, the rest of the §43 command catalogue).
 
 ---
 

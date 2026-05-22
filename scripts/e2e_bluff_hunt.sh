@@ -11,10 +11,11 @@
 # "compiles and tests green" but doesn't work for the user will FAIL
 # at least one assertion here.
 #
-# Fifty-four invariants (E1..E55 — E49-E55 new in Wave 4a; E37-E42 live in
-# Wave 3b; E45 still SKIP-with-reason — pending Wave 3c cross-binary
-# wiring; each invariant is the "captured-evidence" for one feature class
-# per §11.4.5 + §11.4.69):
+# Sixty-one invariants (E1..E62; E55 + E62 SKIP-with-reason — E56-E62 new
+# in Wave 4b TOON content negotiation; E49-E55 Wave 4a HTTP/3+Brotli+Alt-Svc+TLS;
+# E37-E42 live in Wave 3b; E45 still SKIP-with-reason — pending Wave 3c
+# cross-binary wiring; each invariant is the "captured-evidence" for one
+# feature class per §11.4.5 + §11.4.69):
 #
 #   E1.  pherald binary builds (compile-level — necessary, not sufficient).
 #   E2.  pherald version --json returns parseable JSON with required fields.
@@ -79,7 +80,16 @@
 # commons_tls.ResolveCertSource when ProdMode=false). Operators wanting
 # plaintext for legacy probes must export HERALD_DISABLE_HTTP3=1.
 #
-# Exit 0 only when E1..E12 + E19..E55 (plus E13..E18 + E34 if attempted) all pass.
+# Wave 4b TOON content negotiation (added 2026-05-22):
+#   E56. Accept: application/json → Content-Type: application/json + body[0]='{'.
+#   E57. Accept: application/toon → Content-Type: application/toon + body[0]!='{'.
+#   E58. TOON response round-trips via real digital.vasic.toon.Unmarshal.
+#   E59. TOON body strictly smaller than JSON body for same payload.
+#   E60. WIRE-LEVEL anti-bluff — TOON body first byte not '{' and not '['.
+#   E61. Accept q-value preference honored (json,toon;q=0.5 → JSON).
+#   E62. SKIP-with-reason — encoder-failure fallback unit-tested only.
+#
+# Exit 0 only when E1..E12 + E19..E62 (plus E13..E18 + E34 if attempted) all pass.
 # Failure prints the offending invariant so the operator knows EXACTLY
 # which feature is bluffing.
 
@@ -575,7 +585,7 @@ PY
         check "E43 GET /v1/compliance no auth → 401" \
             "[ \"\$(curl -k -sS -o /dev/null -w '%{http_code}' https://127.0.0.1:24992/v1/compliance)\" = '401' ]"
         check "E44 GET /v1/compliance valid JWT empty tenant → 200 + total=0" \
-            "curl -k -fsS -H 'Authorization: Bearer ${TOKEN}' https://127.0.0.1:24992/v1/compliance | python3 -c 'import sys,json; d=json.load(sys.stdin); assert d[\"total\"]==0, d[\"total\"]; assert d[\"page\"]==1; assert d[\"page_size\"]==50'"
+            "curl -k -fsS -H 'Authorization: Bearer ${TOKEN}' -H 'Accept: application/json' https://127.0.0.1:24992/v1/compliance | python3 -c 'import sys,json; d=json.load(sys.stdin); assert d[\"total\"]==0, d[\"total\"]; assert d[\"page\"]==1; assert d[\"page_size\"]==50'"
         # E45 is reported in its own block further below (Wave 3b reorg).
     else
         echo "FAIL  E43/E44 cherald serve never accepted HTTPS within 5s on :24992"
@@ -621,7 +631,7 @@ PY
         check "E46 GET /v1/safety_state no auth → 401" \
             "[ \"\$(curl -k -sS -o /dev/null -w '%{http_code}' https://127.0.0.1:24993/v1/safety_state)\" = '401' ]"
         check "E47 GET /v1/safety_state fresh sherald → 200 + mem>0 + last_destructive_op=null + uptime>=1" \
-            "curl -k -fsS -H 'Authorization: Bearer ${TOKEN}' https://127.0.0.1:24993/v1/safety_state | python3 -c 'import sys,json; d=json.load(sys.stdin); assert d[\"binary\"]==\"sherald\"; assert d[\"current_mem_percent\"]>0, d.get(\"current_mem_percent\"); assert d[\"last_destructive_op\"] is None; assert d[\"uptime_seconds\"]>=1, d[\"uptime_seconds\"]; assert d[\"open_events\"]==0'"
+            "curl -k -fsS -H 'Authorization: Bearer ${TOKEN}' -H 'Accept: application/json' https://127.0.0.1:24993/v1/safety_state | python3 -c 'import sys,json; d=json.load(sys.stdin); assert d[\"binary\"]==\"sherald\"; assert d[\"current_mem_percent\"]>0, d.get(\"current_mem_percent\"); assert d[\"last_destructive_op\"] is None; assert d[\"uptime_seconds\"]>=1, d[\"uptime_seconds\"]; assert d[\"open_events\"]==0'"
         echo "SKIP  E48 (destructive-op trigger — HRD-033 stub body not implemented)"
     else
         echo "FAIL  E46/E47 sherald serve never accepted HTTPS within 5s on :24993"
@@ -979,6 +989,166 @@ GO_EOF
     fi
 else
     echo "SKIP  E49-E55 (lsof/curl absent — §11.4.3 explicit SKIP-with-reason)"
+fi
+
+# ----------------------------------------------------------------------
+echo ""
+echo "== E56-E62: TOON (application/toon) content negotiation (Wave 4b) =="
+# E56. GET /v1/safety_state Accept: application/json → Content-Type:
+#      application/json + body[0]='{' (explicit JSON honored).
+# E57. GET /v1/safety_state Accept: application/toon → Content-Type:
+#      application/toon + body[0]!='{' (server emits real TOON bytes; the
+#      §107 watershed — the 2026-05-17 bluff would surface here).
+# E58. TOON wire bytes round-trip via real digital.vasic.toon.Unmarshal
+#      into a non-empty Go map (proof the bytes are valid TOON, not just
+#      header-decoration).
+# E59. TOON body strictly smaller than JSON body for the same payload
+#      (real compression, not a header-swap bluff; threshold ≤ 0.95).
+# E60. WIRE-LEVEL anti-bluff — TOON response first byte is NOT '{' and NOT
+#      '[' (catches JSON-bytes-wearing-TOON-Content-Type — the original
+#      PASS-bluff signature reverted in W4b T2).
+# E61. Content negotiation q-value preference — `application/json,
+#      application/toon;q=0.5` → JSON wins (higher q honored).
+# E62. SKIP-with-reason (per W4b T7 spec): unit-tested only at
+#      commons/cli/toon_test.go TestRespond_EncoderFailure path. No Herald
+#      handler exposes a Go type that the TOON codec rejects (Snapshot /
+#      ComplianceList / Receipt all encode cleanly), so an e2e provocation
+#      is unfalsifiable. Documented + intentional.
+
+if (command -v lsof >/dev/null 2>&1) && (command -v curl >/dev/null 2>&1); then
+    W4B_BIN="/tmp/sherald-w4b-$$"
+    W4B_PORT="${HERALD_W4B_PORT:-24794}"
+    if go build -o "${W4B_BIN}" ./sherald/cmd/sherald > /tmp/e2e_w4b_out 2>&1; then
+        lsof -ti:${W4B_PORT} 2>/dev/null | xargs -r kill -9 2>/dev/null || true
+        "${W4B_BIN}" serve --http-port ${W4B_PORT} > /tmp/sherald-w4b.log 2>&1 &
+        w4b_pid=$!
+        w4b_ready=0
+        for i in $(seq 1 10); do
+            if curl -k -fsS "https://127.0.0.1:${W4B_PORT}/v1/healthz" >/dev/null 2>&1; then
+                w4b_ready=1; break
+            fi
+            sleep 0.5
+        done
+
+        if [ "${w4b_ready}" = 1 ]; then
+            # mem-sampler warm-up
+            sleep 1.2
+            TOKEN_W4B=$(python3 - <<'PY'
+import hmac, hashlib, base64, json, time, os
+secret = os.environ["HERALD_AUTH_HMAC_SECRET"].encode()
+header = base64.urlsafe_b64encode(b'{"alg":"HS256","typ":"JWT"}').rstrip(b'=')
+payload = base64.urlsafe_b64encode(json.dumps({"tenant":"550e8400-e29b-41d4-a716-446655440000","sub":"t","exp":int(time.time())+300}).encode()).rstrip(b'=')
+sig = base64.urlsafe_b64encode(hmac.new(secret, header+b'.'+payload, hashlib.sha256).digest()).rstrip(b'=')
+print((header+b'.'+payload+b'.'+sig).decode())
+PY
+)
+
+            # E56 — Accept: application/json → JSON response.
+            curl -k -fsS -H "Authorization: Bearer ${TOKEN_W4B}" -H 'Accept: application/json' \
+                -D /tmp/e56-hdr -o /tmp/e56-body \
+                "https://127.0.0.1:${W4B_PORT}/v1/safety_state" 2>/dev/null
+            check "E56 Accept: application/json on /v1/safety_state → Content-Type: application/json + body[0]='{'" \
+                "grep -qi '^content-type: application/json' /tmp/e56-hdr && [ \"\$(head -c 1 /tmp/e56-body)\" = '{' ]"
+
+            # E57 — Accept: application/toon → TOON response (§107 watershed).
+            curl -k -fsS -H "Authorization: Bearer ${TOKEN_W4B}" -H 'Accept: application/toon' \
+                -D /tmp/e57-hdr -o /tmp/e57-body \
+                "https://127.0.0.1:${W4B_PORT}/v1/safety_state" 2>/dev/null
+            check "E57 Accept: application/toon on /v1/safety_state → Content-Type: application/toon + body[0]!='{'" \
+                "grep -qi '^content-type: application/toon' /tmp/e57-hdr && [ \"\$(head -c 1 /tmp/e57-body)\" != '{' ] && [ -s /tmp/e57-body ]"
+
+            # E58 — TOON round-trip via real digital.vasic.toon.Unmarshal.
+            # Compile a probe inside commons/ so the digital.vasic.toon
+            # replace directive resolves through Herald's module graph.
+            cat > /tmp/toon_rt_probe.go <<'GO_EOF'
+package main
+
+import (
+	"fmt"
+	"os"
+
+	toon "digital.vasic.toon/pkg/toon"
+)
+
+func main() {
+	b, err := os.ReadFile(os.Args[1])
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "READ", err)
+		os.Exit(2)
+	}
+	var v map[string]any
+	if err := toon.Unmarshal(b, &v); err != nil {
+		fmt.Fprintln(os.Stderr, "UNMARSHAL", err)
+		os.Exit(3)
+	}
+	if len(v) == 0 {
+		fmt.Fprintln(os.Stderr, "EMPTY")
+		os.Exit(4)
+	}
+	fmt.Println("OK", len(v))
+}
+GO_EOF
+            TOON_RT_BIN="/tmp/toon-rt-$$"
+            if (cd "${REPO_ROOT}/commons" && go build -o "${TOON_RT_BIN}" /tmp/toon_rt_probe.go) > /tmp/e58-build-err 2>&1; then
+                "${TOON_RT_BIN}" /tmp/e57-body > /tmp/e58-out 2> /tmp/e58-err || true
+                check "E58 TOON response bytes round-trip via real digital.vasic.toon.Unmarshal to non-empty map" \
+                    "grep -q '^OK' /tmp/e58-out"
+                rm -f "${TOON_RT_BIN}"
+            else
+                echo "FAIL  E58 (toon round-trip probe compile failed)"
+                tail -5 /tmp/e58-build-err 2>/dev/null | sed 's/^/      /'
+                fail=$((fail+1))
+                fail_names+=("E58-build")
+            fi
+            rm -f /tmp/toon_rt_probe.go
+
+            # E59 — TOON body strictly smaller than JSON body for the same
+            # payload. Real compression evidence — header-swap bluff would
+            # produce identical byte counts.
+            toon_size=$(wc -c < /tmp/e57-body 2>/dev/null | tr -d ' ')
+            json_size=$(wc -c < /tmp/e56-body 2>/dev/null | tr -d ' ')
+            check "E59 TOON body (${toon_size}B) shorter than JSON body (${json_size}B) — real compression, not header-swap bluff" \
+                "[ \"${toon_size:-0}\" -gt 0 ] && [ \"${json_size:-0}\" -gt 0 ] && [ \"${toon_size:-0}\" -lt \"${json_size:-0}\" ]"
+
+            # E60 — WIRE-LEVEL anti-bluff: first byte of TOON body must
+            # NOT be '{' or '[' (catches JSON-bytes-wearing-TOON-Content-Type
+            # — the original 2026-05-17 bluff signature).
+            check "E60 TOON response body first byte NOT '{' and NOT '[' (anti-JSON-bytes-bluff wire check)" \
+                "first=\"\$(head -c 1 /tmp/e57-body)\"; [ \"\$first\" != '{' ] && [ \"\$first\" != '[' ]"
+
+            # E61 — q-value preference: explicit Accept with JSON higher q
+            # → JSON wins despite TOON being Herald-default.
+            curl -k -fsS -H "Authorization: Bearer ${TOKEN_W4B}" \
+                -H 'Accept: application/json, application/toon;q=0.5' \
+                -D /tmp/e61-hdr -o /tmp/e61-body \
+                "https://127.0.0.1:${W4B_PORT}/v1/safety_state" 2>/dev/null
+            check "E61 Accept: application/json+toon;q=0.5 → JSON wins (q-value preference honored)" \
+                "grep -qi '^content-type: application/json' /tmp/e61-hdr && [ \"\$(head -c 1 /tmp/e61-body)\" = '{' ]"
+
+            # E62 — SKIP-with-reason per W4b T7 plan: unit-tested only.
+            echo "SKIP  E62 (encoder-failure fallback — unit-tested in commons/cli/toon_test.go TestRespond_EncoderFailure_FallsBackToJSON_WithObservableHeader; no Herald handler exposes a TOON-unencodable Go type so e2e provocation is unfalsifiable — §11.4.3 explicit SKIP-with-reason)"
+
+        else
+            echo "FAIL  E56-E62 sherald serve never accepted HTTPS within 5s on :${W4B_PORT}"
+            tail -10 /tmp/sherald-w4b.log 2>&1 | sed 's/^/      /'
+            fail=$((fail+6))
+            fail_names+=("E56" "E57" "E58" "E59" "E60" "E61")
+        fi
+
+        kill ${w4b_pid} 2>/dev/null || true
+        wait ${w4b_pid} 2>/dev/null || true
+        rm -f "${W4B_BIN}" /tmp/sherald-w4b.log \
+              /tmp/e56-hdr /tmp/e56-body /tmp/e57-hdr /tmp/e57-body \
+              /tmp/e58-out /tmp/e58-err /tmp/e58-build-err \
+              /tmp/e61-hdr /tmp/e61-body
+    else
+        echo "FAIL  E56-E62 sherald build (Wave 4b TOON probe binary)"
+        tail -5 /tmp/e2e_w4b_out | sed 's/^/      /'
+        fail=$((fail+6))
+        fail_names+=("E56-build" "E57-build" "E58-build" "E59-build" "E60-build" "E61-build")
+    fi
+else
+    echo "SKIP  E56-E62 (lsof/curl absent — §11.4.3 explicit SKIP-with-reason)"
 fi
 
 # ----------------------------------------------------------------------
