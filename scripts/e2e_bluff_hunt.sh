@@ -250,15 +250,25 @@ fi
 #   E16: commons_infra/clients_integration_test.go (redis TTL)
 echo ""
 echo "== E14-E16: HRD-010 commons_storage live integration =="
-if command -v docker >/dev/null 2>&1 || command -v podman >/dev/null 2>&1; then
+# §11.4.3 SKIP-with-reason guard: container CLI installed AND PG/Redis
+# actually reachable (mirrors E13's reachability probe). A bare
+# `command -v podman` succeeds when podman is installed but its daemon
+# is down — that produced FAIL-without-runtime regressions in fresh
+# sessions. The reachability probe catches that case.
+if (command -v docker >/dev/null 2>&1 || command -v podman >/dev/null 2>&1) \
+   && nc -z 127.0.0.1 24100 2>/dev/null; then
     check "E14 commons_storage RLS tenant-isolation round-trip (live PG)" \
         "go test ./commons_storage/ -tags=integration -run TestRLS_TenantIsolation_RoundTrip -count=1 -timeout=180s"
     check "E15 commons_infra queue enqueue/dequeue round-trip (live PG)" \
         "go test ./commons_infra/ -tags=integration -run TestUp_PopulatesQueue_EnqueueDequeueRoundTrip -count=1 -timeout=180s"
-    check "E16 commons_infra redis TTL round-trip (live Redis)" \
-        "go test ./commons_infra/ -tags=integration -run TestUp_PopulatesRedis_TTLRoundTrip -count=1 -timeout=180s"
+    if nc -z 127.0.0.1 24200 2>/dev/null; then
+        check "E16 commons_infra redis TTL round-trip (live Redis)" \
+            "go test ./commons_infra/ -tags=integration -run TestUp_PopulatesRedis_TTLRoundTrip -count=1 -timeout=180s"
+    else
+        echo "SKIP  E16 — Redis on :24200 unreachable (closed-set reason: hardware_not_present)"
+    fi
 else
-    echo "SKIP  E14-E16 (no docker/podman on PATH — §11.4.3 explicit SKIP-with-reason)"
+    echo "SKIP  E14-E16 (container runtime absent OR Postgres :24100 unreachable — §11.4.3 explicit SKIP-with-reason)"
 fi
 
 # ----------------------------------------------------------------------

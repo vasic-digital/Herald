@@ -15,10 +15,10 @@ import (
 type SummaryEntry struct {
 	Service     string    // "telegram" | "claude_code" | ...
 	VarName     string    // "HERALD_TGRAM_BOT_TOKEN"
-	MaskedValue string    // "882338...jfU" — never the raw value
+	MaskedValue string    // "000000...XXX" — never the raw value (synthetic example shape)
 	ShellFile   string    // "/Users/alice/.zshrc"
 	Timestamp   time.Time // when the wizard wrote this entry
-	Notes       string    // free-form, e.g. "DM chat_id 2057253161; group setup pending"
+	Notes       string    // free-form, e.g. "DM chat_id <REDACTED>; group setup pending"
 }
 
 // SummaryPath returns the canonical path to the operator's credentials
