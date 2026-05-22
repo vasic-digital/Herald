@@ -65,7 +65,12 @@ func registerStubs(root *cobra.Command) {
 //  1. commons_auth.GinMiddleware(verifier) — 401 on missing/invalid JWT
 //  2. httpsrv.RequestIDMiddleware()        — propagates X-Request-ID
 func newServeCmd(br commons.Branding) *cobra.Command {
-	var port int
+	var (
+		port     int
+		tlsCert  string
+		tlsKey   string
+		noBrotli bool
+	)
 	cmd := &cobra.Command{
 		Use:   "serve",
 		Short: "Start the " + br.DisplayName + " HTTP server",
@@ -90,6 +95,14 @@ func newServeCmd(br commons.Branding) *cobra.Command {
 			r.GET("/v1/healthz", cli.HealthzHandler(br))
 			r.GET("/v1/readyz", cli.ReadyzHandler(br))
 			r.GET("/metrics", cli.MetricsHandler(br))
+			// Wave 4a Task 7: auto-wire Brotli compression for flavor
+			// routes (matches cli.ServeCmd behavior). Healthz/readyz/metrics
+			// registered above are unaffected — Gin's r.Use() only applies
+			// to routes registered after the call. The --no-brotli flag
+			// suppresses this for streaming routes that can't be buffered.
+			if !noBrotli {
+				r.Use(cli.BrotliMiddleware(0))
+			}
 			// Auth + request-ID middleware for everything below.
 			r.Use(commons_auth.GinMiddleware(verifier))
 			r.Use(httpsrv.RequestIDMiddleware())
@@ -101,13 +114,27 @@ func newServeCmd(br commons.Branding) *cobra.Command {
 				}
 				r.Handle(route.Method, route.Path, h)
 			}
+			// Note: pherald's serve plane is currently TCP-only (no H3
+			// listener) because its lazy Runner/verifier construction
+			// happens in this RunE rather than via cli.ServeCmd. The
+			// --tls-cert/--tls-key flags wire to the TCP listener's TLS
+			// config for HTTPS+H2 termination; without them the listener
+			// runs plaintext HTTP/1.1+H2c (the pre-Wave 4a default).
+			// HRD-024 follow-up may unify pherald onto cli.ServeCmd to
+			// get the dual-listener behavior for free.
 			srv := &http.Server{
 				Addr:    ":" + strconv.Itoa(port),
 				Handler: r,
 			}
 			errCh := make(chan error, 1)
 			go func() {
-				if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+				var err error
+				if tlsCert != "" && tlsKey != "" {
+					err = srv.ListenAndServeTLS(tlsCert, tlsKey)
+				} else {
+					err = srv.ListenAndServe()
+				}
+				if err != nil && err != http.ErrServerClosed {
 					errCh <- err
 				}
 			}()
@@ -126,6 +153,9 @@ func newServeCmd(br commons.Branding) *cobra.Command {
 		},
 	}
 	cmd.Flags().IntVar(&port, "http-port", 0, "TCP port to bind (default = flavor's DefaultPort)")
+	cmd.Flags().StringVar(&tlsCert, "tls-cert", "", "Path to PEM-encoded TLS certificate (enables HTTPS+H2 on the TCP listener)")
+	cmd.Flags().StringVar(&tlsKey, "tls-key", "", "Path to PEM-encoded TLS private key (paired with --tls-cert)")
+	cmd.Flags().BoolVar(&noBrotli, "no-brotli", false, "Disable auto-wired Brotli compression middleware (useful for streaming routes that cannot be buffered)")
 	return cmd
 }
 

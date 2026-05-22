@@ -123,13 +123,42 @@ type ServeOpts struct {
 // refused and the UDP port is re-bindable by an unrelated listener
 // (proof the QUIC stack released the socket).
 func ServeCmd(opts ServeOpts) *cobra.Command {
-	var port int
+	var (
+		port     int
+		tlsCert  string
+		tlsKey   string
+		noBrotli bool
+	)
 	cmd := &cobra.Command{
 		Use:   "serve",
 		Short: "Start the " + opts.Branding.DisplayName + " HTTP server",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if port == 0 {
 				port = opts.Branding.DefaultPort
+			}
+			// Wave 4a Task 7: flag-supplied paths override opts defaults.
+			// Empty flags leave opts as-supplied by the caller. This lets
+			// per-binary main.go either pre-populate opts (programmatic)
+			// or rely on operator-supplied flags (CLI). Auto-detection of
+			// HERALD_DISABLE_HTTP3 / HERALD_AUTH_MODE=jwks happens below.
+			if tlsCert != "" {
+				opts.TLSCertPath = tlsCert
+			}
+			if tlsKey != "" {
+				opts.TLSKeyPath = tlsKey
+			}
+			if noBrotli {
+				opts.DisableBrotli = true
+			}
+			// Env-driven auto-detection — keeps main.go free of env reads
+			// per the T6 contract. HERALD_DISABLE_HTTP3=1 is the UDP-
+			// blocked-environment escape hatch; HERALD_AUTH_MODE=jwks is
+			// the production-mode signal that gates dev-cert autogen.
+			if os.Getenv("HERALD_DISABLE_HTTP3") == "1" {
+				opts.DisableH3 = true
+			}
+			if os.Getenv("HERALD_AUTH_MODE") == "jwks" {
+				opts.ProdMode = true
 			}
 			gin.SetMode(gin.ReleaseMode)
 			r := gin.New()
@@ -323,6 +352,9 @@ func ServeCmd(opts ServeOpts) *cobra.Command {
 		},
 	}
 	cmd.Flags().IntVar(&port, "http-port", 0, "TCP+UDP port to bind (default = flavor's DefaultPort)")
+	cmd.Flags().StringVar(&tlsCert, "tls-cert", "", "Path to PEM-encoded TLS certificate (required when HTTP/3 is enabled, optional for TCP-only)")
+	cmd.Flags().StringVar(&tlsKey, "tls-key", "", "Path to PEM-encoded TLS private key (paired with --tls-cert)")
+	cmd.Flags().BoolVar(&noBrotli, "no-brotli", false, "Disable auto-wired Brotli compression middleware (useful for streaming routes that cannot be buffered)")
 	return cmd
 }
 
