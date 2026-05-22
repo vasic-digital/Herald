@@ -213,14 +213,17 @@ if go build -o "${cbin}" ./cherald/cmd/cherald > /tmp/w2-build.out 2>&1; then
     sleep 1.5
 
     # Probe A: documented port 24792 MUST NOT respond.
-    if curl -fsS --max-time 1 'http://127.0.0.1:24792/v1/healthz' >/dev/null 2>&1; then
+    # Wave 4a (V3 r10): cherald serves HTTPS by default — probe over TLS
+    # with `-k` (self-signed cert acceptable) so this test still asserts
+    # what it claims: the documented port should not bind anything.
+    if curl -fskS --max-time 1 'https://127.0.0.1:24792/v1/healthz' >/dev/null 2>&1; then
         port_24792_responds="yes"
     else
         port_24792_responds="no"
     fi
 
     # Probe B: mutated port 9999 MUST respond.
-    if curl -fsS --max-time 1 'http://127.0.0.1:9999/v1/healthz' >/dev/null 2>&1; then
+    if curl -fskS --max-time 1 'https://127.0.0.1:9999/v1/healthz' >/dev/null 2>&1; then
         port_9999_responds="yes"
     else
         port_9999_responds="no"
