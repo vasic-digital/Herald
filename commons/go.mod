@@ -15,6 +15,7 @@ require github.com/google/uuid v1.6.0
 
 require (
 	digital.vasic.http3 v0.0.0-00010101000000-000000000000
+	digital.vasic.middleware v0.0.0-00010101000000-000000000000
 	github.com/gin-gonic/gin v1.12.0
 	github.com/quic-go/quic-go v0.59.0
 	github.com/spf13/cobra v1.10.2
@@ -26,6 +27,12 @@ require (
 // commons import digital.vasic.http3/pkg/server (the HTTP/3 listener
 // wrapper) without going through a public Go proxy.
 replace digital.vasic.http3 => ../submodules/http3
+
+// Wave 4a Task 4 — middleware vendored as a Herald submodule at
+// submodules/middleware. AltSvcMiddleware wraps
+// digital.vasic.middleware/pkg/altsvc via .../pkg/gin.Wrap into a
+// Gin handler. Future Wave 4a Task 5 will also use pkg/brotli.
+replace digital.vasic.middleware => ../submodules/middleware
 
 // commons_tls is a workspace sibling (also listed in go.work). The
 // replace directive matches the pattern used by sherald/cherald/pherald
