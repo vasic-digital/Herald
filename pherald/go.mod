@@ -6,8 +6,11 @@ require (
 	digital.vasic.middleware v0.0.0
 	github.com/gin-gonic/gin v1.12.0
 	github.com/google/uuid v1.6.0
+	github.com/jackc/pgx/v5 v5.9.2
+	github.com/redis/go-redis/v9 v9.7.3
 	github.com/spf13/cobra v1.10.2
 	github.com/vasic-digital/herald/commons v0.0.0
+	github.com/vasic-digital/herald/commons_constitution v0.0.0
 )
 
 require (
@@ -49,9 +52,12 @@ require (
 
 replace (
 	github.com/vasic-digital/herald/commons => ../commons
+	github.com/vasic-digital/herald/commons_constitution => ../commons_constitution
 	github.com/vasic-digital/herald/commons_messaging => ../commons_messaging
 	github.com/vasic-digital/herald/commons_prefix => ../commons_prefix
 	github.com/vasic-digital/herald/commons_storage => ../commons_storage
 )
 
 replace digital.vasic.middleware => ../submodules/middleware
+
+replace digital.vasic.database => ../submodules/database
