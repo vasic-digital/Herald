@@ -73,8 +73,17 @@ func registerStubs(root *cobra.Command) {
 //
 // Middleware stack (in order, downstream of cli.RunServe's auto-wired
 // Brotli + Alt-Svc layers):
-//  1. commons_auth.GinMiddleware(verifier) — 401 on missing/invalid JWT
-//  2. httpsrv.RequestIDMiddleware()        — propagates X-Request-ID
+//  1. cli.TOONMiddleware()                 — transcodes c.JSON → TOON when
+//                                            client Accept prefers TOON
+//                                            (Wave 4b T5)
+//  2. commons_auth.GinMiddleware(verifier) — 401 on missing/invalid JWT
+//  3. httpsrv.RequestIDMiddleware()        — propagates X-Request-ID
+//
+// TOONMiddleware sits BEFORE auth so the Accept-negotiation buffer wraps
+// the writer for the entire downstream chain (auth-failure responses also
+// get codec-correct encoding). The auth + RequestID middlewares observe
+// the wrapped writer transparently — both call c.JSON which lands in
+// TOONMiddleware's response buffer.
 func newServeCmd(br commons.Branding) *cobra.Command {
 	var (
 		port     int
@@ -101,6 +110,7 @@ func newServeCmd(br commons.Branding) *cobra.Command {
 				Branding: br,
 				Routes:   httpsrv.Routes(runnerInstance),
 				Middleware: []gin.HandlerFunc{
+					cli.TOONMiddleware(), // Wave 4b T5: TOON↔JSON content negotiation
 					commons_auth.GinMiddleware(verifier),
 					httpsrv.RequestIDMiddleware(),
 				},
