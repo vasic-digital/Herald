@@ -14,9 +14,16 @@ go 1.25.0
 require github.com/google/uuid v1.6.0
 
 require (
+	digital.vasic.http3 v0.0.0-00010101000000-000000000000
 	github.com/gin-gonic/gin v1.12.0
 	github.com/spf13/cobra v1.10.2
 )
+
+// Wave 4a — http3 vendored as a Herald submodule at the pinned SHA
+// 1d0df7b700436b70a361c3ba14d0520b070e7df9. The replace directive lets
+// commons import digital.vasic.http3/pkg/server (the HTTP/3 listener
+// wrapper) without going through a public Go proxy.
+replace digital.vasic.http3 => ../submodules/http3
 
 require (
 	github.com/bytedance/gopkg v0.1.3 // indirect

@@ -37,3 +37,6 @@
 [submodule "submodules/telebot"]
 	path = submodules/telebot
 	url = https://github.com/tucnak/telebot.git
+[submodule "submodules/http3"]
+	path = submodules/http3
+	url = git@github.com:vasic-digital/http3.git
