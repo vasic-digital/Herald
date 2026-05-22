@@ -16,6 +16,7 @@ require github.com/google/uuid v1.6.0
 require (
 	digital.vasic.http3 v0.0.0-00010101000000-000000000000
 	digital.vasic.middleware v0.0.0-00010101000000-000000000000
+	digital.vasic.toon v0.0.0-00010101000000-000000000000
 	github.com/andybalholm/brotli v1.2.1
 	github.com/gin-gonic/gin v1.12.0
 	github.com/quic-go/quic-go v0.59.0
@@ -34,6 +35,18 @@ replace digital.vasic.http3 => ../submodules/http3
 // digital.vasic.middleware/pkg/altsvc via .../pkg/gin.Wrap into a
 // Gin handler. Future Wave 4a Task 5 will also use pkg/brotli.
 replace digital.vasic.middleware => ../submodules/middleware
+
+// Wave 4b Task 1 — toon vendored as a Herald submodule at
+// submodules/TOON (upstream git@github.com:vasic-digital/TOON.git pinned
+// at fc2ab55, the honest sentinel-error scaffold per round-27 §11.4
+// audit). The replace directive lets commons import
+// digital.vasic.toon/pkg/toon without a public Go proxy. W4b-T2 will
+// bump the pinned SHA when upstream lands the real toon-format/toon-go
+// delegation; the smoke test in commons/cli/toon_smoke_test.go pins the
+// expected upstream contract (sentinel at this SHA; round-trip at the
+// post-W4b-T2 SHA) so a regression to the old JSON-fallback bluff fails
+// the build immediately.
+replace digital.vasic.toon => ../submodules/TOON
 
 // commons_tls is a workspace sibling (also listed in go.work). The
 // replace directive matches the pattern used by sherald/cherald/pherald
