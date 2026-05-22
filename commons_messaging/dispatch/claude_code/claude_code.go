@@ -30,11 +30,18 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	db "digital.vasic.database/pkg/database"
 	"github.com/google/uuid"
 	"github.com/vasic-digital/herald/commons"
 )
+
+// DefaultBootstrapTimeout caps the wall-clock cost of a single
+// claude --session-id <new-uuid> --print "<bootstrap-prompt>" invocation
+// (HRD-012 step 7). 60s mirrors the spec §33.2 step-4 budget; longer
+// budgets would mask the more-common "claude binary hangs on auth" case.
+const DefaultBootstrapTimeout = 60 * time.Second
 
 // HeraldSystemTenant is a fixed UUID that scopes Herald's internal
 // (operator-shared, non-customer-tenant) data. Sessions, configs, and
@@ -48,10 +55,23 @@ var HeraldSystemTenant = uuid.MustParse("00000000-0000-0000-0000-000000000001")
 
 // Dispatcher is the Claude Code LLM dispatcher.
 type Dispatcher struct {
-	binaryPath  string      // typically "claude"
-	workingDir  string      // consuming-project root
-	projectName string      // e.g. "ATMOSphere"
-	pool        db.Database // optional; nil = persistence disabled (Dispatch-only)
+	binaryPath       string        // typically "claude"
+	workingDir       string        // consuming-project root
+	projectName      string        // e.g. "ATMOSphere"
+	pool             db.Database   // optional; nil = persistence disabled (Dispatch-only)
+	bootstrapTimeout time.Duration // §33.2 step-4 budget; default DefaultBootstrapTimeout
+}
+
+// SetBootstrapTimeout overrides the default bootstrap subprocess timeout.
+// A non-positive value resets to DefaultBootstrapTimeout. Exposed so the
+// inbound runtime + tests can stretch the budget on slow CI runners
+// without rebuilding the binary.
+func (d *Dispatcher) SetBootstrapTimeout(t time.Duration) {
+	if t <= 0 {
+		d.bootstrapTimeout = DefaultBootstrapTimeout
+		return
+	}
+	d.bootstrapTimeout = t
 }
 
 // New constructs a Dispatcher.
@@ -74,9 +94,10 @@ func New(binaryPath, workingDir, projectName string) (*Dispatcher, error) {
 		}
 	}
 	return &Dispatcher{
-		binaryPath:  binaryPath,
-		workingDir:  workingDir,
-		projectName: projectName,
+		binaryPath:       binaryPath,
+		workingDir:       workingDir,
+		projectName:      projectName,
+		bootstrapTimeout: DefaultBootstrapTimeout,
 	}, nil
 }
 

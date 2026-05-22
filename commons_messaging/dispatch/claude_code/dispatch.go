@@ -21,9 +21,10 @@ import (
 // defaults.
 //
 // Spec §33.2 step 1 (session resolution): if ResolveSession returns
-// uuid.Nil we MUST NOT pretend; instead we fail explicitly so the
-// caller (HRD-012 step 7 persistence layer) can decide to spawn an
-// initialising session and PersistSession before retrying.
+// uuid.Nil we MUST NOT pretend. The HRD-012 step-7 root-cause fix
+// (2026-05-22) wires d.bootstrapSession(ctx, anchor) inside buildCmd
+// to spawn `claude --session-id <new-uuid>` non-interactively, persist
+// the anchor, and proceed with the regular `--resume <new-uuid>` path.
 func (d *Dispatcher) Dispatch(ctx context.Context, req DispatchRequest) (DispatchResponse, error) {
 	cmd, sessionUUID, anchor, err := d.buildCmd(ctx, req)
 	if err != nil {
@@ -74,7 +75,17 @@ func (d *Dispatcher) buildCmd(ctx context.Context, req DispatchRequest) (*exec.C
 		return nil, uuid.Nil, anchor, fmt.Errorf("claude_code: dispatch resolve session: %w", err)
 	}
 	if sessionUUID == uuid.Nil {
-		return nil, uuid.Nil, anchor, fmt.Errorf("claude_code: dispatch: no anchored session at %s (HRD-012 step 7 will bootstrap)", anchor)
+		// HRD-012 step 7 root-cause fix (2026-05-22): on missing anchor,
+		// spawn a fresh claude session non-interactively, persist the
+		// anchor, and resume against the freshly-minted UUID. The
+		// previous placeholder error path was a §107 PASS-bluff —
+		// docs/Fixed.md claimed step 7 closed but the bootstrap never
+		// landed, breaking every project without a hand-rolled anchor.
+		bootUUID, err := d.bootstrapSession(ctx, anchor)
+		if err != nil {
+			return nil, uuid.Nil, anchor, fmt.Errorf("claude_code: dispatch: bootstrap session at %s: %w", anchor, err)
+		}
+		sessionUUID = bootUUID
 	}
 
 	envelope := d.FormatEnvelopeWithPreText(req, string(req.Channel))
