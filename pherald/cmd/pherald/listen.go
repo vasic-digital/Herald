@@ -54,8 +54,13 @@ import (
 // the surface env-only to match the operator-locked config story (single
 // .env file controls everything); a follow-up HRD can lift values to
 // --bot-token / --chat-id / --project-name flags if the workflow demands.
+//
+// Wave 6 T10a (2026-05-22) adds ONE flag — `--qa-out-dir <path>` — which,
+// when set, journals every bidirectional inbound/CC/outbound event into
+// `<path>/transcript.jsonl` per the docs/qa/ §107.x evidence mandate.
+// Attachments are copied (content-addressed) under `<path>/attachments/`.
 func newListenCmd() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "listen",
 		Short: "Run the inbound runtime: Telegram getUpdates long-poll + Claude Code dispatch loop",
 		Long: `Long-running. Wires tgram.Subscribe (getUpdates long-poll) to the
@@ -70,6 +75,13 @@ Optional environment:
   HERALD_PROJECT_NAME      Claude Code session name (else basename(cwd) else "Herald").
   HERALD_CLAUDE_BIN        Path to ` + "`claude`" + ` CLI (default: $PATH lookup).
 
+Optional flags:
+  --qa-out-dir <path>      Journal every inbound/CC/outbound event to
+                           <path>/transcript.jsonl and copy attachments to
+                           <path>/attachments/<sha256>.<ext>. Wave 6 T10a
+                           §107.x evidence primitive — feature ships with
+                           the resulting run dir under docs/qa/<run-id>/.
+
 Signal handling: SIGINT/SIGTERM cancels the long-poll cleanly via
 signal.NotifyContext.`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
@@ -77,12 +89,19 @@ signal.NotifyContext.`,
 			if err != nil {
 				return err
 			}
+			cfg.QAOutDir, _ = cmd.Flags().GetString("qa-out-dir")
 			ctx, cancel := signal.NotifyContext(cmd.Context(), syscall.SIGINT, syscall.SIGTERM)
 			defer cancel()
 			fmt.Fprintln(cmd.OutOrStdout(), "pherald listen: starting Telegram getUpdates long-poll loop")
+			if cfg.QAOutDir != "" {
+				fmt.Fprintf(cmd.OutOrStdout(), "pherald listen: QA journaling enabled — %s\n", cfg.QAOutDir)
+			}
 			return runListen(ctx, cfg)
 		},
 	}
+	cmd.Flags().String("qa-out-dir", "",
+		"If set, journal inbound/CC/outbound events to <dir>/transcript.jsonl + copy attachments to <dir>/attachments/<sha256>.<ext> (Wave 6 T10a §107.x evidence)")
+	return cmd
 }
 
 // listenConfig carries the resolved dependencies for runListen. The
@@ -95,6 +114,11 @@ type listenConfig struct {
 	BotToken    string
 	ChatID      string
 	ClaudeBin   string
+	// QAOutDir, when non-empty, enables JSONL journaling of every
+	// bidirectional event to <QAOutDir>/transcript.jsonl plus content-
+	// addressed attachment copies under <QAOutDir>/attachments/ per the
+	// Wave 6 T10a §107.x evidence primitive.
+	QAOutDir string
 	// Subscriber is the long-poll entry point. Production: a closure over
 	// tgram.Adapter.Subscribe. Test: a closure that publishes one synthetic
 	// InboundEvent and waits for ctx.Done.
@@ -168,15 +192,32 @@ func loadListenConfigFromEnv() (listenConfig, error) {
 // invokes Handle on every message). Test asserts Handle was invoked and
 // the returned err is one of (nil, context.Canceled, context.DeadlineExceeded).
 func runListen(ctx context.Context, cfg listenConfig) error {
+	code := cfg.Code
+	replier := cfg.Replier
+	var jrn *journal
+	if cfg.QAOutDir != "" {
+		var jerr error
+		jrn, jerr = newJournal(cfg.QAOutDir)
+		if jerr != nil {
+			return fmt.Errorf("pherald listen: open journal: %w", jerr)
+		}
+		defer jrn.Close()
+		code = &journalingCode{j: jrn, inner: code}
+		replier = &journalingReplier{j: jrn, inner: replier}
+	}
 	dispatcher, err := inbound.NewDispatcher(inbound.Config{
 		ProjectName: cfg.ProjectName,
-		Code:        cfg.Code,
-		TgramReply:  cfg.Replier,
+		Code:        code,
+		TgramReply:  replier,
 	})
 	if err != nil {
 		return fmt.Errorf("pherald listen: build inbound dispatcher: %w", err)
 	}
-	if err := cfg.Subscriber(ctx, dispatcher); err != nil {
+	var handler commons.InboundHandler = dispatcher
+	if jrn != nil {
+		handler = &journalingHandler{j: jrn, inner: handler}
+	}
+	if err := cfg.Subscriber(ctx, handler); err != nil {
 		// Subscriber returns ctx.Err() on clean cancellation; bubble
 		// that up so the caller (signal.NotifyContext) can exit 0.
 		if ctxErr := ctx.Err(); ctxErr != nil {
