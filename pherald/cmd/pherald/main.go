@@ -62,6 +62,7 @@ func main() {
 	root.AddCommand(newServeCmd(branding)) // Wave 3b: builds Runner + verifier lazily inside serve
 	root.AddCommand(newMigrateCmd())       // real impl (HRD-010) — unchanged
 	root.AddCommand(newWizardCmd())        // real impl (HRD-011/012 setup) — unchanged
+	root.AddCommand(newListenCmd())        // Wave 6 T6: inbound getUpdates long-poll + CC dispatch
 	registerStubs(root)                    // §43 GitOps stubs via cli.StubCmd
 
 	if err := root.Execute(); err != nil {
