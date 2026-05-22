@@ -25,6 +25,14 @@ LEGACY_HEADER_RE = re.compile(
     re.MULTILINE,
 )
 
+# Legacy pandoc-attr header — renders verbatim as "{width=96px height=96px}"
+# on GitHub's Markdown renderer. We upgrade to a raw <img> tag which both
+# GitHub and pandoc honour cleanly.
+LEGACY_PANDOC_ATTR_RE = re.compile(
+    r'^<div align="center">\n\n!\[Herald\]\(([^)]+)\)\{width=96px height=96px\}\n\n</div>\n\n',
+    re.MULTILINE,
+)
+
 
 def rel_to_logo(md_path: Path) -> str:
     """Return relative path from md_path's directory to LOGO_REL."""
@@ -36,27 +44,27 @@ def rel_to_logo(md_path: Path) -> str:
 
 
 def header_block(rel_path: str) -> str:
-    """Pandoc-friendly logo header.
+    """GitHub- and pandoc-friendly logo header.
 
     Format:
       <div align="center">
 
-      ![Herald](RELPATH){width=96px height=96px}
+      <img src="RELPATH" alt="Herald" width="96" height="96" />
 
       </div>
 
     Why this shape:
       - <div align="center"> renders centered in raw HTML (GitHub, browsers).
-      - Pandoc's gfm + markdown readers treat block-level HTML around a blank
-        line as a wrapper and parse the inner markdown image — so the image
-        is properly embedded into HTML, PDF (weasyprint), and DOCX.
-      - {width=96px height=96px} is pandoc's attribute syntax; passed through
-        to every output format.
+      - Raw <img> renders correctly on GitHub's Markdown renderer (it does
+        NOT support pandoc's `{width=...}` attribute extension — that syntax
+        leaks through as literal text).
+      - Pandoc passes raw HTML through unchanged to HTML, PDF (weasyprint),
+        and DOCX, so the same source works for every output format.
     """
     return (
         f'<div align="center">\n'
         f'\n'
-        f'![Herald]({rel_path}){{width=96px height=96px}}\n'
+        f'<img src="{rel_path}" alt="Herald" width="96" height="96" />\n'
         f'\n'
         f'</div>\n'
         f'\n'
@@ -66,12 +74,15 @@ def header_block(rel_path: str) -> str:
 def already_has_logo(content: str) -> bool:
     """Return True only if the CANONICAL header is present.
 
-    A legacy raw-<p> header is treated as "needs upgrade" — not yet present.
+    Legacy headers (raw <p> or pandoc-attr) are treated as "needs upgrade".
     """
     head = content[:2000]
     if LEGACY_HEADER_RE.match(content):
         return False
-    return LOGO_MARKER in head and "![Herald](" in head
+    if LEGACY_PANDOC_ATTR_RE.match(content):
+        return False
+    # Canonical form uses raw <img src="...herald_logo_square_128.png" ...
+    return LOGO_MARKER in head and '<img src="' in head and 'alt="Herald"' in head
 
 
 def insert_after_front_matter(content: str, block: str) -> str:
@@ -103,6 +114,12 @@ def process(md_path: Path) -> str:
         new_content = LEGACY_HEADER_RE.sub(block, content, count=1)
         md_path.write_text(new_content, encoding="utf-8")
         return f"upgraded legacy header ({rel})"
+
+    # Upgrade legacy pandoc-attr header in place (GitHub renders it as raw text).
+    if LEGACY_PANDOC_ATTR_RE.match(content):
+        new_content = LEGACY_PANDOC_ATTR_RE.sub(block, content, count=1)
+        md_path.write_text(new_content, encoding="utf-8")
+        return f"upgraded pandoc-attr header ({rel})"
 
     if already_has_logo(content):
         return "skipped (already has canonical logo)"

@@ -1,6 +1,6 @@
 <div align="center">
 
-![Herald](../../../assets/logo/herald_logo_square_128.png){width=96px height=96px}
+<img src="../../../assets/logo/herald_logo_square_128.png" alt="Herald" width="96" height="96" />
 
 </div>
 
@@ -86,7 +86,7 @@ Create `docs/catalogue-checks/HRD-093-commons-auth.md`:
 ```markdown
 <div align="center">
 
-![Herald](../../assets/logo/herald_logo_square_128.png){width=96px height=96px}
+<img src="../../assets/logo/herald_logo_square_128.png" alt="Herald" width="96" height="96" />
 
 </div>
 

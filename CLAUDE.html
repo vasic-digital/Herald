@@ -97,8 +97,8 @@
 </header>
 <div align="center">
 
-<p><img src="assets/logo/herald_logo_square_128.png"
-alt="Herald" />{width=96px height=96px}</p>
+<img src="assets/logo/herald_logo_square_128.png" alt="Herald" width="96" height="96" />
+
 </div>
 
 <h1 id="claudemd">CLAUDE.md</h1>
@@ -533,9 +533,10 @@ are derived; do not hand-edit.</p>
 <p><strong>Logo branding (added 2026-05-21).</strong> Every tracked
 Markdown doc now leads with a centered Herald logo header
 (pandoc-friendly <code>&lt;div align="center"&gt;</code> wrapping a
-<code>![Herald](...){width=96px height=96px}</code> image reference to
-<code>assets/logo/herald_logo_square_128.png</code>). The export
-pipeline propagates that logo into the HTML, PDF, and DOCX siblings:</p>
+<code>&lt;img src="..." alt="Herald" width="96" height="96" /&gt;</code>
+image reference to <code>assets/logo/herald_logo_square_128.png</code>).
+The export pipeline propagates that logo into the HTML, PDF, and DOCX
+siblings:</p>
 <ul>
 <li>Logo source: <code>assets/logo/herald_logo.png</code> (1664x928 RGB
 master). Square + transparent variants live under

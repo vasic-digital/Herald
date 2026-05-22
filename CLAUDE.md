@@ -1,6 +1,6 @@
 <div align="center">
 
-![Herald](assets/logo/herald_logo_square_128.png){width=96px height=96px}
+<img src="assets/logo/herald_logo_square_128.png" alt="Herald" width="96" height="96" />
 
 </div>
 
@@ -187,7 +187,7 @@ The empty `constitutable/` directory at the repo root is intentional. Per the sp
 
 The HRD-lifecycle docs in `docs/` also ship as PDF/HTML/DOCX quadruples: `Issues.md` (open HRDs per V3 §8.3), `Fixed.md` (closed-HRD log per §11.4.19 atomic migration), `Status.md` (status summary), `CONTINUATION.md` (live-test handoff prompt for operator-supplied credentials). The `*_Summary.md` variants are derived; do not hand-edit.
 
-**Logo branding (added 2026-05-21).** Every tracked Markdown doc now leads with a centered Herald logo header (pandoc-friendly `<div align="center">` wrapping a `![Herald](...){width=96px height=96px}` image reference to `assets/logo/herald_logo_square_128.png`). The export pipeline propagates that logo into the HTML, PDF, and DOCX siblings:
+**Logo branding (added 2026-05-21).** Every tracked Markdown doc now leads with a centered Herald logo header (pandoc-friendly `<div align="center">` wrapping a `<img src="..." alt="Herald" width="96" height="96" />` image reference to `assets/logo/herald_logo_square_128.png`). The export pipeline propagates that logo into the HTML, PDF, and DOCX siblings:
 
 - Logo source: `assets/logo/herald_logo.png` (1664x928 RGB master). Square + transparent variants live under `assets/logo/herald_logo_square_{32,64,128,256,512,1024}.png` (chroma-keyed white → alpha). `assets/logo/herald_logo.svg` is a vector wrapper around the 512px PNG. `assets/logo/print.css` carries print/screen styling for the HTML/PDF route.
 - Injection: idempotent re-runnable via `python3 scripts/branding_inject_logo.py <md ...>` — skips submodules/, containers/, constitutable/, docs/diary/, LICENSE; respects YAML front-matter; computes the relative path per doc depth.
