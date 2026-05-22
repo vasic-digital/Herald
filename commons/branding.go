@@ -1,6 +1,33 @@
 // Package commons — Branding factory per spec V3 §6.3 + §11.0.
 package commons
 
+import (
+	"os"
+	"path/filepath"
+	"strings"
+)
+
+// ProjectName resolves the Claude Code session name per the Wave 6
+// operator-locked decision (2026-05-22):
+//
+//  1. HERALD_PROJECT_NAME env var wins when non-empty after TrimSpace.
+//  2. Otherwise filepath.Base(os.Getwd()) — the current working directory's
+//     basename.
+//  3. Otherwise (cwd unreadable) the final fallback is "Herald".
+//
+// Every pherald subcommand that touches the Claude Code dispatcher MUST
+// call commons.ProjectName() rather than hardcoding "Herald" — pins the
+// session name to the operator's project context.
+func ProjectName() string {
+	if s := strings.TrimSpace(os.Getenv("HERALD_PROJECT_NAME")); s != "" {
+		return s
+	}
+	if cwd, err := os.Getwd(); err == nil && cwd != "" {
+		return filepath.Base(cwd)
+	}
+	return "Herald"
+}
+
 // DefaultBranding returns a sensible Branding for the named flavor.
 // Each <prefix>herald binary calls this at startup and threads the
 // returned Branding through every OutboundMessage; channel adapters
