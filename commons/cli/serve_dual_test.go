@@ -24,10 +24,12 @@ import (
 	"net"
 	"net/http"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
 
+	toon "digital.vasic.toon/pkg/toon"
 	"github.com/andybalholm/brotli"
 	"github.com/gin-gonic/gin"
 
@@ -417,6 +419,173 @@ func TestServeCmd_AltSvcAndBrotliAutoWired(t *testing.T) {
 	}
 	if string(decoded) != srcBody {
 		t.Errorf("decoded body mismatch — len(got)=%d, len(want)=%d", len(decoded), len(srcBody))
+	}
+
+	cancel()
+	select {
+	case err := <-done:
+		if err != nil && !errors.Is(err, context.Canceled) {
+			t.Errorf("ServeCmd exit error = %v, want nil or context.Canceled", err)
+		}
+	case <-time.After(7 * time.Second):
+		t.Fatal("ServeCmd did not shut down within 7s")
+	}
+}
+
+// toonAutoWireFixture is the payload returned by the auto-wire probe
+// route. Kept as a struct with mixed types so JSON↔TOON round-trip
+// asymmetries (number coercion, etc.) surface clearly.
+type toonAutoWireFixture struct {
+	RuleID  string `json:"rule_id"  toon:"rule_id"`
+	Subject string `json:"subject"  toon:"subject"`
+	Count   int    `json:"count"    toon:"count"`
+	Ok      bool   `json:"ok"       toon:"ok"`
+}
+
+// TestServeCmd_TOONMiddlewareAutoWired — Wave 4b Task 6 §107 anti-bluff
+// regression guard.
+//
+// Asserts that cli.RunServe auto-wires cli.TOONMiddleware() into the
+// middleware chain, so every flavor binary that calls ServeCmd /
+// RunServe inherits Accept: application/toon → TOON-encoded responses
+// WITHOUT needing per-flavor opts.Middleware wiring.
+//
+// Load-bearing assertions (each independently falsifies a distinct §107
+// bluff mode):
+//
+//  1. The response Content-Type after a GET with Accept: application/toon
+//     is application/toon — proves negotiation fired.
+//  2. body[0] is NOT '{' (the JSON-syntax marker). The 2026-05-17 PASS-
+//     bluff revision was JSON bytes wearing an application/toon CT; this
+//     check makes that mode structurally detectable.
+//  3. The wire body decodes via the REAL digital.vasic.toon codec back
+//     into the source struct (reflect.DeepEqual). A "looks-like-TOON"
+//     regression that emits valid-looking but unparseable bytes would
+//     FAIL here.
+//  4. A second GET with Accept: application/json on the same listener
+//     returns JSON — proves the middleware honours explicit Accept and
+//     does NOT force TOON on every client.
+//
+// Mutation falsifiability: removing the `r.Use(TOONMiddleware())` line
+// from RunServe MUST cause assertion 1+2+3 to FAIL (the response would
+// stay JSON because the TOON middleware never wraps the writer).
+func TestServeCmd_TOONMiddlewareAutoWired(t *testing.T) {
+	// Disable HERALD_DEFAULT_RESPONSE_CODEC so the default fallback is
+	// not in play here — we want to test EXPLICIT Accept negotiation.
+	t.Setenv("HERALD_DEFAULT_RESPONSE_CODEC", "")
+	t.Setenv("HERALD_DISABLE_HTTP3", "1") // TCP-only — no cert needed
+
+	port := freeDualPort(t)
+	br := commons.Branding{Flavor: "sherald", DisplayName: "System Herald", DefaultPort: port}
+
+	fixture := toonAutoWireFixture{
+		RuleID:  "11.4.10",
+		Subject: "user-alice",
+		Count:   42,
+		Ok:      true,
+	}
+
+	// Register a flavor route that emits the fixture via c.JSON. The
+	// middleware MUST transcode this to TOON when the client asks for it.
+	opts := ServeOpts{
+		Branding:  br,
+		DisableH3: true,
+		Routes: []Route{
+			{
+				Method:      "GET",
+				Path:        "/v1/probe-toon",
+				Description: "auto-wire TOON middleware probe route",
+				Handler: func(c *gin.Context) {
+					c.JSON(http.StatusOK, fixture)
+				},
+			},
+		},
+		// NO TOONMiddleware in opts.Middleware — that is the whole point
+		// of this test: the auto-wire path in cli.RunServe MUST inject
+		// it for us. If we put it here too we'd be testing double-
+		// wrapping, which is a DIFFERENT (and explicitly forbidden)
+		// configuration.
+	}
+
+	done, cancel := runServeInBackground(t, opts, port)
+	defer cancel()
+
+	url := fmt.Sprintf("http://127.0.0.1:%d/v1/probe-toon", port)
+
+	// Probe 1: Accept: application/toon → response is TOON
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		t.Fatalf("NewRequest: %v", err)
+	}
+	req.Header.Set("Accept", "application/toon")
+	// Disable Accept-Encoding so Brotli does NOT compress the body
+	// (this test is about TOON, not Brotli; decoding through both layers
+	// at once muddies the failure mode if one of them regresses).
+	req.Header.Set("Accept-Encoding", "identity")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("GET TOON: %v", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("status = %d, want 200", resp.StatusCode)
+	}
+
+	gotCT := canonicalCT(resp.Header.Get("Content-Type"))
+	if gotCT != MediaTypeTOON {
+		t.Fatalf("Content-Type = %q, want %q — TOONMiddleware NOT auto-wired",
+			gotCT, MediaTypeTOON)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("read body: %v", err)
+	}
+	if len(body) == 0 {
+		t.Fatal("empty response body (§107: middleware swallowed handler output)")
+	}
+	if body[0] == '{' || body[0] == '[' {
+		t.Fatalf("§107 BLUFF — body[0]=%q (JSON syntax) under Content-Type: application/toon; wire=%q",
+			string(body[0]), string(body[:min(80, len(body))]))
+	}
+
+	var back toonAutoWireFixture
+	if err := toon.Unmarshal(body, &back); err != nil {
+		t.Fatalf("response body did not decode as TOON via real codec: %v; wire=%q",
+			err, string(body))
+	}
+	if !reflect.DeepEqual(fixture, back) {
+		t.Fatalf("§107 round-trip failed — auto-wired TOON corrupted payload:\n  orig=%+v\n  back=%+v\n  wire=%q",
+			fixture, back, string(body))
+	}
+
+	// Probe 2: Accept: application/json → response stays JSON (proves
+	// the middleware doesn't force TOON on every client).
+	req2, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		t.Fatalf("NewRequest JSON: %v", err)
+	}
+	req2.Header.Set("Accept", "application/json")
+	req2.Header.Set("Accept-Encoding", "identity")
+	resp2, err := http.DefaultClient.Do(req2)
+	if err != nil {
+		t.Fatalf("GET JSON: %v", err)
+	}
+	defer resp2.Body.Close()
+	if resp2.StatusCode != http.StatusOK {
+		t.Fatalf("JSON status = %d, want 200", resp2.StatusCode)
+	}
+	body2, err := io.ReadAll(resp2.Body)
+	if err != nil {
+		t.Fatalf("read JSON body: %v", err)
+	}
+	if body2[0] != '{' {
+		t.Fatalf("Accept: application/json did not yield JSON; body[0]=%q wire=%q",
+			string(body2[0]), string(body2[:min(80, len(body2))]))
+	}
+	if got := canonicalCT(resp2.Header.Get("Content-Type")); got != MediaTypeJSON {
+		t.Errorf("JSON probe Content-Type = %q, want %q", got, MediaTypeJSON)
 	}
 
 	cancel()

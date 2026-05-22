@@ -104,10 +104,12 @@ type ServeOpts struct {
 //
 //   - DisableH3 == false (default): binds BOTH a TCP/HTTPS+H2 listener
 //     AND a UDP/H3 listener on --http-port. Both serve the same Gin
-//     engine. Auto-injects AltSvcMiddleware + BrotliMiddleware into the
-//     chain so TCP clients see Alt-Svc upgrade hints + Accept-Encoding:
-//     br responses get compressed. Requires a TLS cert (operator flag,
-//     env, or dev-autogen depending on ProdMode).
+//     engine. Auto-injects AltSvcMiddleware + BrotliMiddleware +
+//     TOONMiddleware (Wave 4b T6) into the chain so TCP clients see
+//     Alt-Svc upgrade hints + Accept-Encoding: br responses get
+//     compressed + Accept: application/toon responses get TOON-encoded.
+//     Requires a TLS cert (operator flag, env, or dev-autogen depending
+//     on ProdMode).
 //   - DisableH3 == true: binds ONLY the TCP listener (HERALD_DISABLE_HTTP3=1
 //     escape hatch). If a cert is supplied, the listener runs TLS; if
 //     not, it falls back to plaintext HTTP/1.1+H2c, matching pre-T6
@@ -249,6 +251,35 @@ func RunServe(ctx context.Context, opts ServeOpts, port int) error {
 		altSvcPort = port
 	}
 	r.Use(AltSvcMiddleware(altSvcPort))
+
+	// Wave 4b Task 6: auto-wire the TOON encode/decode middleware AFTER
+	// Brotli + Alt-Svc but BEFORE the flavor middleware chain. Ordering
+	// rationale:
+	//
+	//   - TOON must wrap a writer that is closer to the handler than
+	//     Brotli is — when TOON.finish() transcodes JSON→TOON, it writes
+	//     the TOON bytes to the *next* layer out (Brotli's buffer), and
+	//     Brotli compresses those TOON bytes. If we reversed the order
+	//     (TOON before Brotli at registration), Brotli would buffer the
+	//     original JSON bytes and TOON.finish() would never see them.
+	//   - TOON must run BEFORE flavor middleware (auth, request-id, …)
+	//     so that those middlewares' own c.JSON responses (e.g., a 401
+	//     "no auth claims" from commons_auth.GinMiddleware) ALSO get
+	//     transcoded when the client requests TOON. Per §107: a TOON-
+	//     aware response on the happy path + a JSON-only 401 on the
+	//     auth-failure path is a covenant gap (Accept-honoring is the
+	//     contract for the entire endpoint surface, not just success).
+	//
+	// Every flavor binary that calls cli.RunServe (cherald, sherald,
+	// bherald, rherald, iherald, scherald via cli.ServeCmd; pherald via
+	// its custom cobra wrapper) inherits TOON encoding for free. Flavors
+	// MUST NOT add TOONMiddleware to opts.Middleware — doing so would
+	// double-wrap the writer (TOON-over-TOON), which the §107 test in
+	// commons/cli/toon_test.go would catch via the byte-0 assertion (the
+	// inner TOON would emit TOON bytes that the outer TOON would try to
+	// JSON-decode, fall back to passthrough, and emit a doubly-TOON
+	// body that is no longer parseable).
+	r.Use(TOONMiddleware())
 
 	for _, mw := range opts.Middleware {
 		if mw != nil {

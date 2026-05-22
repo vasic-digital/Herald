@@ -8,10 +8,12 @@ import (
 	"strings"
 	"testing"
 
+	toon "digital.vasic.toon/pkg/toon"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
 	"github.com/vasic-digital/herald/cherald/internal/compliance"
+	"github.com/vasic-digital/herald/commons/cli"
 	"github.com/vasic-digital/herald/commons_auth"
 	constitution "github.com/vasic-digital/herald/commons_constitution"
 	"github.com/vasic-digital/herald/commons_constitution/state"
@@ -168,5 +170,131 @@ func fakeAuth(tenant string) gin.HandlerFunc {
 			"sub":    "test-operator",
 		})
 		c.Next()
+	}
+}
+
+// TestComplianceHandler_AcceptTOON_EmitsTOON — Wave 4b Task 6 §107
+// anti-bluff guarantee for cherald.
+//
+// Asserts that GET /v1/compliance, when served through the cli.RunServe
+// chain (which auto-wires cli.TOONMiddleware as of Wave 4b T6), responds
+// with REAL TOON wire bytes when the client sends Accept: application/toon.
+//
+// Load-bearing assertions (each falsifies a distinct §107 bluff mode):
+//
+//  1. Content-Type is application/toon — proves the middleware was
+//     reachable AND fired.
+//  2. body[0] is NOT '{' (the JSON-syntax marker). The 2026-05-17 PASS-
+//     bluff revision was JSON bytes wearing an application/toon CT; this
+//     check makes that mode impossible to slip past unnoticed.
+//  3. The wire body decodes via the REAL digital.vasic.toon codec AND
+//     surfaces the expected response fields (page, page_size, total,
+//     tenant_id) end-to-end. A regression that emitted "looks-like-TOON"
+//     bytes the codec could not parse would FAIL here.
+//
+// The test wires the same middleware chain cli.RunServe wires in
+// production (TOONMiddleware → fakeAuth → handler) so what passes here
+// is what an operator sees on a live cherald binary.
+//
+// Mutation falsifiability: deleting `r.Use(cli.TOONMiddleware())` from
+// commons/cli/serve.go would propagate to cherald's serve plane (since
+// cherald uses cli.ServeCmd) and FAIL assertions 1+2+3.
+func TestComplianceHandler_AcceptTOON_EmitsTOON(t *testing.T) {
+	// Explicit empty env so the request-level Accept header is the only
+	// thing driving negotiation. (Herald-default is TOON anyway, but
+	// pinning this makes the failure mode obvious if a future regression
+	// silently changes the default.)
+	t.Setenv("HERALD_DEFAULT_RESPONSE_CODEC", "")
+
+	gin.SetMode(gin.TestMode)
+	store := state.NewMemory()
+	tid := uuid.New()
+	ctx := context.Background()
+
+	// Seed one row so the response carries observable structure (total≥1
+	// + results[0] populated) — empty-payload responses are too sparse to
+	// surface a TOON round-trip regression.
+	r := constitution.Result{
+		Decision: constitution.DecisionPass,
+		Evidence: "seeded-evidence",
+		DigestSHA: [32]byte{0xa, 0xb, 0xc},
+	}
+	if _, err := store.Record(ctx, tid, "11.4.10", "subj-toon", r, constitution.BundleHash{}, "uri-toon"); err != nil {
+		t.Fatalf("seed Record: %v", err)
+	}
+
+	// Build the SAME middleware chain cli.RunServe builds — TOON
+	// middleware first (auto-wired), then auth, then handler. This is
+	// the §107 "production-equivalent fixture" requirement: the test
+	// covers the bytes the operator actually sees.
+	router := gin.New()
+	router.Use(cli.TOONMiddleware())
+	router.GET("/v1/compliance", fakeAuth(tid.String()), compliance.Handler(store))
+
+	req := httptest.NewRequest(http.MethodGet, "/v1/compliance", nil)
+	req.Header.Set("Accept", "application/toon")
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200; body = %s", rec.Code, rec.Body.String())
+	}
+
+	// Assertion 1: Content-Type is application/toon (canonicalised).
+	gotCT := strings.SplitN(rec.Header().Get("Content-Type"), ";", 2)[0]
+	gotCT = strings.ToLower(strings.TrimSpace(gotCT))
+	if gotCT != "application/toon" {
+		t.Fatalf("Content-Type = %q, want application/toon — TOONMiddleware did not transcode", gotCT)
+	}
+
+	// Assertion 2: wire bytes are NOT JSON (the 2026-05-17 bluff
+	// signature was JSON bytes under a TOON CT — caught here at byte 0).
+	body := rec.Body.Bytes()
+	if len(body) == 0 {
+		t.Fatal("empty response body (§107: middleware swallowed handler output)")
+	}
+	if body[0] == '{' || body[0] == '[' {
+		t.Fatalf("§107 BLUFF — body[0]=%q (JSON syntax) under Content-Type: application/toon; wire=%q",
+			string(body[0]), string(body[:min(80, len(body))]))
+	}
+
+	// Assertion 3: real-codec round-trip into the response shape.
+	// The compliance handler emits a gin.H (map[string]any) so we decode
+	// the TOON bytes back into the same shape and verify the structural
+	// fields. "No error" alone is insufficient — we positively assert
+	// the values made it through the codec.
+	var got struct {
+		Page     int    `toon:"page"`
+		PageSize int    `toon:"page_size"`
+		Total    int    `toon:"total"`
+		TenantID string `toon:"tenant_id"`
+		Results  []struct {
+			RuleID  string `toon:"rule_id"`
+			Subject string `toon:"subject"`
+		} `toon:"results"`
+	}
+	if err := toon.Unmarshal(body, &got); err != nil {
+		t.Fatalf("response body did not decode as TOON via real codec: %v; wire=%q",
+			err, string(body))
+	}
+	if got.Page != 1 || got.PageSize != 50 {
+		t.Errorf("defaults wrong after TOON round-trip: page=%d page_size=%d (want 1/50)",
+			got.Page, got.PageSize)
+	}
+	if got.Total != 1 || len(got.Results) != 1 {
+		t.Fatalf("seeded row did not survive TOON round-trip: total=%d results=%d",
+			got.Total, len(got.Results))
+	}
+	if got.TenantID != tid.String() {
+		t.Errorf("tenant_id = %q after TOON round-trip, want %q (codec corrupted the field)",
+			got.TenantID, tid.String())
+	}
+	if got.Results[0].RuleID != "11.4.10" {
+		t.Errorf("results[0].rule_id = %q after TOON round-trip, want %q",
+			got.Results[0].RuleID, "11.4.10")
+	}
+	if got.Results[0].Subject != "subj-toon" {
+		t.Errorf("results[0].subject = %q after TOON round-trip, want %q",
+			got.Results[0].Subject, "subj-toon")
 	}
 }

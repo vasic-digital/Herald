@@ -23,6 +23,13 @@
 // still called INSIDE RunE, so `pherald version` / `pherald migrate`
 // remain runnable without PG/JWT env vars. This closes the §107 covenant
 // gap that left POST /v1/events TCP-only after Wave 4a T6/T7.
+//
+// Wave 4b Task 6 refactor (2026-05-22): cli.RunServe now auto-wires
+// cli.TOONMiddleware() (between Brotli/AltSvc and flavor middleware) so
+// every flavor inherits TOON encoding for free. Pherald NO LONGER adds
+// cli.TOONMiddleware() to opts.Middleware — that would double-wrap the
+// writer (TOON-over-TOON), which would corrupt response bodies for any
+// client requesting application/toon.
 package main
 
 import (
@@ -72,18 +79,17 @@ func registerStubs(root *cobra.Command) {
 //   - GET  /metrics   → cli.MetricsHandler                [built-in]
 //
 // Middleware stack (in order, downstream of cli.RunServe's auto-wired
-// Brotli + Alt-Svc layers):
-//  1. cli.TOONMiddleware()                 — transcodes c.JSON → TOON when
-//                                            client Accept prefers TOON
-//                                            (Wave 4b T5)
-//  2. commons_auth.GinMiddleware(verifier) — 401 on missing/invalid JWT
-//  3. httpsrv.RequestIDMiddleware()        — propagates X-Request-ID
+// Brotli + Alt-Svc + TOON layers — Wave 4b T6 lifted TOON into RunServe
+// itself):
+//  1. commons_auth.GinMiddleware(verifier) — 401 on missing/invalid JWT
+//  2. httpsrv.RequestIDMiddleware()        — propagates X-Request-ID
 //
-// TOONMiddleware sits BEFORE auth so the Accept-negotiation buffer wraps
-// the writer for the entire downstream chain (auth-failure responses also
-// get codec-correct encoding). The auth + RequestID middlewares observe
-// the wrapped writer transparently — both call c.JSON which lands in
-// TOONMiddleware's response buffer.
+// cli.RunServe's auto-wired TOONMiddleware sits BEFORE these flavor
+// middlewares so the Accept-negotiation buffer wraps the writer for the
+// entire downstream chain (auth-failure 401s also get codec-correct
+// encoding). The auth + RequestID middlewares observe the wrapped writer
+// transparently — both call c.JSON which lands in TOONMiddleware's
+// response buffer.
 func newServeCmd(br commons.Branding) *cobra.Command {
 	var (
 		port     int
@@ -110,7 +116,11 @@ func newServeCmd(br commons.Branding) *cobra.Command {
 				Branding: br,
 				Routes:   httpsrv.Routes(runnerInstance),
 				Middleware: []gin.HandlerFunc{
-					cli.TOONMiddleware(), // Wave 4b T5: TOON↔JSON content negotiation
+					// Wave 4b T6: TOONMiddleware is auto-wired by
+					// cli.RunServe (BEFORE this flavor chain) so every
+					// flavor inherits TOON encoding without per-flavor
+					// wiring. Do NOT re-add it here — that would double-
+					// wrap the writer and corrupt application/toon bodies.
 					commons_auth.GinMiddleware(verifier),
 					httpsrv.RequestIDMiddleware(),
 				},
