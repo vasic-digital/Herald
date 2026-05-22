@@ -1,6 +1,7 @@
 package claude_code
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"strings"
@@ -97,6 +98,91 @@ func TestFormatEnvelope_ContainsExpectedFields(t *testing.T) {
 		if !strings.Contains(env, want) {
 			t.Errorf("envelope missing %q\n---ENVELOPE---\n%s", want, env)
 		}
+	}
+}
+
+// TestDispatchCommandIncludesOpusModel proves the Wave 6 operator-locked
+// Opus pinning is load-bearing on the literal argv of the spawned `claude`
+// process — not "intended via config", not "passed as env var hopefully
+// read by the binary". Inspects the *exec.Cmd.Args slice constructed by
+// the internal buildCmd helper (exported for tests via export_test.go).
+//
+// §107 anti-bluff: the assertion requires `--model` and `claude-opus-4-7`
+// to appear as two contiguous slice entries. A single joined string like
+// "--model claude-opus-4-7" (one argv entry) would be rejected by the
+// Claude CLI flag parser at runtime; the test catches that too.
+//
+// Wave 6 T12 mutation gate (b) swaps the literal to "claude-sonnet-4-6"
+// and asserts this test FAILs — proving the assertion catches real model
+// drift rather than passing trivially.
+func TestDispatchCommandIncludesOpusModel(t *testing.T) {
+	d, err := New("/nonexistent/claude", t.TempDir(), "TestProj")
+	if err != nil {
+		t.Fatalf("New: %v", err)
+	}
+	// Pre-create the session anchor so ResolveSession returns a non-Nil UUID.
+	// buildCmd never spawns the binary; it only assembles argv.
+	anchorDir := filepath.Join(d.WorkingDirForTest(), ".herald", "claude-code", "sessions")
+	if err := os.MkdirAll(anchorDir, 0o755); err != nil {
+		t.Fatalf("mkdir anchor dir: %v", err)
+	}
+	anchorFile := filepath.Join(anchorDir, "TestProj.session")
+	if err := os.WriteFile(anchorFile, []byte("11111111-2222-3333-4444-555555555555\n"), 0o644); err != nil {
+		t.Fatalf("write anchor: %v", err)
+	}
+
+	cmd, err := d.BuildCmdForTest(context.Background(), DispatchRequest{
+		InboundID:    "INB-OPUS-1",
+		Sender:       "tgram:test",
+		Channel:      commons.ChannelTelegram,
+		UserMessage:  "hi",
+		Conversation: "(no prior thread)",
+		Classification: Classification{
+			Type:        "query",
+			Criticality: "low",
+			Confidence:  0.5,
+		},
+	})
+	if err != nil {
+		t.Fatalf("BuildCmdForTest: %v", err)
+	}
+
+	args := cmd.Args
+	found := false
+	for i := 0; i+1 < len(args); i++ {
+		if args[i] == "--model" && args[i+1] == "claude-opus-4-7" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatalf("argv missing contiguous [--model, claude-opus-4-7]; got: %v", args)
+	}
+
+	// Also defensive: ensure the model arg appears between --resume and --print
+	// (positional sanity — `claude` accepts flags in any order, but we
+	// document the intent here so a future refactor doesn't accidentally
+	// place --model after the envelope payload, which would make the
+	// envelope text be parsed as the model name).
+	idxResume := -1
+	idxModel := -1
+	idxPrint := -1
+	for i, a := range args {
+		switch a {
+		case "--resume":
+			idxResume = i
+		case "--model":
+			idxModel = i
+		case "--print":
+			idxPrint = i
+		}
+	}
+	if idxResume < 0 || idxModel < 0 || idxPrint < 0 {
+		t.Fatalf("expected --resume, --model, --print all present; got args: %v", args)
+	}
+	if !(idxResume < idxModel && idxModel < idxPrint) {
+		t.Fatalf("expected ordering --resume < --model < --print; got resume=%d model=%d print=%d in args: %v",
+			idxResume, idxModel, idxPrint, args)
 	}
 }
 

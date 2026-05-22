@@ -25,20 +25,10 @@ import (
 // caller (HRD-012 step 7 persistence layer) can decide to spawn an
 // initialising session and PersistSession before retrying.
 func (d *Dispatcher) Dispatch(ctx context.Context, req DispatchRequest) (DispatchResponse, error) {
-	sessionUUID, anchor, err := d.ResolveSession()
+	cmd, sessionUUID, anchor, err := d.buildCmd(ctx, req)
 	if err != nil {
-		return DispatchResponse{}, fmt.Errorf("claude_code: dispatch resolve session: %w", err)
+		return DispatchResponse{}, err
 	}
-	if sessionUUID == uuid.Nil {
-		return DispatchResponse{}, fmt.Errorf("claude_code: dispatch: no anchored session at %s (HRD-012 step 7 will bootstrap)", anchor)
-	}
-
-	envelope := d.FormatEnvelope(req)
-	cmd := exec.CommandContext(ctx, d.binaryPath,
-		"--resume", sessionUUID.String(),
-		"--print", envelope,
-	)
-	cmd.Dir = d.workingDir
 	out, err := cmd.Output()
 	if err != nil {
 		var ee *exec.ExitError
@@ -67,6 +57,34 @@ func (d *Dispatcher) Dispatch(ctx context.Context, req DispatchRequest) (Dispatc
 		}
 	}
 	return resp, nil
+}
+
+// buildCmd assembles the `claude` invocation for a DispatchRequest WITHOUT
+// running it. Extracted from Dispatch so unit tests can inspect the *exec.Cmd
+// argv slice (proving the Wave 6 operator-locked `--model claude-opus-4-7`
+// pin is load-bearing on the literal argv — not merely "configured somewhere
+// hopefully").
+//
+// Returns the prepared *exec.Cmd, the resolved session UUID, the anchor
+// path, and any session-resolution error. The caller (Dispatch) is
+// responsible for cmd.Output() and reply parsing.
+func (d *Dispatcher) buildCmd(ctx context.Context, req DispatchRequest) (*exec.Cmd, uuid.UUID, string, error) {
+	sessionUUID, anchor, err := d.ResolveSession()
+	if err != nil {
+		return nil, uuid.Nil, anchor, fmt.Errorf("claude_code: dispatch resolve session: %w", err)
+	}
+	if sessionUUID == uuid.Nil {
+		return nil, uuid.Nil, anchor, fmt.Errorf("claude_code: dispatch: no anchored session at %s (HRD-012 step 7 will bootstrap)", anchor)
+	}
+
+	envelope := d.FormatEnvelope(req)
+	cmd := exec.CommandContext(ctx, d.binaryPath,
+		"--resume", sessionUUID.String(),
+		"--model", "claude-opus-4-7", // Wave 6 operator-locked: Opus always.
+		"--print", envelope,
+	)
+	cmd.Dir = d.workingDir
+	return cmd, sessionUUID, anchor, nil
 }
 
 // parseReply scans Claude Code's stdout for the <<<HERALD-REPLY>>> marker
