@@ -33,6 +33,22 @@
 //                            that returns a canned reply, so the test
 //                            never spawns the real claude CLI. Production
 //                            callers do NOT set this.
+//   HERALD_OPERATOR_IDS    — Wave 6.5 T7: comma-separated channel_user_id
+//                            allowlist for the §32.6 Done:/Reopen:
+//                            commands. Empty / unset → both commands are
+//                            rejected with ErrNotOperator. Whitespace
+//                            tolerant; empty segments skipped. Stub for
+//                            V3 §32.10 subscriber-role mapping (Wave 7).
+//
+// Flags:
+//   --docs-dir <path>      — Wave 6.5 T7: docs root containing Issues.md,
+//                            Fixed.md, Status.md, CONTINUATION.md, Help.md.
+//                            Default "docs" (relative to cwd). docs/Issues.md
+//                            MUST exist; the command refuses to boot
+//                            otherwise (§107 fail-loud — silent degradation
+//                            to "everything goes to CC" would mask a real
+//                            misconfiguration).
+//   --qa-out-dir <path>    — Wave 6 T10a: JSONL journal directory.
 package main
 
 import (
@@ -40,6 +56,8 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"path/filepath"
+	"strings"
 	"syscall"
 
 	"github.com/spf13/cobra"
@@ -81,6 +99,11 @@ Optional flags:
                            <path>/attachments/<sha256>.<ext>. Wave 6 T10a
                            §107.x evidence primitive — feature ships with
                            the resulting run dir under docs/qa/<run-id>/.
+  --docs-dir <path>        Docs root containing Issues.md / Fixed.md /
+                           Status.md / CONTINUATION.md / Help.md. Default
+                           "docs" (relative to cwd). Issues.md MUST exist;
+                           startup fails otherwise (Wave 6.5 T7 §107
+                           fail-loud).
 
 Signal handling: SIGINT/SIGTERM cancels the long-poll cleanly via
 signal.NotifyContext.`,
@@ -90,17 +113,29 @@ signal.NotifyContext.`,
 				return err
 			}
 			cfg.QAOutDir, _ = cmd.Flags().GetString("qa-out-dir")
+			cfg.DocsDir, _ = cmd.Flags().GetString("docs-dir")
+			if cfg.DocsDir == "" {
+				cfg.DocsDir = "docs"
+			}
+			cfg.OperatorIDs = parseOperatorIDs(os.Getenv("HERALD_OPERATOR_IDS"))
+			if err := wireDocsAndCommands(&cfg); err != nil {
+				return err
+			}
 			ctx, cancel := signal.NotifyContext(cmd.Context(), syscall.SIGINT, syscall.SIGTERM)
 			defer cancel()
 			fmt.Fprintln(cmd.OutOrStdout(), "pherald listen: starting Telegram getUpdates long-poll loop")
 			if cfg.QAOutDir != "" {
 				fmt.Fprintf(cmd.OutOrStdout(), "pherald listen: QA journaling enabled — %s\n", cfg.QAOutDir)
 			}
+			fmt.Fprintf(cmd.OutOrStdout(), "pherald listen: docs dir %s; %d operator(s) authorised for Done:/Reopen:\n",
+				cfg.DocsDir, len(cfg.OperatorIDs))
 			return runListen(ctx, cfg)
 		},
 	}
 	cmd.Flags().String("qa-out-dir", "",
 		"If set, journal inbound/CC/outbound events to <dir>/transcript.jsonl + copy attachments to <dir>/attachments/<sha256>.<ext> (Wave 6 T10a §107.x evidence)")
+	cmd.Flags().String("docs-dir", "docs",
+		"Docs root containing Issues.md / Fixed.md / Status.md / CONTINUATION.md / Help.md. Issues.md MUST exist (Wave 6.5 T7).")
 	return cmd
 }
 
@@ -119,6 +154,28 @@ type listenConfig struct {
 	// addressed attachment copies under <QAOutDir>/attachments/ per the
 	// Wave 6 T10a §107.x evidence primitive.
 	QAOutDir string
+	// DocsDir is the operator-supplied docs root (Wave 6.5 T7). Default
+	// "docs"; --docs-dir overrides. Issues.md must exist inside it.
+	DocsDir string
+	// OperatorIDs is the parsed HERALD_OPERATOR_IDS env (Wave 6.5 T7).
+	// Empty / nil → all Done:/Reopen: commands rejected.
+	OperatorIDs map[string]bool
+	// IssueOpener (Wave 6.5 T7) wires action=issue.open through to
+	// docs/Issues.md. Constructed in wireDocsAndCommands when the
+	// docs dir is valid; nil in hermetic tests that don't exercise
+	// the issue.open action.
+	IssueOpener inbound.IssueOpener
+	// Commands (Wave 6.5 T7) wires the §32.6 fast-path command handlers.
+	// Constructed in wireDocsAndCommands; nil in hermetic tests that
+	// don't exercise the command fast-path.
+	Commands *inbound.CommandsConfig
+	// EventEmitter (Wave 6.5 T7) wires action=event.emit through to
+	// runner.Runner.Run. Wave 6.5 ships this nil — the operator runs
+	// pherald listen + pherald serve in separate processes today, so
+	// the listen-side Runner is unavailable. The dispatcher returns
+	// an explicit "no EventEmitter configured" error for event.emit
+	// replies when this is nil (§107 fail-loud).
+	EventEmitter inbound.EventEmitter
 	// Subscriber is the long-poll entry point. Production: a closure over
 	// tgram.Adapter.Subscribe. Test: a closure that publishes one synthetic
 	// InboundEvent and waits for ctx.Done.
@@ -209,6 +266,9 @@ func runListen(ctx context.Context, cfg listenConfig) error {
 		ProjectName: cfg.ProjectName,
 		Code:        code,
 		TgramReply:  replier,
+		Issues:      cfg.IssueOpener,
+		Events:      cfg.EventEmitter,
+		Commands:    cfg.Commands,
 	})
 	if err != nil {
 		return fmt.Errorf("pherald listen: build inbound dispatcher: %w", err)
@@ -239,4 +299,95 @@ func (fakeCodeDispatcher) Dispatch(_ context.Context, _ inbound.CodeRequest) (in
 	return inbound.CodeResponse{
 		Stdout: []byte(`<<<HERALD-REPLY>>> {"action":"reply","text":"ack (fake)"}`),
 	}, nil
+}
+
+// parseOperatorIDs is the §32.6 Done:/Reopen: operator-role allowlist
+// parser (Wave 6.5 T7). It accepts a comma-separated string of
+// channel_user_id values (Telegram numeric chat IDs) and returns the
+// set as a map[string]bool. Whitespace around each segment is trimmed;
+// empty segments (including ",,", trailing/leading commas) are skipped.
+//
+// Empty / unset HERALD_OPERATOR_IDS env → empty map → all Done:/Reopen:
+// commands rejected with inbound.ErrNotOperator. The pherald listen
+// startup line prints the count so the operator sees the count before
+// any inbound message arrives.
+func parseOperatorIDs(s string) map[string]bool {
+	m := map[string]bool{}
+	if s == "" {
+		return m
+	}
+	for _, p := range strings.Split(s, ",") {
+		p = strings.TrimSpace(p)
+		if p == "" {
+			continue
+		}
+		m[p] = true
+	}
+	return m
+}
+
+// wireDocsAndCommands constructs the Wave 6.5 T7 docs-aware dependencies
+// (DocsIssueOpener + CommandsConfig) from cfg.DocsDir + cfg.OperatorIDs
+// and stamps them into cfg in-place. Returns an explicit error if
+// docs/Issues.md is missing — §107 fail-loud, never silent-degrade to
+// "everything goes to CC because the issue opener can't see the file".
+//
+// Optional siblings (Status.md / CONTINUATION.md / Help.md) emit
+// warnings to stderr but do not block startup; the corresponding
+// commands fall back to errors-at-call-time (HandleStatus / HandleContinue
+// return an error from os.ReadFile when invoked; HandleHelp falls back
+// to BuiltinHelp by design).
+//
+// EventEmitter is left nil — the operator runs pherald listen +
+// pherald serve in separate processes today (Wave 6.5 scope). The
+// dispatcher returns an explicit error for action=event.emit replies
+// when nil, which the operator sees as a SendReply error.
+func wireDocsAndCommands(cfg *listenConfig) error {
+	if cfg.DocsDir == "" {
+		cfg.DocsDir = "docs"
+	}
+	issuesPath := filepath.Join(cfg.DocsDir, "Issues.md")
+	fixedPath := filepath.Join(cfg.DocsDir, "Fixed.md")
+	if _, err := os.Stat(issuesPath); err != nil {
+		return fmt.Errorf("pherald listen: docs Issues.md not found at %s — set --docs-dir or chdir to repo root: %w",
+			issuesPath, err)
+	}
+	if _, err := os.Stat(fixedPath); err != nil {
+		// Fixed.md absent is a warning, not fatal — nextHRDNumber
+		// tolerates the missing path. But Done:/Reopen: will fail
+		// when invoked against a missing Fixed.md (with explicit
+		// error to the operator), so warn at startup so the
+		// operator notices.
+		fmt.Fprintf(os.Stderr, "pherald listen: warning — Fixed.md missing at %s (Done:/Reopen: will fail until present)\n", fixedPath)
+	}
+	statusPath := filepath.Join(cfg.DocsDir, "Status.md")
+	continuePath := filepath.Join(cfg.DocsDir, "CONTINUATION.md")
+	helpPath := filepath.Join(cfg.DocsDir, "Help.md")
+	if _, err := os.Stat(statusPath); err != nil {
+		fmt.Fprintf(os.Stderr, "pherald listen: warning — Status.md missing at %s (Status: command will error until present)\n", statusPath)
+	}
+	if _, err := os.Stat(continuePath); err != nil {
+		fmt.Fprintf(os.Stderr, "pherald listen: warning — CONTINUATION.md missing at %s (Continue: command will error until present)\n", continuePath)
+	}
+	// Help.md is optional by design (BuiltinHelp fallback) — no warning.
+	lockPath := filepath.Join(cfg.DocsDir, ".issues.lock")
+	cfg.IssueOpener = &inbound.DocsIssueOpener{
+		IssuesPath: issuesPath,
+		FixedPath:  fixedPath,
+		LockPath:   lockPath,
+		Clock:      commons.RealClock{},
+	}
+	cfg.Commands = &inbound.CommandsConfig{
+		DocsDir:      cfg.DocsDir,
+		IssuesPath:   issuesPath,
+		FixedPath:    fixedPath,
+		StatusPath:   statusPath,
+		ContinuePath: continuePath,
+		HelpPath:     helpPath,
+		LockPath:     lockPath,
+		OperatorIDs:  cfg.OperatorIDs,
+		Clock:        commons.RealClock{},
+	}
+	cfg.EventEmitter = nil
+	return nil
 }

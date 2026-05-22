@@ -84,12 +84,20 @@ type EventEmitter interface {
 // Config is NewDispatcher's input. ProjectName surfaces here for
 // observability/logging; CC session resolution happens inside the
 // CodeDispatcher implementation.
+//
+// Commands (Wave 6.5 T7) wires the §32.6 fast-path command handlers
+// (Help / Status / Continue / Done / Reopen). When non-nil, the
+// Dispatcher's Handle method invokes them BEFORE CC dispatch for the
+// matching classification.Type values — saving the LLM round-trip for
+// deterministic-prefix messages. When nil, every inbound message goes
+// to CC regardless of classification (Wave 6 behaviour preserved).
 type Config struct {
 	ProjectName string
 	Code        CodeDispatcher
 	TgramReply  TgramReplier
 	Issues      IssueOpener
 	Events      EventEmitter
+	Commands    *CommandsConfig
 	Fake        bool // listen_test.go opt-in; production callers leave false
 }
 
@@ -100,13 +108,16 @@ type Dispatcher struct {
 	reply       TgramReplier
 	opener      IssueOpener
 	emit        EventEmitter
+	commands    *CommandsConfig
 }
 
 // NewDispatcher validates cfg and returns a ready Dispatcher. cfg.Code and
 // cfg.TgramReply MUST be non-nil — cfg.Issues / cfg.Events may be nil iff
 // the corresponding action triggers are never emitted by the LLM (the
 // switch returns an explicit error in that case rather than silently
-// dropping the trigger).
+// dropping the trigger). cfg.Commands may be nil — when nil, every
+// inbound message goes to CC regardless of classification (Wave 6
+// behaviour preserved).
 func NewDispatcher(cfg Config) (*Dispatcher, error) {
 	if cfg.Code == nil {
 		return nil, errors.New("inbound.NewDispatcher: cfg.Code is required")
@@ -120,23 +131,47 @@ func NewDispatcher(cfg Config) (*Dispatcher, error) {
 		reply:       cfg.TgramReply,
 		opener:      cfg.Issues,
 		emit:        cfg.Events,
+		commands:    cfg.Commands,
 	}, nil
 }
 
 // Handle implements commons.InboundHandler.
 //
+// Wave 6.5 T7: classifier runs unconditionally on ev.Body.Plain so the
+// journal always records the §32.6 classification — even when the
+// dispatch path falls through to CC (because the classifier hit a free-
+// form `query` / `bug` / `task` / `investigation` / `override` type).
+// For the fast-path command types (help_command / status_request /
+// continuation_request / closure / reopen), the corresponding handler
+// from d.commands is invoked BEFORE CC dispatch — saving the LLM
+// round-trip for deterministic-prefix messages. If d.commands is nil,
+// every inbound message goes to CC regardless of classification (Wave 6
+// behaviour preserved).
+//
 // §107 anchor: every sink invocation is logged with a stable prefix
 // ("inbound dispatched: <action>") so listen_test.go can confirm the
 // production handler was wired (not silently swallowed).
 func (d *Dispatcher) Handle(ctx context.Context, ev commons.InboundEvent) error {
+	classification := Classify(ev.Body.Plain)
+
+	// Fast-path: §32.6 command-prefix types are handled locally without a
+	// CC round-trip. d.commands must be wired (T7 listen.go) for this to
+	// fire — when nil, the classifier still ran (journal sees it) but the
+	// dispatcher falls through to CC.
+	if d.commands != nil {
+		if handled, err := d.fastPath(ctx, ev, classification); handled {
+			return err
+		}
+	}
+
 	req := CodeRequest{
-		InboundID:    ev.EventID,
-		Sender:       fmt.Sprintf("%s:%s", ev.Sender.Channel, ev.Sender.ChannelUserID),
-		Channel:      commons.ChannelID(ev.Sender.Channel),
-		Conversation: ev.Body.Plain,
-		Attachments:  ev.Attachments,
-		UserMessage:  ev.Body.Plain,
-		// Classification is left empty for Wave 6; §32.6 classifier is HRD-NNN-W6c.
+		InboundID:      ev.EventID,
+		Sender:         fmt.Sprintf("%s:%s", ev.Sender.Channel, ev.Sender.ChannelUserID),
+		Channel:        commons.ChannelID(ev.Sender.Channel),
+		Conversation:   ev.Body.Plain,
+		Attachments:    ev.Attachments,
+		UserMessage:    ev.Body.Plain,
+		Classification: classification,
 	}
 	resp, err := d.code.Dispatch(ctx, req)
 	if err != nil {
@@ -186,6 +221,71 @@ func (d *Dispatcher) Handle(ctx context.Context, ev commons.InboundEvent) error 
 	default:
 		return fmt.Errorf("inbound: unknown action %q", reply.Action)
 	}
+}
+
+// fastPath inspects classification.Type and, for the §32.6 command-prefix
+// types (help_command / status_request / continuation_request / closure /
+// reopen), invokes the matching handler on d.commands and sends the
+// resulting reply directly via d.reply.SendReply — bypassing CC entirely.
+//
+// Returns (handled=true, err) when the type matched a fast-path handler
+// — caller MUST return err verbatim (success or failure both terminate
+// Handle). Returns (handled=false, nil) when the type is NOT a fast-path
+// type (the caller proceeds with CC dispatch).
+//
+// §107 anchor: each branch logs "inbound dispatched: <command>" before
+// returning so listen_test + journal can confirm the command path ran
+// (not silently swallowed). A handler that returns an error still
+// terminates Handle — we do NOT fall through to CC on fast-path failure
+// (the operator should see the explicit error, not a fabricated CC
+// retry).
+func (d *Dispatcher) fastPath(ctx context.Context, ev commons.InboundEvent, c Classification) (bool, error) {
+	var (
+		replyText string
+		atts      []commons.Attachment
+		err       error
+		label     string
+	)
+	switch c.Type {
+	case "help_command":
+		label = "help"
+		replyText, atts, err = d.commands.HandleHelp(ctx)
+	case "status_request":
+		label = "status"
+		replyText, atts, err = d.commands.HandleStatus(ctx)
+	case "continuation_request":
+		label = "continue"
+		replyText, atts, err = d.commands.HandleContinue(ctx)
+	case "closure":
+		label = "done"
+		replyText, atts, err = d.commands.HandleDone(ctx, ev.Body.Plain, ev.Sender.ChannelUserID)
+	case "reopen":
+		label = "reopen"
+		replyText, atts, err = d.commands.HandleReopen(ctx, ev.Body.Plain, ev.Sender.ChannelUserID)
+	default:
+		return false, nil
+	}
+	if err != nil {
+		// Fast-path handler errored (e.g. non-operator rejection on
+		// Done:/Reopen:). Surface the message to the operator via the
+		// same reply channel so they see WHY the command failed —
+		// silent failure here would be a §107 PASS-bluff.
+		chatID, _ := strconv.ParseInt(ev.Sender.ChannelUserID, 10, 64)
+		replyToID, _ := extractReplyToMessageID(ev.Raw)
+		errText := fmt.Sprintf("%s: %s", label, err.Error())
+		if _, sendErr := d.reply.SendReply(ctx, chatID, errText, replyToID, nil); sendErr != nil {
+			return true, fmt.Errorf("inbound: fast-path %s send err-reply: %w (original: %v)", label, sendErr, err)
+		}
+		log.Printf("inbound dispatched: %s (event=%s err=%v)", label, ev.EventID, err)
+		return true, nil
+	}
+	chatID, _ := strconv.ParseInt(ev.Sender.ChannelUserID, 10, 64)
+	replyToID, _ := extractReplyToMessageID(ev.Raw)
+	if _, err := d.reply.SendReply(ctx, chatID, replyText, replyToID, atts); err != nil {
+		return true, fmt.Errorf("inbound: fast-path %s send reply: %w", label, err)
+	}
+	log.Printf("inbound dispatched: %s (event=%s chatID=%d replyTo=%d)", label, ev.EventID, chatID, replyToID)
+	return true, nil
 }
 
 // extractReplyToMessageID reads ev.Raw["message_id"] — populated by

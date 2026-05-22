@@ -19,6 +19,9 @@ package main
 
 import (
 	"context"
+	"os"
+	"path/filepath"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -185,5 +188,94 @@ func TestRunListenRejectsBadConfig(t *testing.T) {
 	err := runListen(context.Background(), cfg)
 	if err == nil {
 		t.Fatal("runListen accepted nil Code/Replier — NewDispatcher validation bypass")
+	}
+}
+
+// TestParseOperatorIDs — Wave 6.5 T7 §32.6 operator-allowlist parser.
+// HERALD_OPERATOR_IDS is comma-separated channel_user_id values
+// (Telegram numeric chat IDs); the parser MUST tolerate whitespace
+// around segments and skip empty segments (including leading /
+// trailing commas, double-commas).
+//
+// §107 anchor: a parser that silently swallowed valid IDs would
+// reject legitimate operators (Done:/Reopen: would always fail
+// even when properly configured). The 5 cases below pin the
+// happy paths + edge cases.
+func TestParseOperatorIDs(t *testing.T) {
+	cases := []struct {
+		name string
+		in   string
+		want []string
+	}{
+		{name: "empty", in: "", want: nil},
+		{name: "single", in: "12345", want: []string{"12345"}},
+		{name: "two", in: "12345,67890", want: []string{"12345", "67890"}},
+		{name: "whitespace", in: "  12345  ,  67890  ", want: []string{"12345", "67890"}},
+		{name: "empty-segments", in: ",,12345,,", want: []string{"12345"}},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := parseOperatorIDs(tc.in)
+			if len(got) != len(tc.want) {
+				t.Fatalf("len mismatch in=%q got=%v want=%v", tc.in, got, tc.want)
+			}
+			for _, k := range tc.want {
+				if !got[k] {
+					t.Fatalf("missing %q in result for in=%q (got=%v)", k, tc.in, got)
+				}
+			}
+		})
+	}
+}
+
+// TestWireDocsAndCommandsRequiresIssuesMd — §107 fail-loud: when
+// docs/Issues.md is missing, wireDocsAndCommands MUST return an
+// explicit error referencing the path. Silent degradation (e.g.
+// nil IssueOpener → action=issue.open errors mid-flight) would be
+// a §107 bluff because the operator would see "everything goes to
+// CC" without knowing why issue.open never lands.
+func TestWireDocsAndCommandsRequiresIssuesMd(t *testing.T) {
+	dir := t.TempDir()
+	cfg := listenConfig{DocsDir: dir}
+	err := wireDocsAndCommands(&cfg)
+	if err == nil {
+		t.Fatal("wireDocsAndCommands accepted missing Issues.md — §107 fail-loud bypass")
+	}
+	if !strings.Contains(err.Error(), "Issues.md") {
+		t.Fatalf("wireDocsAndCommands err does not reference Issues.md path: %v", err)
+	}
+}
+
+// TestWireDocsAndCommandsHappyPath — when docs/Issues.md exists,
+// wireDocsAndCommands populates cfg.IssueOpener + cfg.Commands +
+// leaves cfg.EventEmitter nil (Wave 6.5 ships without runner-attach).
+// Optional siblings (Status.md / CONTINUATION.md / Help.md) absent
+// emit stderr warnings but do not block.
+func TestWireDocsAndCommandsHappyPath(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "Issues.md"), []byte("# Issues\n## Open\n| ID | x |\n|---|---|\n| HRD-001 | x |\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "Fixed.md"), []byte("# Fixed\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	cfg := listenConfig{DocsDir: dir, OperatorIDs: map[string]bool{"123": true}}
+	if err := wireDocsAndCommands(&cfg); err != nil {
+		t.Fatalf("wireDocsAndCommands: %v", err)
+	}
+	if cfg.IssueOpener == nil {
+		t.Fatal("cfg.IssueOpener nil after happy-path wire")
+	}
+	if cfg.Commands == nil {
+		t.Fatal("cfg.Commands nil after happy-path wire")
+	}
+	if cfg.Commands.IssuesPath == "" {
+		t.Fatal("cfg.Commands.IssuesPath empty")
+	}
+	if !cfg.Commands.OperatorIDs["123"] {
+		t.Fatal("cfg.Commands.OperatorIDs not threaded from cfg")
+	}
+	if cfg.EventEmitter != nil {
+		t.Fatal("cfg.EventEmitter MUST be nil in Wave 6.5 (no runner-attach)")
 	}
 }
