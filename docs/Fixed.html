@@ -47,7 +47,7 @@ alt="Herald" />{width=96px height=96px}</p>
 <tbody>
 <tr>
 <td>Revision</td>
-<td>9</td>
+<td>10</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -55,7 +55,7 @@ alt="Herald" />{width=96px height=96px}</p>
 </tr>
 <tr>
 <td>Last modified</td>
-<td>2026-05-21</td>
+<td>2026-05-22</td>
 </tr>
 <tr>
 <td>Status</td>
@@ -63,52 +63,48 @@ alt="Herald" />{width=96px height=96px}</p>
 </tr>
 <tr>
 <td>Status summary</td>
-<td>r9 doc-cleanup: renumbers the Wave 3a commons_auth scaffold from
-HRD-093 → <strong>HRD-099</strong> to resolve a collision with Wave 2's
-HRD-093 (sherald flavor scaffold). Catalogue-check evidence relocated to
-<code>docs/catalogue-checks/HRD-099-commons-auth.md</code>; Wave 3a
-commits (<code>dbbea95..0cc6fad</code>) keep HRD-093 in their messages
-as executing-time history. r8 captured Wave 3a close-outs: HRD-028
+<td>r10 closes <strong>HRD-011 (Telegram live integration)</strong>
+atomically with live operator-session evidence: real bot delivery
+<code>message_id=5</code> from <code>@atmosphere_worker_bot</code> to
+chat <code>2057253161</code> (validated via <code>getChat</code>) using
+the extended wizard's <code>--bot-token</code> / <code>--chat-id</code>
+/ <code>--non-interactive</code> CLI args.
+Token→getMe→getChat→sendMessage chain confirmed end-to-end in commit
+<code>140a2f1</code> session 2026-05-22. Prior r9 doc-cleanup:
+renumbered Wave 3a commons_auth scaffold HRD-093 →
+<strong>HRD-099</strong>. r8 captured Wave 3a close-outs: HRD-028
 (cherald <code>/v1/compliance</code> live), HRD-098 (sherald
-<code>/v1/safety_state</code> live), and the commons_auth/ JWT-verifier
-scaffold (now HRD-099). 8 new e2e invariants land — E35/E36 auth gate ×
-2 flavors + E43/E44 cherald compliance + E46/E47 sherald safety_state.
-E45 + E48 SKIP-with-reason awaiting Wave 3b (pherald Runner + HRD-033
-destructive-guard body). Paired §1.1 mutation gate
-<code>tests/test_wave3_mutation_meta.sh</code> (3/3 PASS: M1
-strip-verify breaks E35; M5 zero-mem breaks E47; post-flight green).
-Prior r7: Wave 2 atomic closures HRD-092..097; HRD-012 Claude Code
-dispatcher live; HRD-011 code complete pending operator creds; HRD-010
-commons_storage live wiring + E14 RLS-bypass bug fix; Foundation
-M1/M2/M3.</td>
+<code>/v1/safety_state</code> live), HRD-099 (commons_auth scaffold). 8
+new e2e invariants landed in Wave 3a; paired §1.1 mutation gate
+<code>tests/test_wave3_mutation_meta.sh</code> (3/3 PASS).</td>
 </tr>
 <tr>
 <td>Issues</td>
-<td>see <code>Issues.md</code> — r10 removes HRD-028 + HRD-098 from open
-(atomically Issues→Fixed in r8 commit) and adopts the HRD-099
-renumber.</td>
+<td>see <code>Issues.md</code> — r11 removes HRD-011 from open
+(atomically Issues→Fixed in this r10 commit).</td>
 </tr>
 <tr>
 <td>Issues summary</td>
-<td>HRD-008/-011 (code complete pending creds) /-015/-016/-018
-(in_progress) + HRD-019..HRD-027 + HRD-029..HRD-056 + HRD-081 +
-HRD-085..HRD-090 still open (49 items).</td>
+<td>HRD-008/-015/-016/-018 (in_progress) + HRD-019..HRD-027 +
+HRD-029..HRD-056 + HRD-081 + HRD-085..HRD-090 still open (48
+items).</td>
 </tr>
 <tr>
 <td>Fixed</td>
-<td>HRD-001..HRD-007, HRD-009, HRD-009b, HRD-010, HRD-012, HRD-013,
-HRD-014, HRD-017, HRD-028, HRD-080, HRD-092, HRD-093, HRD-094, HRD-095,
-HRD-096, HRD-097, HRD-098, HRD-099 (and HRD-018 partial — M1 component
-landed)</td>
+<td>HRD-001..HRD-007, HRD-009, HRD-009b, HRD-010, HRD-011, HRD-012,
+HRD-013, HRD-014, HRD-017, HRD-028, HRD-080, HRD-092, HRD-093, HRD-094,
+HRD-095, HRD-096, HRD-097, HRD-098, HRD-099 (and HRD-018 partial — M1 +
+M2 components landed)</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
 <td>spec V1→V3 r8; Go module foundation + Foundation M1/M2/M3; HRD-010
-commons_storage live wiring; HRD-012 Claude Code dispatcher live (live
-PASS evidence captured); universal §11.4.73 + §11.4.74 mandates
-propagated; I6 gate refined; Wave 2 flavor scaffolds (HRD-092..097)
-closed atomically; Wave 3a substrate (HRD-099 commons_auth JWT verifier)
-+ 2 live REST routes (HRD-028, HRD-098) closed atomically.</td>
+commons_storage live wiring; HRD-011 Telegram live (live
+<code>message_id=5</code> evidence 2026-05-22); HRD-012 Claude Code
+dispatcher live; universal §11.4.73 + §11.4.74 mandates propagated; I6
+gate refined; Wave 2 flavor scaffolds (HRD-092..097) closed atomically;
+Wave 3a substrate (HRD-099 commons_auth JWT verifier) + 2 live REST
+routes (HRD-028, HRD-098) closed atomically.</td>
 </tr>
 <tr>
 <td>Continuation</td>
@@ -134,6 +130,29 @@ closed atomically; Wave 3a substrate (HRD-099 commons_auth JWT verifier)
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>HRD-011</td>
+<td>task</td>
+<td>middle</td>
+<td>Telegram channel adapter live integration — telebot.v3 vendored
+(<code>submodules/telebot</code>); HealthCheck + Send + Subscribe +
+outbound_delivery_evidence persistence all live-wired with §107 bluff
+guards. Closed atomically with operator-session live evidence
+2026-05-22: real bot delivery <code>message_id=5</code> from
+<code>@atmosphere_worker_bot</code> to chat <code>2057253161</code>
+(validated via <code>getChat</code>) using the extended wizard CLI's
+<code>--bot-token</code> (env: HERALD_TGRAM_BOT_TOKEN) +
+<code>--chat-id</code> (validated via <code>getChat</code> before
+persist) + <code>--non-interactive</code> flags.
+Token→getMe→getChat→sendMessage chain confirmed end-to-end in commit
+<code>140a2f1</code> session.</td>
+<td>2026-05-22</td>
+<td>(this commit)</td>
+<td>spec V3 §11.1; Catalogue-Check: no-match → vendor telebot.v3 as
+submodules/telebot per §11.4.74; live evidence: wizard run 2026-05-22 +
+Telegram Bot API <code>sendMessage</code> returning
+<code>ok=true, message_id=5</code></td>
+</tr>
 <tr>
 <td>HRD-099</td>
 <td>task</td>

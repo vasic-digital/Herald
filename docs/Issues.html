@@ -47,7 +47,7 @@ alt="Herald" />{width=96px height=96px}</p>
 <tbody>
 <tr>
 <td>Revision</td>
-<td>10</td>
+<td>11</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -55,7 +55,7 @@ alt="Herald" />{width=96px height=96px}</p>
 </tr>
 <tr>
 <td>Last modified</td>
-<td>2026-05-21</td>
+<td>2026-05-22</td>
 </tr>
 <tr>
 <td>Status</td>
@@ -63,44 +63,42 @@ alt="Herald" />{width=96px height=96px}</p>
 </tr>
 <tr>
 <td>Status summary</td>
-<td>r10 doc-cleanup: renumbers the Wave 3a commons_auth scaffold HRD-093
-→ <strong>HRD-099</strong> to resolve the collision with Wave 2's
-HRD-093 (sherald flavor scaffold). Catalogue-check evidence relocated to
-<code>docs/catalogue-checks/HRD-099-commons-auth.md</code>; Wave 3a
-commits (<code>dbbea95..0cc6fad</code>) retain HRD-093 in their messages
-as executing-time history. r9 captured Wave 3a close-out: HRD-028
-(cherald /v1/compliance live) + HRD-098 (sherald /v1/safety_state live)
-atomically Issues→Fixed alongside the commons_auth scaffold (now
-HRD-099). 8 new e2e invariants land (E35/E36 auth gate × 2 flavors +
-E43/E44 cherald compliance + E46/E47 sherald safety_state); E45 + E48
-SKIP-with-reason awaiting Wave 3b. New paired §1.1 mutation meta-test
-<code>tests/test_wave3_mutation_meta.sh</code> (3/3 PASS). Prior r8:
-HRD-012 Claude Code dispatcher closed; HRD-011 Telegram code complete
-pending live evidence; HRD-092..097 Wave 2 atomic closures; HRD-098
-opened (now closed). Operator guide
-<code>docs/guides/OPERATOR_CREDENTIALS.md</code> remains the credential
-resolution source-of-truth.</td>
+<td>r11 closes <strong>HRD-011 (Telegram live integration)</strong>
+atomically — live evidence captured in commit <code>140a2f1</code>
+session: real bot delivery <code>message_id=5</code> from
+<code>@atmosphere_worker_bot</code> to chat <code>2057253161</code>
+(validated via <code>getChat</code>), exercising the full
+token→getMe→getChat→sendMessage chain that the new wizard CLI args
+(<code>--bot-token</code> / <code>--chat-id</code> /
+<code>--non-interactive</code>) just configured. Prior r10 doc-cleanup:
+renumbered Wave 3a commons_auth scaffold HRD-093 →
+<strong>HRD-099</strong> to resolve the collision with Wave 2's HRD-093
+(sherald flavor scaffold). r9 captured Wave 3a close-out: HRD-028
+(cherald /v1/compliance live) + HRD-098 (sherald /v1/safety_state live).
+Operator guide <code>docs/guides/OPERATOR_CREDENTIALS.md</code> remains
+the credential resolution source-of-truth.</td>
 </tr>
 <tr>
 <td>Issues</td>
-<td>HRD-008, HRD-011 (code complete; live evidence pending), HRD-015,
-HRD-016, HRD-018..HRD-027, HRD-029..HRD-056, HRD-081,
-HRD-085..HRD-090</td>
+<td>HRD-008, HRD-015, HRD-016, HRD-018..HRD-027, HRD-029..HRD-056,
+HRD-081, HRD-085..HRD-090</td>
 </tr>
 <tr>
 <td>Issues summary</td>
-<td>49 open / in-progress workable items. r10 doc-cleanup renumbers
-HRD-093 (commons_auth) → HRD-099 (no scope change). r9: HRD-028 (cherald
-compliance) + HRD-098 (sherald safety_state) closed atomically by Wave
-3a (commits dbbea95..0cc6fad). Carry-over to Wave 3b: HRD-016 (pherald
-Runner), HRD-024 (iherald paging), HRD-033 (destructive-guard body), and
-the rest of the §43 command catalogue.</td>
+<td>48 open / in-progress workable items. r11: HRD-011 (Telegram live)
+closed atomically with live message_id=5 evidence. r10 doc-cleanup
+renumbered HRD-093 (commons_auth) → HRD-099 (no scope change). r9:
+HRD-028 (cherald compliance) + HRD-098 (sherald safety_state) closed
+atomically by Wave 3a (commits dbbea95..0cc6fad). Carry-over to Wave 3b:
+HRD-016 (pherald Runner), HRD-024 (iherald paging), HRD-033
+(destructive-guard body), and the rest of the §43 command
+catalogue.</td>
 </tr>
 <tr>
 <td>Fixed</td>
-<td>HRD-001..HRD-007, HRD-009, HRD-009b, HRD-010, HRD-012, HRD-013,
-HRD-014, HRD-017, HRD-028, HRD-080, HRD-092, HRD-093, HRD-094, HRD-095,
-HRD-096, HRD-097, HRD-098, HRD-099</td>
+<td>HRD-001..HRD-007, HRD-009, HRD-009b, HRD-010, HRD-011, HRD-012,
+HRD-013, HRD-014, HRD-017, HRD-028, HRD-080, HRD-092, HRD-093, HRD-094,
+HRD-095, HRD-096, HRD-097, HRD-098, HRD-099</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
@@ -140,22 +138,6 @@ implementation PR will re-verify.</p>
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>HRD-011</td>
-<td>task</td>
-<td>code complete; awaiting live E17/E19 evidence</td>
-<td>middle</td>
-<td>Telegram channel adapter live integration — code complete commits
-92c9cb3..a254fec + 7697644 (telebot v3.3.8 vendored; HealthCheck + Send
-+ Subscribe + outbound_delivery_evidence persistence all live-wired with
-§107 bluff guards). §107 BLOCKS Issues→Fixed migration until operator
-provides HERALD_TGRAM_BOT_TOKEN + HERALD_TGRAM_CHAT_ID and E17 + E19
-capture live PASS. See docs/guides/OPERATOR_CREDENTIALS.md.</td>
-<td>2026-05-20</td>
-<td>2026-05-21</td>
-<td>spec V3 §11.1; Catalogue-Check: no-match → vendor telebot.v3 as
-submodules/telebot per §11.4.74</td>
-</tr>
 <tr>
 <td>HRD-015</td>
 <td>task</td>
