@@ -26,6 +26,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/spf13/cobra"
+
 	"github.com/vasic-digital/herald/commons"
 	"github.com/vasic-digital/herald/commons/cli"
 )
@@ -40,6 +42,20 @@ var version = "0.0.0-dev"
 //	go build -ldflags "-X main.commit=$(git rev-parse --short HEAD)"
 var commit = "unknown"
 
+// rootCmd is the package-level Cobra root for qaherald. Defined at
+// package scope (rather than inside main()) so subcommand-defining
+// files (run.go, future subcommands) can register themselves via
+// `rootCmd.AddCommand(...)` from their own init() functions without
+// the registration order coupling to main()'s body.
+//
+// Initialized in init() so it is available before any other init()
+// in the same package runs AddCommand against it.
+var rootCmd = func() *cobra.Command {
+	branding := commons.DefaultBranding("qa", version)
+	root := cli.NewRootCmd(branding)
+	return root
+}()
+
 func main() {
 	// Propagate ldflags-injected build info into commons/cli so
 	// VersionCmd's human + JSON output surface the real values (not the
@@ -49,15 +65,17 @@ func main() {
 
 	branding := commons.DefaultBranding("qa", version)
 
-	root := cli.NewRootCmd(branding)
-	root.Version = version + " (" + commit + ")"
+	// Re-apply branding/version on the package-level rootCmd in case the
+	// `version` var was overridden at build time (ldflags inject AFTER
+	// the package-level initializer above runs). NewRootCmd is cheap;
+	// the version string + Use are re-applied here for parity with the
+	// pherald/sherald wiring.
+	rootCmd.Version = version + " (" + commit + ")"
 
-	root.AddCommand(cli.VersionCmd(branding))
-	// `qaherald run` lands in Wave 5 Task 7 once the scenario engine
-	// (T5) + report generator (T6) are wired. Until then, `qaherald
-	// version` is the only working subcommand.
+	rootCmd.AddCommand(cli.VersionCmd(branding))
+	// `qaherald run` is registered in run.go's init().
 
-	if err := root.Execute(); err != nil {
+	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, "qaherald:", err)
 		os.Exit(1)
 	}
