@@ -133,6 +133,29 @@ func New(baseURL string, jwtSecret []byte) *Client {
 	}
 }
 
+// NewWithClient constructs a Client using the supplied *http.Client
+// verbatim. Wave 5 Task 5 — added to let the scenario package's unit
+// test inject an httptest.Server-shared http.Client without poking
+// into the unexported `http` field across package boundaries. The
+// herald-package internal test still uses `c.http = srv.Client()`
+// because that path keeps the Wave 4a TLS posture visible in one
+// place; cross-package callers MUST use NewWithClient.
+//
+// Production code (T7 `qaherald run` wiring) calls New, NOT
+// NewWithClient — the default TLS-1.3 + ALPN posture is the
+// load-bearing security baseline; overriding it is reserved for
+// hermetic tests.
+func NewWithClient(baseURL string, jwtSecret []byte, hc *http.Client) *Client {
+	if hc == nil {
+		return New(baseURL, jwtSecret)
+	}
+	return &Client{
+		baseURL: baseURL,
+		secret:  jwtSecret,
+		http:    hc,
+	}
+}
+
 // jwt mints a HS256 token with the commons_auth-required claims
 // ("tenant" + "sub") + a 5-minute expiry. Issuer is set to "qaherald"
 // for observability — commons_auth does not gate on it.
