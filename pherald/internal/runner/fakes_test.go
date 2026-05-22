@@ -181,3 +181,48 @@ func (s *fakeSubscribersStore) ListByTenant(ctx context.Context) ([]subscriberRo
 	copy(out, s.subs[tid])
 	return out, nil
 }
+
+// fakeChannel is a minimal in-memory stand-in for commons.Channel.
+// Records every Send and lets the test inspect what would have been
+// dispatched without hitting a real network. Concurrent-safe so the
+// dispatcher fan-out test can exercise it without races.
+type fakeChannel struct {
+	mu       sync.Mutex
+	name     string
+	sends    []fakeSendRecord
+	failNext bool
+}
+
+type fakeSendRecord struct {
+	Msg     commons.OutboundMessage
+	Receipt commons.Receipt
+}
+
+func newFakeChannel(name string) *fakeChannel {
+	return &fakeChannel{name: name}
+}
+
+func (c *fakeChannel) Name() string { return c.name }
+
+func (c *fakeChannel) Capabilities() commons.Capabilities {
+	return commons.Capabilities{Text: true, DeliveryCeiling: commons.DeliveryRouted}
+}
+
+func (c *fakeChannel) Send(ctx context.Context, msg commons.OutboundMessage) (commons.Receipt, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.failNext {
+		c.failNext = false
+		return commons.Receipt{}, errors.New("fake channel: forced fail")
+	}
+	rcpt := commons.Receipt{
+		Evidence:     commons.DeliveryRouted,
+		ChannelMsgID: c.name + "-msgid-" + strings.TrimSpace(msg.EventID),
+		SentAt:       time.Now(),
+	}
+	c.sends = append(c.sends, fakeSendRecord{Msg: msg, Receipt: rcpt})
+	return rcpt, nil
+}
+
+func (c *fakeChannel) Subscribe(ctx context.Context, h commons.InboundHandler) error { return nil }
+func (c *fakeChannel) HealthCheck(ctx context.Context) error                         { return nil }
