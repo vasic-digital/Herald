@@ -112,7 +112,7 @@ alt="Herald" />{width=96px height=96px}</p>
 <tbody>
 <tr>
 <td>Revision</td>
-<td>8</td>
+<td>9</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -120,7 +120,7 @@ alt="Herald" />{width=96px height=96px}</p>
 </tr>
 <tr>
 <td>Last modified</td>
-<td>2026-05-21</td>
+<td>2026-05-22</td>
 </tr>
 <tr>
 <td>Status</td>
@@ -128,14 +128,19 @@ alt="Herald" />{width=96px height=96px}</p>
 </tr>
 <tr>
 <td>Status summary</td>
-<td>V3 r8 — Wave 2 lands the shared <code>commons/cli/</code> scaffold +
-6 new flavor binaries (sherald, cherald, bherald, rherald, iherald,
-scherald) + pherald refactor. §6.3 HeraldBranding extended with 5
-per-flavor identity fields (Flavor, Prefix, DisplayName, DefaultPort,
-Mission). §18 Flavors + §41 REST surface expanded. §44 gains §44.M Wave
-2 milestone. <code>scripts/e2e_bluff_hunt.sh</code> invariants grow 18 →
-33 with a paired §1.1 mutation gate
-(<code>tests/test_wave2_mutation_meta.sh</code>).</td>
+<td>V3 r9 — Wave 3b lands pherald <code>/v1/events</code> LIVE
+end-to-end (the §32 7-stage Runner orchestrator: EventParser →
+IdempotencyChecker → TenantResolver → PolicyGate → SubscriberResolver →
+ChannelDispatcher → OutcomeRecorder; HRD-016 atomic close-out). §32
+stages gain an "Implementation" column citing
+<code>pherald/internal/runner/&lt;file&gt;.go</code>. §41
+<code>/v1/events</code> row flips from <code>501 stub (HRD-016)</code>
+to <code>202 Accepted + Receipt JSON (Wave 3b live)</code>. §44 gains
+§44.N Wave 3b milestone. <code>scripts/e2e_bluff_hunt.sh</code>
+invariants grow 41 → 47 (E37-E42 live; E45 cross-binary still
+SKIP-with-reason pending Wave 3c).
+<code>tests/test_wave3_mutation_meta.sh</code> gains M2/M3/M4 (M3
+SKIP-with-reason pending deny-evaluator e2e).</td>
 </tr>
 <tr>
 <td>Issues</td>
@@ -147,33 +152,40 @@ Mission). §18 Flavors + §41 REST surface expanded. §44 gains §44.M Wave
 </tr>
 <tr>
 <td>Fixed</td>
-<td>V3-R8-01..V3-R8-05 (r8 Wave 2 scaffolds + Branding extension + REST
+<td>V3-R9-01..V3-R9-04 (r9 Wave 3b — Runner live + e2e E37-E42 +
+mutation gate M2/M3/M4 + §32 implementation column + §44.N milestone);
+V3-R8-01..V3-R8-05 (r8 Wave 2 scaffolds + Branding extension + REST
 surface expansion + §44.M milestone + §43 catalogue HRD-092 entry);
 V3-R3-01..V3-R3-03 (r3 parent-doc spec-path sync); V3-R2-01..V3-R2-09
 (r2); V3-R1-01..V3-R1-14 (r1); inherits closed V2 + V1 lineage.</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
-<td>r8 captures Wave 2 as-built — shared <code>commons/cli/</code>
-scaffold + 7 flavor binaries (1 refactored, 6 net new), Branding struct
-extended with 5 per-flavor identity fields, §41 REST surface gains
-<code>/v1/compliance</code> (cherald), <code>/v1/safety_state</code>
-(sherald), <code>/v1/webhooks/page</code> (iherald), §44.M Wave 2
-milestone subsection records 33-invariant e2e + 4/4 mutation meta +
-HRD-092 catalogue-check (no-match → vendor). r7 lands §44 Foundation
-contract + records M1 as-built evidence (commons_constitution 14-file
-scaffold, in-process EventBus/Registry/Captureer/Ladder/Store/Runner all
-green under -race; full workspace inheritance gate 12 PASS / 0
-FAIL).</td>
+<td>r9 captures Wave 3b as-built — pherald <code>/v1/events</code> is
+live (7-stage Runner orchestrator wired against real Postgres + Redis +
+commons_auth JWT verifier; 23 runner package tests green + 6 new e2e
+invariants E37-E42; HRD-016 closes atomic Issues → Fixed; cross-binary
+E45 still SKIP-with-reason pending Wave 3c wiring). r8 captures Wave 2
+as-built — shared <code>commons/cli/</code> scaffold + 7 flavor binaries
+(1 refactored, 6 net new), Branding struct extended with 5 per-flavor
+identity fields, §41 REST surface gains <code>/v1/compliance</code>
+(cherald), <code>/v1/safety_state</code> (sherald),
+<code>/v1/webhooks/page</code> (iherald), §44.M Wave 2 milestone
+subsection records 33-invariant e2e + 4/4 mutation meta + HRD-092
+catalogue-check (no-match → vendor). r7 lands §44 Foundation contract +
+records M1 as-built evidence (commons_constitution 14-file scaffold,
+in-process EventBus/Registry/Captureer/Ladder/Store/Runner all green
+under -race; full workspace inheritance gate 12 PASS / 0 FAIL).</td>
 </tr>
 <tr>
 <td>Continuation</td>
-<td>Wave 3 work: HRD-016 Runner wiring (pherald
-<code>/v1/events</code>), HRD-024 iherald <code>/v1/webhooks/page</code>
-live, HRD-028 cherald <code>/v1/compliance</code> constitution_state
-pull live, HRD-098 sherald <code>/v1/safety_state</code> daemon live,
-plus the 28 §43 command implementations (HRD-029..056). Each milestone
-followed by multi-mirror push. Then codegraph integration per <a
+<td>Wave 3c+: cross-binary E45 wiring (pherald deny POST → cherald GET
+/v1/compliance round-trip), HRD-024 iherald
+<code>/v1/webhooks/page</code> live, HRD-098 sherald
+<code>/v1/safety_state</code> daemon live, plus the 28 §43 command
+implementations (HRD-029..056), parallel-fan-out optimization, OpenAPI
+surface, INTEGRATION.md, v0.1.0 release tag. Each milestone followed by
+multi-mirror push. Then codegraph integration per <a
 href="https://github.com/colbymchenry/codegraph">https://github.com/colbymchenry/codegraph</a>.</td>
 </tr>
 </tbody>
@@ -3775,7 +3787,8 @@ flavor-specific stubs from <code>internal/stubs/stubs.go</code>, and
 <td>24791</td>
 <td>✓</td>
 <td>6 (HRD-029, 030, 043, 044, 049, 053)</td>
-<td><code>POST /v1/events</code> (HRD-016)</td>
+<td><code>POST /v1/events</code> (Wave 3b live — 202 Accepted + Receipt
+JSON; HRD-016 closed)</td>
 </tr>
 <tr>
 <td><code>sherald</code></td>
@@ -6523,6 +6536,77 @@ multi-stage validation, and three user-visible reply checkpoints
 │     ↓                                                                    │
 │  diary append (§19); OTel span closed                                    │
 └──────────────────────────────────────────────────────────────────────────┘</code></pre>
+<h4 id="3211-implementation-map-wave-3b">32.1.1 Implementation map (Wave
+3b)</h4>
+<p>Each §32 stage of the <strong>outbound</strong> ingest path (POST
+/v1/events) is implemented by a concrete struct in
+<code>pherald/internal/runner/</code>. Stages communicate exclusively
+via <code>RunCtx</code> — no shared interface; the orchestrator
+(<code>runner.Runner.Run</code>) holds stage instances as fields and
+calls them in fixed order:</p>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>Responsibility</th>
+<th>Implementation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1. EventParser</td>
+<td>Parse + validate inbound CloudEvent; extract Trace context +
+idempotency key</td>
+<td><code>pherald/internal/runner/event_parser.go</code></td>
+</tr>
+<tr>
+<td>2. IdempotencyChecker</td>
+<td>Redis SETNX + PG <code>events_processed</code> fallback; sets
+<code>rc.Duplicate</code></td>
+<td><code>pherald/internal/runner/idempotency.go</code></td>
+</tr>
+<tr>
+<td>3. TenantResolver</td>
+<td>Bind tenant GUC on the transaction for RLS</td>
+<td><code>pherald/internal/runner/tenant.go</code></td>
+</tr>
+<tr>
+<td>4. PolicyGate</td>
+<td>Run registered constitution evaluators; sets
+<code>rc.PolicyDecision</code></td>
+<td><code>pherald/internal/runner/policy.go</code></td>
+</tr>
+<tr>
+<td>5. SubscriberResolver</td>
+<td>List subscribers + aliases for the tenant</td>
+<td><code>pherald/internal/runner/subscriber.go</code></td>
+</tr>
+<tr>
+<td>6. ChannelDispatcher</td>
+<td>Fan out to the channel adapters per recipient alias</td>
+<td><code>pherald/internal/runner/dispatcher.go</code></td>
+</tr>
+<tr>
+<td>7. OutcomeRecorder</td>
+<td>Persist <code>outbound_delivery_evidence</code> rows +
+<code>events_processed</code> archive</td>
+<td><code>pherald/internal/runner/outcome.go</code></td>
+</tr>
+</tbody>
+</table>
+<p>Short-circuits:</p>
+<ul>
+<li>Stage 2 duplicate → cached Receipt returned with
+<code>WasReplay=true</code>; no dispatch.</li>
+<li>Stage 4 <code>DecisionFail</code> →
+<code>OutcomeRecorder.RecordDenied</code> writes a single
+<code>policy_denied</code> evidence row + archive row; no dispatch.</li>
+</ul>
+<p>The HTTP adapter is <code>pherald/internal/http/events.go</code>
+(<code>EventsHandler(r *runner.Runner)</code>).</p>
+<p>Wave 3b ships a permissive <code>commons_constitution.Registry</code>
+by default (no evaluators registered) — flavor binaries that need policy
+enforcement register evaluators on top of the same Runner.</p>
 <h3 id="322-polling-cadence-30-s-mandate">32.2 Polling cadence (30 s
 mandate)</h3>
 <p>Every flavor's Subscribe loop MUST check upstream for new messages
@@ -8382,6 +8466,32 @@ JSON.</td>
 </tr>
 </tbody>
 </table>
+<p><strong>Wave 3b (r9) live-route flip</strong> —
+<code>POST /v1/events</code> flips from 501-stub to live 202 Accepted +
+Receipt JSON:</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Owning flavor</th>
+<th>Behaviour</th>
+<th>HRD</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>POST</code></td>
+<td><code>/v1/events</code></td>
+<td><code>pherald</code></td>
+<td>202 Accepted + Receipt JSON (CloudEvent ingestion through the §32
+7-stage Runner pipeline). 200 + <code>X-Herald-Replay: true</code> on
+idempotency replay. 401 on missing/invalid JWT. 400 on parse failure.
+See §32.1.1 implementation map.</td>
+<td>HRD-016 closed (Wave 3b)</td>
+</tr>
+</tbody>
+</table>
 <p><strong>Wave 2 (r8) per-flavor route additions</strong> — landed as
 501-stub routes by Wave 2 (scaffold only; live wiring lands in Wave 3
 under the cited HRDs):</p>
@@ -8485,10 +8595,10 @@ openapi-python-client).</li>
 under their own <code>/api/herald/*</code> namespace, applying app-side
 auth before forwarding.</li>
 </ul>
-<p><code>pherald</code> r1 ships REST scaffolding under
-<code>pherald/internal/http/</code> (planned in HRD-016 follow-up — not
-in this V3 r2 commit; the Go binary currently exposes only CLI surface,
-with HTTP wiring deferred to the implementation cycle).</p>
+<p><code>pherald</code> r1 shipped REST scaffolding under
+<code>pherald/internal/http/</code>; Wave 3b (V3 r9) lands
+<code>POST /v1/events</code> live — see §32.1.1 implementation map +
+§44.N Wave 3b milestone.</p>
 <hr />
 <h2 id="42-constitution-flavor-binding-catalogue">§42.
 Constitution-flavor binding catalogue</h2>
@@ -10149,8 +10259,9 @@ Universal §11.4.74. Tracked under HRD-092 (now Fixed in r8). Evidence:
 <code>docs/catalogue-checks/HRD-092-commons-cli.md</code>.</p>
 <p><strong>Open follow-ups (Wave 3+):</strong></p>
 <ul>
-<li><strong>HRD-016</strong> — <code>pherald</code>
-<code>/v1/events</code> Runner wiring (Wave 3).</li>
+<li><del><strong>HRD-016</strong></del> — <code>pherald</code>
+<code>/v1/events</code> Runner wiring → <strong>closed in Wave 3b (r9);
+see §44.N below</strong>.</li>
 <li><strong>HRD-024</strong> — <code>iherald</code>
 <code>/v1/webhooks/page</code> live (Wave 3/4).</li>
 <li><strong>HRD-028</strong> — <code>cherald</code>
@@ -10159,6 +10270,124 @@ Universal §11.4.74. Tracked under HRD-092 (now Fixed in r8). Evidence:
 <code>/v1/safety_state</code> live (Wave 3).</li>
 <li><strong>HRD-029..056</strong> — the 28 §43 command bodies (Wave
 4+).</li>
+</ul>
+<h3
+id="44n-wave-3b--pherald-runner-live--v1events-202-landed-2026-05-22">§44.N
+Wave 3b — pherald Runner live + <code>/v1/events</code> 202 (landed
+2026-05-22)</h3>
+<p><strong>Scope</strong> (per
+[<code>docs/superpowers/plans/2026-05-22-wave3b-runner.md</code>]):</p>
+<p>The §32 7-stage event-ingest pipeline lands as 7 concrete structs
+under <code>pherald/internal/runner/</code>, orchestrated by
+<code>runner.Runner.Run</code>:</p>
+<ol type="1">
+<li><code>event_parser.go</code> — Stage 1 EventParser (CloudEvent v1.0
+parse + tenant guard + idempotency-key extraction).</li>
+<li><code>idempotency.go</code> — Stage 2 IdempotencyChecker (Redis
+SETNX + PG fallback).</li>
+<li><code>tenant.go</code> — Stage 3 TenantResolver (binds
+<code>app.tenant_id</code> GUC on the per-request transaction
+context).</li>
+<li><code>policy.go</code> — Stage 4 PolicyGate (runs registered
+constitution evaluators; ships permissive by default).</li>
+<li><code>subscriber.go</code> — Stage 5 SubscriberResolver (lists
+subscribers + aliases for the tenant under RLS).</li>
+<li><code>dispatcher.go</code> — Stage 6 ChannelDispatcher (fan out to
+channel adapters per recipient alias).</li>
+<li><code>outcome.go</code> — Stage 7 OutcomeRecorder (persists
+<code>outbound_delivery_evidence</code> + <code>events_processed</code>
+archive).</li>
+</ol>
+<p><code>pherald/internal/http/events.go</code> exposes the live
+<code>POST /v1/events</code> handler.
+<code>pherald/cmd/pherald/{main,stubs}.go</code> lazily build the Runner
++ JWT verifier inside the serve subcommand's <code>RunE</code> so
+<code>pherald --help</code>, <code>version</code>, and
+<code>migrate</code> paths still work without <code>HERALD_PG_DSN</code>
+/ <code>HERALD_AUTH_MODE</code>.</p>
+<p><strong>As-built evidence (2026-05-22):</strong></p>
+<ul>
+<li>Commits: <code>eb9b2f4</code> (T1 runctx) → <code>40ad60f</code> (T2
+EventParser) → <code>2fdb7b5</code> (T3 IdempotencyChecker) →
+<code>4c4af24</code> (T4 TenantResolver) → <code>3988114</code> (T5
+PolicyGate) → <code>5468897</code> (T6 SubscriberResolver) →
+<code>6ea29a4</code> (T7 ChannelDispatcher) → <code>be71db1</code> (T8
+OutcomeRecorder) → <code>c7b89a4</code> (T9 Runner orchestrator + 3
+integration tests + real PG/Redis adapters) → <strong>this
+commit</strong> (T10 HTTP handler + main.go wiring + e2e E37-E42 +
+Issues→Fixed + 4-mirror push).</li>
+<li><code>go build ./pherald/... ./commons/... ./commons_auth/... ./commons_storage/... ./commons_messaging/...</code>:
+PASS clean.</li>
+<li><code>go test -race -count=1 ./pherald/internal/runner/...</code>:
+23/23 PASS (per-stage units + 3 integration scenarios: happy / duplicate
+/ deny).</li>
+<li><code>scripts/e2e_bluff_hunt.sh</code>: <strong>47
+invariants</strong> total (E1..E48; E37-E42 live in Wave 3b; E45
+cross-binary still SKIP-with-reason — runtime gate: PG :24100
+reachability).</li>
+<li><code>tests/test_wave3_mutation_meta.sh</code>: M1+M2+M4+M5 prove
+their gates; M3+M6 SKIP-with-reason pending Wave 3c deny-evaluator e2e +
+cross-binary wiring; post-flight green after restores.</li>
+</ul>
+<p><strong>HTTP contract (<code>POST /v1/events</code>):</strong></p>
+<table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th>Status</th>
+<th>Body</th>
+<th>Headers</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Fresh CloudEvent</td>
+<td>202 Accepted</td>
+<td>Receipt JSON</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Replay of prior idempotency key</td>
+<td>200 OK</td>
+<td>Receipt JSON</td>
+<td><code>X-Herald-Replay: true</code></td>
+</tr>
+<tr>
+<td>Missing/invalid Bearer JWT</td>
+<td>401 Unauthorized</td>
+<td><code>{"error":"..."}</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td>Malformed CloudEvent body</td>
+<td>400 Bad Request</td>
+<td><code>{"error":"event_parser: ..."}</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td>Policy <code>DecisionFail</code></td>
+<td>202 Accepted</td>
+<td>Receipt JSON (Recipients=0, denied evidence row)</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Stage error (Redis outage etc.)</td>
+<td>500 Internal Server Error</td>
+<td><code>{"error":"&lt;stage tag&gt;: ..."}</code></td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Open follow-ups (Wave 3c+):</strong></p>
+<ul>
+<li>Cross-binary E45 wiring (pherald deny POST → cherald GET
+/v1/compliance round-trip).</li>
+<li>Deny-evaluator e2e invariant (currently M3 SKIP-with-reason).</li>
+<li>Parallel-fan-out optimization in Stage 6 (current implementation is
+serial per recipient).</li>
+<li>OpenAPI surface for <code>/v1/events</code> per §41.7.</li>
+<li><code>docs/INTEGRATION.md</code> consumer onboarding guide.</li>
+<li>v0.1.0 release tag.</li>
 </ul>
 <hr />
 <h2 id="30-v2-self-review-log">§30. V2 self-review log</h2>

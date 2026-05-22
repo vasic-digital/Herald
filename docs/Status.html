@@ -47,7 +47,7 @@ alt="Herald" />{width=96px height=96px}</p>
 <tbody>
 <tr>
 <td>Revision</td>
-<td>12</td>
+<td>13</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -63,43 +63,42 @@ alt="Herald" />{width=96px height=96px}</p>
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>r12 closes HRD-011 (Telegram live integration) atomically
-with live operator-session evidence</strong>: real bot delivery
-<code>message_id=5</code> from <code>@atmosphere_worker_bot</code> to
-chat <code>2057253161</code> (validated via <code>getChat</code>) using
-the extended wizard's <code>--bot-token</code> / <code>--chat-id</code>
-/ <code>--non-interactive</code> CLI args.
-Token→getMe→getChat→sendMessage chain confirmed end-to-end in commit
-<code>140a2f1</code> session 2026-05-22. Prior r11 doc-cleanup:
-renumbered commons_auth HRD-093 → HRD-099; refreshed CLAUDE.md +
-CONTINUATION.md. r10: Wave 3a substrate + 2 live REST routes (commits
-<code>dbbea95..0cc6fad</code>) — <code>commons_auth/</code> JWT
-verifier, <code>events_processed</code> migration 000012,
-<code>ConstitutionStore.ListQuery</code> extended with
-Since/Until/Offset, cherald <code>/v1/compliance</code> live, sherald
-<code>/v1/safety_state</code> live, e2e_bluff_hunt grew 33 → 41
-invariants, paired §1.1 mutation gate (3/3 PASS), atomic Issues→Fixed
-for HRD-028 + HRD-098 + HRD-099.</td>
+<td><strong>r13 closes HRD-016 (pherald <code>/v1/events</code> Runner
+wiring) atomically — Wave 3b complete.</strong> The §32 7-stage Runner
+orchestrator lands end-to-end as 7 concrete structs in
+<code>pherald/internal/runner/</code> (EventParser → IdempotencyChecker
+→ TenantResolver → PolicyGate → SubscriberResolver → ChannelDispatcher →
+OutcomeRecorder); <code>pherald/internal/http/events.go</code> exposes
+the live POST /v1/events handler (202 + Receipt JSON; 200 +
+<code>X-Herald-Replay: true</code> on replay; 401/400 on auth/parse
+failures). 23/23 runner package tests green; e2e_bluff_hunt grew 41 → 47
+invariants (E37-E42 live; E45 cross-binary still SKIP-with-reason
+pending Wave 3c); mutation gate gains M2 + M4 proven (M3
+SKIP-with-reason pending deny-evaluator e2e). Spec V3 bumped r8 → r9
+with §32.1.1 implementation map + §44.N Wave 3b milestone.
+<strong>Consumer-project integration is now unlocked.</strong> Prior r12
+closed HRD-011 (Telegram live). r10-r11 closed Wave 3a (HRD-028 cherald
++ HRD-098 sherald + HRD-099 commons_auth).</td>
 </tr>
 <tr>
 <td>Issues</td>
-<td>HRD-008, HRD-015, HRD-016, HRD-018 (in_progress), HRD-019..HRD-027,
+<td>HRD-008, HRD-015, HRD-018 (in_progress), HRD-019..HRD-027,
 HRD-029..HRD-056, HRD-081, HRD-085..HRD-090</td>
 </tr>
 <tr>
 <td>Issues summary</td>
-<td>see <code>Issues.md</code> — 48 open items spanning REST surface
-(HRD-016 pherald Runner), §42 constitution bindings (HRD-018..027), §43
-command-catalogue (HRD-029..056), HRD-081 (containers podman-compose
-adapter refinement), HRD-085..090 (queue-repository stub-completion
-surface). HRD-011 (Telegram live) + HRD-028 + HRD-098 + HRD-099 closed
-in r10-r12 cycle.</td>
+<td>see <code>Issues.md</code> — 47 open items spanning §42 constitution
+bindings (HRD-018..027), §43 command-catalogue (HRD-029..056), HRD-081
+(containers podman-compose adapter refinement), HRD-085..090
+(queue-repository stub-completion surface). HRD-016 (pherald Runner) +
+HRD-011 (Telegram live) + HRD-028 + HRD-098 + HRD-099 closed in r10-r13
+cycle.</td>
 </tr>
 <tr>
 <td>Fixed</td>
 <td>HRD-001..HRD-007, HRD-009, HRD-009b, HRD-010, HRD-011, HRD-012,
-HRD-013, HRD-014, HRD-017, HRD-028, HRD-080, HRD-092, HRD-093, HRD-094,
-HRD-095, HRD-096, HRD-097, HRD-098, HRD-099</td>
+HRD-013, HRD-014, HRD-016, HRD-017, HRD-028, HRD-080, HRD-092, HRD-093,
+HRD-094, HRD-095, HRD-096, HRD-097, HRD-098, HRD-099</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
@@ -107,15 +106,15 @@ HRD-095, HRD-096, HRD-097, HRD-098, HRD-099</td>
 </tr>
 <tr>
 <td>Continuation</td>
-<td><strong>Wave 3b next</strong>: HRD-016 (pherald Runner wiring + live
-<code>POST /v1/events</code>) — the critical-path blocker for
-incorporating Herald into a parent project. After Wave 3b: HRD-024
-(iherald <code>/v1/webhooks/page</code> live), HRD-033 (sherald
-destructive-guard body — unlocks E48), and the rest of the §43 command
-catalogue. Cross-binary E45 invariant (cherald reads pherald-written
-constitution_state rows) lights up once Runner lands. Operator priority:
-HRD-008 (quickstart e2e validation). Each milestone followed by
-multi-mirror push + full anti-bluff verification.</td>
+<td><strong>Wave 3c next</strong>: cross-binary E45 wiring (pherald deny
+POST → cherald GET /v1/compliance round-trip), HRD-024 (iherald
+<code>/v1/webhooks/page</code> live), HRD-033 (sherald destructive-guard
+body — unlocks E48), HRD-018..027 flavor-specific constitution bindings,
+and the rest of the §43 command catalogue. Parallel-fan-out optimization
+in Stage 6 + OpenAPI surface for /v1/events +
+<code>docs/INTEGRATION.md</code> + v0.1.0 release tag are queued. Each
+milestone followed by multi-mirror push + full anti-bluff
+verification.</td>
 </tr>
 </tbody>
 </table>

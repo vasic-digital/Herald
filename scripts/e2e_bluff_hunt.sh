@@ -11,8 +11,9 @@
 # "compiles and tests green" but doesn't work for the user will FAIL
 # at least one assertion here.
 #
-# Forty-one invariants (E1..E48; E37-E42 land in Wave 3b; each is the
-# "captured-evidence" for one feature class per §11.4.5 + §11.4.69):
+# Forty-seven invariants (E1..E48; E37-E42 live in Wave 3b; E45 still
+# SKIP-with-reason — pending Wave 3c cross-binary wiring; each invariant
+# is the "captured-evidence" for one feature class per §11.4.5 + §11.4.69):
 #
 #   E1.  pherald binary builds (compile-level — necessary, not sufficient).
 #   E2.  pherald version --json returns parseable JSON with required fields.
@@ -23,7 +24,7 @@
 #   E7.  pherald serve actually starts + binds + accepts HTTP.
 #   E8.  /v1/healthz returns 200 with status:ok + version.
 #   E9.  /v1/readyz returns 200 with status:ready.
-#   E10. /v1/events POST returns 501 with HRD-016 pointer (honest stub).
+#   E10. /v1/events POST without auth → 401 (Wave 3b live + JWT-gated; was 501-stub through Wave 2).
 #   E11. /metrics returns text/plain + herald_build_info gauge.
 #   E12. pherald serve graceful-shutdowns on SIGTERM (drain + exit 0).
 #
@@ -160,52 +161,68 @@ check "E6 audit_antibluff.sh 14/14 PASS (includes I8 §107 paired meta-test)" \
 
 # ----------------------------------------------------------------------
 # E7..E12: pherald serve live HTTP smoke.
+#
+# Wave 3b: pherald serve now REQUIRES HERALD_PG_DSN (no PG-less serve mode).
+# Gate the whole block behind PG reachability (mirrors E14-E16 pattern).
+# When PG isn't reachable, SKIP-with-reason — the same surfaces are
+# re-exercised by E37-E42 below under the same gate.
+#
+# E10 changed from "501 + HRD-016 pointer" → "401 unauthorized" because
+# /v1/events is now live + auth-gated. A POST without a Bearer token
+# correctly returns 401 (auth middleware short-circuits before the
+# handler). The honest-stub era ended at HRD-016 close-out (Wave 3b).
 echo ""
 echo "== E7-E12: pherald serve live HTTP smoke on :${HTTP_PORT} =="
-"${PHERALD_BIN}" serve --http-port "${HTTP_PORT}" >/tmp/pherald_serve.log 2>&1 &
-PHERALD_PID=$!
-# Wait until the port responds (max 10s).
-ready=0
-for i in $(seq 1 20); do
-    if curl -fsS "http://127.0.0.1:${HTTP_PORT}/v1/healthz" >/dev/null 2>&1; then
-        ready=1; break
+if nc -z 127.0.0.1 24100 2>/dev/null; then
+    HERALD_PG_DSN="postgres://herald:herald_dev@127.0.0.1:24100/herald" \
+        "${PHERALD_BIN}" serve --http-port "${HTTP_PORT}" >/tmp/pherald_serve.log 2>&1 &
+    PHERALD_PID=$!
+    # Wait until the port responds (max 10s).
+    ready=0
+    for i in $(seq 1 20); do
+        if curl -fsS "http://127.0.0.1:${HTTP_PORT}/v1/healthz" >/dev/null 2>&1; then
+            ready=1; break
+        fi
+        sleep 0.5
+    done
+    if [ "${ready}" = 1 ]; then
+        echo "PASS  E7 pherald serve binds + accepts HTTP"
+        pass=$((pass+1))
+    else
+        echo "FAIL  E7 pherald serve never accepted HTTP within 10s"
+        fail=$((fail+1))
+        fail_names+=("E7")
     fi
-    sleep 0.5
-done
-if [ "${ready}" = 1 ]; then
-    echo "PASS  E7 pherald serve binds + accepts HTTP"
-    pass=$((pass+1))
+
+    # E8: healthz body sanity.
+    check "E8 /v1/healthz returns 200 + status:ok + version" \
+        "curl -fsS 'http://127.0.0.1:${HTTP_PORT}/v1/healthz' | python3 -c 'import sys,json; d=json.load(sys.stdin); assert d[\"status\"]==\"ok\"; assert d[\"build\"][\"version\"]; print(\"ok\")'"
+
+    check "E9 /v1/readyz returns 200 + status:ready" \
+        "curl -fsS 'http://127.0.0.1:${HTTP_PORT}/v1/readyz' | python3 -c 'import sys,json; d=json.load(sys.stdin); assert d[\"status\"]==\"ready\"; print(\"ok\")'"
+
+    # E10: /v1/events without auth → 401 (Wave 3b live + JWT-gated).
+    check "E10 /v1/events POST without auth returns 401 (Wave 3b live + JWT-gated)" \
+        "test \"\$(curl -s -o /tmp/ev.body -w \"%{http_code}\" -X POST 'http://127.0.0.1:${HTTP_PORT}/v1/events' -H 'Content-Type: application/cloudevents+json' -d '{}')\" = 401"
+
+    check "E11 /metrics returns text/plain + pherald_build_info gauge" \
+        "curl -fsS 'http://127.0.0.1:${HTTP_PORT}/metrics' | grep -q '^pherald_build_info{'"
+
+    # E12: graceful shutdown — send SIGTERM and verify exit 0.
+    kill -TERM "${PHERALD_PID}"
+    wait "${PHERALD_PID}" 2>/dev/null
+    exit_code=$?
+    PHERALD_PID=""
+    if [ "${exit_code}" = 0 ]; then
+        echo "PASS  E12 pherald serve graceful-shutdown on SIGTERM (exit 0)"
+        pass=$((pass+1))
+    else
+        echo "FAIL  E12 pherald serve exited ${exit_code} on SIGTERM (want 0)"
+        fail=$((fail+1))
+        fail_names+=("E12")
+    fi
 else
-    echo "FAIL  E7 pherald serve never accepted HTTP within 10s"
-    fail=$((fail+1))
-    fail_names+=("E7")
-fi
-
-# E8: healthz body sanity.
-check "E8 /v1/healthz returns 200 + status:ok + version" \
-    "curl -fsS 'http://127.0.0.1:${HTTP_PORT}/v1/healthz' | python3 -c 'import sys,json; d=json.load(sys.stdin); assert d[\"status\"]==\"ok\"; assert d[\"build\"][\"version\"]; print(\"ok\")'"
-
-check "E9 /v1/readyz returns 200 + status:ready" \
-    "curl -fsS 'http://127.0.0.1:${HTTP_PORT}/v1/readyz' | python3 -c 'import sys,json; d=json.load(sys.stdin); assert d[\"status\"]==\"ready\"; print(\"ok\")'"
-
-check "E10 /v1/events POST returns 501 + HRD-016 pointer (honest stub)" \
-    "test \"\$(curl -s -o /tmp/ev.body -w \"%{http_code}\" -X POST 'http://127.0.0.1:${HTTP_PORT}/v1/events' -H 'Content-Type: application/cloudevents+json' -d '{}')\" = 501 && grep -q 'HRD-016' /tmp/ev.body"
-
-check "E11 /metrics returns text/plain + pherald_build_info gauge" \
-    "curl -fsS 'http://127.0.0.1:${HTTP_PORT}/metrics' | grep -q '^pherald_build_info{'"
-
-# E12: graceful shutdown — send SIGTERM and verify exit 0.
-kill -TERM "${PHERALD_PID}"
-wait "${PHERALD_PID}" 2>/dev/null
-exit_code=$?
-PHERALD_PID=""
-if [ "${exit_code}" = 0 ]; then
-    echo "PASS  E12 pherald serve graceful-shutdown on SIGTERM (exit 0)"
-    pass=$((pass+1))
-else
-    echo "FAIL  E12 pherald serve exited ${exit_code} on SIGTERM (want 0)"
-    fail=$((fail+1))
-    fail_names+=("E12")
+    echo "SKIP  E7-E12 (Postgres :24100 unreachable — pherald serve requires HERALD_PG_DSN per Wave 3b; §11.4.3 explicit SKIP-with-reason)"
 fi
 
 # ----------------------------------------------------------------------
@@ -508,7 +525,7 @@ for flavor in cherald sherald; do
 done
 
 echo ""
-echo "== E43-E45: cherald /v1/compliance live (HRD-028 close-out) =="
+echo "== E43-E44: cherald /v1/compliance live (HRD-028 close-out) =="
 bin="/tmp/cherald-compliance-$$"
 if go build -o "${bin}" ./cherald/cmd/cherald > /tmp/e2e_out 2>&1; then
     "${bin}" serve --http-port 24992 > /tmp/cherald-e43.log 2>&1 &
@@ -534,7 +551,7 @@ PY
             "[ \"\$(curl -sS -o /dev/null -w '%{http_code}' http://127.0.0.1:24992/v1/compliance)\" = '401' ]"
         check "E44 GET /v1/compliance valid JWT empty tenant → 200 + total=0" \
             "curl -fsS -H 'Authorization: Bearer ${TOKEN}' http://127.0.0.1:24992/v1/compliance | python3 -c 'import sys,json; d=json.load(sys.stdin); assert d[\"total\"]==0, d[\"total\"]; assert d[\"page\"]==1; assert d[\"page_size\"]==50'"
-        echo "SKIP  E45 (cross-binary integration — pherald Runner not live yet; runs in Wave 3b)"
+        # E45 is reported in its own block further below (Wave 3b reorg).
     else
         echo "FAIL  E43/E44 cherald serve never accepted HTTP within 5s on :24992"
         tail -5 /tmp/cherald-e43.log 2>&1 | sed 's/^/      /'
@@ -595,6 +612,107 @@ else
     tail -5 /tmp/e2e_out | sed 's/^/      /'
     fail=$((fail+2))
     fail_names+=("E46-build" "E47-build")
+fi
+
+# ----------------------------------------------------------------------
+# E37-E42: pherald POST /v1/events live (HRD-016 close-out — Wave 3b).
+#
+# Requires container runtime + PG :24100 migrated. Otherwise SKIP-with-reason
+# (matches E14-E16 / E7-E12 pattern). E37 asserts 202 + Receipt JSON on a
+# fresh event; E38 asserts X-Herald-Replay header on the second identical
+# call (idempotency); E39 asserts 401 without auth; E40 asserts 401 with
+# wrong JWT signature; E41 asserts 400 on malformed body; E42 asserts the
+# events_processed PG archive row was actually written (sink-side evidence
+# per §11.4.68).
+echo ""
+echo "== E37-E42: pherald POST /v1/events live (HRD-016 close-out) =="
+if (command -v docker >/dev/null 2>&1 || command -v podman >/dev/null 2>&1) \
+   && nc -z 127.0.0.1 24100 2>/dev/null; then
+    bin="/tmp/pherald-events-$$"
+    if go build -o "${bin}" ./pherald/cmd/pherald > /tmp/e2e_out 2>&1; then
+        # Run pending migrations against the PG :24100 instance so the
+        # events_processed + outbound_delivery_evidence + subscribers
+        # tables exist for E37-E42.
+        HERALD_PG_DSN="postgres://herald:herald_dev@127.0.0.1:24100/herald" \
+            "${bin}" migrate up >/tmp/pherald-e37-migrate.log 2>&1 || true
+        HERALD_AUTH_MODE=hmac \
+        HERALD_AUTH_HMAC_SECRET="test-secret-32-bytes-of-padding!!" \
+        HERALD_PG_DSN="postgres://herald:herald_dev@127.0.0.1:24100/herald" \
+        "${bin}" serve --http-port 24791 > /tmp/pherald-e37.log 2>&1 &
+        serve_pid=$!
+        # Wait for the port to bind.
+        e37_ready=0
+        for i in $(seq 1 20); do
+            if curl -fsS http://127.0.0.1:24791/v1/healthz >/dev/null 2>&1; then
+                e37_ready=1; break
+            fi
+            sleep 0.5
+        done
+        if [ "${e37_ready}" = 1 ]; then
+            TOKEN=$(python3 -c '
+import hmac, hashlib, base64, json, time, os
+s = b"test-secret-32-bytes-of-padding!!"
+h = base64.urlsafe_b64encode(b"{\"alg\":\"HS256\",\"typ\":\"JWT\"}").rstrip(b"=")
+p = base64.urlsafe_b64encode(json.dumps({"tenant":"550e8400-e29b-41d4-a716-446655440000","sub":"t","exp":int(time.time())+300}).encode()).rstrip(b"=")
+sig = base64.urlsafe_b64encode(hmac.new(s, h+b"."+p, hashlib.sha256).digest()).rstrip(b"=")
+print((h+b"."+p+b"."+sig).decode())
+')
+            EVENT_ID="$(uuidgen 2>/dev/null || python3 -c 'import uuid; print(uuid.uuid4())')"
+            check "E37 POST /v1/events valid JWT + null recipient → 202 + Receipt" \
+                "STATUS=\$(curl -sS -X POST -H 'Authorization: Bearer ${TOKEN}' -H 'Content-Type: application/json' --data '{\"specversion\":\"1.0\",\"id\":\"${EVENT_ID}\",\"source\":\"//e2e\",\"type\":\"digital.vasic.herald.e2e\"}' -w '%{http_code}' -o /tmp/e37-body http://127.0.0.1:24791/v1/events); [ \"\${STATUS}\" = '202' ] && grep -q 'event_id' /tmp/e37-body"
+            check "E38 idempotency: second POST same event_id → 200 + X-Herald-Replay header" \
+                "curl -sS -X POST -H 'Authorization: Bearer ${TOKEN}' -H 'Content-Type: application/json' --data '{\"specversion\":\"1.0\",\"id\":\"${EVENT_ID}\",\"source\":\"//e2e\",\"type\":\"digital.vasic.herald.e2e\"}' -D /tmp/e38-hdr http://127.0.0.1:24791/v1/events >/dev/null && grep -qi 'X-Herald-Replay: true' /tmp/e38-hdr"
+            check "E39 POST without auth → 401" \
+                "[ \"\$(curl -sS -o /dev/null -w '%{http_code}' -X POST http://127.0.0.1:24791/v1/events)\" = '401' ]"
+            BAD_TOKEN=$(python3 -c '
+import hmac, hashlib, base64, json, time
+s = b"wrong-secret-32-bytes-padding!!!!"
+h = base64.urlsafe_b64encode(b"{\"alg\":\"HS256\",\"typ\":\"JWT\"}").rstrip(b"=")
+p = base64.urlsafe_b64encode(json.dumps({"tenant":"550e8400-e29b-41d4-a716-446655440000","sub":"t","exp":int(time.time())+300}).encode()).rstrip(b"=")
+sig = base64.urlsafe_b64encode(hmac.new(s, h+b"."+p, hashlib.sha256).digest()).rstrip(b"=")
+print((h+b"."+p+b"."+sig).decode())
+')
+            check "E40 POST with wrong JWT signature → 401" \
+                "[ \"\$(curl -sS -o /dev/null -w '%{http_code}' -X POST -H 'Authorization: Bearer ${BAD_TOKEN}' -H 'Content-Type: application/json' --data '{}' http://127.0.0.1:24791/v1/events)\" = '401' ]"
+            check "E41 POST malformed JSON → 400" \
+                "[ \"\$(curl -sS -o /dev/null -w '%{http_code}' -X POST -H 'Authorization: Bearer ${TOKEN}' -H 'Content-Type: application/json' --data 'not json' http://127.0.0.1:24791/v1/events)\" = '400' ]"
+            check "E42 sink-side: events_processed row written (§11.4.68 positive PG evidence)" \
+                "PGPASSWORD='herald_dev' psql -h 127.0.0.1 -p 24100 -U herald -d herald -tAc 'SELECT count(*) FROM events_processed' | grep -qE '^[1-9]'"
+        else
+            echo "FAIL  E37-E42 pherald serve never accepted HTTP within 10s on :24791"
+            tail -5 /tmp/pherald-e37.log 2>&1 | sed 's/^/      /'
+            fail=$((fail+6))
+            fail_names+=("E37" "E38" "E39" "E40" "E41" "E42")
+        fi
+        kill "${serve_pid}" 2>/dev/null || true
+        wait "${serve_pid}" 2>/dev/null || true
+        rm -f "${bin}" /tmp/e37-body /tmp/e38-hdr /tmp/pherald-e37.log /tmp/pherald-e37-migrate.log
+    else
+        echo "FAIL  E37-E42 pherald build"
+        tail -5 /tmp/e2e_out | sed 's/^/      /'
+        fail=$((fail+6))
+        fail_names+=("E37-build" "E38-build" "E39-build" "E40-build" "E41-build" "E42-build")
+    fi
+else
+    echo "SKIP  E37-E42 (no container runtime OR PG :24100 unreachable — §11.4.3 explicit SKIP-with-reason; Wave 3b live but PG-gated)"
+fi
+
+# ----------------------------------------------------------------------
+# E45 cross-binary update (Wave 3b unblock).
+#
+# Previously SKIP-with-reason "pherald Runner not live yet (Wave 3b)". The
+# Wave 3b close-out unblocks the prerequisite. Fully wiring the cross-
+# binary smoke (post deny event via pherald → wait for replication → GET
+# /v1/compliance from cherald) is its own substantial e2e block; for
+# Wave 3b we keep E45 honest-SKIP with the new reason. Wave 3c will land
+# the live wiring.
+echo ""
+echo "== E45: cross-binary integration (pherald → cherald) =="
+if (command -v docker >/dev/null 2>&1 || command -v podman >/dev/null 2>&1) \
+   && nc -z 127.0.0.1 24100 2>/dev/null; then
+    echo "SKIP  E45 (Runner is live post-Wave 3b; cross-binary smoke wiring deferred to Wave 3c — honest SKIP-with-reason per §11.4.3)"
+else
+    echo "SKIP  E45 (prerequisite PG :24100 + cherald running — §11.4.3 explicit SKIP-with-reason)"
 fi
 
 # ----------------------------------------------------------------------

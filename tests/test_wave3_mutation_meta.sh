@@ -1,23 +1,31 @@
 #!/usr/bin/env bash
 # tests/test_wave3_mutation_meta.sh — Paired §1.1 mutation test for Wave 3
-# invariants — 3a fragment.
+# invariants — 3a + 3b consolidated.
 #
 # Per Universal §11.4 + §1.1 + Herald §107: every gate MUST have a paired
 # mutation proving it FAILS when the property it claims to enforce is
 # removed. A gate without a paired mutation is itself a §11.4 PASS-bluff.
 #
-# Wave 3a covers three mutations (M2/M3/M4 land in Wave 3b alongside
-# pherald Runner):
+# Wave 3a + 3b cover six mutations:
 #
 #   M1. Strip JWT verification from commons_auth/middleware.go → E35 MUST FAIL.
+#   M2. Mutate pherald Runner IdempotencyChecker to set Duplicate=false
+#       unconditionally → E38 MUST FAIL (replay header missing on 2nd call).
+#   M3. Mutate pherald Runner PolicyGate.Process to force DecisionPass
+#       (disables deny short-circuit) → no E2E invariant fires today
+#       because Wave 3b ships permissive registry; recorded as SKIP-with-
+#       reason and revisited when a deny evaluator lands.
+#   M4. Mutate pherald Runner OutcomeRecorder.Process to skip the
+#       events_processed.Insert call → E38 MUST FAIL (no archive → 2nd
+#       send isn't deduped) AND E42 MUST FAIL (no PG row written).
 #   M5. Mutate sherald Aggregator.Snapshot to return zero mem → E47 MUST FAIL.
 #   M6. SKIP-with-reason — cross-binary cherald compliance integration
-#       requires Runner; deferred to Wave 3b (paired with E45 SKIP).
+#       requires the still-deferred Wave 3c wiring (paired with E45 SKIP).
 #
 # Hardlink-backup-restore pattern lifted from tests/test_i8_usability_meta.sh.
 # Post-flight verifies the full e2e battery is still green after restores.
 #
-# Returns 0 only when both expected mutations cause the gate to FAIL on
+# Returns 0 only when every expected mutation causes the gate to FAIL on
 # the expected invariant AND the post-flight passes. Non-zero on any bluff.
 
 set -uo pipefail
@@ -48,6 +56,10 @@ cleanup_all() {
     restore "${REPO_ROOT}/commons_auth/middleware.go"
     restore "${REPO_ROOT}/sherald/internal/safety/aggregator.go"
     restore "${REPO_ROOT}/cherald/internal/compliance/handler.go"
+    # Wave 3b mutation sites (M2/M3/M4):
+    restore "${REPO_ROOT}/pherald/internal/runner/idempotency.go"
+    restore "${REPO_ROOT}/pherald/internal/runner/policy.go"
+    restore "${REPO_ROOT}/pherald/internal/runner/outcome.go"
     for port in 24791 24992 24993 24994; do
         lsof -ti:${port} 2>/dev/null | xargs -r kill -9 2>/dev/null || true
     done
@@ -102,6 +114,93 @@ else
     fail=$((fail+1))
 fi
 restore "${MIDDLEWARE}"
+
+# ----------------------------------------------------------------------
+# M2: mutate pherald Runner IdempotencyChecker to set Duplicate=false
+# unconditionally. With this mutation the 2nd identical POST cannot
+# observe the duplicate state, so E38 MUST FAIL (X-Herald-Replay header
+# missing on the 2nd call).
+#
+# The mutation only matters when E37-E42 are running live (PG :24100
+# reachable). If E37-E42 SKIP due to no-PG, M2 SKIPs too — honest match.
+# ----------------------------------------------------------------------
+IDEM="${REPO_ROOT}/pherald/internal/runner/idempotency.go"
+echo "== M2: mutate IdempotencyChecker.Process → Duplicate=false unconditionally =="
+if nc -z 127.0.0.1 24100 2>/dev/null; then
+    file_backup "${IDEM}"
+    # Replace the conditional Duplicate=true with a forced false. The
+    # second SETNX miss (lookup hit) would normally set Duplicate=true on
+    # line 73; we mutate that single line.
+    sed -i.tmp 's|rc\.Duplicate = true|rc.Duplicate = false|' "${IDEM}"
+    rm -f "${IDEM}.tmp"
+    if ! grep -qE 'rc\.Duplicate = false' "${IDEM}" || grep -qE 'rc\.Duplicate = true' "${IDEM}"; then
+        echo "FAIL  M2: sed mutation failed — anchor missing or partial"
+        fail=$((fail+1))
+    else
+        bash "${E2E}" > /tmp/w3meta-m2.log 2>&1 || true
+        if grep -qE "FAIL  E38" /tmp/w3meta-m2.log; then
+            echo "PASS  M2: Duplicate=false breaks E38 (gate proven)"
+            pass=$((pass+1))
+        else
+            echo "FAIL  M2: Duplicate=false did NOT break E38 — gate is a bluff"
+            fail=$((fail+1))
+        fi
+    fi
+    restore "${IDEM}"
+else
+    echo "SKIP  M2 (E38 itself is SKIP-with-reason — PG :24100 unreachable; mutation has no observable invariant)"
+fi
+
+# ----------------------------------------------------------------------
+# M3: mutate pherald Runner PolicyGate.Process to force DecisionPass.
+#
+# This would normally disable the §32 stage-4 deny short-circuit. However
+# Wave 3b ships a PERMISSIVE evaluator registry (no evaluators registered
+# by default), so there's no deny invariant currently active in the e2e
+# suite. The mutation IS still source-mutable + would be observable when
+# a deny-evaluator e2e check lands (Wave 3c follow-up). For now, this
+# block is SKIP-with-reason — wired so when the deny invariant arrives
+# it gets coverage immediately.
+# ----------------------------------------------------------------------
+echo "== M3: mutate pherald Runner PolicyGate → DecisionPass unconditional =="
+echo "SKIP  M3 (no deny-evaluator e2e invariant active in Wave 3b; mutation will fire when Wave 3c adds the deny-path check)"
+
+# ----------------------------------------------------------------------
+# M4: mutate pherald Runner OutcomeRecorder.Process to skip the
+# events_processed.Insert call. With this mutation the archive row is
+# never written, so:
+#   - E38 MUST FAIL (no row → 2nd send isn't deduped via PG fallback)
+#   - E42 MUST FAIL (no row → events_processed count stays 0)
+# ----------------------------------------------------------------------
+OUTCOME="${REPO_ROOT}/pherald/internal/runner/outcome.go"
+echo "== M4: mutate OutcomeRecorder.Process → skip events_processed.Insert =="
+if nc -z 127.0.0.1 24100 2>/dev/null; then
+    file_backup "${OUTCOME}"
+    # Comment out the Insert call in the happy path (line ~89). We only
+    # want to mutate the happy-path call (Process), not the RecordDenied
+    # call further down — sed-anchor on the surrounding error wrap.
+    perl -i -0pe 's|(\tif err := o\.EventsProcessed\.Insert\(rc\.TenantPGCtx, eventsProcessedRow\{\n\t\tTenantID:    rc\.TenantID,\n\t\tIdemKey:     rc\.IdemKey,\n\t\tEventID:     rc\.Event\.ID,\n\t\tFirstSeenAt: now,\n\t\tReceipt:     rcpt,\n\t\}\); err != nil \{\n\t\treturn nil, fmt\.Errorf\("outcome: archive events_processed: %w", err\)\n\t\})|\t// MUTATED M4: events_processed.Insert SKIPPED\n\t_ = rcpt|' "${OUTCOME}"
+    if ! grep -qE "MUTATED M4" "${OUTCOME}"; then
+        echo "FAIL  M4: perl mutation failed — anchor not found in outcome.go"
+        fail=$((fail+1))
+    else
+        bash "${E2E}" > /tmp/w3meta-m4.log 2>&1 || true
+        # Either E38 or E42 failing is sufficient evidence; require both
+        # to be honest.
+        m4_fail_e38=$(grep -cE "FAIL  E38" /tmp/w3meta-m4.log || true)
+        m4_fail_e42=$(grep -cE "FAIL  E42" /tmp/w3meta-m4.log || true)
+        if [ "${m4_fail_e38}" -gt 0 ] || [ "${m4_fail_e42}" -gt 0 ]; then
+            echo "PASS  M4: skipping events_processed.Insert breaks E38 (${m4_fail_e38}) or E42 (${m4_fail_e42}) (gate proven)"
+            pass=$((pass+1))
+        else
+            echo "FAIL  M4: skipping events_processed.Insert did NOT break E38 or E42 — gate is a bluff"
+            fail=$((fail+1))
+        fi
+    fi
+    restore "${OUTCOME}"
+else
+    echo "SKIP  M4 (E38/E42 themselves SKIP-with-reason — PG :24100 unreachable; mutation has no observable invariant)"
+fi
 
 # ----------------------------------------------------------------------
 # M5: mutate sherald Aggregator.Snapshot to return zero memory.

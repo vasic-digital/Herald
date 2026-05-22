@@ -10,6 +10,7 @@ import (
 	db "digital.vasic.database/pkg/database"
 	"digital.vasic.database/pkg/postgres"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 // Open returns a connected Postgres client per the §11.4.74 catalogue-check
@@ -35,6 +36,34 @@ func Open(ctx context.Context, cfg *postgres.Config) (db.Database, error) {
 		return nil, fmt.Errorf("commons_storage: Open: connect: %w", err)
 	}
 	return client, nil
+}
+
+// OpenWithPool is Open's twin for callers that need direct access to the
+// underlying `*pgxpool.Pool` (e.g. the pherald Runner's pg adapters, which
+// drive raw pgx.Query/pgx.Exec calls rather than going through the
+// db.Database interface). The returned db.Database is the same wrapper Open
+// returns — keep it for Close(); the *pgxpool.Pool is owned by the wrapper,
+// so callers MUST NOT call Pool.Close() themselves (call db.Close instead).
+//
+// Use Open() when you only need the universal interface (cherald
+// ConstitutionStore, migrations). Use OpenWithPool() when you need the raw
+// pool (pherald Runner's PG adapters).
+func OpenWithPool(ctx context.Context, cfg *postgres.Config) (db.Database, *pgxpool.Pool, error) {
+	database, err := Open(ctx, cfg)
+	if err != nil {
+		return nil, nil, err
+	}
+	client, ok := database.(*postgres.Client)
+	if !ok {
+		_ = database.Close()
+		return nil, nil, fmt.Errorf("commons_storage: OpenWithPool: backend is not *postgres.Client (got %T)", database)
+	}
+	pool := client.Pool()
+	if pool == nil {
+		_ = database.Close()
+		return nil, nil, errors.New("commons_storage: OpenWithPool: client returned nil *pgxpool.Pool")
+	}
+	return database, pool, nil
 }
 
 // ConfigForHerald returns a populated postgres.Config for a local-dev
