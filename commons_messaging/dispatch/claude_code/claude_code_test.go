@@ -186,6 +186,64 @@ func TestDispatchCommandIncludesOpusModel(t *testing.T) {
 	}
 }
 
+// TestFormatEnvelopePreText proves the Wave 6 operator-mandated pre-text
+// wrapper renders verbatim. The opening sentence ("We have received new
+// message from our communication channel <name>.") MUST appear as a
+// strict prefix of the rendered output — §107 forensic anchor (operator
+// mandate, 2026-05-22). The existing structured <<<HERALD-DISPATCH-v1>>>
+// block is preserved byte-for-byte; FormatEnvelopeWithPreText only adds
+// the human-language prelude.
+//
+// Five sub-assertions: (a) verbatim prefix, (b) ordering (pre-text before
+// structured marker), (c) blank-line separator, (d) attachment surfaces
+// in pre-text, (e) classification surfaces in pre-text.
+func TestFormatEnvelopePreText(t *testing.T) {
+	d, err := New("/bin/true", t.TempDir(), "AtmosphereProject")
+	if err != nil {
+		t.Fatal(err)
+	}
+	req := DispatchRequest{
+		InboundID:      "01HXYZ",
+		Sender:         "tgram:milos85vasic",
+		Channel:        commons.ChannelTelegram,
+		Classification: Classification{Type: "query", Criticality: "low", Confidence: 0.88},
+		Conversation:   "milos: ping?",
+		Attachments:    []commons.Attachment{{Filename: "shot.png", MIMEType: "image/png", SizeBytes: 1234}},
+		UserMessage:    "ping",
+	}
+	out := d.FormatEnvelopeWithPreText(req, "tgram")
+
+	// (a) verbatim opening line (the operator's mandated wording)
+	if !strings.HasPrefix(out, "We have received new message from our communication channel tgram.") {
+		end := 80
+		if end > len(out) {
+			end = len(out)
+		}
+		t.Fatalf("missing verbatim pre-text opener; got first 80 bytes: %q", out[:end])
+	}
+	// (b) pre-text appears BEFORE the structured marker
+	preIdx := strings.Index(out, "We have received new message")
+	markerIdx := strings.Index(out, "<<<HERALD-DISPATCH-v1>>>")
+	if preIdx < 0 || markerIdx < 0 || preIdx >= markerIdx {
+		t.Fatalf("ordering wrong: preIdx=%d markerIdx=%d", preIdx, markerIdx)
+	}
+	// (c) blank line between pre-text and structured block
+	blank := strings.Index(out[preIdx:], "\n\n<<<HERALD-DISPATCH-v1>>>")
+	if blank < 0 {
+		t.Fatalf("no blank line between pre-text and structured marker")
+	}
+	// (d) attachment filename surfaces in the pre-text (so the LLM sees
+	//     the attachment context in natural language before the structured
+	//     list)
+	if !strings.Contains(out, "shot.png") {
+		t.Fatalf("attachment filename not surfaced in pre-text")
+	}
+	// (e) classification surfaces in the pre-text
+	if !strings.Contains(strings.ToLower(out), "query") {
+		t.Fatalf("classification not surfaced in pre-text")
+	}
+}
+
 func TestFormatEnvelope_TaskVerbVariesByType(t *testing.T) {
 	d, _ := New("claude", t.TempDir(), "X")
 	for itemType, expect := range map[string]string{

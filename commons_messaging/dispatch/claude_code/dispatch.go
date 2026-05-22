@@ -77,7 +77,7 @@ func (d *Dispatcher) buildCmd(ctx context.Context, req DispatchRequest) (*exec.C
 		return nil, uuid.Nil, anchor, fmt.Errorf("claude_code: dispatch: no anchored session at %s (HRD-012 step 7 will bootstrap)", anchor)
 	}
 
-	envelope := d.FormatEnvelope(req)
+	envelope := d.FormatEnvelopeWithPreText(req, string(req.Channel))
 	cmd := exec.CommandContext(ctx, d.binaryPath,
 		"--resume", sessionUUID.String(),
 		"--model", "claude-opus-4-7", // Wave 6 operator-locked: Opus always.

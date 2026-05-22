@@ -187,6 +187,44 @@ func (d *Dispatcher) FormatEnvelope(req DispatchRequest) string {
 	return sb.String()
 }
 
+// FormatEnvelopeWithPreText renders the §33.3 envelope prefixed with the
+// verbatim operator pre-text per Wave 6 operator mandate (2026-05-22):
+//
+//	"We have received new message from our communication channel <name>.
+//	 <classification sentence>. <attachment list>"
+//
+// followed by a blank line and the existing <<<HERALD-DISPATCH-v1>>>
+// structured block (kept byte-for-byte identical to FormatEnvelope's
+// output for the structured portion).
+//
+// §107 anchor: the opening sentence MUST appear as a strict prefix of
+// the rendered output — TestFormatEnvelopePreText asserts via
+// strings.HasPrefix, and T11 invariant E74 greps captured envelopes
+// (under docs/qa/<run-id>/) for the literal prefix.
+func (d *Dispatcher) FormatEnvelopeWithPreText(req DispatchRequest, channelName string) string {
+	var pre strings.Builder
+	fmt.Fprintf(&pre, "We have received new message from our communication channel %s.\n", channelName)
+	fmt.Fprintf(&pre, "The message has been classified as %q with %q criticality (confidence %.2f).\n",
+		req.Classification.Type, req.Classification.Criticality, req.Classification.Confidence)
+	fmt.Fprintf(&pre, "Sender: %s. Inbound ID: %s.\n", req.Sender, req.InboundID)
+	if len(req.Attachments) > 0 {
+		pre.WriteString("Attached materials:\n")
+		for _, a := range req.Attachments {
+			// Attachments downloaded by pherald inbound runtime are
+			// available on the local filesystem. The path is carried in
+			// the Filename field for Wave 6 (it's already the canonical
+			// ~/.herald/inbox/<sha256>.<ext> path emitted by the
+			// attachment download helper — see T5).
+			fmt.Fprintf(&pre, "  - %s (%s, %d bytes)\n", a.Filename, a.MIMEType, a.SizeBytes)
+		}
+	} else {
+		pre.WriteString("No attached materials.\n")
+	}
+	pre.WriteString("\n")
+	pre.WriteString(d.FormatEnvelope(req)) // existing structured block unchanged
+	return pre.String()
+}
+
 // DispatchResponse is the typed projection of the §33.3 JSON reply.
 // JSON tags match the snake_case schema declared in replyJSONSchema.
 // SessionUUID + AnchorPath are populated by Dispatch post-exec for the
