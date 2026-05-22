@@ -15,17 +15,19 @@
 // This keeps `pherald --help`, `pherald version`, `pherald migrate ...`
 // runnable even when HERALD_PG_DSN / HERALD_AUTH_MODE aren't set. The
 // serve subcommand is the only path that requires PG + auth wired up.
+//
+// Wave 4a Task 7.5 refactor (2026-05-22): newServeCmd now delegates the
+// listener body to cli.RunServe so pherald gets the EXACT same dual
+// TCP/H2 + UDP/H3 + Brotli + Alt-Svc engine as every other flavor. The
+// lazy Runner construction is preserved — buildRunner/buildVerifier are
+// still called INSIDE RunE, so `pherald version` / `pherald migrate`
+// remain runnable without PG/JWT env vars. This closes the §107 covenant
+// gap that left POST /v1/events TCP-only after Wave 4a T6/T7.
 package main
 
 import (
 	"context"
 	"log/slog"
-	"net/http"
-	"os"
-	"os/signal"
-	"strconv"
-	"syscall"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
@@ -55,13 +57,22 @@ func registerStubs(root *cobra.Command) {
 // actually runs (not at process start). `pherald --help`, `version`,
 // `migrate` paths don't need PG/auth wired up.
 //
+// Wave 4a Task 7.5 (pherald unification onto cli.RunServe): the
+// dual-listener engine (TCP/H2 + UDP/H3 + Brotli + Alt-Svc) is the
+// shared cli.RunServe body — pherald no longer rolls its own
+// http.Server. The lazy Runner/verifier construction is preserved: we
+// build them here in RunE, plug them into ServeOpts, and hand off to
+// cli.RunServe for the listener lifecycle. Result: POST /v1/events
+// gets HTTP/3 + Brotli + Alt-Svc exactly like every other route.
+//
 // Routes:
 //   - POST /v1/events → httpsrv.EventsHandler(runner) [LIVE]
 //   - GET  /v1/healthz → cli.HealthzHandler               [built-in]
 //   - GET  /v1/readyz  → cli.ReadyzHandler                [built-in]
 //   - GET  /metrics   → cli.MetricsHandler                [built-in]
 //
-// Middleware stack (in order):
+// Middleware stack (in order, downstream of cli.RunServe's auto-wired
+// Brotli + Alt-Svc layers):
 //  1. commons_auth.GinMiddleware(verifier) — 401 on missing/invalid JWT
 //  2. httpsrv.RequestIDMiddleware()        — propagates X-Request-ID
 func newServeCmd(br commons.Branding) *cobra.Command {
@@ -80,82 +91,31 @@ func newServeCmd(br commons.Branding) *cobra.Command {
 				ctx = context.Background()
 			}
 			// Build the Runner and verifier here, NOT at process start.
+			// `pherald version` / `pherald migrate` / `pherald --help`
+			// must remain runnable without HERALD_PG_DSN / HERALD_AUTH_MODE.
 			runnerInstance, pgCloser := buildRunner(ctx)
 			defer pgCloser()
 			verifier := buildVerifier()
 
-			if port == 0 {
-				port = br.DefaultPort
+			opts := cli.ServeOpts{
+				Branding: br,
+				Routes:   httpsrv.Routes(runnerInstance),
+				Middleware: []gin.HandlerFunc{
+					commons_auth.GinMiddleware(verifier),
+					httpsrv.RequestIDMiddleware(),
+				},
+				TLSCertPath:   tlsCert,
+				TLSKeyPath:    tlsKey,
+				DisableBrotli: noBrotli,
+				// ProdMode + DisableH3 are env-detected inside cli.RunServe
+				// (HERALD_AUTH_MODE=jwks ⇒ ProdMode, HERALD_DISABLE_HTTP3=1
+				// ⇒ DisableH3). Keeping them out of main.go matches the
+				// Wave 4a T6/T7 contract every other flavor uses.
 			}
-			gin.SetMode(gin.ReleaseMode)
-			r := gin.New()
-			r.Use(gin.Recovery())
-			// Health/observability endpoints registered BEFORE the auth
-			// chain so probes don't need a JWT.
-			r.GET("/v1/healthz", cli.HealthzHandler(br))
-			r.GET("/v1/readyz", cli.ReadyzHandler(br))
-			r.GET("/metrics", cli.MetricsHandler(br))
-			// Wave 4a Task 7: auto-wire Brotli compression for flavor
-			// routes (matches cli.ServeCmd behavior). Healthz/readyz/metrics
-			// registered above are unaffected — Gin's r.Use() only applies
-			// to routes registered after the call. The --no-brotli flag
-			// suppresses this for streaming routes that can't be buffered.
-			if !noBrotli {
-				r.Use(cli.BrotliMiddleware(0))
-			}
-			// Auth + request-ID middleware for everything below.
-			r.Use(commons_auth.GinMiddleware(verifier))
-			r.Use(httpsrv.RequestIDMiddleware())
-			// Flavor-specific routes (POST /v1/events live).
-			for _, route := range httpsrv.Routes(runnerInstance) {
-				h := route.Handler
-				if h == nil && route.HRD != "" {
-					h = cli.StubRouteHandler(route)
-				}
-				r.Handle(route.Method, route.Path, h)
-			}
-			// Note: pherald's serve plane is currently TCP-only (no H3
-			// listener) because its lazy Runner/verifier construction
-			// happens in this RunE rather than via cli.ServeCmd. The
-			// --tls-cert/--tls-key flags wire to the TCP listener's TLS
-			// config for HTTPS+H2 termination; without them the listener
-			// runs plaintext HTTP/1.1+H2c (the pre-Wave 4a default).
-			// HRD-024 follow-up may unify pherald onto cli.ServeCmd to
-			// get the dual-listener behavior for free.
-			srv := &http.Server{
-				Addr:    ":" + strconv.Itoa(port),
-				Handler: r,
-			}
-			errCh := make(chan error, 1)
-			go func() {
-				var err error
-				if tlsCert != "" && tlsKey != "" {
-					err = srv.ListenAndServeTLS(tlsCert, tlsKey)
-				} else {
-					err = srv.ListenAndServe()
-				}
-				if err != nil && err != http.ErrServerClosed {
-					errCh <- err
-				}
-			}()
-			sigCh := make(chan os.Signal, 1)
-			signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
-			defer signal.Stop(sigCh)
-			select {
-			case err := <-errCh:
-				return err
-			case <-sigCh:
-			case <-ctx.Done():
-			}
-			shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-			defer cancel()
-			return srv.Shutdown(shutdownCtx)
+			return cli.RunServe(ctx, opts, port)
 		},
 	}
-	cmd.Flags().IntVar(&port, "http-port", 0, "TCP port to bind (default = flavor's DefaultPort)")
-	cmd.Flags().StringVar(&tlsCert, "tls-cert", "", "Path to PEM-encoded TLS certificate (enables HTTPS+H2 on the TCP listener)")
-	cmd.Flags().StringVar(&tlsKey, "tls-key", "", "Path to PEM-encoded TLS private key (paired with --tls-cert)")
-	cmd.Flags().BoolVar(&noBrotli, "no-brotli", false, "Disable auto-wired Brotli compression middleware (useful for streaming routes that cannot be buffered)")
+	cli.BindServeFlags(cmd, &port, &tlsCert, &tlsKey, &noBrotli)
 	return cmd
 }
 
