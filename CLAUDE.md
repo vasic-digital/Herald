@@ -126,6 +126,53 @@ Do not invent build/test commands beyond what `go test ./<module>/...` provides.
 
 The bar for shipping any Herald feature is **NOT** "tests pass" — it is **"the end user of the flavor binary can actually use the feature."** Every PASS (unit, integration, gate, Challenge, smoke, e2e) MUST carry positive runtime evidence that the user-visible behaviour works. Metadata-only / configuration-only / "absence-of-error" / grep-only PASS are §11.4 PASS-bluffs and constitute critical defects regardless of how green the summary line looks. Canonical Herald authority: `docs/guides/HERALD_CONSTITUTION.md` §107. Canonical Helix authority: `<discovered>/Constitution.md` §11.4 + §11.4.1..§11.4.16 and `<discovered>/CLAUDE.md` "MANDATORY ANTI-BLUFF COVENANT — END-USER QUALITY GUARANTEE". Canonical Herald evidence: `scripts/e2e_bluff_hunt.sh` (14 invariants against real services; ALL must PASS). Inheritance gate invariant **I8a** asserts this covenant anchor is present in this file.
 
+## §107.x — docs/qa/ Evidence Mandate (operator mandate, 2026-05-22; cascades from Helix §11.4.83)
+
+**Forensic anchor — verbatim operator mandate (2026-05-22):**
+
+> "every feature that ships MUST carry a recorded e2e communication transcript + any attached materials under `docs/qa/<run-id>/` (per-feature subdirectories). A feature with no QA transcript is itself a §107 PASS-bluff — it claims to work but has no auditable runtime evidence. Bot-driven automation (e.g. Herald's planned `qaherald` binary) MUST preserve full bidirectional communication threads as proof."
+
+Every Herald feature that ships — every flavor binary (`pherald`, `sherald`, `cherald`, `bherald`, `rherald`, `iherald`, `scherald`, future `qaherald`) and every `/v1/*` route they expose — MUST carry a recorded end-to-end communication transcript plus all attached materials (Telegram screenshots, Gin response bodies in JSON or TOON, OpenTelemetry trace exports, container logs) committed under `docs/qa/<run-id>/`. A Herald feature that ships without a `docs/qa/<run-id>/` directory is by definition a §107 PASS-bluff — its e2e_bluff_hunt PASS line claims it works for end users, but no auditable runtime evidence proves an end user ever exercised it.
+
+Operative rule for Herald. (1) Every Herald HRD-NNN (V3 §8.3) work-item that introduces a user-visible feature MUST land its `docs/qa/HRD-NNN/` directory (timestamp-prefixed if multiple runs) in the same logical work effort. (2) Bidirectional transcripts only — for Telegram-driven features (HRD-011, planned `qaherald`), capture both directions of the bot conversation; for Gin /v1 routes, capture both the request payload and the full response body. (3) Attached materials commit verbatim — never link to external Slack/Drive/Telegram URLs; the artefact lives in-repo. (4) The planned `qaherald` binary (HRD-NNN to be assigned) is Herald's QA bot: it drives pherald ↔ Telegram round-trips and preserves the full conversation thread under `docs/qa/qaherald-<TS>/`. (5) Release gates (`scripts/release.sh` when implemented + the existing tag-time guard) REFUSE to tag a release whose feature-shipping commits lack their `docs/qa/<run-id>/`. (6) `scripts/e2e_bluff_hunt.sh` invariants for new features MUST cite the `docs/qa/<run-id>/` artefact as their positive-evidence anchor (§11.4.2 / §11.4.5 composition).
+
+**Cascade authority.** Helix Universal Constitution §11.4.83 (the verbatim operator mandate is anchored there). Herald §107.x is the project-binding restatement.
+
+**Enforcement.** A feature commit that lacks `docs/qa/<run-id>/` triggers FAIL at the release-gate layer. The §11.4.4 test-interrupt-on-discovery applies — the entire release cycle stops until evidence lands.
+
+**Non-compliance is a release blocker.** No `--qa-evidence-optional`, `--qa-transcript-later`, `--qa-bot-summary-suffices` flag exists for Herald.
+
+## §107.y — Working-Tree Quiescence Rule (operator mandate, 2026-05-22; cascades from Helix §11.4.84)
+
+**Short tag:** `working-tree quiescence`.
+
+**Forensic anchor — verbatim operator mandate (2026-05-22):**
+
+> "no subagent commit may proceed while any concurrent mutation gate is in flight in the same checkout. Before `git add`, the committing agent MUST `grep` its own working tree for mutation markers (`MUTATED for paired`, `// always pass`, `return json.Marshal` shortcut paths, etc.). Any unexplained file in the staging area triggers ABORT."
+
+**Lesson (forensic case study — Herald-internal).** On 2026-05-21 a logo-fix subagent (commit `72e81ab`, "Fix: replace pandoc {width=96px} image attr with HTML <img> tag") ran in this very checkout while a paired §1.1 Wave 4b mutation gate had temporarily injected an `// always pass` shortcut into `commons_auth/middleware.go` (JWT-bypass mutation, intended for the paired-mutation cycle to mutate → assert FAIL → restore). The logo-fix subagent's `git add` swept the mutation residue into its commit; the resulting commit was pushed to all four mirrors before any other agent caught it. Within the hour the SECURITY FIX (`d5bd360`, "SECURITY FIX: restore commons_auth/middleware.go JWT verify (mutation residue in 72e81ab)") restored the verify path, but the production-equivalent-binary-with-bypassed-JWT window is a real security-defect window — small, but non-zero, and demonstrably exploitable during that interval. This is no longer hypothetical; it happened. The rule below is the constitutional outcome.
+
+**Operative rule for Herald.**
+
+1. **Pre-`git add` quiescence check.** Every commit flow (main thread + subagent) MUST grep the working tree for the canonical Herald mutation markers BEFORE `git add`:
+   - `MUTATED for paired` (the canonical paired-§1.1 marker emitted by `tests/test_wave4b_mutation_meta.sh`)
+   - `// always pass`, `// MUTATION`, `# MUTATION` (Go + shell mutation annotations)
+   - `return json.Marshal` shortcut paths in commons or commons_messaging (Wave 4b TOON mutation residue)
+   - `_mutated_*` filename suffixes
+   - `.git/MUTATION_IN_PROGRESS` (the lockfile — see (3))
+2. **Scope-match.** Cross-check `git status --porcelain` against the subagent's declared scope. Any file outside the declared scope → ABORT. The subagent MUST explicitly account for every modified / untracked / staged entry.
+3. **Lockfile serialisation.** When any mutation gate is in flight, the gate's first action is `touch .git/MUTATION_IN_PROGRESS`; its last action (in trap-on-exit) is `rm .git/MUTATION_IN_PROGRESS`. Any subagent that finds this lockfile present MUST refuse to `git add` and ABORT until the gate completes the mutate → assert-FAIL → restore → assert-PASS cycle and removes the lockfile.
+4. **Worktree isolation (preferred).** When parallel subagents are required (§11.4.20 / §11.4.70 subagent-driven default), prefer `git worktree add` per subagent over single-checkout concurrency — eliminates the cross-mutation race by construction.
+5. **Pre-push mutation-residue scanner.** `scripts/mutation_residue_audit.sh` (to be implemented; HRD-NNN to be assigned) MUST run before every push. Any commit in the pushed range containing a mutation marker → push BLOCKED, commit MUST be reverted or amended before mirrors are updated.
+
+**Prototype enforcement.** `tests/test_wave4b_mutation_meta.sh` ALREADY includes a working-tree quiescence check (`check_quiescence()` at line 92; assertion at line 197 — "Working-tree quiescence — assert no MUTATED markers leaked"). It is the canonical prototype. Generalising it across all paired-§1.1 gates is open work; the universal scanner (`scripts/mutation_residue_audit.sh`) is the planned roll-out.
+
+**Cascade authority.** Helix Universal Constitution §11.4.84. Herald §107.y is the project-binding restatement.
+
+**Enforcement.** A mutation marker that lands in any tagged Herald commit is a critical defect regardless of how briefly it persisted — see commit `72e81ab` / `d5bd360` as proof.
+
+**Non-compliance is a release blocker.** No `--allow-residue`, `--skip-quiescence`, `--mutation-cleanup-later` flag exists.
+
 ## Mission (from the spec)
 
 > Ingesting system events and reliably fanning them out to multiple notification channels so every alert reaches the right destination without confusion.

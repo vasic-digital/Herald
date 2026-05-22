@@ -44,6 +44,26 @@ Canonical Herald evidence: `scripts/e2e_bluff_hunt.sh` (41 invariants against re
 
 Inheritance gate invariant **I8a** asserts this covenant anchor is present in CLAUDE.md; **I8b** asserts it in AGENTS.md; **I8c** asserts it in HERALD_CONSTITUTION.md. This QWEN.md restates the anchor for Qwen Code session parity (added 2026-05-22 doc-cleanup pass alongside QWEN.md propagation across all Helix-stack submodules).
 
+## §107.x — docs/qa/ Evidence Mandate (operator mandate, 2026-05-22; cascades from Helix §11.4.83)
+
+**Forensic anchor — verbatim operator mandate (2026-05-22):**
+
+> "every feature that ships MUST carry a recorded e2e communication transcript + any attached materials under `docs/qa/<run-id>/` (per-feature subdirectories). A feature with no QA transcript is itself a §107 PASS-bluff — it claims to work but has no auditable runtime evidence. Bot-driven automation (e.g. Herald's planned `qaherald` binary) MUST preserve full bidirectional communication threads as proof."
+
+Every Herald feature that ships from a Qwen-driven session MUST carry a recorded end-to-end communication transcript plus attached materials committed under `docs/qa/<run-id>/`. Bidirectional transcripts only; bot-driven QA (the planned `qaherald` binary) preserves the full conversation thread. CI release gates refuse to tag any version whose feature-shipping commit lacks its `docs/qa/<run-id>/`. Canonical Helix authority: `<discovered>/Constitution.md` §11.4.83. Canonical Herald authority: `docs/guides/HERALD_CONSTITUTION.md` §107.x.
+
+## §107.y — Working-Tree Quiescence Rule (operator mandate, 2026-05-22; cascades from Helix §11.4.84)
+
+**Short tag:** `working-tree quiescence`.
+
+**Forensic anchor — verbatim operator mandate (2026-05-22):**
+
+> "no subagent commit may proceed while any concurrent mutation gate is in flight in the same checkout. Before `git add`, the committing agent MUST `grep` its own working tree for mutation markers (`MUTATED for paired`, `// always pass`, `return json.Marshal` shortcut paths, etc.). Any unexplained file in the staging area triggers ABORT."
+
+Lesson (forensic — Herald-internal): commit `72e81ab` (logo fix, 2026-05-21) swept a `// always pass` JWT-bypass mutation residue into an unrelated commit; pushed to all four mirrors; fix `d5bd360` ("SECURITY FIX: restore commons_auth/middleware.go JWT verify") landed within the hour. The security-defect window is real; the rule is constitutional.
+
+Qwen-agent-binding rule. Pre-`git add`: grep for mutation markers (`MUTATED for paired`, `// always pass`, `return json.Marshal` shortcuts, `// MUTATION` annotations, `_mutated_*` filenames, `.git/MUTATION_IN_PROGRESS` lockfile); cross-check `git status --porcelain` against declared scope; unaccounted entries ABORT. Active mutation gates serialise before unrelated commits; concurrent subagents use `git worktree add` or the lockfile. The prototype is `tests/test_wave4b_mutation_meta.sh` (`check_quiescence()` at line 92, assertion at line 197). Canonical Helix authority: `<discovered>/Constitution.md` §11.4.84. Canonical Herald authority: `docs/guides/HERALD_CONSTITUTION.md` §107.y.
+
 ## Qwen-specific notes
 
 Qwen agents follow the same disciplines documented for Claude Code:

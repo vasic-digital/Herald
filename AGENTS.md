@@ -108,6 +108,32 @@ Canonical Herald enforcement: `scripts/e2e_bluff_hunt.sh` — boots real service
 
 Tests AND Challenges are bound equally: a Challenge that scores PASS on a broken-for-end-user feature is the same defect class as a unit test that does. Both are release blockers.
 
+### §107.x — docs/qa/ Evidence Mandate (operator mandate, 2026-05-22; cascades from Helix §11.4.83)
+
+**Forensic anchor — verbatim operator mandate (2026-05-22):**
+
+> "every feature that ships MUST carry a recorded e2e communication transcript + any attached materials under `docs/qa/<run-id>/` (per-feature subdirectories). A feature with no QA transcript is itself a §107 PASS-bluff — it claims to work but has no auditable runtime evidence. Bot-driven automation (e.g. Herald's planned `qaherald` binary) MUST preserve full bidirectional communication threads as proof."
+
+**Agent-binding rule for Herald.** No agent may declare a Herald feature done without `docs/qa/<run-id>/` evidence committed in the same logical work effort. Telegram-driven features (HRD-011, planned `qaherald`) capture both halves of the bot conversation; Gin `/v1/*` routes capture request + full response body; container-driven features (Postgres, Redis, OTel) capture container logs + healthcheck output. Bot-driven QA (the planned `qaherald` binary) MUST preserve the full conversation thread under `docs/qa/qaherald-<TS>/` — a stored-final-PASS-only mode is itself a §107 bluff.
+
+CI / release gates MUST refuse to tag a release whose feature-shipping commits lack their matching `docs/qa/<run-id>/`. Canonical Helix authority: `<discovered>/Constitution.md` §11.4.83. Canonical Herald authority: `docs/guides/HERALD_CONSTITUTION.md` §107.x.
+
+### §107.y — Working-Tree Quiescence Rule (operator mandate, 2026-05-22; cascades from Helix §11.4.84)
+
+**Short tag:** `working-tree quiescence`.
+
+**Forensic anchor — verbatim operator mandate (2026-05-22):**
+
+> "no subagent commit may proceed while any concurrent mutation gate is in flight in the same checkout. Before `git add`, the committing agent MUST `grep` its own working tree for mutation markers (`MUTATED for paired`, `// always pass`, `return json.Marshal` shortcut paths, etc.). Any unexplained file in the staging area triggers ABORT."
+
+**Lesson (forensic — Herald-internal).** Commit `72e81ab` (logo fix subagent, 2026-05-21) swept a `// always pass` JWT-bypass mutation residue — left mid-cycle by a paired §1.1 Wave 4b mutation gate — into the unrelated commit, which was then pushed to all four mirrors. The SECURITY FIX `d5bd360` ("restore commons_auth/middleware.go JWT verify (mutation residue in 72e81ab)") landed within the hour, but the production-equivalent-binary-with-bypassed-JWT window is a real security-defect window. The rule below is the constitutional outcome.
+
+**Agent-binding rule for Herald.** Every commit flow (main thread + every dispatched subagent) MUST: (1) grep the working tree for mutation markers (`MUTATED for paired`, `// always pass`, `return json.Marshal` shortcut paths, `// MUTATION` / `# MUTATION` annotations, `_mutated_*` filename suffixes, `.git/MUTATION_IN_PROGRESS` lockfile) BEFORE `git add`; (2) cross-check `git status --porcelain` against the declared scope — unaccounted files ABORT; (3) refuse to operate while `.git/MUTATION_IN_PROGRESS` is present (any active mutation gate MUST complete mutate → assert FAIL → restore → assert PASS BEFORE unrelated commits proceed); (4) prefer `git worktree add` per subagent when running concurrent subagent work.
+
+**Prototype.** `tests/test_wave4b_mutation_meta.sh` carries the canonical Herald implementation (`check_quiescence()` at line 92; assertion at line 197). Generalising to all paired-§1.1 gates is open work. The planned universal scanner is `scripts/mutation_residue_audit.sh`.
+
+Canonical Helix authority: `<discovered>/Constitution.md` §11.4.84. Canonical Herald authority: `docs/guides/HERALD_CONSTITUTION.md` §107.y. A mutation marker that lands in a tagged Herald commit is a critical defect regardless of how briefly it persisted — see `72e81ab` / `d5bd360` as proof.
+
 ### Inheritance gate (run before any commit that touches root docs or `constitution/`)
 
 ```bash
