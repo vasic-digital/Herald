@@ -47,7 +47,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>14</td>
+<td>15</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -63,27 +63,39 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>r14 captures Wave 4b (TOON <code>application/toon</code>
-content negotiation; tag v0.3.0). No new HRDs migrated — substrate-level
-upgrade.</strong> Every <code>/v1/*</code> business route on every
-serving flavor now honors <code>Accept: application/toon</code> → real
-TOON-encoded body (via <code>digital.vasic.toon</code> +
-<code>toon-format/toon-go</code> upstream, real wire-up replacing the
-prior sentinel-error scaffold from the §107 PASS-bluff revert). JSON
-remains the honest fallback. <code>POST /v1/events</code> accepts both
-TOON and JSON request bodies. TOONMiddleware auto-wired into
-<code>cli.RunServe</code> — every flavor inherits. 7 new e2e invariants
-E56-E62 (E62 SKIP-with-reason — encoder-failure fallback unit-tested in
-<code>commons/cli/toon_test.go</code>). New
-<code>tests/test_wave4b_mutation_meta.sh</code> (5/5 PASS — M1 strip
-TOONMiddleware → E57 FAIL; M2 swap <code>toon.Marshal</code> →
-<code>json.Marshal</code> (recurrence of the 2026-05-17 PASS-bluff) →
-E60 FAIL; M3 no-op transcodeRequestBody → pherald unit test FAIL;
-working-tree quiescence check (lesson from 72e81ab); post-flight green).
-Tag <strong>v0.3.0</strong>. Prior r13 captured Wave 4a (HTTP/3 + Brotli
-+ Alt-Svc + TLS 1.3). r12 closed HRD-016 (Wave 3b pherald Runner live).
-r11 closed HRD-011 (Telegram live, message_id=5). r10 renumbered HRD-093
-→ HRD-099. r9: Wave 3a close-out (HRD-028 + HRD-098).</td>
+<td><strong>r15 captures Wave 6 (pherald inbound runtime + Claude Code
+headless bridge — code-doc closure; tag v0.4.0 deferred to T13b post
+live evidence). HRD-100 atomic Issues→Fixed in this revision.</strong>
+New Cobra subcommand <code>pherald listen</code> runs the closed-loop
+runtime: Telegram <code>getUpdates</code> long-poll
+(<code>OnText</code>/<code>OnPhoto</code>/<code>OnDocument</code>/<code>OnVoice</code>)
++ bot self-filter (<code>bot.Me.Username</code> anti-echo guard, fails
+Subscribe if <code>getMe</code> returned no username) + sha256
+content-addressed attachment download into
+<code>~/.herald/inbox/&lt;sha256&gt;.&lt;ext&gt;</code> + Claude Code
+dispatch with <strong>Opus pinned in argv</strong>
+(<code>claude --model claude-opus-4-7 --resume &lt;UUID&gt; --print &lt;envelope&gt;</code>)
++ envelope pre-text (verbatim operator wording "We have received new
+message from our communication channel <channel-name>. ...") preceding
+the <code>&lt;&lt;&lt;HERALD-DISPATCH-v1&gt;&gt;&gt;</code> structured
+block + <code>&lt;&lt;&lt;HERALD-REPLY&gt;&gt;&gt;</code> parser with
+<code>action</code> routing (<code>reply</code> /
+<code>issue.open</code> / <code>event.emit</code>) +
+<code>tgram.Adapter.SendReply</code> wiring
+<code>reply_to_message_id</code> from the inbound
+<code>message_id</code>. T10a <code>--qa-out-dir</code> flag journals
+every inbound/outbound event as JSONL per §107.x. 12 commits
+(T1=<code>ad87d7f</code>..T12=<code>96c7c6b</code>). 8 new e2e
+invariants E63-E70 added (currently SKIP with documented reasons —
+converting to PASS at T10b when operator runs the live closed-loop and
+commits <code>docs/qa/HRD-100/</code>). Wave 6 mutation gate
+<code>tests/test_wave6_mutation_meta.sh</code> lands 3 paired hermetic
+mutations. Tag <strong>v0.4.0 deferred to T13b</strong>
+(operator-supplied live evidence per §107.x). Prior r14 captured Wave 4b
+TOON <code>application/toon</code> content negotiation (tag v0.3.0).
+Prior r13 captured Wave 4a (HTTP/3 + Brotli + Alt-Svc + TLS 1.3). r12
+closed HRD-016 (Wave 3b pherald Runner live). r11 closed HRD-011
+(Telegram live, message_id=5).</td>
 </tr>
 <tr>
 <td>Issues</td>
@@ -92,20 +104,23 @@ HRD-085..HRD-090</td>
 </tr>
 <tr>
 <td>Issues summary</td>
-<td>47 open / in-progress workable items. r12: HRD-016 closed atomically
-(Wave 3b pherald Runner live + e2e E37-E42 PASS or honest
-SKIP-with-reason when PG :24100 absent). r11: HRD-011 (Telegram live)
-closed atomically with live message_id=5 evidence. r10 doc-cleanup
-renumbered HRD-093 → HRD-099. r9: HRD-028 + HRD-098 closed (Wave 3a).
-Carry-over to Wave 3c: HRD-024 (iherald paging), HRD-033
-(destructive-guard body), HRD-018..027 flavor-specific bindings, plus
-the rest of the §43 command catalogue.</td>
+<td>47 open / in-progress workable items. r15: HRD-100 closed atomically
+(Wave 6 pherald inbound runtime — code-doc closure; live evidence
+operator-pending → T10b). r14: substrate upgrade only (Wave 4b TOON; no
+HRDs migrated). r12: HRD-016 closed atomically (Wave 3b pherald Runner
+live + e2e E37-E42 PASS or honest SKIP-with-reason when PG :24100
+absent). r11: HRD-011 (Telegram live) closed atomically with live
+message_id=5 evidence. r10 doc-cleanup renumbered HRD-093 → HRD-099. r9:
+HRD-028 + HRD-098 closed (Wave 3a). Carry-over to Wave 3c: HRD-024
+(iherald paging), HRD-033 (destructive-guard body), HRD-018..027
+flavor-specific bindings, plus the rest of the §43 command
+catalogue.</td>
 </tr>
 <tr>
 <td>Fixed</td>
 <td>HRD-001..HRD-007, HRD-009, HRD-009b, HRD-010, HRD-011, HRD-012,
 HRD-013, HRD-014, HRD-016, HRD-017, HRD-028, HRD-080, HRD-092, HRD-093,
-HRD-094, HRD-095, HRD-096, HRD-097, HRD-098, HRD-099</td>
+HRD-094, HRD-095, HRD-096, HRD-097, HRD-098, HRD-099, HRD-100</td>
 </tr>
 <tr>
 <td>Fixed summary</td>

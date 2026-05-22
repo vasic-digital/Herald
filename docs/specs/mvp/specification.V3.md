@@ -8,11 +8,11 @@
 
 | Field | Value |
 |---|---|
-| Revision | 11 |
+| Revision | 12 |
 | Created | 2026-05-20 |
 | Last modified | 2026-05-22 |
 | Status | active |
-| Status summary | V3 r11 — Wave 4b lands TOON (Token-Oriented Object Notation, `application/toon`) content negotiation as Herald's preferred wire format with JSON as honest fallback. Every `/v1/*` business route now honors `Accept: application/toon` (responses are real TOON bytes via the `digital.vasic.toon` submodule + `toon-format/toon-go` upstream); `Accept: application/json` keeps JSON; q-value preference honored; `*/*` and missing Accept go to the server default (TOON; `HERALD_DEFAULT_RESPONSE_CODEC=json` flips). `POST /v1/events` accepts both TOON and JSON request bodies (TOON transcoded to JSON before the Runner's EventParser; Runner stays codec-agnostic). TOONMiddleware auto-wired into `cli.RunServe` so every flavor binary (`pherald`/`cherald`/`sherald`/`bherald`/`rherald`/`iherald`/`scherald`) inherits for free. Real compression evidence — for sherald /v1/safety_state, TOON body is 215B vs 226B JSON (~5% saved on a tiny payload; larger tabular payloads see 30-60% per upstream measurements). 7 new e2e invariants (E56-E62; E62 SKIP-with-reason — encoder-failure fallback is unit-tested in `commons/cli/toon_test.go` because no Herald handler exposes a TOON-unencodable Go type). New `tests/test_wave4b_mutation_meta.sh` (5/5 PASS — M1 strip TOONMiddleware → E57 FAIL; M2 swap `toon.Marshal` → `json.Marshal` (2026-05-17 PASS-bluff recurrence) → E60 FAIL; M3 no-op transcodeRequestBody → pherald unit test FAIL; working-tree quiescence check; post-flight green). Tag **v0.3.0**. Workspace module count unchanged at 15. Prior r10 — Wave 4a HTTP/3 + Brotli + Alt-Svc + TLS 1.3 transport substrate; tag v0.2.0. Prior r9 — Wave 3b pherald `/v1/events` LIVE. r8 — Wave 3a substrate. |
+| Status summary | **V3 r12 — Wave 6 lands the pherald INBOUND runtime (closed-loop subscriber → CC → reply).** New `pherald listen` Cobra subcommand runs Telegram `getUpdates` long-poll (`OnText`/`OnPhoto`/`OnDocument`/`OnVoice` handlers) + bot self-filter (`bot.Me.Username` anti-echo guard captured at Subscribe construction; refuses to start if `getMe` returned no username) + sha256 content-addressed attachment download into `~/.herald/inbox/<sha256>.<ext>` (idempotent — duplicate downloads do NOT re-write) + Claude Code dispatch with Opus pinned in the spawned argv (`claude --model claude-opus-4-7 --resume <UUID> --print <envelope>`) + envelope pre-text — verbatim operator wording `"We have received new message from our communication channel <channel-name>. <classification sentence>. <attachment list>"` preceding the existing `<<<HERALD-DISPATCH-v1>>>` structured block + `<<<HERALD-REPLY>>>` parser with `action` routing (`reply` default / `issue.open` / `event.emit`) + `tgram.Adapter.SendReply(ctx, chatID, text, replyToID, attachments)` wiring `reply_to_message_id` from the original `message_id`. `--qa-out-dir <path>` flag journals every inbound + outbound + CC dispatch event as JSONL per §107.x. Three new spec subsections capture the substrate: §32.9 (bot self-filter), §33.6 (envelope pre-text — verbatim operator mandate), §33.7 (Opus model pin). §43 command catalogue gains `pherald listen` row. Workspace at 16 Go modules (Wave 5 added `qaherald`; Wave 6 added no new module — inbound is `pherald/internal/inbound/`). 12 Wave-6 commits T1=`ad87d7f`..T12=`96c7c6b`. 8 new e2e invariants E63-E70 land in this revision (currently SKIP-with-documented-reason — auto-convert to PASS once T10b lands operator-supplied live evidence under `docs/qa/HRD-100-<run-id>/`). Wave 6 mutation gate `tests/test_wave6_mutation_meta.sh` (3 paired hermetic mutations, 4/4 PASS). Tag **v0.4.0 deferred to T13b** (operator-supplied live evidence per §107.x). Prior r11 — Wave 4b lands TOON (Token-Oriented Object Notation, `application/toon`) content negotiation as Herald's preferred wire format with JSON as honest fallback. Every `/v1/*` business route now honors `Accept: application/toon` (responses are real TOON bytes via the `digital.vasic.toon` submodule + `toon-format/toon-go` upstream); `Accept: application/json` keeps JSON; q-value preference honored; `*/*` and missing Accept go to the server default (TOON; `HERALD_DEFAULT_RESPONSE_CODEC=json` flips). `POST /v1/events` accepts both TOON and JSON request bodies (TOON transcoded to JSON before the Runner's EventParser; Runner stays codec-agnostic). TOONMiddleware auto-wired into `cli.RunServe` so every flavor binary (`pherald`/`cherald`/`sherald`/`bherald`/`rherald`/`iherald`/`scherald`) inherits for free. Real compression evidence — for sherald /v1/safety_state, TOON body is 215B vs 226B JSON (~5% saved on a tiny payload; larger tabular payloads see 30-60% per upstream measurements). 7 new e2e invariants (E56-E62; E62 SKIP-with-reason — encoder-failure fallback is unit-tested in `commons/cli/toon_test.go` because no Herald handler exposes a TOON-unencodable Go type). New `tests/test_wave4b_mutation_meta.sh` (5/5 PASS — M1 strip TOONMiddleware → E57 FAIL; M2 swap `toon.Marshal` → `json.Marshal` (2026-05-17 PASS-bluff recurrence) → E60 FAIL; M3 no-op transcodeRequestBody → pherald unit test FAIL; working-tree quiescence check; post-flight green). Tag **v0.3.0**. Workspace module count unchanged at 15. Prior r10 — Wave 4a HTTP/3 + Brotli + Alt-Svc + TLS 1.3 transport substrate; tag v0.2.0. Prior r9 — Wave 3b pherald `/v1/events` LIVE. r8 — Wave 3a substrate. |
 | Issues | none |
 | Issues summary | — |
 | Fixed | V3-R9-01..V3-R9-04 (r9 Wave 3b — Runner live + e2e E37-E42 + mutation gate M2/M3/M4 + §32 implementation column + §44.N milestone); V3-R8-01..V3-R8-05 (r8 Wave 2 scaffolds + Branding extension + REST surface expansion + §44.M milestone + §43 catalogue HRD-092 entry); V3-R3-01..V3-R3-03 (r3 parent-doc spec-path sync); V3-R2-01..V3-R2-09 (r2); V3-R1-01..V3-R1-14 (r1); inherits closed V2 + V1 lineage. |
@@ -3500,6 +3500,14 @@ Per §17.2 the inbound pipeline emits:
 - `herald_spam_block_total{tenant,reason}` counter.
 - Span name `herald.inbound.process` with child spans per stage.
 
+### 32.9 Bot self-filter (Wave 6, anti-echo, operator-mandated 2026-05-22)
+
+Inbound message handlers MUST drop messages where `msg.Sender.IsBot && msg.Sender.Username == bot.Me.Username`. Cross-bot messages (a different bot in the same chat) are KEPT — they represent legitimate multi-bot collaboration. If `bot.Me.Username` is unset after channel construction, the runtime MUST refuse to start (fail-closed: an echo-loop-prone runtime ships only when the self-identity is known).
+
+Implementation: `commons_messaging/channels/tgram/subscribe.go` captures `bot.Me.Username` at `Subscribe` time and applies `shouldDropBotSelf(msg, selfUsername)` before dispatching each `OnText` / `OnPhoto` / `OnDocument` / `OnVoice` handler.
+
+§107 anti-bluff: T12 mutation gate (M1) blanks the filter; paired detector is `TestSubscribeBotSelfFilter` (assertion on the cross-bot-kept case, not just "drop all bots"). When the closed-loop runs against real Telegram, an echo loop would manifest as pherald's own reply re-entering `getUpdates` and triggering a second CC dispatch within ~25s — observable in `tests/test_wave6_live_loop.sh`.
+
 ---
 
 ## §33. LLM / agent dispatch
@@ -3623,6 +3631,32 @@ V3 ships only `claude-code` dispatcher. Spec hooks reserved for:
 - `agentic-claude-api` — direct Anthropic API (Managed Agents) for hosted deployments where a CLI isn't desirable.
 
 Operators select per-tenant via `[llm].default_agent`; per-classification-type override via `[llm.routing]` table.
+
+### 33.6 Envelope pre-text (Wave 6, operator-mandated 2026-05-22)
+
+Every Claude Code envelope MUST be prefixed with the verbatim operator wording:
+
+```
+We have received new message from our communication channel <channel-name>.
+The message has been classified as "<type>" with "<criticality>" criticality (confidence <0.NN>).
+Sender: <channel>:<handle>. Inbound ID: <ULID>.
+Attached materials:
+  - <filename> (<mime>, <bytes> bytes)
+[or:] No attached materials.
+
+<<<HERALD-DISPATCH-v1>>>
+... existing structured block (§33.3) unchanged byte-for-byte ...
+```
+
+The pre-text is human-language; the LLM reads natural-language context BEFORE the structured schema. The existing `<<<HERALD-DISPATCH-v1>>>` block remains byte-identical to §33.3 — pre-text is additive.
+
+Implementation: `(*claude_code.Dispatcher).FormatEnvelopeWithPreText(req, channelName string) string`. Production `buildCmd` calls the new formatter; `FormatEnvelope` (§33.3) is preserved as the structured-only renderer for tests + tooling. §107 anchor: T11 invariant E66 greps the captured envelope bytes (from `--qa-out-dir`) for the literal opener prefix `"We have received new message from our communication channel "`.
+
+### 33.7 Model pinning (Wave 6, operator-mandated 2026-05-22)
+
+`pherald listen` (and any other call site that spawns Claude Code through the dispatcher) MUST spawn `claude --model claude-opus-4-7` (literal argv flag). No fallback to default model selection. No silent downgrade to Sonnet or Haiku. The model flag is two contiguous argv entries (`["--model", "claude-opus-4-7"]`), NOT a joined `"--model claude-opus-4-7"` string.
+
+Implementation: `commons_messaging/dispatch/claude_code/dispatch.go::buildCmd` inserts the flag between `--resume <UUID>` and `--print <envelope>`. §107 anchor: T2's `TestDispatchCommandIncludesOpusModel` inspects `*exec.Cmd.Args` directly (NOT env vars, NOT stdin). T12 mutation gate (M2) swaps to `claude-sonnet-4-6` and asserts the detector FAILs — proving the assertion is load-bearing.
 
 ---
 
@@ -4569,8 +4603,9 @@ Every row in §43.2 below MUST land as its own HRD-NNN (already opened HRD-029..
 | §11.4.73 Main-spec version + revision discipline | `cherald` | `cherald spec-version check` | `POST /v1/compliance/spec-version` | Asserts the main-spec metadata `Revision` is current vs. uncommitted spec edits + project config `main_spec_path`. Emits `.spec.revision_drift`. | HRD-054 |
 | §11.4.74 Submodule-catalogue-first | `cherald` | `cherald catalogue-check <pr-url>` | `POST /v1/compliance/catalogue-check` | Scans a PR description + linked Issues.md row for the `Catalogue-Check:` line; survey-runner that lists `vasic-digital` + `HelixDevelopment` repos matching a search term. Emits `.catalogue.miss` if missing. | HRD-055 |
 | §12.6 Memory-budget ceiling | `sherald` | `sherald mem-budget watch` (daemon-mode subcommand) | `GET /v1/safety/mem-budget` | Continuous watcher emitting `.host.safety_breach` when 60% threshold crossed. Composes with §17 metrics. | HRD-056 |
+| Wave 6 operator mandate (2026-05-22) — inbound runtime | `pherald` | `pherald listen [--qa-out-dir <path>]` | (no REST; long-running CLI daemon) | Closed-loop subscriber → CC → reply runtime. Telegram `getUpdates` long-poll + bot self-filter (§32.9) + sha256 content-addressed attachment download + Claude Code dispatch with Opus pinned (§33.7) + envelope pre-text (§33.6) + `<<<HERALD-REPLY>>>` action routing + `tgram.SendReply` with `reply_to_message_id`. Required env: `HERALD_TGRAM_BOT_TOKEN`, `HERALD_TGRAM_CHAT_ID`. Optional: `HERALD_PROJECT_NAME` (default: repo root folder name), `HERALD_CLAUDE_BIN` (default: $PATH lookup). `--qa-out-dir` opt-in journals every event to `<dir>/transcript.jsonl` per §107.x. | HRD-100 |
 
-Total: **27 new flavor commands / workflows** — one per HRD-029 through HRD-056 (note: HRD-049 is `reopen` which maps onto an existing REST endpoint per §41 rather than a fresh `/v1/<verb>`; net new HRDs: 27).
+Total: **28 new flavor commands / workflows** — one per HRD-029 through HRD-056 plus HRD-100 (note: HRD-049 is `reopen` which maps onto an existing REST endpoint per §41 rather than a fresh `/v1/<verb>`; net new HRDs: 28).
 
 **Wave 2 (r8) addendum — shared CLI scaffold.** The 28 commands above ship as Cobra subcommands on their owning `<prefix>herald` binary. Wave 2 landed the **shared CLI scaffold** (`commons/cli/`) that every flavor binary consumes — `NewRootCmd` / `VersionCmd` / `ServeCmd` / `StubCmd` plus `/v1/healthz`, `/v1/readyz`, `/v1/metrics`, and per-flavor 501-stub route registration. Tracked under **HRD-092** (Catalogue-Check: `no-match → vendor as Herald-internal package`; evidence in `docs/catalogue-checks/HRD-092-commons-cli.md`). HRD-092 is **Fixed (Wave 2, r8)** — every §43.2 command's Cobra surface is now built on top of this scaffold rather than each flavor reinventing root + version + serve. See §44.M for the full Wave 2 milestone.
 

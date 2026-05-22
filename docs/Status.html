@@ -47,7 +47,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>15</td>
+<td>16</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -63,9 +63,38 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>r15 captures Wave 4b (TOON <code>application/toon</code>
-content negotiation). Tag v0.3.0 issued.</strong> Every
-<code>/v1/*</code> business route on every serving flavor now honors
+<td><strong>r16 captures Wave 6 (pherald inbound runtime + Claude Code
+headless bridge — code-doc closure). HRD-100 closed atomically with 12
+Wave-6 commit SHAs. Tag <code>v0.4.0</code> is DEFERRED to T13b
+(operator-supplied live evidence per §107.x).</strong> New Cobra
+subcommand <code>pherald listen</code> runs the closed-loop runtime:
+Telegram <code>getUpdates</code> long-poll
+(<code>OnText</code>/<code>OnPhoto</code>/<code>OnDocument</code>/<code>OnVoice</code>)
++ bot self-filter (<code>bot.Me.Username</code> anti-echo guard) +
+sha256 content-addressed attachment download into
+<code>~/.herald/inbox/&lt;sha256&gt;.&lt;ext&gt;</code> + Claude Code
+dispatch with Opus pinned in argv
+(<code>claude --model claude-opus-4-7 --resume &lt;UUID&gt; --print &lt;envelope&gt;</code>)
++ envelope pre-text (verbatim operator wording "We have received new
+message from our communication channel <channel-name>. ...") preceding
+the <code>&lt;&lt;&lt;HERALD-DISPATCH-v1&gt;&gt;&gt;</code> structured
+block + <code>&lt;&lt;&lt;HERALD-REPLY&gt;&gt;&gt;</code> parser with
+<code>action</code> routing + <code>tgram.Adapter.SendReply</code>
+wiring <code>reply_to_message_id</code>. T10a <code>--qa-out-dir</code>
+JSONL journaling. 12 commits
+T1=<code>ad87d7f</code>..T12=<code>96c7c6b</code>. 8 new e2e invariants
+E63-E70 (all currently SKIP-with-documented-reason — convert to PASS at
+T10b live evidence). Wave 6 mutation gate
+<code>tests/test_wave6_mutation_meta.sh</code> (3 paired hermetic).
+Pre-existing e2e FAILs unrelated to Wave 6 (Postgres SASL on :24100
+surfaced in E7-E12 + E14-E16 + E37-E42) tracked separately — NOT Wave 6
+regressions. Workspace at 16 modules (Wave 5 added
+<code>qaherald</code>; Wave 6 added NO new module — inbound is
+<code>pherald/internal/inbound/</code>). Prior r15 captured Wave 4b TOON
+(tag v0.3.0). Prior r14 captured Wave 4a HTTP/3+Brotli+Alt-Svc+TLS (tag
+v0.2.0). r13 closed HRD-016 (Wave 3b pherald Runner live). r12 closed
+HRD-011 (Telegram live, message_id=5). Every <code>/v1/*</code> business
+route on every serving flavor now honors
 <code>Accept: application/toon</code> → real TOON-encoded body (via
 <code>digital.vasic.toon</code> + <code>toon-format/toon-go</code>
 upstream wire-up replacing the prior sentinel-error scaffold from the

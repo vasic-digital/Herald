@@ -112,7 +112,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>8</td>
+<td>10</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -128,19 +128,39 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td>r8: Wave 4b (TOON <code>application/toon</code> content negotiation)
-status pointer added; tag v0.3.0. Every <code>/v1/*</code> business
-route honors <code>Accept: application/toon</code> → real TOON-encoded
-body via <code>digital.vasic.toon</code> +
-<code>toon-format/toon-go</code> upstream. Workspace module count
-unchanged at 15 (Wave 4a added commons_tls; Wave 4b added no module —
-TOON glue lives in commons/cli/). E2e at 61 invariants (E1..E62; E55+E62
-SKIP-with-reason). Mutation gates: 4 (W2) + 3+SKIPs (W3) + 4 (W4a) + 5
-(W4b) = 16 paired gates. Prior r7: workspace module count corrected 7 →
-14. Prior r5/r6: §107 End-user-usability covenant section restating the
-verbatim operator mandate at Herald level + ToC entry; ties to
-HERALD_CONSTITUTION.md §107 + inheritance-gate invariant I8a (paired
-with I8b/c on AGENTS.md + HERALD_CONSTITUTION.md).</td>
+<td><strong>r10: Wave 6 (pherald inbound runtime + Claude Code headless
+bridge — code-doc closure; tag v0.4.0 deferred to T13b
+post-live-evidence).</strong> New <code>pherald listen</code> Cobra
+subcommand drives the closed-loop runtime: Telegram
+<code>getUpdates</code> long-poll + bot self-filter (§32.9 anti-echo via
+<code>bot.Me.Username</code>) +
+<code>OnPhoto</code>/<code>OnDocument</code>/<code>OnVoice</code>
+handlers with sha256 content-addressed attachment download
+(<code>~/.herald/inbox/&lt;sha&gt;.&lt;ext&gt;</code>, idempotent) +
+Claude Code dispatch with Opus pinned in argv
+(<code>claude --model claude-opus-4-7</code>, §33.7) + envelope pre-text
+— verbatim operator wording "We have received new message from our
+communication channel ..." preceding the existing
+<code>&lt;&lt;&lt;HERALD-DISPATCH-v1&gt;&gt;&gt;</code> block (§33.6) +
+<code>&lt;&lt;&lt;HERALD-REPLY&gt;&gt;&gt;</code> parser with
+<code>action</code> routing (<code>reply</code> /
+<code>issue.open</code> / <code>event.emit</code>) +
+<code>tgram.SendReply</code> wiring <code>reply_to_message_id</code>.
+T10a <code>--qa-out-dir</code> JSONL journaling (§107.x). 12 Wave-6
+commits (T1=<code>ad87d7f</code> → T12=<code>96c7c6b</code>). 8 new e2e
+invariants E63-E70 (currently SKIP-with-documented-reason — convert to
+PASS once T10b lands operator-supplied live evidence). Wave 6 mutation
+gate <code>tests/test_wave6_mutation_meta.sh</code> (3 paired hermetic
+mutations, 4/4 PASS). HRD-100 atomic Issues→Fixed. Spec V3 r11→r12 with
+§32.9 + §33.6 + §33.7 + §43 <code>pherald listen</code> row. Workspace
+at 16 modules (Wave 5 added <code>qaherald</code>; Wave 6 added NO new
+module — inbound is <code>pherald/internal/inbound/</code>). Prior r9:
+Wave 5 T1 <code>qaherald</code> module skeleton landed (16th workspace
+module + 8th flavor binary). Prior r8: Wave 4b TOON status pointer; tag
+v0.3.0 substrate. Prior r5/r6: §107 End-user-usability covenant section
+restating the verbatim operator mandate at Herald level + ToC entry;
+ties to HERALD_CONSTITUTION.md §107 + inheritance-gate invariant I8a
+(paired with I8b/c on AGENTS.md + HERALD_CONSTITUTION.md).</td>
 </tr>
 <tr>
 <td>Issues</td>
@@ -155,7 +175,9 @@ with I8b/c on AGENTS.md + HERALD_CONSTITUTION.md).</td>
 <td>spec-path references (r2), pre-implementation-language update (r3),
 submodules + HRD-docs + codegraph-index enumeration (r4), §107 mandate
 restatement + I8a anchor (r5), Wave-2/3a workspace-module-count refresh
-(r7), Wave 4a + 4b status pointer + e2e/mutation tally refresh (r8)</td>
+(r7), Wave 4a + 4b status pointer + e2e/mutation tally refresh (r8),
+Wave 5 T1 qaherald skeleton + commons_tls enumeration fold-in (r9), Wave
+6 inbound runtime + CC headless bridge code-doc closure (r10)</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
@@ -164,15 +186,32 @@ commit; r4 closes the discoverability gaps observed during a fresh
 <code>/init</code> review; r5 closes the Herald-level
 explicit-restatement gap identified by the 2026-05-20 audit; r7 closes
 the doc drift observed during the Wave 3a final review; r8 records the
-Wave 4a→4b transport/wire-format substrate upgrades.</td>
+Wave 4a→4b transport/wire-format substrate upgrades; r9 lands Wave 5 T1
+(<code>qaherald/cmd/qaherald</code> + <code>commons/branding.go</code>
+qa flavor) and back-fills the Wave 4a <code>commons_tls</code> workspace
+enumeration that was missing from r7/r8; r10 lands Wave 6 — pherald
+inbound runtime (<code>pherald listen</code> Cobra subcommand,
+<code>pherald/internal/inbound/</code> Dispatcher with
+<code>&lt;&lt;&lt;HERALD-REPLY&gt;&gt;&gt;</code> action routing, tgram
+bot self-filter +
+<code>OnPhoto</code>/<code>OnDocument</code>/<code>OnVoice</code> with
+sha256 content-addressed attachment download, claude_code dispatcher
+pinned to Opus with verbatim pre-text envelope, tgram.SendReply with
+<code>reply_to_message_id</code>, T10a <code>--qa-out-dir</code> JSONL
+journaling); spec V3 r11→r12 + HRD-100 atomic Issues→Fixed; tag v0.4.0
+deferred to T13b (post-T10b live evidence).</td>
 </tr>
 <tr>
 <td>Continuation</td>
-<td>bump again when QA workstream completes (<code>docs/qa/</code>
-evidence mandate + qaherald binary + v1.0.0-dev-0.0.1 release tag) and
-Wave 3c carry-over lands (HRD-024 iherald paging, HRD-033
-destructive-guard body, remaining HRD-018..028 constitution bindings,
-§43 command catalogue HRD-029..056).</td>
+<td>bump again when T10b lands operator-supplied live evidence under
+<code>docs/qa/HRD-100-&lt;run-id&gt;/</code> and T13b tags v0.4.0; then
+continue with Wave 7 (genericize messenger-channel framework per
+operator mandate 2026-05-22 — Slack/Max/Email next), Wave 3c carry-over
+(HRD-024 iherald paging, HRD-033 destructive-guard body, remaining
+HRD-018..028 constitution bindings), §43 command catalogue HRD-029..056,
+comprehensive docs audit (task #147), and the OOM-Protect Herald flavor
+(<code>oherald</code>, future post-Wave-6 closure per operator
+2026-05-22).</td>
 </tr>
 </tbody>
 </table>
@@ -318,15 +357,18 @@ Redis + OTel up on-demand.</li>
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> build ./commons/... ./commons_prefix/... ./commons_messaging/... ./commons_storage/... ./commons_constitution/... ./commons_infra/... ./pherald/...</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test <span class="at">-race</span> <span class="at">-count</span><span class="op">=</span>1 ./commons/... ./commons_prefix/... ./commons_messaging/... ./commons_storage/... ./commons_constitution/... ./commons_infra/... ./pherald/...</span></code></pre></div>
 <p>Tests pass on Go 1.25+ (verified on 1.26). Workspace is configured
-via <code>go.work</code> listing <strong>14</strong> Herald modules: the
+via <code>go.work</code> listing <strong>16</strong> Herald modules: the
 7 foundation modules (<code>commons</code>,
 <code>commons_constitution</code>, <code>commons_infra</code>,
 <code>commons_messaging</code>, <code>commons_prefix</code>,
 <code>commons_storage</code>, <code>pherald</code>) plus
-<code>commons_auth</code> (Wave 3a JWT verifier / Gin middleware) and
-the 6 Wave 2 flavor binaries (<code>sherald</code>,
-<code>cherald</code>, <code>bherald</code>, <code>rherald</code>,
-<code>iherald</code>, <code>scherald</code>). <code>go.work</code>
+<code>commons_auth</code> (Wave 3a JWT verifier / Gin middleware),
+<code>commons_tls</code> (Wave 4a auto-cert loader for the dual
+HTTP/3+TLS listener), and the 7 flavor binaries: the 6 Wave 2 flavors
+(<code>sherald</code>, <code>cherald</code>, <code>bherald</code>,
+<code>rherald</code>, <code>iherald</code>, <code>scherald</code>) plus
+<code>qaherald</code> (Wave 5 — QA bot, pherald ↔︎ Telegram round-trip
+automation per §107.x docs/qa evidence mandate). <code>go.work</code>
 itself is gitignored per spec §9.1; a fresh clone needs
 <code>go work init &amp;&amp; go work use ./...</code> (or copy the
 existing snippet from the project's local working tree). The 9
@@ -392,6 +434,148 @@ Herald evidence: <code>scripts/e2e_bluff_hunt.sh</code> (14 invariants
 against real services; ALL must PASS). Inheritance gate invariant
 <strong>I8a</strong> asserts this covenant anchor is present in this
 file.</p>
+<h2
+id="107x--docsqa-evidence-mandate-operator-mandate-2026-05-22-cascades-from-helix-11483">§107.x
+— docs/qa/ Evidence Mandate (operator mandate, 2026-05-22; cascades from
+Helix §11.4.83)</h2>
+<p><strong>Forensic anchor — verbatim operator mandate
+(2026-05-22):</strong></p>
+<blockquote>
+<p>"every feature that ships MUST carry a recorded e2e communication
+transcript + any attached materials under
+<code>docs/qa/&lt;run-id&gt;/</code> (per-feature subdirectories). A
+feature with no QA transcript is itself a §107 PASS-bluff — it claims to
+work but has no auditable runtime evidence. Bot-driven automation (e.g.
+Herald's planned <code>qaherald</code> binary) MUST preserve full
+bidirectional communication threads as proof."</p>
+</blockquote>
+<p>Every Herald feature that ships — every flavor binary
+(<code>pherald</code>, <code>sherald</code>, <code>cherald</code>,
+<code>bherald</code>, <code>rherald</code>, <code>iherald</code>,
+<code>scherald</code>, future <code>qaherald</code>) and every
+<code>/v1/*</code> route they expose — MUST carry a recorded end-to-end
+communication transcript plus all attached materials (Telegram
+screenshots, Gin response bodies in JSON or TOON, OpenTelemetry trace
+exports, container logs) committed under
+<code>docs/qa/&lt;run-id&gt;/</code>. A Herald feature that ships
+without a <code>docs/qa/&lt;run-id&gt;/</code> directory is by
+definition a §107 PASS-bluff — its e2e_bluff_hunt PASS line claims it
+works for end users, but no auditable runtime evidence proves an end
+user ever exercised it.</p>
+<p>Operative rule for Herald. (1) Every Herald HRD-NNN (V3 §8.3)
+work-item that introduces a user-visible feature MUST land its
+<code>docs/qa/HRD-NNN/</code> directory (timestamp-prefixed if multiple
+runs) in the same logical work effort. (2) Bidirectional transcripts
+only — for Telegram-driven features (HRD-011, planned
+<code>qaherald</code>), capture both directions of the bot conversation;
+for Gin /v1 routes, capture both the request payload and the full
+response body. (3) Attached materials commit verbatim — never link to
+external Slack/Drive/Telegram URLs; the artefact lives in-repo. (4) The
+planned <code>qaherald</code> binary (HRD-NNN to be assigned) is
+Herald's QA bot: it drives pherald ↔︎ Telegram round-trips and preserves
+the full conversation thread under
+<code>docs/qa/qaherald-&lt;TS&gt;/</code>. (5) Release gates
+(<code>scripts/release.sh</code> when implemented + the existing
+tag-time guard) REFUSE to tag a release whose feature-shipping commits
+lack their <code>docs/qa/&lt;run-id&gt;/</code>. (6)
+<code>scripts/e2e_bluff_hunt.sh</code> invariants for new features MUST
+cite the <code>docs/qa/&lt;run-id&gt;/</code> artefact as their
+positive-evidence anchor (§11.4.2 / §11.4.5 composition).</p>
+<p><strong>Cascade authority.</strong> Helix Universal Constitution
+§11.4.83 (the verbatim operator mandate is anchored there). Herald
+§107.x is the project-binding restatement.</p>
+<p><strong>Enforcement.</strong> A feature commit that lacks
+<code>docs/qa/&lt;run-id&gt;/</code> triggers FAIL at the release-gate
+layer. The §11.4.4 test-interrupt-on-discovery applies — the entire
+release cycle stops until evidence lands.</p>
+<p><strong>Non-compliance is a release blocker.</strong> No
+<code>--qa-evidence-optional</code>, <code>--qa-transcript-later</code>,
+<code>--qa-bot-summary-suffices</code> flag exists for Herald.</p>
+<h2
+id="107y--working-tree-quiescence-rule-operator-mandate-2026-05-22-cascades-from-helix-11484">§107.y
+— Working-Tree Quiescence Rule (operator mandate, 2026-05-22; cascades
+from Helix §11.4.84)</h2>
+<p><strong>Short tag:</strong> <code>working-tree quiescence</code>.</p>
+<p><strong>Forensic anchor — verbatim operator mandate
+(2026-05-22):</strong></p>
+<blockquote>
+<p>"no subagent commit may proceed while any concurrent mutation gate is
+in flight in the same checkout. Before <code>git add</code>, the
+committing agent MUST <code>grep</code> its own working tree for
+mutation markers (<code>MUTATED for paired</code>,
+<code>// always pass</code>, <code>return json.Marshal</code> shortcut
+paths, etc.). Any unexplained file in the staging area triggers
+ABORT."</p>
+</blockquote>
+<p><strong>Lesson (forensic case study — Herald-internal).</strong> On
+2026-05-21 a logo-fix subagent (commit <code>72e81ab</code>, "Fix:
+replace pandoc {width=96px} image attr with HTML <img> tag") ran in this
+very checkout while a paired §1.1 Wave 4b mutation gate had temporarily
+injected an <code>// always pass</code> shortcut into
+<code>commons_auth/middleware.go</code> (JWT-bypass mutation, intended
+for the paired-mutation cycle to mutate → assert FAIL → restore). The
+logo-fix subagent's <code>git add</code> swept the mutation residue into
+its commit; the resulting commit was pushed to all four mirrors before
+any other agent caught it. Within the hour the SECURITY FIX
+(<code>d5bd360</code>, "SECURITY FIX: restore commons_auth/middleware.go
+JWT verify (mutation residue in 72e81ab)") restored the verify path, but
+the production-equivalent-binary-with-bypassed-JWT window is a real
+security-defect window — small, but non-zero, and demonstrably
+exploitable during that interval. This is no longer hypothetical; it
+happened. The rule below is the constitutional outcome.</p>
+<p><strong>Operative rule for Herald.</strong></p>
+<ol type="1">
+<li><strong>Pre-<code>git add</code> quiescence check.</strong> Every
+commit flow (main thread + subagent) MUST grep the working tree for the
+canonical Herald mutation markers BEFORE <code>git add</code>:
+<ul>
+<li><code>MUTATED for paired</code> (the canonical paired-§1.1 marker
+emitted by <code>tests/test_wave4b_mutation_meta.sh</code>)</li>
+<li><code>// always pass</code>, <code>// MUTATION</code>,
+<code># MUTATION</code> (Go + shell mutation annotations)</li>
+<li><code>return json.Marshal</code> shortcut paths in commons or
+commons_messaging (Wave 4b TOON mutation residue)</li>
+<li><code>_mutated_*</code> filename suffixes</li>
+<li><code>.git/MUTATION_IN_PROGRESS</code> (the lockfile — see (3))</li>
+</ul></li>
+<li><strong>Scope-match.</strong> Cross-check
+<code>git status --porcelain</code> against the subagent's declared
+scope. Any file outside the declared scope → ABORT. The subagent MUST
+explicitly account for every modified / untracked / staged entry.</li>
+<li><strong>Lockfile serialisation.</strong> When any mutation gate is
+in flight, the gate's first action is
+<code>touch .git/MUTATION_IN_PROGRESS</code>; its last action (in
+trap-on-exit) is <code>rm .git/MUTATION_IN_PROGRESS</code>. Any subagent
+that finds this lockfile present MUST refuse to <code>git add</code> and
+ABORT until the gate completes the mutate → assert-FAIL → restore →
+assert-PASS cycle and removes the lockfile.</li>
+<li><strong>Worktree isolation (preferred).</strong> When parallel
+subagents are required (§11.4.20 / §11.4.70 subagent-driven default),
+prefer <code>git worktree add</code> per subagent over single-checkout
+concurrency — eliminates the cross-mutation race by construction.</li>
+<li><strong>Pre-push mutation-residue scanner.</strong>
+<code>scripts/mutation_residue_audit.sh</code> (to be implemented;
+HRD-NNN to be assigned) MUST run before every push. Any commit in the
+pushed range containing a mutation marker → push BLOCKED, commit MUST be
+reverted or amended before mirrors are updated.</li>
+</ol>
+<p><strong>Prototype enforcement.</strong>
+<code>tests/test_wave4b_mutation_meta.sh</code> ALREADY includes a
+working-tree quiescence check (<code>check_quiescence()</code> at line
+92; assertion at line 197 — "Working-tree quiescence — assert no MUTATED
+markers leaked"). It is the canonical prototype. Generalising it across
+all paired-§1.1 gates is open work; the universal scanner
+(<code>scripts/mutation_residue_audit.sh</code>) is the planned
+roll-out.</p>
+<p><strong>Cascade authority.</strong> Helix Universal Constitution
+§11.4.84. Herald §107.y is the project-binding restatement.</p>
+<p><strong>Enforcement.</strong> A mutation marker that lands in any
+tagged Herald commit is a critical defect regardless of how briefly it
+persisted — see commit <code>72e81ab</code> / <code>d5bd360</code> as
+proof.</p>
+<p><strong>Non-compliance is a release blocker.</strong> No
+<code>--allow-residue</code>, <code>--skip-quiescence</code>,
+<code>--mutation-cleanup-later</code> flag exists.</p>
 <h2 id="mission-from-the-spec">Mission (from the spec)</h2>
 <blockquote>
 <p>Ingesting system events and reliably fanning them out to multiple

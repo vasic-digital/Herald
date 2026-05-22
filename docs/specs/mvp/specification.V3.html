@@ -112,7 +112,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>11</td>
+<td>12</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -128,12 +128,49 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td>V3 r11 — Wave 4b lands TOON (Token-Oriented Object Notation,
-<code>application/toon</code>) content negotiation as Herald's preferred
-wire format with JSON as honest fallback. Every <code>/v1/*</code>
-business route now honors <code>Accept: application/toon</code>
-(responses are real TOON bytes via the <code>digital.vasic.toon</code>
-submodule + <code>toon-format/toon-go</code> upstream);
+<td><strong>V3 r12 — Wave 6 lands the pherald INBOUND runtime
+(closed-loop subscriber → CC → reply).</strong> New
+<code>pherald listen</code> Cobra subcommand runs Telegram
+<code>getUpdates</code> long-poll
+(<code>OnText</code>/<code>OnPhoto</code>/<code>OnDocument</code>/<code>OnVoice</code>
+handlers) + bot self-filter (<code>bot.Me.Username</code> anti-echo
+guard captured at Subscribe construction; refuses to start if
+<code>getMe</code> returned no username) + sha256 content-addressed
+attachment download into
+<code>~/.herald/inbox/&lt;sha256&gt;.&lt;ext&gt;</code> (idempotent —
+duplicate downloads do NOT re-write) + Claude Code dispatch with Opus
+pinned in the spawned argv
+(<code>claude --model claude-opus-4-7 --resume &lt;UUID&gt; --print &lt;envelope&gt;</code>)
++ envelope pre-text — verbatim operator wording
+<code>"We have received new message from our communication channel &lt;channel-name&gt;. &lt;classification sentence&gt;. &lt;attachment list&gt;"</code>
+preceding the existing
+<code>&lt;&lt;&lt;HERALD-DISPATCH-v1&gt;&gt;&gt;</code> structured block
++ <code>&lt;&lt;&lt;HERALD-REPLY&gt;&gt;&gt;</code> parser with
+<code>action</code> routing (<code>reply</code> default /
+<code>issue.open</code> / <code>event.emit</code>) +
+<code>tgram.Adapter.SendReply(ctx, chatID, text, replyToID, attachments)</code>
+wiring <code>reply_to_message_id</code> from the original
+<code>message_id</code>. <code>--qa-out-dir &lt;path&gt;</code> flag
+journals every inbound + outbound + CC dispatch event as JSONL per
+§107.x. Three new spec subsections capture the substrate: §32.9 (bot
+self-filter), §33.6 (envelope pre-text — verbatim operator mandate),
+§33.7 (Opus model pin). §43 command catalogue gains
+<code>pherald listen</code> row. Workspace at 16 Go modules (Wave 5
+added <code>qaherald</code>; Wave 6 added no new module — inbound is
+<code>pherald/internal/inbound/</code>). 12 Wave-6 commits
+T1=<code>ad87d7f</code>..T12=<code>96c7c6b</code>. 8 new e2e invariants
+E63-E70 land in this revision (currently SKIP-with-documented-reason —
+auto-convert to PASS once T10b lands operator-supplied live evidence
+under <code>docs/qa/HRD-100-&lt;run-id&gt;/</code>). Wave 6 mutation
+gate <code>tests/test_wave6_mutation_meta.sh</code> (3 paired hermetic
+mutations, 4/4 PASS). Tag <strong>v0.4.0 deferred to T13b</strong>
+(operator-supplied live evidence per §107.x). Prior r11 — Wave 4b lands
+TOON (Token-Oriented Object Notation, <code>application/toon</code>)
+content negotiation as Herald's preferred wire format with JSON as
+honest fallback. Every <code>/v1/*</code> business route now honors
+<code>Accept: application/toon</code> (responses are real TOON bytes via
+the <code>digital.vasic.toon</code> submodule +
+<code>toon-format/toon-go</code> upstream);
 <code>Accept: application/json</code> keeps JSON; q-value preference
 honored; <code>*/*</code> and missing Accept go to the server default
 (TOON; <code>HERALD_DEFAULT_RESPONSE_CODEC=json</code> flips).
@@ -6975,6 +7012,29 @@ counter.</li>
 <li>Span name <code>herald.inbound.process</code> with child spans per
 stage.</li>
 </ul>
+<h3
+id="329-bot-self-filter-wave-6-anti-echo-operator-mandated-2026-05-22">32.9
+Bot self-filter (Wave 6, anti-echo, operator-mandated 2026-05-22)</h3>
+<p>Inbound message handlers MUST drop messages where
+<code>msg.Sender.IsBot &amp;&amp; msg.Sender.Username == bot.Me.Username</code>.
+Cross-bot messages (a different bot in the same chat) are KEPT — they
+represent legitimate multi-bot collaboration. If
+<code>bot.Me.Username</code> is unset after channel construction, the
+runtime MUST refuse to start (fail-closed: an echo-loop-prone runtime
+ships only when the self-identity is known).</p>
+<p>Implementation:
+<code>commons_messaging/channels/tgram/subscribe.go</code> captures
+<code>bot.Me.Username</code> at <code>Subscribe</code> time and applies
+<code>shouldDropBotSelf(msg, selfUsername)</code> before dispatching
+each <code>OnText</code> / <code>OnPhoto</code> /
+<code>OnDocument</code> / <code>OnVoice</code> handler.</p>
+<p>§107 anti-bluff: T12 mutation gate (M1) blanks the filter; paired
+detector is <code>TestSubscribeBotSelfFilter</code> (assertion on the
+cross-bot-kept case, not just "drop all bots"). When the closed-loop
+runs against real Telegram, an echo loop would manifest as pherald's own
+reply re-entering <code>getUpdates</code> and triggering a second CC
+dispatch within ~25s — observable in
+<code>tests/test_wave6_live_loop.sh</code>.</p>
 <hr />
 <h2 id="33-llm--agent-dispatch">§33. LLM / agent dispatch</h2>
 <h3 id="331-first-target-claude-code">33.1 First target: Claude
@@ -7111,6 +7171,48 @@ Agents) for hosted deployments where a CLI isn't desirable.</li>
 <p>Operators select per-tenant via <code>[llm].default_agent</code>;
 per-classification-type override via <code>[llm.routing]</code>
 table.</p>
+<h3 id="336-envelope-pre-text-wave-6-operator-mandated-2026-05-22">33.6
+Envelope pre-text (Wave 6, operator-mandated 2026-05-22)</h3>
+<p>Every Claude Code envelope MUST be prefixed with the verbatim
+operator wording:</p>
+<pre><code>We have received new message from our communication channel &lt;channel-name&gt;.
+The message has been classified as &quot;&lt;type&gt;&quot; with &quot;&lt;criticality&gt;&quot; criticality (confidence &lt;0.NN&gt;).
+Sender: &lt;channel&gt;:&lt;handle&gt;. Inbound ID: &lt;ULID&gt;.
+Attached materials:
+  - &lt;filename&gt; (&lt;mime&gt;, &lt;bytes&gt; bytes)
+[or:] No attached materials.
+
+&lt;&lt;&lt;HERALD-DISPATCH-v1&gt;&gt;&gt;
+... existing structured block (§33.3) unchanged byte-for-byte ...</code></pre>
+<p>The pre-text is human-language; the LLM reads natural-language
+context BEFORE the structured schema. The existing
+<code>&lt;&lt;&lt;HERALD-DISPATCH-v1&gt;&gt;&gt;</code> block remains
+byte-identical to §33.3 — pre-text is additive.</p>
+<p>Implementation:
+<code>(*claude_code.Dispatcher).FormatEnvelopeWithPreText(req, channelName string) string</code>.
+Production <code>buildCmd</code> calls the new formatter;
+<code>FormatEnvelope</code> (§33.3) is preserved as the structured-only
+renderer for tests + tooling. §107 anchor: T11 invariant E66 greps the
+captured envelope bytes (from <code>--qa-out-dir</code>) for the literal
+opener prefix
+<code>"We have received new message from our communication channel "</code>.</p>
+<h3 id="337-model-pinning-wave-6-operator-mandated-2026-05-22">33.7
+Model pinning (Wave 6, operator-mandated 2026-05-22)</h3>
+<p><code>pherald listen</code> (and any other call site that spawns
+Claude Code through the dispatcher) MUST spawn
+<code>claude --model claude-opus-4-7</code> (literal argv flag). No
+fallback to default model selection. No silent downgrade to Sonnet or
+Haiku. The model flag is two contiguous argv entries
+(<code>["--model", "claude-opus-4-7"]</code>), NOT a joined
+<code>"--model claude-opus-4-7"</code> string.</p>
+<p>Implementation:
+<code>commons_messaging/dispatch/claude_code/dispatch.go::buildCmd</code>
+inserts the flag between <code>--resume &lt;UUID&gt;</code> and
+<code>--print &lt;envelope&gt;</code>. §107 anchor: T2's
+<code>TestDispatchCommandIncludesOpusModel</code> inspects
+<code>*exec.Cmd.Args</code> directly (NOT env vars, NOT stdin). T12
+mutation gate (M2) swaps to <code>claude-sonnet-4-6</code> and asserts
+the detector FAILs — proving the assertion is load-bearing.</p>
 <hr />
 <h2 id="34-reply-protocol-queued--processing--result">§34. Reply
 protocol (queued → processing → result)</h2>
@@ -7350,24 +7452,24 @@ publish's commit SHA.</li>
 only), Herald posts with a warning:
 <code>⚠️ This report has uncommitted changes — link will become live once the change is committed.</code></p>
 <h3 id="354-persistence">35.4 Persistence</h3>
-<div class="sourceCode" id="cb43"><pre
-class="sourceCode sql"><code class="sourceCode sql"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> report_publications (</span>
-<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">id</span>                  UUID <span class="kw">PRIMARY</span> <span class="kw">KEY</span> <span class="kw">DEFAULT</span> uuidv7(),</span>
-<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>    tenant_id           UUID <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
-<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>    update_key          TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>,                   <span class="co">-- stable identifier for the report</span></span>
-<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>    channel             TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
-<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a>    channel_address_id  UUID <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">REFERENCES</span> channel_addresses(<span class="kw">id</span>),</span>
-<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a>    channel_msg_id      TEXT,                            <span class="co">-- so we can edit-in-place on next update</span></span>
-<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a>    content_sha256      BYTEA <span class="kw">NOT</span> <span class="kw">NULL</span>,                  <span class="co">-- of the source .md</span></span>
-<span id="cb43-9"><a href="#cb43-9" aria-hidden="true" tabindex="-1"></a>    git_commit_sha      TEXT,                            <span class="co">-- nullable for uncommitted</span></span>
-<span id="cb43-10"><a href="#cb43-10" aria-hidden="true" tabindex="-1"></a>    published_at        TIMESTAMPTZ <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> now(),</span>
-<span id="cb43-11"><a href="#cb43-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">UNIQUE</span> (tenant_id, update_key, channel, channel_address_id)</span>
-<span id="cb43-12"><a href="#cb43-12" aria-hidden="true" tabindex="-1"></a>);</span>
-<span id="cb43-13"><a href="#cb43-13" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> report_publications <span class="kw">ENABLE</span> <span class="kw">ROW</span> <span class="kw">LEVEL</span> SECURITY;</span>
-<span id="cb43-14"><a href="#cb43-14" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> report_publications <span class="kw">FORCE</span> <span class="kw">ROW</span> <span class="kw">LEVEL</span> SECURITY;</span>
-<span id="cb43-15"><a href="#cb43-15" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> POLICY rp_isolation <span class="kw">ON</span> report_publications</span>
-<span id="cb43-16"><a href="#cb43-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">USING</span> (tenant_id <span class="op">=</span> current_setting(<span class="st">&#39;app.tenant_id&#39;</span>):<span class="ch">:uuid</span>)</span>
-<span id="cb43-17"><a href="#cb43-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">WITH</span> <span class="kw">CHECK</span> (tenant_id <span class="op">=</span> current_setting(<span class="st">&#39;app.tenant_id&#39;</span>):<span class="ch">:uuid</span>);</span></code></pre></div>
+<div class="sourceCode" id="cb44"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> report_publications (</span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">id</span>                  UUID <span class="kw">PRIMARY</span> <span class="kw">KEY</span> <span class="kw">DEFAULT</span> uuidv7(),</span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a>    tenant_id           UUID <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a>    update_key          TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>,                   <span class="co">-- stable identifier for the report</span></span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a>    channel             TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a>    channel_address_id  UUID <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">REFERENCES</span> channel_addresses(<span class="kw">id</span>),</span>
+<span id="cb44-7"><a href="#cb44-7" aria-hidden="true" tabindex="-1"></a>    channel_msg_id      TEXT,                            <span class="co">-- so we can edit-in-place on next update</span></span>
+<span id="cb44-8"><a href="#cb44-8" aria-hidden="true" tabindex="-1"></a>    content_sha256      BYTEA <span class="kw">NOT</span> <span class="kw">NULL</span>,                  <span class="co">-- of the source .md</span></span>
+<span id="cb44-9"><a href="#cb44-9" aria-hidden="true" tabindex="-1"></a>    git_commit_sha      TEXT,                            <span class="co">-- nullable for uncommitted</span></span>
+<span id="cb44-10"><a href="#cb44-10" aria-hidden="true" tabindex="-1"></a>    published_at        TIMESTAMPTZ <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> now(),</span>
+<span id="cb44-11"><a href="#cb44-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">UNIQUE</span> (tenant_id, update_key, channel, channel_address_id)</span>
+<span id="cb44-12"><a href="#cb44-12" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb44-13"><a href="#cb44-13" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> report_publications <span class="kw">ENABLE</span> <span class="kw">ROW</span> <span class="kw">LEVEL</span> SECURITY;</span>
+<span id="cb44-14"><a href="#cb44-14" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> report_publications <span class="kw">FORCE</span> <span class="kw">ROW</span> <span class="kw">LEVEL</span> SECURITY;</span>
+<span id="cb44-15"><a href="#cb44-15" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> POLICY rp_isolation <span class="kw">ON</span> report_publications</span>
+<span id="cb44-16"><a href="#cb44-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">USING</span> (tenant_id <span class="op">=</span> current_setting(<span class="st">&#39;app.tenant_id&#39;</span>):<span class="ch">:uuid</span>)</span>
+<span id="cb44-17"><a href="#cb44-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">WITH</span> <span class="kw">CHECK</span> (tenant_id <span class="op">=</span> current_setting(<span class="st">&#39;app.tenant_id&#39;</span>):<span class="ch">:uuid</span>);</span></code></pre></div>
 <p>The <code>(content_sha256, git_commit_sha)</code> pair is the dedup
 key: if a re-publish event arrives but the source <code>.md</code> is
 byte-identical AND the commit SHA is the same, Herald skips the publish
@@ -7607,21 +7709,21 @@ detect which rows changed; emit one <strong>doc-level</strong> event
 the diff is parseable).</li>
 <li>Persist new SHA + <code>last_emitted_at</code>.</li>
 </ol>
-<div class="sourceCode" id="cb46"><pre
-class="sourceCode sql"><code class="sourceCode sql"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- §37.2 tracker_state (added to migrations as a future 000006_tracker_state.up.sql)</span></span>
-<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> <span class="cf">IF</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> tracker_state (</span>
-<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>    tenant_id        UUID <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
-<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a>    doc_path         TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
-<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a>    content_sha256   BYTEA <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
-<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a>    last_event_id    UUID,</span>
-<span id="cb46-7"><a href="#cb46-7" aria-hidden="true" tabindex="-1"></a>    last_emitted_at  TIMESTAMPTZ <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> now(),</span>
-<span id="cb46-8"><a href="#cb46-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">PRIMARY</span> <span class="kw">KEY</span> (tenant_id, doc_path)</span>
-<span id="cb46-9"><a href="#cb46-9" aria-hidden="true" tabindex="-1"></a>);</span>
-<span id="cb46-10"><a href="#cb46-10" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> tracker_state <span class="kw">ENABLE</span> <span class="kw">ROW</span> <span class="kw">LEVEL</span> SECURITY;</span>
-<span id="cb46-11"><a href="#cb46-11" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> tracker_state <span class="kw">FORCE</span> <span class="kw">ROW</span> <span class="kw">LEVEL</span> SECURITY;</span>
-<span id="cb46-12"><a href="#cb46-12" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> POLICY ts_isolation <span class="kw">ON</span> tracker_state</span>
-<span id="cb46-13"><a href="#cb46-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">USING</span> (tenant_id <span class="op">=</span> current_setting(<span class="st">&#39;app.tenant_id&#39;</span>):<span class="ch">:uuid</span>)</span>
-<span id="cb46-14"><a href="#cb46-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">WITH</span> <span class="kw">CHECK</span> (tenant_id <span class="op">=</span> current_setting(<span class="st">&#39;app.tenant_id&#39;</span>):<span class="ch">:uuid</span>);</span></code></pre></div>
+<div class="sourceCode" id="cb47"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- §37.2 tracker_state (added to migrations as a future 000006_tracker_state.up.sql)</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> <span class="cf">IF</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> tracker_state (</span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>    tenant_id        UUID <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>    doc_path         TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a>    content_sha256   BYTEA <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb47-6"><a href="#cb47-6" aria-hidden="true" tabindex="-1"></a>    last_event_id    UUID,</span>
+<span id="cb47-7"><a href="#cb47-7" aria-hidden="true" tabindex="-1"></a>    last_emitted_at  TIMESTAMPTZ <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> now(),</span>
+<span id="cb47-8"><a href="#cb47-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">PRIMARY</span> <span class="kw">KEY</span> (tenant_id, doc_path)</span>
+<span id="cb47-9"><a href="#cb47-9" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb47-10"><a href="#cb47-10" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> tracker_state <span class="kw">ENABLE</span> <span class="kw">ROW</span> <span class="kw">LEVEL</span> SECURITY;</span>
+<span id="cb47-11"><a href="#cb47-11" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> tracker_state <span class="kw">FORCE</span> <span class="kw">ROW</span> <span class="kw">LEVEL</span> SECURITY;</span>
+<span id="cb47-12"><a href="#cb47-12" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> POLICY ts_isolation <span class="kw">ON</span> tracker_state</span>
+<span id="cb47-13"><a href="#cb47-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">USING</span> (tenant_id <span class="op">=</span> current_setting(<span class="st">&#39;app.tenant_id&#39;</span>):<span class="ch">:uuid</span>)</span>
+<span id="cb47-14"><a href="#cb47-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">WITH</span> <span class="kw">CHECK</span> (tenant_id <span class="op">=</span> current_setting(<span class="st">&#39;app.tenant_id&#39;</span>):<span class="ch">:uuid</span>);</span></code></pre></div>
 <h3 id="373-fan-out">37.3 Fan-out</h3>
 <p>Each tracker-doc event is routed via the standard §6
 channel-addresses + tag-fan-out matching pipeline. By default tracker
@@ -8742,22 +8844,22 @@ event (which carries both <code>newEvaluationResult</code> and
 result is hashed and stored in a Postgres
 <code>constitution_state</code> table; events fire only when the hash
 changes.</p>
-<div class="sourceCode" id="cb51"><pre
-class="sourceCode sql"><code class="sourceCode sql"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- §42.1.2 constitution_state (planned 000006_constitution_state.up.sql).</span></span>
-<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> <span class="cf">IF</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> constitution_state (</span>
-<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>    tenant_id        UUID <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
-<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a>    rule_id          TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>,                  <span class="co">-- &quot;§11.4.10&quot;, &quot;§12.1&quot;, ...</span></span>
-<span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a>    subject          TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>,                  <span class="co">-- file path / repo / branch / commit SHA / tenant scope</span></span>
-<span id="cb51-6"><a href="#cb51-6" aria-hidden="true" tabindex="-1"></a>    last_decision    TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>,                  <span class="co">-- &#39;pass&#39;|&#39;warn&#39;|&#39;fail&#39;|&#39;error&#39;|&#39;skip&#39;</span></span>
-<span id="cb51-7"><a href="#cb51-7" aria-hidden="true" tabindex="-1"></a>    last_evaluated_at TIMESTAMPTZ <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> now(),</span>
-<span id="cb51-8"><a href="#cb51-8" aria-hidden="true" tabindex="-1"></a>    last_event_id    UUID,</span>
-<span id="cb51-9"><a href="#cb51-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">PRIMARY</span> <span class="kw">KEY</span> (tenant_id, rule_id, subject)</span>
-<span id="cb51-10"><a href="#cb51-10" aria-hidden="true" tabindex="-1"></a>);</span>
-<span id="cb51-11"><a href="#cb51-11" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> constitution_state <span class="kw">ENABLE</span> <span class="kw">ROW</span> <span class="kw">LEVEL</span> SECURITY;</span>
-<span id="cb51-12"><a href="#cb51-12" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> constitution_state <span class="kw">FORCE</span> <span class="kw">ROW</span> <span class="kw">LEVEL</span> SECURITY;</span>
-<span id="cb51-13"><a href="#cb51-13" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> POLICY cs_isolation <span class="kw">ON</span> constitution_state</span>
-<span id="cb51-14"><a href="#cb51-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">USING</span> (tenant_id <span class="op">=</span> current_setting(<span class="st">&#39;app.tenant_id&#39;</span>):<span class="ch">:uuid</span>)</span>
-<span id="cb51-15"><a href="#cb51-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">WITH</span> <span class="kw">CHECK</span> (tenant_id <span class="op">=</span> current_setting(<span class="st">&#39;app.tenant_id&#39;</span>):<span class="ch">:uuid</span>);</span></code></pre></div>
+<div class="sourceCode" id="cb52"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- §42.1.2 constitution_state (planned 000006_constitution_state.up.sql).</span></span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> <span class="cf">IF</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> constitution_state (</span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a>    tenant_id        UUID <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a>    rule_id          TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>,                  <span class="co">-- &quot;§11.4.10&quot;, &quot;§12.1&quot;, ...</span></span>
+<span id="cb52-5"><a href="#cb52-5" aria-hidden="true" tabindex="-1"></a>    subject          TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>,                  <span class="co">-- file path / repo / branch / commit SHA / tenant scope</span></span>
+<span id="cb52-6"><a href="#cb52-6" aria-hidden="true" tabindex="-1"></a>    last_decision    TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>,                  <span class="co">-- &#39;pass&#39;|&#39;warn&#39;|&#39;fail&#39;|&#39;error&#39;|&#39;skip&#39;</span></span>
+<span id="cb52-7"><a href="#cb52-7" aria-hidden="true" tabindex="-1"></a>    last_evaluated_at TIMESTAMPTZ <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> now(),</span>
+<span id="cb52-8"><a href="#cb52-8" aria-hidden="true" tabindex="-1"></a>    last_event_id    UUID,</span>
+<span id="cb52-9"><a href="#cb52-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">PRIMARY</span> <span class="kw">KEY</span> (tenant_id, rule_id, subject)</span>
+<span id="cb52-10"><a href="#cb52-10" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb52-11"><a href="#cb52-11" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> constitution_state <span class="kw">ENABLE</span> <span class="kw">ROW</span> <span class="kw">LEVEL</span> SECURITY;</span>
+<span id="cb52-12"><a href="#cb52-12" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> constitution_state <span class="kw">FORCE</span> <span class="kw">ROW</span> <span class="kw">LEVEL</span> SECURITY;</span>
+<span id="cb52-13"><a href="#cb52-13" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> POLICY cs_isolation <span class="kw">ON</span> constitution_state</span>
+<span id="cb52-14"><a href="#cb52-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">USING</span> (tenant_id <span class="op">=</span> current_setting(<span class="st">&#39;app.tenant_id&#39;</span>):<span class="ch">:uuid</span>)</span>
+<span id="cb52-15"><a href="#cb52-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">WITH</span> <span class="kw">CHECK</span> (tenant_id <span class="op">=</span> current_setting(<span class="st">&#39;app.tenant_id&#39;</span>):<span class="ch">:uuid</span>);</span></code></pre></div>
 <p><strong>§42.1.3 Constitution-bundle hash (replayability).</strong>
 Every constitution-rule event MUST carry the
 <strong><code>heraldconstitutionbundlesha</code></strong> extension —
@@ -9998,12 +10100,32 @@ missing.</td>
 60% threshold crossed. Composes with §17 metrics.</td>
 <td>HRD-056</td>
 </tr>
+<tr>
+<td>Wave 6 operator mandate (2026-05-22) — inbound runtime</td>
+<td><code>pherald</code></td>
+<td><code>pherald listen [--qa-out-dir &lt;path&gt;]</code></td>
+<td>(no REST; long-running CLI daemon)</td>
+<td>Closed-loop subscriber → CC → reply runtime. Telegram
+<code>getUpdates</code> long-poll + bot self-filter (§32.9) + sha256
+content-addressed attachment download + Claude Code dispatch with Opus
+pinned (§33.7) + envelope pre-text (§33.6) +
+<code>&lt;&lt;&lt;HERALD-REPLY&gt;&gt;&gt;</code> action routing +
+<code>tgram.SendReply</code> with <code>reply_to_message_id</code>.
+Required env: <code>HERALD_TGRAM_BOT_TOKEN</code>,
+<code>HERALD_TGRAM_CHAT_ID</code>. Optional:
+<code>HERALD_PROJECT_NAME</code> (default: repo root folder name),
+<code>HERALD_CLAUDE_BIN</code> (default: $PATH lookup).
+<code>--qa-out-dir</code> opt-in journals every event to
+<code>&lt;dir&gt;/transcript.jsonl</code> per §107.x.</td>
+<td>HRD-100</td>
+</tr>
 </tbody>
 </table>
-<p>Total: <strong>27 new flavor commands / workflows</strong> — one per
-HRD-029 through HRD-056 (note: HRD-049 is <code>reopen</code> which maps
-onto an existing REST endpoint per §41 rather than a fresh
-<code>/v1/&lt;verb&gt;</code>; net new HRDs: 27).</p>
+<p>Total: <strong>28 new flavor commands / workflows</strong> — one per
+HRD-029 through HRD-056 plus HRD-100 (note: HRD-049 is
+<code>reopen</code> which maps onto an existing REST endpoint per §41
+rather than a fresh <code>/v1/&lt;verb&gt;</code>; net new HRDs:
+28).</p>
 <p><strong>Wave 2 (r8) addendum — shared CLI scaffold.</strong> The 28
 commands above ship as Cobra subcommands on their owning
 <code>&lt;prefix&gt;herald</code> binary. Wave 2 landed the
@@ -10182,21 +10304,21 @@ every running process invalidates its own cache (see Foundation design
 governance envelope (locked)</h3>
 <p>Every emitted Constitution-CloudEvent carries the spec §42.1.1
 envelope:</p>
-<div class="sourceCode" id="cb53"><pre
-class="sourceCode json"><code class="sourceCode json"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
-<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;envelope&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;rule_id&quot;</span><span class="fu">:</span> <span class="st">&quot;§11.4.10&quot;</span><span class="fu">,</span></span>
-<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;severity_category&quot;</span><span class="fu">:</span> <span class="st">&quot;critical&quot;</span><span class="fu">,</span></span>
-<span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;decision_result&quot;</span><span class="fu">:</span> <span class="st">&quot;fail&quot;</span><span class="fu">,</span></span>
-<span id="cb53-6"><a href="#cb53-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;bundle_hash&quot;</span><span class="fu">:</span> <span class="st">&quot;&lt;sha256-hex&gt;&quot;</span><span class="fu">,</span></span>
-<span id="cb53-7"><a href="#cb53-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;transition_from&quot;</span><span class="fu">:</span> <span class="st">&quot;pass&quot;</span><span class="fu">,</span></span>
-<span id="cb53-8"><a href="#cb53-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;transition_to&quot;</span><span class="fu">:</span> <span class="st">&quot;fail&quot;</span><span class="fu">,</span></span>
-<span id="cb53-9"><a href="#cb53-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;tenant_id&quot;</span><span class="fu">:</span> <span class="st">&quot;&lt;uuid&gt;&quot;</span><span class="fu">,</span></span>
-<span id="cb53-10"><a href="#cb53-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;evidence_uri&quot;</span><span class="fu">:</span> <span class="st">&quot;&lt;uri&gt;&quot;</span><span class="fu">,</span></span>
-<span id="cb53-11"><a href="#cb53-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;traceparent&quot;</span><span class="fu">:</span> <span class="st">&quot;&lt;W3C trace-context&gt;&quot;</span></span>
-<span id="cb53-12"><a href="#cb53-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">},</span></span>
-<span id="cb53-13"><a href="#cb53-13" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;payload&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="er">/*</span> <span class="er">per-class</span> <span class="er">typed</span> <span class="er">payload</span> <span class="er">*/</span> <span class="fu">}</span></span>
-<span id="cb53-14"><a href="#cb53-14" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb54"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;envelope&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;rule_id&quot;</span><span class="fu">:</span> <span class="st">&quot;§11.4.10&quot;</span><span class="fu">,</span></span>
+<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;severity_category&quot;</span><span class="fu">:</span> <span class="st">&quot;critical&quot;</span><span class="fu">,</span></span>
+<span id="cb54-5"><a href="#cb54-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;decision_result&quot;</span><span class="fu">:</span> <span class="st">&quot;fail&quot;</span><span class="fu">,</span></span>
+<span id="cb54-6"><a href="#cb54-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;bundle_hash&quot;</span><span class="fu">:</span> <span class="st">&quot;&lt;sha256-hex&gt;&quot;</span><span class="fu">,</span></span>
+<span id="cb54-7"><a href="#cb54-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;transition_from&quot;</span><span class="fu">:</span> <span class="st">&quot;pass&quot;</span><span class="fu">,</span></span>
+<span id="cb54-8"><a href="#cb54-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;transition_to&quot;</span><span class="fu">:</span> <span class="st">&quot;fail&quot;</span><span class="fu">,</span></span>
+<span id="cb54-9"><a href="#cb54-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;tenant_id&quot;</span><span class="fu">:</span> <span class="st">&quot;&lt;uuid&gt;&quot;</span><span class="fu">,</span></span>
+<span id="cb54-10"><a href="#cb54-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;evidence_uri&quot;</span><span class="fu">:</span> <span class="st">&quot;&lt;uri&gt;&quot;</span><span class="fu">,</span></span>
+<span id="cb54-11"><a href="#cb54-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;traceparent&quot;</span><span class="fu">:</span> <span class="st">&quot;&lt;W3C trace-context&gt;&quot;</span></span>
+<span id="cb54-12"><a href="#cb54-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">},</span></span>
+<span id="cb54-13"><a href="#cb54-13" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;payload&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="er">/*</span> <span class="er">per-class</span> <span class="er">typed</span> <span class="er">payload</span> <span class="er">*/</span> <span class="fu">}</span></span>
+<span id="cb54-14"><a href="#cb54-14" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <p>On the wire (CloudEvent extension attributes), underscored keys are
 normalised to lowercase alphanumeric per CloudEvents v1.0 §3
 (<code>rule_id</code> → <code>ruleid</code>, etc.). The internal Go API

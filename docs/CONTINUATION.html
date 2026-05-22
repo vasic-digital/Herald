@@ -23,6 +23,71 @@
       vertical-align: middle;
     }
     .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
   </style>
   <link rel="stylesheet" href="../assets/logo/print.css" />
 </head>
@@ -47,7 +112,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>6</td>
+<td>7</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -55,7 +120,7 @@
 </tr>
 <tr>
 <td>Last modified</td>
-<td>2026-05-21</td>
+<td>2026-05-22</td>
 </tr>
 <tr>
 <td>Status</td>
@@ -63,36 +128,37 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>Wave 3a + Wave 2 + Foundation M1/M2/M3 all landed.</strong>
-Workspace at 14 Go modules (<code>go.work</code> gitignored): commons +
-commons_auth + commons_constitution + commons_infra + commons_messaging
-+ commons_prefix + commons_storage + pherald + 6 Wave-2 flavor binaries
-(sherald, cherald, bherald, rherald, iherald, scherald). Three live REST
-surfaces (pherald serve plumbing + cherald <code>/v1/compliance</code> +
-sherald <code>/v1/safety_state</code>); pherald <code>/v1/events</code>
-ingest still 501 pending Wave 3b Runner. Anti-bluff battery green:
-e2e_bluff_hunt 41 PASS / 0 FAIL / 5 SKIP; audit_antibluff 16/0/1;
-codegraph_validate 7/0/2; inheritance gate 15/15 + META-PASS; 5 paired
-§1.1 mutation gates green. Spec V3 at r8 (r9 owns Wave 3b spec capture).
-Doc-cleanup pass (this commit): Status r10→r11, Issues r9→r10, Fixed
-r8→r9 renumbered Wave 3a commons_auth HRD-093 → HRD-099 to resolve
-collision with Wave 2 sherald-scaffold HRD-093.</td>
+<td><strong>Wave 6 code-doc closure landed (this commit). pherald
+inbound runtime + Claude Code headless bridge complete. Tag v0.4.0
+DEFERRED to T13b (operator-supplied live evidence).</strong> HRD-100
+closed atomically with 12 Wave-6 commit SHAs
+T1=<code>ad87d7f</code>..T12=<code>96c7c6b</code>. 8 new e2e invariants
+E63-E70 land in this commit but currently SKIP with documented reasons —
+convert to PASS at T10b when the operator runs the live closed-loop
+end-to-end and commits <code>docs/qa/HRD-100-&lt;run-id&gt;/</code>.
+Workspace at 16 modules (Wave 5 added <code>qaherald</code>; Wave 6
+added NO new module — inbound is
+<code>pherald/internal/inbound/</code>). Spec V3 at r12. Pre-existing
+e2e FAILs on the Postgres-:24100 dependent invariants (E7-E12 + E14-E16
++ E37-E42 — SASL handshake) are NOT Wave 6 regressions; documented in
+this commit as carry-over. Anti-bluff gates green: inheritance gate
+15/15 PASS; audit_antibluff 18/0/1; codegraph_validate 7/0/2. Prior r6
+covered Wave 3a + Wave 2 + Foundation M1/M2/M3.</td>
 </tr>
 <tr>
 <td>Issues</td>
-<td>HRD-008, HRD-011 (code complete; live evidence pending), HRD-015,
-HRD-016, HRD-018 (in_progress), HRD-019..HRD-027, HRD-029..HRD-056,
-HRD-081, HRD-085..HRD-090</td>
+<td>HRD-008, HRD-015, HRD-018 (in_progress), HRD-019..HRD-027,
+HRD-029..HRD-056, HRD-081, HRD-085..HRD-090</td>
 </tr>
 <tr>
 <td>Issues summary</td>
-<td>see <code>Issues.md</code> — 49 open items</td>
+<td>see <code>Issues.md</code> — 47 open items</td>
 </tr>
 <tr>
 <td>Fixed</td>
-<td>HRD-001..HRD-007, HRD-009, HRD-009b, HRD-010, HRD-012, HRD-013,
-HRD-014, HRD-017, HRD-028, HRD-080, HRD-092..HRD-099 (HRD-018 partial —
-M1 + M2 components landed)</td>
+<td>HRD-001..HRD-007, HRD-009, HRD-009b, HRD-010, HRD-011, HRD-012,
+HRD-013, HRD-014, HRD-016, HRD-017, HRD-028, HRD-080, HRD-092..HRD-100
+(HRD-018 partial — M1 + M2 components landed)</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
@@ -100,16 +166,27 @@ M1 + M2 components landed)</td>
 </tr>
 <tr>
 <td>Continuation</td>
-<td><strong>Wave 3b next</strong>: pherald Runner
-(<code>pherald/internal/runner/</code> — 7 stages from §32) + live
-<code>POST /v1/events</code> ingest (HRD-016 close-out) + Telegram live
-evidence (HRD-011 — operator exports HERALD_TGRAM_BOT_TOKEN +
-HERALD_TGRAM_CHAT_ID; e2e E40 flips SKIP→PASS). Wave 3b plan still to be
-written (next <code>superpowers:writing-plans</code> invocation). After
-Wave 3b: §43 command-catalogue rollout (HRD-029..056), iherald
+<td><strong>T10b next (live closed-loop evidence)</strong> — operator
+exports <code>HERALD_TGRAM_BOT_TOKEN</code> +
+<code>HERALD_TGRAM_CHAT_ID</code> + <code>HERALD_CLAUDE_BIN</code>, then
+runs
+<code>bash tests/test_wave6_live_loop.sh --qa-out-dir docs/qa/HRD-100-&lt;run-id&gt;/</code>.
+The script types a synthetic message into the chat, observes the
+original <code>message_id</code>, starts <code>pherald listen</code> in
+the background with <code>--qa-out-dir</code> pointing at the new
+directory, waits up to 45s for a reply with
+<code>reply_to_message_id == original</code>, and exits 0 on PASS. The
+resulting <code>docs/qa/HRD-100-&lt;run-id&gt;/</code> directory carries
+<code>transcript.jsonl</code> (bidirectional events) +
+<code>pherald-listen.log</code> + <code>claude-stdout.log</code> +
+<code>claude-stderr.log</code> +
+<code>attachments/&lt;sha256&gt;.&lt;ext&gt;</code> (any exchanged) + an
+operator-authored <code>README.md</code> narrative. After T10b PASS,
+T13b tags <code>v0.4.0</code> and pushes to all 4 mirrors. After Wave 6:
+§43 command-catalogue rollout (HRD-029..056), iherald
 <code>/v1/webhooks/page</code> live (HRD-024), sherald destructive-guard
-body (HRD-033 — unlocks E48), HRD-091 codegraph submodule-traversal gap.
-Spec V3 r9 bump owned by Wave 3b. Multi-mirror push after each
+body (HRD-033 — unlocks E48), HRD-091 codegraph submodule-traversal gap,
+comprehensive docs audit per task #147. Multi-mirror push after each
 milestone. Update on every non-trivial commit (per Universal
 §12.10).</td>
 </tr>
@@ -287,6 +364,52 @@ invocation; capture session UUID; parse
 mandates (spec-versioning + submodule-catalogue-first) into the
 constitution submodule.</p></li>
 </ol>
+<h2 id="4a-wave-6-live-test-handoff-t10b--gating-tag-v040">§4a. Wave 6
+live-test handoff (T10b — gating tag v0.4.0)</h2>
+<p><strong>Operator-supplied credentials required</strong> — Wave 6's
+e2e invariants E63-E70 land as honest SKIPs until the live closed-loop
+runs against real Telegram + real Claude Code with real chat messages
+exchanged.</p>
+<p><strong>Step-by-step.</strong></p>
+<ol type="1">
+<li>Export credentials in the shell that will drive the test:
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">HERALD_TGRAM_BOT_TOKEN</span><span class="op">=</span><span class="st">&quot;&lt;your-bot-token-from-BotFather&gt;&quot;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">HERALD_TGRAM_CHAT_ID</span><span class="op">=</span><span class="st">&quot;&lt;numeric-chat-id-where-bot-is-admin&gt;&quot;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">HERALD_CLAUDE_BIN</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$(</span><span class="bu">command</span> <span class="at">-v</span> claude<span class="va">)</span><span class="st">&quot;</span>   <span class="co"># path to the claude CLI binary</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">HERALD_PROJECT_NAME</span><span class="op">=</span><span class="st">&quot;Herald&quot;</span>                <span class="co"># or any operator-chosen session name</span></span></code></pre></div></li>
+<li>Pick a <code>&lt;run-id&gt;</code> (timestamp + 4-char nonce):
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="va">RUN_ID</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$(</span><span class="fu">date</span> <span class="at">-u</span> +%Y-%m-%dT%H-%M-%S<span class="va">)</span><span class="st">-</span><span class="va">$(</span><span class="fu">uuidgen</span> <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-c1-4</span><span class="va">)</span><span class="st">&quot;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="va">QA_DIR</span><span class="op">=</span><span class="st">&quot;docs/qa/HRD-100-</span><span class="va">${RUN_ID}</span><span class="st">&quot;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> <span class="st">&quot;</span><span class="va">${QA_DIR}</span><span class="st">/attachments&quot;</span></span></code></pre></div></li>
+<li>Type ONE message in the configured Telegram chat (script reads it
+via <code>getUpdates</code> within 60s).</li>
+<li>Run the live closed-loop test:
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> tests/test_wave6_live_loop.sh</span></code></pre></div>
+The script builds <code>pherald</code>, observes the original
+<code>message_id</code>, starts
+<code>pherald listen --bot-token "$HERALD_TGRAM_BOT_TOKEN" --chat-id "$HERALD_TGRAM_CHAT_ID" --qa-out-dir "$QA_DIR"</code>
+in the background, waits up to 45s for a reply with
+<code>reply_to_message_id == original</code>, and exits 0 on PASS.</li>
+<li>Capture supplementary logs:
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> /tmp/pherald-w6.log <span class="st">&quot;</span><span class="va">${QA_DIR}</span><span class="st">/pherald-listen.log&quot;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co"># claude stdout/stderr — paths depend on the journaling setup. Copy whatever</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co"># the test produced into ${QA_DIR}/claude-stdout.log + claude-stderr.log.</span></span></code></pre></div></li>
+<li>Author a brief <code>${QA_DIR}/README.md</code> (5 lines minimum)
+narrating: who ran it, when, what message was sent, what reply came
+back, any anomalies. This is NOT auto-generated — operator-written
+narrative is the §107.x evidence anchor.</li>
+<li><code>git add ${QA_DIR}/ &amp;&amp; git commit -m "Wave 6 step 10b: docs/qa/HRD-100-${RUN_ID}/ live closed-loop evidence"</code>
+then proceed to T13b (<code>v0.4.0</code> tag + 4-mirror push).</li>
+</ol>
+<p><strong>If the script SKIPs</strong> (any env var unset): the test
+prints <code>SKIP: &lt;reason&gt;</code> and exits 0. That is honest
+§11.4.3 hardware-absent SKIP-with-reason, not a PASS. Tag
+<code>v0.4.0</code> MUST NOT be created until at least one PASS run is
+committed to <code>docs/qa/HRD-100-&lt;run-id&gt;/</code>.</p>
 <h2 id="5-long-form-pointers">§5. Long-form pointers</h2>
 <ul>
 <li><code>docs/specs/mvp/specification.V3.md</code> — full active spec
