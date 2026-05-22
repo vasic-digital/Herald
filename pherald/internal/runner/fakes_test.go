@@ -226,3 +226,35 @@ func (c *fakeChannel) Send(ctx context.Context, msg commons.OutboundMessage) (co
 
 func (c *fakeChannel) Subscribe(ctx context.Context, h commons.InboundHandler) error { return nil }
 func (c *fakeChannel) HealthCheck(ctx context.Context) error                         { return nil }
+
+// fakeEvidenceStore is a minimal in-memory stand-in for the PG
+// `outbound_delivery_evidence` table. Records every Insert with a fresh
+// UUID and lets the test inspect the rows. Concurrent-safe.
+//
+// evidenceRow lives in production code (outcome.go) so the real PG
+// adapter (T9) can accept it; see the eventsProcessedRow / subscriberRow
+// precedent.
+type fakeEvidenceStore struct {
+	mu   sync.Mutex
+	rows []evidenceRow
+}
+
+func newFakeEvidenceStore() *fakeEvidenceStore {
+	return &fakeEvidenceStore{}
+}
+
+func (s *fakeEvidenceStore) Insert(ctx context.Context, r evidenceRow) (uuid.UUID, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	r.ID = uuid.New()
+	s.rows = append(s.rows, r)
+	return r.ID, nil
+}
+
+func (s *fakeEvidenceStore) All() []evidenceRow {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	out := make([]evidenceRow, len(s.rows))
+	copy(out, s.rows)
+	return out
+}
