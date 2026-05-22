@@ -31,6 +31,7 @@ import (
 type Adapter struct {
 	botToken string
 	chatID   string
+	baseURL  string       // override for telebot.Settings.URL; "" => telebot default (api.telegram.org). Test seam — see NewAdapterWithBaseURL.
 	bot      *telebot.Bot // lazy-initialized on first live call (HealthCheck/Send/Subscribe)
 	botOnce  sync.Once    // guards bot construction across goroutines (Task 2 review carry-forward)
 	botErr   error        // captured by botOnce if NewBot fails
@@ -45,7 +46,15 @@ type Adapter struct {
 // roundtrip — callers can then rely on a.bot.Me being populated.
 func (a *Adapter) ensureBot() error {
 	a.botOnce.Do(func() {
-		bot, err := telebot.NewBot(telebot.Settings{Token: a.botToken})
+		settings := telebot.Settings{Token: a.botToken}
+		if a.baseURL != "" {
+			// Test seam: NewAdapterWithBaseURL routes the bot through an
+			// httptest server (Wave 6 T8 wire-byte assertions). Production
+			// callers leave baseURL empty and telebot defaults to
+			// api.telegram.org (see submodules/telebot/bot.go:29-30).
+			settings.URL = a.baseURL
+		}
+		bot, err := telebot.NewBot(settings)
 		if err != nil {
 			a.botErr = fmt.Errorf("tgram.ensureBot: connect to Bot API (getMe): %w", err)
 			return
