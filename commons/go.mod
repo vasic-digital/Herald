@@ -7,7 +7,7 @@
 // Licensed under the terms in ../LICENSE.
 module github.com/vasic-digital/herald/commons
 
-go 1.25.0
+go 1.25.3
 
 // commons is intentionally dependency-light at L0. Only stdlib + the
 // canonical CloudEvents Go SDK (for type marshaling at the boundary).
@@ -16,7 +16,9 @@ require github.com/google/uuid v1.6.0
 require (
 	digital.vasic.http3 v0.0.0-00010101000000-000000000000
 	github.com/gin-gonic/gin v1.12.0
+	github.com/quic-go/quic-go v0.59.0
 	github.com/spf13/cobra v1.10.2
+	github.com/vasic-digital/herald/commons_tls v0.0.0
 )
 
 // Wave 4a — http3 vendored as a Herald submodule at the pinned SHA
@@ -24,6 +26,13 @@ require (
 // commons import digital.vasic.http3/pkg/server (the HTTP/3 listener
 // wrapper) without going through a public Go proxy.
 replace digital.vasic.http3 => ../submodules/http3
+
+// commons_tls is a workspace sibling (also listed in go.work). The
+// replace directive matches the pattern used by sherald/cherald/pherald
+// for their cross-module references — keeps `go build ./commons/...`
+// resolvable from the repo root regardless of whether the caller is
+// inside or outside the workspace.
+replace github.com/vasic-digital/herald/commons_tls => ../commons_tls
 
 require (
 	github.com/bytedance/gopkg v0.1.3 // indirect
@@ -46,7 +55,6 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
 	github.com/quic-go/qpack v0.6.0 // indirect
-	github.com/quic-go/quic-go v0.59.0 // indirect
 	github.com/spf13/pflag v1.0.9 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.3.1 // indirect
