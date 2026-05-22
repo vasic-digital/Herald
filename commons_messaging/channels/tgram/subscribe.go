@@ -11,6 +11,28 @@ import (
 	"github.com/vasic-digital/herald/commons"
 )
 
+// shouldDropBotSelf returns true when msg originates from THIS bot
+// (self-echo), so the caller can short-circuit before re-dispatching its
+// own outbound reply through the Claude Code pipeline.
+//
+// Wave 6 anti-echo-loop guarantee per plan T4 / CLAUDE.md §107.x:
+// without this filter, every reply pherald posts to a Telegram group is
+// re-delivered by getUpdates and re-dispatched to claude --resume —
+// hallucinating to itself in an infinite loop on the operator's quota.
+//
+// Scope is deliberately narrow: cross-bot messages (a DIFFERENT bot in
+// the same chat) are KEPT. Multi-bot collaboration is real subscriber
+// traffic; a "drop all bot messages" filter would be too broad.
+func shouldDropBotSelf(msg *telebot.Message, selfUsername string) bool {
+	if msg == nil || msg.Sender == nil {
+		return false
+	}
+	if !msg.Sender.IsBot {
+		return false
+	}
+	return msg.Sender.Username == selfUsername
+}
+
 // Subscribe runs the live getUpdates long-poll loop until ctx is cancelled,
 // dispatching each inbound text message to h.Handle.
 //
@@ -25,6 +47,11 @@ import (
 // test asserts ≥1 handler invocation from an operator-hand-sent message —
 // proving getUpdates actually pulled real updates.
 //
+// Wave 6 bot self-filter: bot.Me.Username is captured here (populated by
+// telebot.NewBot via getMe synchronously) and threaded into the OnText
+// closure. If Me.Username is empty we refuse to boot — an unfiltered
+// runtime is an echo-loop hazard. Cross-bot messages remain dispatchable.
+//
 // Implementation note: telebot.v3.3.8 requires Settings.Poller at Bot
 // construction time — LongPoller cannot be attached to an existing *Bot.
 // HealthCheck/Send use the ensureBot-managed a.bot (no poller). Subscribe
@@ -38,9 +65,25 @@ func (a *Adapter) Subscribe(ctx context.Context, h commons.InboundHandler) error
 		return fmt.Errorf("tgram.Subscribe: connect with poller: %w", err)
 	}
 
+	selfUsername := ""
+	if bot.Me != nil {
+		selfUsername = bot.Me.Username
+	}
+	if selfUsername == "" {
+		// telebot populates bot.Me synchronously via getMe inside NewBot.
+		// An empty Username here means getMe returned a degenerate user
+		// record (or Offline mode was used). Refuse to boot — running
+		// without a self-filter is the §107 echo-loop hazard the gate
+		// is designed to catch.
+		return fmt.Errorf("tgram.Subscribe: bot.Me.Username unset after NewBot — getMe likely failed; refusing to boot without self-filter (echo-loop hazard)")
+	}
+
 	bot.Handle(telebot.OnText, func(c telebot.Context) error {
 		msg := c.Message()
 		if msg == nil {
+			return nil
+		}
+		if shouldDropBotSelf(msg, selfUsername) {
 			return nil
 		}
 		ev := commons.InboundEvent{
