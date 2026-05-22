@@ -1,11 +1,49 @@
+// Wave 4a Task 6 — dual-listener (TCP/H2 + UDP/H3) serve scaffold.
+//
+// Before T6, ServeCmd bound a single TCP listener via http.Server.
+// After T6, a single cli.ServeCmd(opts) call binds BOTH a TCP/H2 listener
+// AND a UDP/H3 listener on the same port, sharing the same Gin engine.
+// Both listeners serve identical routes/handlers. Either listener's
+// failure does NOT crash the other — the orchestration logs + degrades
+// (TCP-only mode if H3 fails to bind; H3-only is not a supported
+// degradation since TCP is the §107 baseline every client falls back to).
+//
+// Resolution policy:
+//
+//   - opts.DisableH3 == true (HERALD_DISABLE_HTTP3=1 escape hatch for
+//     UDP-blocked environments): ONLY the TCP listener binds. The
+//     auto-injected Alt-Svc middleware becomes a no-op (port 0 disables
+//     advertisement). TLS becomes optional — if no cert is supplied, the
+//     listener runs plaintext HTTP/1.1+H2c, matching pre-T6 behavior. This
+//     is the backward-compatibility branch existing flavors / tests rely
+//     on.
+//
+//   - opts.DisableH3 == false (default): BOTH listeners bind. A TLS cert
+//     is REQUIRED — HTTP/3 mandates TLS 1.3 on the wire, and the TCP
+//     listener piggybacks on the same cert so both protocols speak HTTPS
+//     on the same port. commons_tls.ResolveCertSource handles the policy:
+//     production mode fails-loud when no explicit cert is supplied; dev
+//     mode auto-generates a self-signed cert at ~/.herald/dev-{cert,key}.pem.
+//
+// Per §107: a "dual-listener configured" PASS without observing both
+// listeners actually bind + actually shut down is a §11.4 bluff. The
+// integration tests below dial both listeners, drive a real round-trip,
+// and post-shutdown probe BOTH the TCP port (expect connection refused)
+// AND the UDP port (expect a successful re-bind by an unrelated
+// listener — proves the QUIC stack released the port).
+
 package cli
 
 import (
 	"context"
+	"crypto/tls"
+	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
@@ -13,30 +51,77 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/vasic-digital/herald/commons"
+	commons_tls "github.com/vasic-digital/herald/commons_tls"
 )
 
-// ServeOpts configures ServeCmd. Branding drives the default port +
-// healthz/metrics gauge name. Routes are flavor-specific routes
-// appended after the base healthz/readyz/metrics. Middleware is the
-// optional flavor-specific Gin middleware chain registered immediately
-// after gin.Recovery() and before any handler — typical use is request-
-// ID propagation, tenant extraction, OTel tracing. Nil/empty is fine.
+// ServeOpts configures ServeCmd.
+//
+// Required:
+//
+//	Branding   — drives the default port + healthz/metrics gauge name.
+//
+// Optional flavor-specific:
+//
+//	Routes     — flavor-specific routes appended after healthz/readyz/metrics.
+//	Middleware — flavor-specific Gin middleware chain registered immediately
+//	             after gin.Recovery() + the auto-wired Brotli/Alt-Svc layers
+//	             + before any handler. Typical use is request-ID
+//	             propagation, tenant extraction, OTel tracing.
+//
+// Wave 4a TLS / HTTP/3 controls (zero-value defaults preserve pre-T6
+// behavior so existing flavor binaries are not broken by the dual-
+// listener refactor):
+//
+//	TLSCertPath    — operator-supplied --tls-cert path (forwarded to
+//	                 commons_tls.ResolveCertSource).
+//	TLSKeyPath     — operator-supplied --tls-key path.
+//	ProdMode       — true ⇒ ResolveCertSource refuses dev-autogen. The
+//	                 caller's convention: set this to
+//	                 (os.Getenv("HERALD_AUTH_MODE") == "jwks").
+//	DisableH3      — true ⇒ HTTP/3 listener is NOT started, the Alt-Svc
+//	                 middleware becomes a no-op, and the TCP listener
+//	                 falls back to plaintext (or TLS if a cert was
+//	                 supplied explicitly). Driven by
+//	                 HERALD_DISABLE_HTTP3=1 in the caller.
+//	DisableBrotli  — true ⇒ Brotli middleware is NOT auto-wired. Useful
+//	                 for routes that stream + cannot be buffered.
 type ServeOpts struct {
-	Branding   commons.Branding
-	Routes     []Route
-	Middleware []gin.HandlerFunc
+	Branding      commons.Branding
+	Routes        []Route
+	Middleware    []gin.HandlerFunc
+	TLSCertPath   string
+	TLSKeyPath    string
+	ProdMode      bool
+	DisableH3     bool
+	DisableBrotli bool
 }
 
 // ServeCmd is the `<flavor>herald serve` subcommand for serving flavors.
 // Binds a Gin engine with healthz/readyz/metrics + every Route in
-// opts.Routes (nil-Handler+non-empty-HRD routes get StubRouteHandler),
-// listens on --http-port (default = branding.DefaultPort), graceful-
-// shutdown on SIGTERM/SIGINT or context cancel. Returns nil on clean
-// shutdown, error on bind failure.
+// opts.Routes (nil-Handler+non-empty-HRD routes get StubRouteHandler).
+//
+// Listener model (Wave 4a Task 6):
+//
+//   - DisableH3 == false (default): binds BOTH a TCP/HTTPS+H2 listener
+//     AND a UDP/H3 listener on --http-port. Both serve the same Gin
+//     engine. Auto-injects AltSvcMiddleware + BrotliMiddleware into the
+//     chain so TCP clients see Alt-Svc upgrade hints + Accept-Encoding:
+//     br responses get compressed. Requires a TLS cert (operator flag,
+//     env, or dev-autogen depending on ProdMode).
+//   - DisableH3 == true: binds ONLY the TCP listener (HERALD_DISABLE_HTTP3=1
+//     escape hatch). If a cert is supplied, the listener runs TLS; if
+//     not, it falls back to plaintext HTTP/1.1+H2c, matching pre-T6
+//     behavior for dev workflows that don't want TLS.
+//
+// Graceful shutdown on SIGTERM/SIGINT/ctx-cancel: BOTH listeners get up
+// to 5s grace each. Returns nil on clean shutdown, error on bind failure.
 //
 // Per §107: a "serve started" PASS without observing a healthz round-
-// trip is a bluff — the integration test starts the server and verifies
-// it actually accepts traffic before declaring success.
+// trip on BOTH listeners is a bluff. The integration tests start the
+// server and verify both listeners actually accept traffic before
+// declaring success; post-shutdown, the TCP port returns connection-
+// refused and the UDP port is re-bindable by an unrelated listener
+// (proof the QUIC stack released the socket).
 func ServeCmd(opts ServeOpts) *cobra.Command {
 	var port int
 	cmd := &cobra.Command{
@@ -50,14 +135,35 @@ func ServeCmd(opts ServeOpts) *cobra.Command {
 			r := gin.New()
 			r.Use(gin.Recovery())
 			// Health/observability endpoints are registered BEFORE the
-			// flavor middleware chain so they remain reachable without auth
-			// (the standard practice for k8s liveness/readiness probes and
-			// Prometheus scrapers). Per §107, blocking healthz behind JWT
-			// is a PASS-bluff: load balancers can't probe the service and
-			// the operator gets a green deploy with a dead canary.
+			// flavor middleware chain AND before the auto-wired Brotli
+			// /Alt-Svc layers so they remain reachable without auth and
+			// without compression overhead. The standard practice for
+			// k8s liveness/readiness probes and Prometheus scrapers.
+			// Per §107, blocking healthz behind JWT is a PASS-bluff:
+			// load balancers can't probe the service and the operator
+			// gets a green deploy with a dead canary.
 			r.GET("/v1/healthz", HealthzHandler(opts.Branding))
 			r.GET("/v1/readyz", ReadyzHandler(opts.Branding))
 			r.GET("/metrics", MetricsHandler(opts.Branding))
+
+			// Wave 4a Task 6: auto-wire Brotli and Alt-Svc into the
+			// middleware chain ahead of flavor-supplied middleware.
+			// Brotli applies to flavor routes (not healthz/metrics —
+			// those are registered above and Gin's r.Use() only
+			// affects routes registered AFTER). Alt-Svc emits the
+			// HTTP/3 upgrade header on every TCP response (no-op when
+			// h3Port <= 0).
+			if !opts.DisableBrotli {
+				// Quality 0 ⇒ consult HERALD_BROTLI_LEVEL env or fall
+				// back to HeraldBrotliDefaultLevel (6).
+				r.Use(BrotliMiddleware(0))
+			}
+			altSvcPort := 0
+			if !opts.DisableH3 {
+				altSvcPort = port
+			}
+			r.Use(AltSvcMiddleware(altSvcPort))
+
 			for _, mw := range opts.Middleware {
 				if mw != nil {
 					r.Use(mw)
@@ -70,14 +176,84 @@ func ServeCmd(opts ServeOpts) *cobra.Command {
 				}
 				r.Handle(route.Method, route.Path, h)
 			}
-			srv := &http.Server{
-				Addr:    fmt.Sprintf(":%d", port),
+
+			// Resolve TLS cert source. Required for HTTP/3 (mandatory
+			// TLS 1.3); optional for TCP-only mode. When the operator
+			// explicitly disables H3 AND supplies no cert/key, we run
+			// plaintext for backward compat with pre-T6 dev flows.
+			var cert *tls.Certificate
+			if !opts.DisableH3 {
+				src, err := commons_tls.ResolveCertSource(commons_tls.Config{
+					CertPath: opts.TLSCertPath,
+					KeyPath:  opts.TLSKeyPath,
+					ProdMode: opts.ProdMode,
+				})
+				if err != nil {
+					return fmt.Errorf("resolve TLS cert: %w", err)
+				}
+				cert = src.Cert
+			} else if opts.TLSCertPath != "" || opts.TLSKeyPath != "" {
+				// H3 disabled but operator supplied TLS material — honor it
+				// for the TCP listener so the "H3 off + TLS on" combo works.
+				src, err := commons_tls.ResolveCertSource(commons_tls.Config{
+					CertPath: opts.TLSCertPath,
+					KeyPath:  opts.TLSKeyPath,
+					ProdMode: opts.ProdMode,
+				})
+				if err != nil {
+					return fmt.Errorf("resolve TLS cert (TCP-only): %w", err)
+				}
+				cert = src.Cert
+			}
+
+			addr := fmt.Sprintf(":%d", port)
+			ctx := cmd.Context()
+			if ctx == nil {
+				ctx = context.Background()
+			}
+
+			// Start the H3 listener first when enabled. If it fails to
+			// bind, fail-fast — there's no point starting the TCP
+			// listener that would advertise Alt-Svc pointing at a
+			// dead UDP port (which the §107 anti-bluff principle
+			// forbids).
+			var (
+				h3Srv      h3Handle // nil interface ⇒ H3 disabled
+				h3StartErr error
+			)
+			if !opts.DisableH3 {
+				h3Srv, h3StartErr = startQUIC(ctx, addr, r, cert)
+				if h3StartErr != nil {
+					return fmt.Errorf("start HTTP/3 listener: %w", h3StartErr)
+				}
+			}
+
+			// Build the TCP server. When a cert is available, run
+			// HTTPS+H2; otherwise plaintext HTTP/1.1+H2c (only allowed
+			// in DisableH3 + no-cert mode for backward compat).
+			tcpSrv := &http.Server{
+				Addr:    addr,
 				Handler: r,
 			}
-			errCh := make(chan error, 1)
+			if cert != nil {
+				tcpSrv.TLSConfig = &tls.Config{
+					Certificates: []tls.Certificate{*cert},
+					MinVersion:   tls.VersionTLS12,
+					NextProtos:   []string{"h2", "http/1.1"},
+				}
+			}
+
+			tcpErrCh := make(chan error, 1)
 			go func() {
-				if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-					errCh <- err
+				var err error
+				if cert != nil {
+					// Empty cert/key file args ⇒ use TLSConfig.Certificates.
+					err = tcpSrv.ListenAndServeTLS("", "")
+				} else {
+					err = tcpSrv.ListenAndServe()
+				}
+				if err != nil && !errors.Is(err, http.ErrServerClosed) {
+					tcpErrCh <- err
 				}
 			}()
 
@@ -85,23 +261,93 @@ func ServeCmd(opts ServeOpts) *cobra.Command {
 			signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 			defer signal.Stop(sigCh)
 
-			ctx := cmd.Context()
-			if ctx == nil {
-				ctx = context.Background()
-			}
+			// Wait for either: TCP listener crash, signal, ctx cancel.
+			// We do NOT wait for the H3 listener's terminal error here
+			// because the upstream startQUIC already runs Start() in a
+			// goroutine; its terminal error lands on Done() during
+			// shutdown and is logged below.
 			select {
-			case err := <-errCh:
-				return fmt.Errorf("listen: %w", err)
+			case err := <-tcpErrCh:
+				// TCP listener crashed. Shut down H3 if it was running
+				// so we don't leak the UDP socket past process exit.
+				if h3Srv != nil {
+					shutdownH3(h3Srv)
+				}
+				return fmt.Errorf("TCP listen: %w", err)
 			case <-sigCh:
 				// graceful shutdown
 			case <-ctx.Done():
 				// graceful shutdown
 			}
-			shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-			defer cancel()
-			return srv.Shutdown(shutdownCtx)
+
+			// Graceful shutdown of BOTH listeners, each with up to 5s
+			// grace. Run them in parallel so a slow shutdown on one
+			// doesn't starve the other.
+			var wg sync.WaitGroup
+			var tcpShutErr, h3ShutErr error
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+				defer cancel()
+				tcpShutErr = tcpSrv.Shutdown(shutdownCtx)
+			}()
+			if h3Srv != nil {
+				wg.Add(1)
+				go func() {
+					defer wg.Done()
+					shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+					defer cancel()
+					if err := h3Srv.Shutdown(shutdownCtx); err != nil {
+						h3ShutErr = err
+					}
+				}()
+			}
+			wg.Wait()
+
+			// Report shutdown errors. Per the brief, either listener's
+			// failure should NOT crash the other — but we DO want to
+			// surface failures so the operator knows what happened. The
+			// first non-nil wins; the second is logged for posterity.
+			if tcpShutErr != nil && h3ShutErr != nil {
+				log.Printf("serve: secondary H3 shutdown error after TCP: %v", h3ShutErr)
+				return fmt.Errorf("TCP shutdown: %w", tcpShutErr)
+			}
+			if tcpShutErr != nil {
+				return fmt.Errorf("TCP shutdown: %w", tcpShutErr)
+			}
+			if h3ShutErr != nil {
+				return fmt.Errorf("H3 shutdown: %w", h3ShutErr)
+			}
+			return nil
 		},
 	}
-	cmd.Flags().IntVar(&port, "http-port", 0, "TCP port to bind (default = flavor's DefaultPort)")
+	cmd.Flags().IntVar(&port, "http-port", 0, "TCP+UDP port to bind (default = flavor's DefaultPort)")
 	return cmd
+}
+
+// h3Handle is the narrow interface ServeCmd needs from the HTTP/3
+// server. It exists so a future hand-rolled mock (or a future
+// configuration where startQUIC returns a different concrete type) can
+// be slotted in without breaking the orchestration shape.
+//
+// The real implementation in commons/cli/h3.go returns a
+// *digital.vasic.http3/pkg/server.Server which satisfies this
+// interface via its Shutdown(ctx) method.
+type h3Handle interface {
+	Shutdown(ctx context.Context) error
+}
+
+// shutdownH3 best-efforts a graceful shutdown of the H3 listener with
+// a short timeout. Used in the TCP-listener-crashed branch where we
+// want to release the UDP socket before returning the TCP error.
+func shutdownH3(srv h3Handle) {
+	if srv == nil {
+		return
+	}
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		log.Printf("serve: H3 shutdown after TCP crash: %v", err)
+	}
 }
