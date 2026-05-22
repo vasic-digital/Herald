@@ -142,3 +142,42 @@ func mustParse(s string) uuid.UUID {
 
 // trimToken strips noise (used to compare hex digests across formats).
 func trimToken(s string) string { return strings.TrimSpace(s) }
+
+// fakeSubscribersStore is a minimal in-memory stand-in for the
+// subscribers + subscriber_aliases tables. Tenant-isolated: queries
+// without a tenant in ctx are rejected (mirrors the PG RLS posture
+// where unset app.tenant_id GUC yields zero rows).
+//
+// subscriberRow + subscriberAliasRow live in production code
+// (subscriber.go) so the real PG adapter (T9) can return them; see
+// the eventsProcessedRow precedent in idempotency.go.
+type fakeSubscribersStore struct {
+	mu   sync.Mutex
+	subs map[uuid.UUID][]subscriberRow // keyed by tenantID
+}
+
+func newFakeSubscribersStore() *fakeSubscribersStore {
+	return &fakeSubscribersStore{subs: map[uuid.UUID][]subscriberRow{}}
+}
+
+func (s *fakeSubscribersStore) Add(tenantID uuid.UUID, row subscriberRow) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	row.TenantID = tenantID
+	s.subs[tenantID] = append(s.subs[tenantID], row)
+}
+
+// ListByTenant returns all subscribers for the tenant resolved via
+// the standard TenantFromCtx convention. Other tenants' rows are
+// invisible (tenant isolation).
+func (s *fakeSubscribersStore) ListByTenant(ctx context.Context) ([]subscriberRow, error) {
+	tid := TenantFromCtx(ctx)
+	if tid == uuid.Nil {
+		return nil, errors.New("fake subscribers: no tenant in ctx")
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	out := make([]subscriberRow, len(s.subs[tid]))
+	copy(out, s.subs[tid])
+	return out, nil
+}
