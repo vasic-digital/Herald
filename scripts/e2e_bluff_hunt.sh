@@ -11,11 +11,12 @@
 # "compiles and tests green" but doesn't work for the user will FAIL
 # at least one assertion here.
 #
-# Sixty-one invariants (E1..E62; E55 + E62 SKIP-with-reason — E56-E62 new
-# in Wave 4b TOON content negotiation; E49-E55 Wave 4a HTTP/3+Brotli+Alt-Svc+TLS;
-# E37-E42 live in Wave 3b; E45 still SKIP-with-reason — pending Wave 3c
-# cross-binary wiring; each invariant is the "captured-evidence" for one
-# feature class per §11.4.5 + §11.4.69):
+# Seventy invariants (E1..E70; E55 + E62 + E63..E70 SKIP-with-reason in the
+# common no-creds / no-T10b-evidence case — E63..E70 new in Wave 6 inbound
+# runtime; E56-E62 Wave 4b TOON content negotiation; E49-E55 Wave 4a
+# HTTP/3+Brotli+Alt-Svc+TLS; E37-E42 live in Wave 3b; E45 still
+# SKIP-with-reason — pending Wave 3c cross-binary wiring; each invariant
+# is the "captured-evidence" for one feature class per §11.4.5 + §11.4.69):
 #
 #   E1.  pherald binary builds (compile-level — necessary, not sufficient).
 #   E2.  pherald version --json returns parseable JSON with required fields.
@@ -89,7 +90,41 @@
 #   E61. Accept q-value preference honored (json,toon;q=0.5 → JSON).
 #   E62. SKIP-with-reason — encoder-failure fallback unit-tested only.
 #
-# Exit 0 only when E1..E12 + E19..E62 (plus E13..E18 + E34 if attempted) all pass.
+# Wave 6 pherald inbound runtime (added 2026-05-22):
+#   E63. pherald listen lifecycle — boots cleanly + SIGTERM-exits 0 against
+#        a real Bot API (gated on HERALD_TGRAM_BOT_TOKEN + HERALD_TGRAM_CHAT_ID;
+#        otherwise SKIP-with-reason: getMe handshake would hit api.telegram.org).
+#   E64. Bot self-filter — captured docs/qa/HRD-NNN-W6-*/transcript.jsonl
+#        contains NO tgram.message line whose payload sender matches the
+#        bot's own username (anti-echo-loop wire evidence). SKIP-with-reason
+#        until T10b commits a real transcript.
+#   E65. Attachment sha256 — for any inbound message with attachments, the
+#        on-disk file at docs/qa/HRD-NNN-W6-*/attachments/<sha256>.<ext>
+#        actually hashes to <sha256>. SKIP-with-reason until T10b commits.
+#   E66. Envelope pre-text — captured cc.dispatch journal line carries the
+#        verbatim operator wording "We have received new message from our
+#        communication channel ". SKIP-with-reason — requires both T10b
+#        evidence AND a journal extension that records the rendered envelope
+#        (current journal records user_message text, not the pre-text-
+#        prefixed envelope; HRD-NNN-W6e tracks the extension).
+#   E67. Opus pin in argv — a captured CC argv line includes the literal
+#        "--model claude-opus-4-7" pair. SKIP-with-reason — current journal
+#        does not record the spawned argv (HRD-NNN-W6e tracks the argv
+#        capture extension; T2 unit test catches the model-flag presence
+#        at the cmd-construction layer in the meantime).
+#   E68. reply_to_message_id wire-bytes — captured tgram.send_reply journal
+#        line carries a non-zero reply_to_message_id matching an earlier
+#        tgram.message line's message_id. SKIP-with-reason until T10b.
+#   E69. Action routing — issue.open — for any cc.reply line with
+#        payload.action == "issue.open", there is NO subsequent tgram.send_
+#        reply line for the same inbound (issue.open routes to the issue
+#        opener, not back to Telegram). SKIP-with-reason until T10b emits
+#        an issue.open-action scenario.
+#   E70. Live closed-loop (T9 script) — invoke tests/test_wave6_live_loop.sh;
+#        PASS on exit 0; SKIP-with-reason when stdout begins with "SKIP:"
+#        (script's own creds-absent guard); FAIL otherwise.
+#
+# Exit 0 only when E1..E12 + E19..E70 (plus E13..E18 + E34 if attempted) all pass.
 # Failure prints the offending invariant so the operator knows EXACTLY
 # which feature is bluffing.
 
@@ -1150,6 +1185,327 @@ GO_EOF
 else
     echo "SKIP  E56-E62 (lsof/curl absent — §11.4.3 explicit SKIP-with-reason)"
 fi
+
+# ----------------------------------------------------------------------
+# E63-E70: Wave 6 pherald inbound runtime invariants (added 2026-05-22).
+#
+# Wave 6 added `pherald listen` — long-poll getUpdates + bot self-filter +
+# attachment sha256 content addressing + Opus-pinned Claude Code dispatch +
+# tgram.SendReply with reply_to_message_id. The end-user-visible payoff is
+# the closed loop: a subscriber types in Telegram → CC processes → a reply
+# lands in-thread. The §107 watershed is therefore the captured wire/
+# subprocess evidence at docs/qa/HRD-NNN-W6-*/transcript.jsonl (T10b).
+#
+# Numbering: this set occupies E63..E70 (the next free contiguous range
+# after Wave 4b's E62). Wave 5 (qaherald) reserves the symbolic E63..E70
+# slot in its own plan; whichever wave commits first owns the verbatim
+# range — Wave 6 lands here first (see Wave 6 plan "Numbering note").
+#
+# Posture: at the moment of commit, T10b (the live closed-loop run that
+# produces docs/qa/HRD-NNN-W6-*/transcript.jsonl) has NOT yet run. E64..E69
+# therefore SKIP-with-reason. The SKIPs convert to PASS automatically when
+# T10b lands a real transcript in-repo. E70 invokes the live-loop script,
+# which itself SKIPs cleanly when creds are absent.
+echo ""
+echo "== E63-E70: Wave 6 pherald inbound runtime =="
+
+# Locate any real Wave 6 QA evidence the operator may have committed.
+# The convention is docs/qa/HRD-NNN-W6-<run-id>/transcript.jsonl. Glob for
+# the most recent committed evidence dir; falls back to empty string when
+# T10b is still pending.
+W6_QA_DIR=""
+if [ -d "${REPO_ROOT}/docs/qa" ]; then
+    # Pick the lexicographically-last HRD-NNN-W6-* dir whose transcript.jsonl
+    # is non-empty. Use find rather than glob expansion so an absent set
+    # of matches yields an empty string under set -u.
+    W6_QA_DIR="$(find "${REPO_ROOT}/docs/qa" -maxdepth 1 -type d -name 'HRD-*W6*' 2>/dev/null \
+                  | sort | tail -1)"
+    if [ -n "${W6_QA_DIR}" ] && [ ! -s "${W6_QA_DIR}/transcript.jsonl" ]; then
+        W6_QA_DIR=""
+    fi
+fi
+
+# ---- E63: pherald listen lifecycle ----
+# Hermetic path: HERALD_INBOUND_CC_FAKE=1 short-circuits the CC dispatcher,
+# but the underlying tgram.Subscribe STILL calls api.telegram.org for getMe
+# (bot.Me.Username is load-bearing for the self-filter — see T4). So the
+# only real-bytes test of lifecycle requires a live Bot token. Gate
+# accordingly; SKIP-with-reason when the operator hasn't exported creds.
+if [ -n "${HERALD_TGRAM_BOT_TOKEN:-}" ] && [ -n "${HERALD_TGRAM_CHAT_ID:-}" ]; then
+    # Build pherald fresh (we have it from E1 but re-use the same binary).
+    W6_LISTEN_LOG="/tmp/pherald-w6-listen-$$.log"
+    HERALD_INBOUND_CC_FAKE=1 \
+        "${PHERALD_BIN}" listen >"${W6_LISTEN_LOG}" 2>&1 &
+    W6_LISTEN_PID=$!
+    sleep 3
+    if kill -0 "${W6_LISTEN_PID}" 2>/dev/null; then
+        kill -TERM "${W6_LISTEN_PID}" 2>/dev/null
+        # Allow up to 5s for clean exit; if still alive after 5s, FAIL.
+        for _ in 1 2 3 4 5 6 7 8 9 10; do
+            kill -0 "${W6_LISTEN_PID}" 2>/dev/null || break
+            sleep 0.5
+        done
+        wait "${W6_LISTEN_PID}" 2>/dev/null
+        w6_exit=$?
+        # On SIGTERM, Go runtime returns exit code 0 (signal.NotifyContext
+        # caught it + runListen returned nil). 143 (128+SIGTERM) is also
+        # acceptable if the binary didn't trap. Anything else = FAIL.
+        if [ "${w6_exit}" = 0 ] || [ "${w6_exit}" = 143 ]; then
+            echo "PASS  E63 pherald listen boots against real Bot API + SIGTERM-exits cleanly (exit=${w6_exit})"
+            pass=$((pass+1))
+        else
+            echo "FAIL  E63 pherald listen exited ${w6_exit} on SIGTERM (want 0 or 143)"
+            tail -10 "${W6_LISTEN_LOG}" 2>/dev/null | sed 's/^/      /'
+            fail=$((fail+1))
+            fail_names+=("E63")
+        fi
+    else
+        # Premature exit — almost always a token/chat-id/network issue.
+        # Surface the log tail so the operator can fix at root cause.
+        echo "FAIL  E63 pherald listen exited prematurely (within 3s)"
+        tail -15 "${W6_LISTEN_LOG}" 2>/dev/null | sed 's/^/      /'
+        fail=$((fail+1))
+        fail_names+=("E63")
+    fi
+    rm -f "${W6_LISTEN_LOG}"
+else
+    echo "SKIP  E63 (HERALD_TGRAM_BOT_TOKEN+_CHAT_ID required — tgram.Subscribe.NewBot calls api.telegram.org/getMe at boot to capture bot.Me.Username for the self-filter; no hermetic path exists at the binary level; §11.4.3 explicit SKIP-with-reason)"
+fi
+
+# ---- E64: bot self-filter (anti-echo-loop) ----
+# Real-bytes evidence requires a transcript.jsonl. The check: NO
+# tgram.message line with payload.text appearing in any prior tgram.send_
+# reply line (i.e., the bot did not re-ingest its own outbound). The
+# transcript records direction=in for inbound and direction=out for
+# replies — a true echo-loop would show an `in` line whose text matches a
+# previously-emitted `out` line's text on the same channel.
+if [ -n "${W6_QA_DIR}" ]; then
+    check "E64 bot self-filter — no inbound tgram.message echoes a prior outbound tgram.send_reply text (anti-echo-loop wire evidence)" \
+        "python3 -c '
+import json, sys
+seen_replies = set()
+echoes = []
+with open(\"${W6_QA_DIR}/transcript.jsonl\") as fh:
+    for line in fh:
+        line = line.strip()
+        if not line: continue
+        rec = json.loads(line)
+        kind = rec.get(\"kind\",\"\")
+        payload = rec.get(\"payload\",{}) or {}
+        if kind == \"tgram.send_reply\":
+            t = payload.get(\"text\") or \"\"
+            if t.strip(): seen_replies.add(t.strip())
+        elif kind == \"tgram.message\":
+            t = (payload.get(\"text\") or \"\").strip()
+            if t and t in seen_replies:
+                echoes.append(t)
+if echoes:
+    print(\"ECHO_LOOP_DETECTED\", len(echoes), file=sys.stderr)
+    sys.exit(1)
+print(\"ok\")
+'"
+else
+    echo "SKIP  E64 (docs/qa/HRD-NNN-W6-*/transcript.jsonl not yet committed — T10b live closed-loop pending; §11.4.3 explicit SKIP-with-reason; SKIP converts to PASS automatically when T10b lands)"
+fi
+
+# ---- E65: attachment sha256 content addressing ----
+# For every attachment in any tgram.message payload, the file on disk at
+# <W6_QA_DIR>/<copied_to> MUST hash to its declared sha256.
+if [ -n "${W6_QA_DIR}" ]; then
+    check "E65 attachment sha256 — every transcript-cited attachment hashes to its declared sha256 on disk (content-addressing wire evidence)" \
+        "python3 -c '
+import hashlib, json, os, sys
+qa_dir = \"${W6_QA_DIR}\"
+total = 0
+mismatches = []
+with open(os.path.join(qa_dir, \"transcript.jsonl\")) as fh:
+    for line in fh:
+        line = line.strip()
+        if not line: continue
+        rec = json.loads(line)
+        if rec.get(\"kind\") != \"tgram.message\": continue
+        for att in (rec.get(\"payload\",{}) or {}).get(\"attachments\",[]) or []:
+            sha = att.get(\"sha256\") or \"\"
+            rel = att.get(\"copied_to\") or \"\"
+            if not (sha and rel): continue
+            total += 1
+            p = os.path.join(qa_dir, rel)
+            h = hashlib.sha256()
+            with open(p,\"rb\") as f:
+                for chunk in iter(lambda: f.read(65536), b\"\"):
+                    h.update(chunk)
+            if h.hexdigest() != sha:
+                mismatches.append((rel, sha, h.hexdigest()))
+if total == 0:
+    print(\"NO_ATTACHMENTS_IN_TRANSCRIPT\", file=sys.stderr)
+    sys.exit(2)
+if mismatches:
+    for m in mismatches: print(\"MISMATCH\", *m, file=sys.stderr)
+    sys.exit(1)
+print(\"ok\", total)
+'"
+else
+    echo "SKIP  E65 (docs/qa/HRD-NNN-W6-*/transcript.jsonl not yet committed — T10b live closed-loop pending; §11.4.3 explicit SKIP-with-reason)"
+fi
+
+# ---- E66: envelope pre-text (verbatim operator wording) ----
+# §107 caveat: the current Wave 6 T10a journaling middleware records the
+# raw user_message (ev.Body.Plain) in the cc.dispatch line, NOT the
+# rendered FormatEnvelopeWithPreText output. The pre-text bytes are
+# constructed inside dispatch.buildCmd just before exec, then piped to
+# claude as the final argv entry — they never traverse the journal
+# pipeline. T11 lands an HONEST SKIP-with-reason citing the journal-
+# extension HRD; T3's unit test
+# (commons_messaging/dispatch/claude_code/claude_code_test.go::
+#  TestFormatEnvelopePreText) is the load-bearing pre-text catch in the
+# meantime.
+if [ -n "${W6_QA_DIR}" ] && grep -q '"envelope_bytes"\|"envelope_text"\|"envelope_pretext"\|"rendered_envelope"' "${W6_QA_DIR}/transcript.jsonl" 2>/dev/null; then
+    check "E66 envelope pre-text — captured rendered envelope opens with verbatim operator wording" \
+        "grep -F 'We have received new message from our communication channel ' '${W6_QA_DIR}/transcript.jsonl' >/dev/null"
+else
+    echo "SKIP  E66 (current T10a journal records user_message text, not the rendered FormatEnvelopeWithPreText output; HRD-NNN-W6e tracks the envelope-text journaling extension. T3 unit test TestFormatEnvelopePreText is the load-bearing pre-text-prefix catch until then; §11.4.3 explicit SKIP-with-reason)"
+fi
+
+# ---- E67: Opus model pin in spawned CC argv ----
+# Same caveat as E66: the current journal records cc.dispatch as the
+# CodeRequest (inbound_id, sender, channel, user_message, attachments,
+# classification) — NOT the spawned *exec.Cmd.Args slice. The Opus pin
+# (--model claude-opus-4-7) is inserted in dispatch.buildCmd at the argv
+# level. T2's unit test TestDispatchCommandIncludesOpusModel inspects
+# cmd.Args directly; T12 mutation gate (b) swaps Opus→Sonnet to prove
+# detector load-bearing. HRD-NNN-W6e tracks the argv-capture extension.
+if [ -n "${W6_QA_DIR}" ] && grep -q '"argv"\|"cc_argv"\|"spawn_argv"\|"command_line"' "${W6_QA_DIR}/transcript.jsonl" 2>/dev/null; then
+    check "E67 Opus pin — captured CC subprocess argv contains '--model' followed by 'claude-opus-4-7' (two contiguous entries)" \
+        "python3 -c '
+import json, sys
+hit = False
+with open(\"${W6_QA_DIR}/transcript.jsonl\") as fh:
+    for line in fh:
+        line = line.strip()
+        if not line: continue
+        rec = json.loads(line)
+        payload = rec.get(\"payload\",{}) or {}
+        argv = payload.get(\"argv\") or payload.get(\"cc_argv\") or payload.get(\"spawn_argv\") or payload.get(\"command_line\")
+        if not argv: continue
+        if isinstance(argv, str): argv = argv.split()
+        for i in range(len(argv)-1):
+            if argv[i] == \"--model\" and argv[i+1] == \"claude-opus-4-7\":
+                hit = True; break
+        if hit: break
+if not hit:
+    print(\"OPUS_PIN_NOT_FOUND_IN_ARGV\", file=sys.stderr); sys.exit(1)
+print(\"ok\")
+'"
+else
+    echo "SKIP  E67 (current T10a journal does not record spawned CC argv; HRD-NNN-W6e tracks the argv-capture extension. T2 unit test TestDispatchCommandIncludesOpusModel asserts the model flag at the cmd-construction layer; T12 mutation gate (b) is the load-bearing drift detector; §11.4.3 explicit SKIP-with-reason)"
+fi
+
+# ---- E68: reply_to_message_id wire-bytes ----
+# For every tgram.send_reply line, its reply_to_message_id MUST be non-zero
+# AND MUST match the message_id of some earlier tgram.message line in the
+# same transcript (i.e., the reply was actually threaded against a real
+# inbound message — not a stray fresh-message bluff).
+if [ -n "${W6_QA_DIR}" ]; then
+    check "E68 reply_to_message_id wire-bytes — every tgram.send_reply's reply_to_message_id is non-zero AND matches a prior tgram.message message_id" \
+        "python3 -c '
+import json, sys
+inbound_ids = set()
+replies = []
+with open(\"${W6_QA_DIR}/transcript.jsonl\") as fh:
+    for line in fh:
+        line = line.strip()
+        if not line: continue
+        rec = json.loads(line)
+        kind = rec.get(\"kind\",\"\")
+        payload = rec.get(\"payload\",{}) or {}
+        if kind == \"tgram.message\":
+            mid = payload.get(\"message_id\")
+            if mid is not None:
+                try: inbound_ids.add(int(mid))
+                except Exception: pass
+        elif kind == \"tgram.send_reply\":
+            replies.append(payload.get(\"reply_to_message_id\"))
+if not replies:
+    print(\"NO_SEND_REPLY_LINES\", file=sys.stderr); sys.exit(2)
+bad = []
+for r in replies:
+    try: rint = int(r) if r is not None else 0
+    except Exception: rint = 0
+    if rint == 0 or rint not in inbound_ids:
+        bad.append(r)
+if bad:
+    for b in bad: print(\"BAD_REPLY_TO\", repr(b), file=sys.stderr)
+    sys.exit(1)
+print(\"ok\", len(replies))
+'"
+else
+    echo "SKIP  E68 (docs/qa/HRD-NNN-W6-*/transcript.jsonl not yet committed — T10b live closed-loop pending; §11.4.3 explicit SKIP-with-reason)"
+fi
+
+# ---- E69: action routing — issue.open does NOT echo to Telegram ----
+# cc.reply lines carry payload.action ∈ {reply, issue.open, event.emit}.
+# For every cc.reply with action=issue.open, the transcript MUST NOT
+# contain a tgram.send_reply line with the same chat_id + same inbound_id
+# pairing (issue.open routes to the issue opener, not back to Telegram).
+# Heuristic match: any cc.reply with action=issue.open followed by a
+# tgram.send_reply within the next 3 events is a routing leak.
+if [ -n "${W6_QA_DIR}" ]; then
+    # Only run the assertion if the transcript actually contains an
+    # issue.open action — otherwise the invariant is unfalsifiable
+    # (vacuously PASS would be a §11.4 bluff). SKIP-with-reason in that
+    # case, telling the operator to add an issue.open scenario in T10b.
+    if grep -q '"action": *"issue.open"\|"action":"issue.open"' "${W6_QA_DIR}/transcript.jsonl" 2>/dev/null; then
+        check "E69 action routing — no tgram.send_reply follows an issue.open cc.reply within 3 events (issue.open routes to the issue opener, not Telegram)" \
+            "python3 -c '
+import json, sys
+events = []
+with open(\"${W6_QA_DIR}/transcript.jsonl\") as fh:
+    for line in fh:
+        line = line.strip()
+        if not line: continue
+        events.append(json.loads(line))
+leaks = []
+for i, rec in enumerate(events):
+    if rec.get(\"kind\") != \"cc.reply\": continue
+    if ((rec.get(\"payload\",{}) or {}).get(\"action\")) != \"issue.open\": continue
+    # look up to 3 events ahead for a tgram.send_reply
+    for j in range(i+1, min(i+4, len(events))):
+        nxt = events[j]
+        if nxt.get(\"kind\") == \"tgram.send_reply\":
+            leaks.append((i, j))
+            break
+if leaks:
+    for L in leaks: print(\"ROUTING_LEAK\", *L, file=sys.stderr)
+    sys.exit(1)
+print(\"ok\")
+'"
+    else
+        echo "SKIP  E69 (transcript present but contains no cc.reply with action=issue.open — vacuously-pass would be a §11.4 PASS-bluff; add an issue.open-action scenario to T10b's live loop to convert this SKIP to a real assertion; §11.4.3 explicit SKIP-with-reason)"
+    fi
+else
+    echo "SKIP  E69 (docs/qa/HRD-NNN-W6-*/transcript.jsonl not yet committed — T10b live closed-loop pending; §11.4.3 explicit SKIP-with-reason)"
+fi
+
+# ---- E70: live closed-loop (delegates to tests/test_wave6_live_loop.sh) ----
+# The script's own design: exit 0 = PASS; exit 0 with stdout beginning
+# "SKIP:" = creds-absent SKIP; exit non-zero = FAIL. e2e_bluff_hunt mirrors
+# that contract — we run the script, capture stdout, and decide.
+W6_LIVE_OUT="/tmp/e2e_w6_live_out_$$"
+if bash "${REPO_ROOT}/tests/test_wave6_live_loop.sh" >"${W6_LIVE_OUT}" 2>&1; then
+    if head -1 "${W6_LIVE_OUT}" | grep -q '^SKIP:'; then
+        skip_reason="$(head -1 "${W6_LIVE_OUT}" | sed 's/^SKIP: *//')"
+        echo "SKIP  E70 (tests/test_wave6_live_loop.sh: ${skip_reason}; §11.4.3 explicit SKIP-with-reason)"
+    else
+        echo "PASS  E70 tests/test_wave6_live_loop.sh closed-loop (subscriber → CC → bot reply with reply_to_message_id wire-evidence)"
+        pass=$((pass+1))
+    fi
+else
+    echo "FAIL  E70 tests/test_wave6_live_loop.sh closed-loop failed"
+    tail -20 "${W6_LIVE_OUT}" 2>/dev/null | sed 's/^/      /'
+    fail=$((fail+1))
+    fail_names+=("E70")
+fi
+rm -f "${W6_LIVE_OUT}"
 
 # ----------------------------------------------------------------------
 echo ""
