@@ -74,6 +74,11 @@ func main() {
 
 	rootCmd.AddCommand(cli.VersionCmd(branding))
 	// `qaherald run` is registered in run.go's init().
+	// `qaherald lifecycle` is registered here (lifecycle.go uses a
+	// closure-captured *lifecycleFlags rather than package-level vars,
+	// so it cannot self-register from an init()).
+	lifecycleCmd, _ := newLifecycleCmd()
+	rootCmd.AddCommand(lifecycleCmd)
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, "qaherald:", err)
