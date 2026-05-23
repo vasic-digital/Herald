@@ -37,6 +37,8 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+
+	"github.com/vasic-digital/herald/qaherald/internal/lifecycle"
 )
 
 // lifecycleFlags is the parsed-flag struct for `qaherald lifecycle`.
@@ -100,6 +102,14 @@ validates required flags, creates the OutDir, and exits with a
 "not-wired-yet" message.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			resolveLifecycleEnvFallbacks(f)
+
+			// --manual short-circuits the required-flag validator —
+			// the manual catalogue print does not need a token or
+			// chat-id.
+			if f.Manual {
+				return lifecycle.PrintScenarios(cmd.OutOrStdout())
+			}
+
 			if err := validateLifecycleRequired(f); err != nil {
 				return err
 			}
@@ -112,19 +122,24 @@ validates required flags, creates the OutDir, and exits with a
 			if err := os.MkdirAll(filepath.Join(f.OutDir, "attachments"), 0o755); err != nil {
 				return fmt.Errorf("HRD-101: mkdir out-dir: %w", err)
 			}
-			// Per-scenario context budget propagates through cmd.Context()
-			// here; T4 will replace this with a real orchestrator call.
-			// Keep the timeout wired so tests can prove the contract.
+
 			ctx, cancel := context.WithTimeout(cmdContextOrBackground(cmd), f.OverallTimeout)
 			defer cancel()
-			_ = ctx
 
-			if f.Manual {
-				fmt.Fprintln(cmd.OutOrStdout(), "qaherald lifecycle --manual: T2/T3 will print the scenarios.")
-				return nil
+			cfg := lifecycle.Config{
+				QABotToken:         f.QABotToken,
+				QABotTokenNonOp:    f.QABotTokenNonOp,
+				ChatID:             f.ChatID,
+				PheraldBotUsername: f.PheraldBotUsername,
+				OutDir:             f.OutDir,
+				RunID:              f.RunID,
+				DocsDir:            f.DocsDir,
+				PheraldQAOutDir:    f.PheraldQAOutDir,
+				Scenarios:          f.Scenarios,
+				PerScenarioTimeout: f.PerScenarioTimeout,
+				SkipPreflight:      f.SkipPreflight,
 			}
-			fmt.Fprintln(cmd.OutOrStdout(), "qaherald lifecycle skeleton — T2/T3 not wired yet")
-			return nil
+			return lifecycle.Run(ctx, cfg)
 		},
 	}
 

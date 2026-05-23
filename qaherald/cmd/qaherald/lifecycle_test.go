@@ -156,13 +156,18 @@ func TestLifecycleFlagsResolveFromEnv(t *testing.T) {
 
 			// The "flag-wins-over-env" case passes explicit flags; the
 			// others rely on the env-only fallback path.
+			//
+			// All cases pass --skip-preflight + --scenarios NONE so the
+			// orchestrator does not attempt to hit api.telegram.org with
+			// the synthetic test token.
 			if tc.name == "flag-wins-over-env" {
 				cmd.SetArgs([]string{
 					"--qa-bot-token", "flag:TOKEN",
 					"--pherald-bot-username", "flaguser",
+					"--skip-preflight", "--scenarios", "NONE",
 				})
 			} else {
-				cmd.SetArgs([]string{})
+				cmd.SetArgs([]string{"--skip-preflight", "--scenarios", "NONE"})
 			}
 
 			err := cmd.Execute()
@@ -277,6 +282,10 @@ func TestLifecycleRequiredFieldsValidation(t *testing.T) {
 // Shape: YYYY-MM-DDTHH-MM-SS-XXXX where XXXX is 4 lowercase hex chars.
 // We tolerate any valid ISO-ish timestamp; the strict assertion is the
 // regex below.
+//
+// Uses --skip-preflight + --scenarios=NONEXISTENT to short-circuit the
+// orchestrator (no scheduled scenarios → zero runs → clean exit). This
+// keeps the test hermetic — no Telegram traffic.
 func TestLifecycleDefaultRunID(t *testing.T) {
 	chdirToTemp(t)
 	resetLifecycleEnv(t)
@@ -287,7 +296,7 @@ func TestLifecycleDefaultRunID(t *testing.T) {
 	cmd, f := newLifecycleCmd()
 	cmd.SetOut(io.Discard)
 	cmd.SetErr(io.Discard)
-	cmd.SetArgs([]string{})
+	cmd.SetArgs([]string{"--skip-preflight", "--scenarios", "NONE"})
 
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("execute: %v", err)
@@ -335,7 +344,7 @@ func TestLifecycleDefaultOutDir(t *testing.T) {
 	cmd, f := newLifecycleCmd()
 	cmd.SetOut(io.Discard)
 	cmd.SetErr(io.Discard)
-	cmd.SetArgs([]string{})
+	cmd.SetArgs([]string{"--skip-preflight", "--scenarios", "NONE"})
 
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("execute: %v", err)
@@ -371,7 +380,7 @@ func TestLifecycleExplicitOutDir(t *testing.T) {
 	cmd, f := newLifecycleCmd()
 	cmd.SetOut(io.Discard)
 	cmd.SetErr(io.Discard)
-	cmd.SetArgs([]string{"--out", "custom/qa/dir"})
+	cmd.SetArgs([]string{"--out", "custom/qa/dir", "--skip-preflight", "--scenarios", "NONE"})
 
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("execute: %v", err)
@@ -381,8 +390,9 @@ func TestLifecycleExplicitOutDir(t *testing.T) {
 	}
 }
 
-// TestLifecycleManualFlagShortCircuits asserts that --manual produces
-// the documented short-circuit output and returns nil.
+// TestLifecycleManualFlagShortCircuits asserts that --manual prints
+// the scenario catalogue and returns nil. The catalogue contains every
+// S0X line (15 scenarios).
 func TestLifecycleManualFlagShortCircuits(t *testing.T) {
 	chdirToTemp(t)
 	resetLifecycleEnv(t)
@@ -399,38 +409,52 @@ func TestLifecycleManualFlagShortCircuits(t *testing.T) {
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("execute: %v", err)
 	}
-	if !strings.Contains(out.String(), "--manual") {
-		t.Errorf("stdout missing --manual mention: %q", out.String())
+	stdout := out.String()
+	// --manual prints the 15-scenario catalogue. Verify a few canonical
+	// scenario IDs appear.
+	for _, want := range []string{"S01", "S08", "S15"} {
+		if !strings.Contains(stdout, want) {
+			t.Errorf("manual catalogue missing %q in stdout: %q", want, stdout)
+		}
 	}
 }
 
-// TestLifecycleSkeletonMessage asserts the documented T1 short-circuit
-// message ("skeleton — T2/T3 not wired yet") surfaces on stdout when
-// the happy-path RunE fires without --manual.
-func TestLifecycleSkeletonMessage(t *testing.T) {
+// TestLifecycleHappyPathReportGen asserts the orchestrator emits
+// report.md under OutDir even when no scenarios are scheduled
+// (--scenarios=NONE) — proves the report writer is wired and that
+// transcript.jsonl is opened.
+func TestLifecycleHappyPathReportGen(t *testing.T) {
 	chdirToTemp(t)
 	resetLifecycleEnv(t)
 	t.Setenv("HERALD_QA_BOT_TOKEN", "test:TOKEN")
 	t.Setenv("HERALD_TGRAM_CHAT_ID", "1")
 	t.Setenv("HERALD_PHERALD_BOT_USERNAME", "u")
 
-	var out bytes.Buffer
-	cmd, _ := newLifecycleCmd()
-	cmd.SetOut(&out)
+	cmd, f := newLifecycleCmd()
+	cmd.SetOut(io.Discard)
 	cmd.SetErr(io.Discard)
-	cmd.SetArgs([]string{})
+	cmd.SetArgs([]string{"--skip-preflight", "--scenarios", "NONE"})
 
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("execute: %v", err)
 	}
-	if !strings.Contains(out.String(), "skeleton") {
-		t.Errorf("stdout missing skeleton sentinel: %q", out.String())
+	for _, p := range []string{
+		f.OutDir + "/report.md",
+		f.OutDir + "/transcript.jsonl",
+	} {
+		if _, err := os.Stat(p); err != nil {
+			t.Errorf("expected artefact %q to exist: %v", p, err)
+		}
 	}
 }
 
 // TestLifecycleFlagDefaults confirms the documented default values for
 // every flag that has a non-zero default — these are the values
 // callers (and T4 orchestrator) rely on when no override is supplied.
+//
+// Uses ParseFlags directly (no Execute) so neither the orchestrator
+// nor the validator fire — the test asserts purely on the
+// post-flag-parse struct state.
 func TestLifecycleFlagDefaults(t *testing.T) {
 	chdirToTemp(t)
 	resetLifecycleEnv(t)
@@ -441,10 +465,8 @@ func TestLifecycleFlagDefaults(t *testing.T) {
 	cmd, f := newLifecycleCmd()
 	cmd.SetOut(io.Discard)
 	cmd.SetErr(io.Discard)
-	cmd.SetArgs([]string{})
-
-	if err := cmd.Execute(); err != nil {
-		t.Fatalf("execute: %v", err)
+	if err := cmd.ParseFlags(nil); err != nil {
+		t.Fatalf("parse: %v", err)
 	}
 	if f.DocsDir != "docs" {
 		t.Errorf("DocsDir default: got %q, want docs", f.DocsDir)
