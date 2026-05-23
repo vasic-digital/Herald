@@ -244,6 +244,76 @@ func TestFormatEnvelopePreText(t *testing.T) {
 	}
 }
 
+// TestFormatEnvelopePreText_ActionGuidance — Wave 6.5 §107 fix (2026-05-23).
+// Without explicit ACTION FORMAT GUIDANCE the LLM defaulted to action:"reply"
+// for every classification, leaving the issue.open pipeline dead in production
+// (HRD-101 S5 live evidence). This test asserts the guidance + the
+// SUGGESTED ACTION line both surface in the rendered envelope.
+func TestFormatEnvelopePreText_ActionGuidance(t *testing.T) {
+	d, _ := New("/bin/true", t.TempDir(), "Guidance")
+
+	cases := []struct {
+		name       string
+		classType  string
+		wantAction string // substring that MUST appear in the SUGGESTED ACTION line
+	}{
+		{"bug", "bug", "emit issue.open"},
+		{"task", "task", "emit issue.open"},
+		{"implementation", "implementation", "emit issue.open"},
+		{"investigation", "investigation", "emit issue.open"},
+		{"query", "query", "emit reply"},
+		{"empty", "", "emit reply"},
+		{"event_trigger", "event_trigger", "emit event.emit"},
+		{"unknown", "moonshot", "asking for clarification"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			req := DispatchRequest{
+				InboundID:      "01HXYZ",
+				Sender:         "tgram:milos",
+				Channel:        commons.ChannelTelegram,
+				Classification: Classification{Type: tc.classType, Criticality: "middle", Confidence: 1.0},
+				UserMessage:    "x",
+			}
+			out := d.FormatEnvelopeWithPreText(req, "tgram")
+
+			// Generic guidance block must be present for every classification.
+			if !strings.Contains(out, "ACTION FORMAT GUIDANCE") {
+				t.Fatalf("envelope missing ACTION FORMAT GUIDANCE block")
+			}
+			if !strings.Contains(out, "<<<HERALD-REPLY>>>") {
+				t.Fatalf("envelope missing <<<HERALD-REPLY>>> marker reference")
+			}
+			if !strings.Contains(out, "\"action\":\"issue.open\"") {
+				t.Fatalf("envelope missing issue.open JSON example")
+			}
+			if !strings.Contains(out, "\"action\":\"reply\"") {
+				t.Fatalf("envelope missing reply JSON example")
+			}
+
+			// Per-type SUGGESTED ACTION line must match the classification.
+			if !strings.Contains(out, "SUGGESTED ACTION") {
+				t.Fatalf("envelope missing SUGGESTED ACTION line")
+			}
+			if !strings.Contains(out, tc.wantAction) {
+				t.Fatalf("SUGGESTED ACTION missing %q for type=%q; envelope:\n%s",
+					tc.wantAction, tc.classType, out)
+			}
+
+			// Guidance + suggestion appear BEFORE the structured marker.
+			guidanceIdx := strings.Index(out, "ACTION FORMAT GUIDANCE")
+			suggIdx := strings.Index(out, "SUGGESTED ACTION")
+			markerIdx := strings.Index(out, "<<<HERALD-DISPATCH-v1>>>")
+			if guidanceIdx < 0 || suggIdx < 0 || markerIdx < 0 {
+				t.Fatalf("missing anchor — guidance=%d sugg=%d marker=%d", guidanceIdx, suggIdx, markerIdx)
+			}
+			if !(guidanceIdx < suggIdx && suggIdx < markerIdx) {
+				t.Fatalf("ordering wrong — guidance=%d sugg=%d marker=%d", guidanceIdx, suggIdx, markerIdx)
+			}
+		})
+	}
+}
+
 func TestFormatEnvelope_TaskVerbVariesByType(t *testing.T) {
 	d, _ := New("claude", t.TempDir(), "X")
 	for itemType, expect := range map[string]string{

@@ -241,9 +241,50 @@ func (d *Dispatcher) FormatEnvelopeWithPreText(req DispatchRequest, channelName 
 	} else {
 		pre.WriteString("No attached materials.\n")
 	}
+
+	// Wave 6.5 §107 fix (2026-05-23): the LLM was never told how to
+	// choose between action types — it always defaulted to "reply" even
+	// for type=bug messages. Without this guidance the issue.open
+	// pipeline (DocsIssueOpener → docs/Issues.md mutation) never fired
+	// in production, leaving the bug-ticket lifecycle broken at the
+	// prompt-engineering layer. Live evidence: scenario S5 (HRD-101).
+	pre.WriteString("\nACTION FORMAT GUIDANCE — your reply MUST end with a single line\n")
+	pre.WriteString("starting with <<<HERALD-REPLY>>> followed by JSON. Choose action by\n")
+	pre.WriteString("classification.type:\n")
+	pre.WriteString("  - type in {bug, task, implementation, investigation}\n")
+	pre.WriteString("      action: \"issue.open\" with payload\n")
+	pre.WriteString("      {\"action\":\"issue.open\",\"issue\":{\"type\":\"<type>\",\"criticality\":\"<crit>\",\n")
+	pre.WriteString("       \"title\":\"<short summary, less than or equal to 80 chars>\",\"body\":\"<longer description>\",\"labels\":[]}}\n")
+	pre.WriteString("  - type = query (or empty/unrecognised): action: \"reply\"\n")
+	pre.WriteString("      {\"action\":\"reply\",\"text\":\"<natural-language answer>\"}\n")
+	pre.WriteString("  - type = event_trigger: action: \"event.emit\"\n")
+	pre.WriteString("      {\"action\":\"event.emit\",\"event\":{\"cloudevent_type\":\"<type>\",\n")
+	pre.WriteString("       \"subject\":\"<subject>\",\"data\":{}}}\n")
+	pre.WriteString("Help/Status/Continue/Done/Reopen never reach you — fast-pathed in pherald.\n")
 	pre.WriteString("\n")
+
+	pre.WriteString(suggestedActionLine(req.Classification.Type))
+	pre.WriteString("\n")
+
 	pre.WriteString(d.FormatEnvelope(req)) // existing structured block unchanged
 	return pre.String()
+}
+
+// suggestedActionLine emits a single line telling the LLM which action
+// to use for this specific message, derived deterministically from
+// classification.type. Wave 6.5 fix per §107: removes the LLM's
+// freedom to silently default to "reply" for bug/task messages.
+func suggestedActionLine(classType string) string {
+	switch classType {
+	case "bug", "task", "implementation", "investigation":
+		return fmt.Sprintf("SUGGESTED ACTION for this message (type=%q): emit issue.open.\n", classType)
+	case "query", "":
+		return "SUGGESTED ACTION for this message: emit reply with a concise natural-language answer.\n"
+	case "event_trigger":
+		return "SUGGESTED ACTION for this message: emit event.emit with the appropriate CloudEvent type.\n"
+	default:
+		return fmt.Sprintf("SUGGESTED ACTION for this message (type=%q): emit reply asking for clarification.\n", classType)
+	}
 }
 
 // DispatchResponse is the typed projection of the §33.3 JSON reply.
