@@ -112,7 +112,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>7</td>
+<td>8</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -120,7 +120,7 @@
 </tr>
 <tr>
 <td>Last modified</td>
-<td>2026-05-22</td>
+<td>2026-05-23</td>
 </tr>
 <tr>
 <td>Status</td>
@@ -128,31 +128,45 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>Wave 6 code-doc closure landed (this commit). pherald
-inbound runtime + Claude Code headless bridge complete. Tag v0.4.0
-DEFERRED to T13b (operator-supplied live evidence).</strong> HRD-100
-closed atomically with 12 Wave-6 commit SHAs
-T1=<code>ad87d7f</code>..T12=<code>96c7c6b</code>. 8 new e2e invariants
-E63-E70 land in this commit but currently SKIP with documented reasons —
-convert to PASS at T10b when the operator runs the live closed-loop
-end-to-end and commits <code>docs/qa/HRD-100-&lt;run-id&gt;/</code>.
-Workspace at 16 modules (Wave 5 added <code>qaherald</code>; Wave 6
-added NO new module — inbound is
-<code>pherald/internal/inbound/</code>). Spec V3 at r12. Pre-existing
-e2e FAILs on the Postgres-:24100 dependent invariants (E7-E12 + E14-E16
-+ E37-E42 — SASL handshake) are NOT Wave 6 regressions; documented in
-this commit as carry-over. Anti-bluff gates green: inheritance gate
-15/15 PASS; audit_antibluff 18/0/1; codegraph_validate 7/0/2. Prior r6
-covered Wave 3a + Wave 2 + Foundation M1/M2/M3.</td>
+<td><strong>2026-05-23 session-end checkpoint — safe to shut down. Wave
+6.5 lifecycle layer landed (12/12 implementation tasks + premature
+v0.5.0 tag from a parallel Haiku session). One root-cause bug discovered
+live + fixed: envelope ACTION FORMAT GUIDANCE (commit
+<code>53a7ad3</code>) — before the fix, every Bug:/Task: defaulted to
+<code>action:"reply"</code> and never wrote Issues.md (§107 PASS-bluff
+at the prompt layer). qaherald-auto Go framework T1+T2+T3+T4+T5 of 8
+landed (full 15-scenario lifecycle test framework using a 2nd Telegram
+bot <code>@pherald_qa_bot</code> as automated subscriber). T6+T7+T8
+remaining: pre-flight validator + httptest-driven unit tests +
+tests/test_wave6.5_lifecycle.sh adapter. After T8 + live run + v0.5.1
+tag: ready to start Wave 7 (genericize messenger framework Slack/Email
+per operator mandate) / close 47 remaining HRDs.</strong> v0.4.0 (Wave 6
+closed-loop) + v0.5.0 (Wave 6.5 implementations) both tagged + pushed to
+all 4 mirrors. Live evidence so far under
+<code>docs/qa/HRD-100-2026-05-22T18-27-30-w6live/</code> (4-event closed
+loop) +
+<code>docs/qa/HRD-101-lifecycle-2026-05-22T20-04-04-w6.5live/</code>
+(partial — only S1+S2 evidence; superseded by qaherald-auto). Workspace
+at 16 modules. Spec V3 at r12 + §32.7 + §32.9 + §33.6 + §33.7 captured.
+Constitutional propagation of §107.x docs/qa-evidence + §107.y
+working-tree-quiescence covenant complete across 13 submodules + parent
+constitution + Herald root (QA1 commit <code>bff18db</code> +
+per-submodule <code>a8c1cb4..b464136</code>). Anti-bluff gates green:
+inheritance 15/15 PASS, audit_antibluff 18/0/1, Wave 6 mutation gate 4/4
+PASS, Wave 6.5 mutation gate 6/6 PASS. Pre-existing carry-over:
+Postgres-SASL-dependent e2e invariants (E7-E12, E14-E16, E37-E42 — 15
+FAILs against the running PG container, root cause is local-PG SASL
+handshake; unrelated to Wave 6/6.5).</td>
 </tr>
 <tr>
 <td>Issues</td>
 <td>HRD-008, HRD-015, HRD-018 (in_progress), HRD-019..HRD-027,
-HRD-029..HRD-056, HRD-081, HRD-085..HRD-090</td>
+HRD-029..HRD-056, HRD-081, HRD-085..HRD-090, HRD-101 (in_progress —
+qaherald-auto + full lifecycle evidence)</td>
 </tr>
 <tr>
 <td>Issues summary</td>
-<td>see <code>Issues.md</code> — 47 open items</td>
+<td>see <code>Issues.md</code> — 48 open items (HRD-101 in flight)</td>
 </tr>
 <tr>
 <td>Fixed</td>
@@ -166,29 +180,29 @@ HRD-013, HRD-014, HRD-016, HRD-017, HRD-028, HRD-080, HRD-092..HRD-100
 </tr>
 <tr>
 <td>Continuation</td>
-<td><strong>T10b next (live closed-loop evidence)</strong> — operator
-exports <code>HERALD_TGRAM_BOT_TOKEN</code> +
-<code>HERALD_TGRAM_CHAT_ID</code> + <code>HERALD_CLAUDE_BIN</code>, then
-runs
-<code>bash tests/test_wave6_live_loop.sh --qa-out-dir docs/qa/HRD-100-&lt;run-id&gt;/</code>.
-The script types a synthetic message into the chat, observes the
-original <code>message_id</code>, starts <code>pherald listen</code> in
-the background with <code>--qa-out-dir</code> pointing at the new
-directory, waits up to 45s for a reply with
-<code>reply_to_message_id == original</code>, and exits 0 on PASS. The
-resulting <code>docs/qa/HRD-100-&lt;run-id&gt;/</code> directory carries
-<code>transcript.jsonl</code> (bidirectional events) +
-<code>pherald-listen.log</code> + <code>claude-stdout.log</code> +
-<code>claude-stderr.log</code> +
-<code>attachments/&lt;sha256&gt;.&lt;ext&gt;</code> (any exchanged) + an
-operator-authored <code>README.md</code> narrative. After T10b PASS,
-T13b tags <code>v0.4.0</code> and pushes to all 4 mirrors. After Wave 6:
-§43 command-catalogue rollout (HRD-029..056), iherald
-<code>/v1/webhooks/page</code> live (HRD-024), sherald destructive-guard
-body (HRD-033 — unlocks E48), HRD-091 codegraph submodule-traversal gap,
-comprehensive docs audit per task #147. Multi-mirror push after each
-milestone. Update on every non-trivial commit (per Universal
-§12.10).</td>
+<td><strong>Resume tomorrow at qaherald-auto T6+T7+T8</strong>
+(<code>docs/superpowers/plans/2026-05-23-qaherald-auto.md</code> commit
+<code>52ce679</code>). T1-T5 landed: <code>qaherald lifecycle</code>
+Cobra subcommand + MessengerClient interface (Telegram impl) + 15
+scenarios (S1..S15) + orchestrator + Markdown report — 12 hermetic unit
+tests PASS under <code>-race -count=1</code>. T6: 10-gate pre-flight
+validator (pherald-bot getMe, qa-bot privacy disabled, group membership,
+OPERATOR_IDS contains qa-bot, etc.). T7: full unit-test pass against
+<code>httptest</code> impersonating Bot API + canned pherald
+transcripts. T8: rewrite <code>tests/test_wave6.5_lifecycle.sh</code> to
+delegate to <code>qaherald lifecycle</code> (keep <code>--manual</code>
+for old interactive UX). After T8: live e2e run with operator-supplied
+creds (see §4a below), commit
+<code>docs/qa/HRD-101-lifecycle-&lt;run-id&gt;/</code> + tag
+<code>v0.5.1</code> + 4-mirror push. Subsequent: Wave 7 (genericize
+messenger framework — Slack/Email next per operator 2026-05-22), then
+close-out of HRDs 018..027 + 029..056 + 081 + 085..090 for v1.0.0
+production-ready, then the docs-audit task #147 (operator manuals +
+PDF/HTML/DOCX exports for every wave). Operator restated 2026-05-22/23:
+NO BLUFF, NO FALSE POSITIVES, fix root causes immediately. The 53a7ad3
+envelope fix is the canonical example of that rule operating live. Push
+to all 4 mirrors + every submodule's own origin on every non-trivial
+commit per Universal §12.10.</td>
 </tr>
 </tbody>
 </table>
@@ -410,6 +424,218 @@ prints <code>SKIP: &lt;reason&gt;</code> and exits 0. That is honest
 §11.4.3 hardware-absent SKIP-with-reason, not a PASS. Tag
 <code>v0.4.0</code> MUST NOT be created until at least one PASS run is
 committed to <code>docs/qa/HRD-100-&lt;run-id&gt;/</code>.</p>
+<h2
+id="4b-qaherald-auto-resume-runbook-next-session--gating-tag-v051">§4b.
+qaherald-auto resume runbook (next session — gating tag v0.5.1)</h2>
+<p><strong>Status as of 2026-05-23 session end:</strong></p>
+<ul>
+<li>HEAD <code>8ad4cb9</code> on <code>main</code>; all 4 mirrors in
+sync (<code>github.com:vasic-digital/Herald.git</code>,
+<code>gitlab.com:vasic-digital/herald.git</code>,
+<code>gitflic.ru:vasic-digital/herald.git</code>,
+<code>gitverse.ru:vasic-digital/Herald.git</code>).</li>
+<li>Tag <code>v0.4.0</code> shipped (Wave 6 closed-loop). Tag
+<code>v0.5.0</code> shipped (Wave 6.5 lifecycle implementations —
+premature: only S1+S2 live evidence + carries the
+pre-<code>53a7ad3</code> envelope-action-guidance bug). Tag
+<code>v0.5.1</code> is the target after qaherald-auto T6-T8 land + full
+15-scenario evidence committed.</li>
+<li>Plan:
+<code>docs/superpowers/plans/2026-05-23-qaherald-auto.md</code> (commit
+<code>52ce679</code>).</li>
+<li>Done: T1 skeleton + T2 messenger + T3 scenarios + T4 orchestrator +
+T5 report (combined commit <code>8ad4cb9</code> for T3-T5).</li>
+<li>TODO: <strong>T6 pre-flight + T7 hermetic tests + T8
+shell-adapter</strong> then live run + tag.</li>
+</ul>
+<h3 id="resume-prerequisites">Resume prerequisites</h3>
+<p>The following are <strong>already provisioned</strong> in
+<code>~/.zshrc</code> (export-on-shell-start):</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">HERALD_TGRAM_BOT_TOKEN</span>     <span class="co"># @atmosphere_worker_bot — pherald-bot (Telegram bot 8823384001)</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ex">HERALD_TGRAM_CHAT_ID</span>       <span class="co"># -4946584787 (ATMOSphere Development group)</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="ex">HERALD_OPERATOR_IDS</span>        <span class="co"># 2057253161 (the operator&#39;s user-id)</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="ex">HERALD_QA_BOT_TOKEN</span>        <span class="co"># @pherald_qa_bot — 2nd bot (8971749017, privacy DISABLED, member of the group)</span></span></code></pre></div>
+<p><strong>The qa-bot token is plaintext in
+<code>~/.zshrc</code></strong> — operator should <code>/revoke</code>
+via @BotFather after Wave 6.5 close-out and regenerate (the token leaked
+into one prior session's bash output earlier today, was never committed
+to git but lives in <code>/private/tmp/claude-501/...</code>
+operator-local files).</p>
+<p>The containers <code>herald-postgres</code> (port 24100) and
+<code>herald-redis</code> (port 24200) are LIVE — both have been Up
+since the start of this session; data persists across podman restarts.
+Schema is at migration v12 (all 12 applied).</p>
+<h3 id="resume-sequence-suggested-next-session-order">Resume sequence
+(suggested next-session order)</h3>
+<ol type="1">
+<li><p><strong>Pull state + verify</strong>:</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ~/Projects/Herald <span class="kw">&amp;&amp;</span> <span class="fu">git</span> pull origin main <span class="kw">&amp;&amp;</span> <span class="fu">git</span> log <span class="at">--oneline</span> <span class="at">-10</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> status <span class="at">--short</span>  <span class="co"># expect clean</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> stash list      <span class="co"># 2 stashes preserved: T8 Wave-5 salvage + premature S3-S5 transcript WIP</span></span></code></pre></div></li>
+<li><p><strong>Spawn T6 (pre-flight)</strong> via a fresh subagent —
+read <code>docs/superpowers/plans/2026-05-23-qaherald-auto.md</code>
+Task 6 in full. Implementation lands at
+<code>qaherald/internal/lifecycle/preflight.go</code> +
+<code>preflight_test.go</code>. 10 gates: pherald-bot reachable via
+getMe, qa-bot reachable, qa-bot privacy disabled, qa-bot is group
+member, OPERATOR_IDS contains qa-bot, etc. Each gate has distinct exit
+code for diagnostics.</p></li>
+<li><p><strong>Spawn T7 (full hermetic tests)</strong> — extends T3-T5's
+12 tests with httptest-based scenario simulation. Coverage targets:
+every scenario PASS path + every FAIL diagnostic + S9 SKIP path + S14
+outbound-attachment sha256 round-trip + S11/S12/S13 inbound-attachment
+download + Issues.md/Fixed.md fs-mutation assertion.</p></li>
+<li><p><strong>Spawn T8 (shell-script adapter)</strong> — rewrites
+<code>tests/test_wave6.5_lifecycle.sh</code> to delegate to
+<code>qaherald lifecycle</code> for automated runs. Keeps the original
+<code>--manual</code> flag for the operator-typing interactive UX as a
+fallback.</p></li>
+<li><p><strong>Run the live e2e (the §107 watershed)</strong>:</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ~/Projects/Herald</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Add qa-bot user-id to OPERATOR_IDS so S5/S6/S8/S10 succeed</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">HERALD_OPERATOR_IDS</span><span class="op">=</span><span class="st">&quot;</span><span class="va">${HERALD_OPERATOR_IDS}</span><span class="st">,8971749017&quot;</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Re-export from .zshrc (or just open a new shell)</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="bu">source</span> ~/.zshrc</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Build pherald + qaherald</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> build <span class="at">-o</span> /tmp/pherald ./pherald/cmd/pherald</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> build <span class="at">-o</span> /tmp/qaherald ./qaherald/cmd/qaherald</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Start pherald listen in background with QA journaling</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="va">RUN_ID</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$(</span><span class="fu">date</span> <span class="at">-u</span> +%Y-%m-%dT%H-%M-%S<span class="va">)</span><span class="st">-w6.5live&quot;</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="va">PHERALD_QA_DIR</span><span class="op">=</span><span class="st">&quot;docs/qa/HRD-101-lifecycle-</span><span class="va">${RUN_ID}</span><span class="st">-pherald&quot;</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a><span class="va">QAUTO_QA_DIR</span><span class="op">=</span><span class="st">&quot;docs/qa/HRD-101-lifecycle-</span><span class="va">${RUN_ID}</span><span class="st">&quot;</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> <span class="st">&quot;</span><span class="va">${PHERALD_QA_DIR}</span><span class="st">/attachments&quot;</span> <span class="st">&quot;</span><span class="va">${QAUTO_QA_DIR}</span><span class="st">/attachments&quot;</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a><span class="ex">/tmp/pherald</span> listen <span class="at">--qa-out-dir</span> <span class="st">&quot;</span><span class="va">${PHERALD_QA_DIR}</span><span class="st">&quot;</span> <span class="at">--docs-dir</span> docs <span class="kw">&amp;</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a><span class="va">PHERALD_PID</span><span class="op">=</span><span class="va">$!</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a><span class="bu">trap</span> <span class="st">&#39;kill -TERM $PHERALD_PID 2&gt;/dev/null&#39;</span> EXIT</span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a><span class="fu">sleep</span> 5</span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Run qaherald lifecycle (T6-T8 must be done first)</span></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a><span class="ex">/tmp/qaherald</span> lifecycle <span class="dt">\</span></span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>  <span class="at">--pherald-bot-username</span><span class="op">=</span>atmosphere_worker_bot <span class="dt">\</span></span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>  <span class="at">--pherald-qa-out-dir</span><span class="op">=</span><span class="st">&quot;</span><span class="va">${PHERALD_QA_DIR}</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>  <span class="at">--out</span><span class="op">=</span><span class="st">&quot;</span><span class="va">${QAUTO_QA_DIR}</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a>  <span class="at">--run-id</span><span class="op">=</span><span class="st">&quot;</span><span class="va">${RUN_ID}</span><span class="st">&quot;</span></span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a><span class="co"># Exit 0 on all-PASS or all-PASS-with-S9-SKIP. Non-zero on any FAIL.</span></span></code></pre></div></li>
+<li><p><strong>Capture evidence</strong>:</p>
+<ul>
+<li><code>${PHERALD_QA_DIR}/transcript.jsonl</code> — pherald's view
+(classifications, dispatch, replies)</li>
+<li><code>${QAUTO_QA_DIR}/transcript.jsonl</code> — qaherald-auto's view
+(sends, assertions)</li>
+<li><code>${QAUTO_QA_DIR}/report.md</code> — Markdown summary</li>
+<li><code>${QAUTO_QA_DIR}/attachments/&lt;sha256&gt;.&lt;ext&gt;</code>
+— content-addressed inbound + outbound attachments</li>
+<li><code>docs/Issues.md</code> + <code>docs/Fixed.md</code> — mutated
+by S5/S6/S8/S10 (and reverted by S10 + S15 cleanups; both files end in
+valid state)</li>
+</ul></li>
+<li><p><strong>Author operator README + commit</strong>:</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="op">&gt;</span> <span class="st">&quot;</span><span class="va">${QAUTO_QA_DIR}</span><span class="st">/README.md&quot;</span> <span class="op">&lt;&lt;EOF</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="st"># HRD-101 Wave 6.5 lifecycle evidence — &lt;run-id&gt;</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="st">&lt;5+ lines narrating: who ran it, when, which scenarios PASSed/FAILed/SKIPped,</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="st">bot reply quality observations, any anomalies. Operator-written, NOT auto-generated.&gt;</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="op">EOF</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> add docs/qa/HRD-101-lifecycle-<span class="va">${RUN_ID}</span><span class="pp">*</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> commit <span class="at">-m</span> <span class="st">&quot;Wave 6.5 step 13: HRD-101 live 15-scenario lifecycle evidence (qaherald-auto)&quot;</span></span></code></pre></div></li>
+<li><p><strong>Tag v0.5.1 + 4-mirror push</strong>:</p>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> tag <span class="at">-a</span> v0.5.1 <span class="at">-m</span> <span class="st">&quot;Wave 6.5 close: full lifecycle live evidence + envelope action-guidance fix&quot;</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> push origin main</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> push origin v0.5.1</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Verify all 4 mirrors converged on the same SHA + tag</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> mirror <span class="kw">in</span> github.com:vasic-digital/Herald.git gitlab.com:vasic-digital/herald.git gitflic.ru:vasic-digital/herald.git gitverse.ru:vasic-digital/Herald.git<span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">git</span> ls-remote <span class="st">&quot;git@</span><span class="va">${mirror}</span><span class="st">&quot;</span> v0.5.1</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span></code></pre></div></li>
+</ol>
+<h3 id="open--known-constraints-for-tomorrow">Open / known constraints
+for tomorrow</h3>
+<ul>
+<li><strong>S9 (non-operator Done: rejection)</strong>: requires
+<code>HERALD_QA_BOT_TOKEN_NON_OPERATOR</code> env (a THIRD bot account
+whose user-id is NOT in OPERATOR_IDS). Without it, S9 emits a
+SKIP-with-reason. Operator may register a third bot OR accept the SKIP
+(S9's logic is already unit-tested hermetically in T5's mutation
+gate).</li>
+<li><strong>First-scenario CC bootstrap</strong>: ~30s on first inbound
+message because the Claude Code session must spawn. Subsequent scenarios
+use the cached session (~5-15s typical).</li>
+<li><strong>Issues.md mutation race</strong>: if you run
+<code>qaherald lifecycle</code> while ANOTHER pherald listen is also
+processing in the same checkout, Issues.md may receive double-writes.
+Single-pherald-listen invocation is the safe default.</li>
+<li><strong>Pre-existing carry-over</strong>: 15 e2e_bluff_hunt FAILs on
+Postgres-SASL invariants (E7-E12 + E14-E16 + E37-E42). Root cause is
+local-PG container's SASL handshake; not related to Wave 6/6.5; can be
+addressed in a separate HRD post-v1.0.0.</li>
+</ul>
+<h3
+id="safe-shutdown-checklist-now--end-of-2026-05-23-session">Safe-shutdown
+checklist (NOW — end of 2026-05-23 session)</h3>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>State</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>All committed work pushed to 4 mirrors</td>
+<td>YES — HEAD <code>8ad4cb9</code> confirmed on
+github+gitlab+gitflic+gitverse</td>
+</tr>
+<tr>
+<td>Local working tree clean</td>
+<td>YES — <code>git status --short</code> empty</td>
+</tr>
+<tr>
+<td>Stashes preserved</td>
+<td>2 stashes: T8 Wave-5 salvage (older) + premature mid-test S3-S5
+transcript WIP (newer, will be regenerated cleanly by qaherald-auto in
+next session)</td>
+</tr>
+<tr>
+<td>Background pherald/qaherald processes</td>
+<td>NONE running (<code>ps aux | grep pherald</code> empty)</td>
+</tr>
+<tr>
+<td>Container state</td>
+<td><code>herald-postgres</code> + <code>herald-redis</code> Up 17 hours
+— persist data across <code>podman stop &amp;&amp; podman start</code>;
+can be left running OR stopped
+(<code>podman stop herald-postgres herald-redis</code>); next session
+restart is <code>podman start herald-postgres herald-redis</code></td>
+</tr>
+<tr>
+<td><code>/tmp/*.log</code> files</td>
+<td>one operator-token leak shred-deleted earlier today; remaining
+transient logs contain no credentials (verified)</td>
+</tr>
+<tr>
+<td><code>.zshrc</code></td>
+<td>contains 4 HERALD_* exports including
+<code>HERALD_QA_BOT_TOKEN</code> plaintext — operator should
+<code>/revoke</code> + regenerate via @BotFather post-Wave-6.5
+closure</td>
+</tr>
+<tr>
+<td>Memory entries</td>
+<td>All session findings persisted under
+<code>/Users/milosvasic/.claude/projects/-Users-milosvasic-Projects-Herald/memory/</code>
+— survive across sessions</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Machine is safe to shut down.</strong> Resume tomorrow by
+<code>cd ~/Projects/Herald &amp;&amp; git pull origin main</code> and
+start with qaherald-auto T6.</p>
 <h2 id="5-long-form-pointers">§5. Long-form pointers</h2>
 <ul>
 <li><code>docs/specs/mvp/specification.V3.md</code> — full active spec
