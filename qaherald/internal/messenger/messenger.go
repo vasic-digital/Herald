@@ -148,6 +148,13 @@ type MessengerClient interface {
 	// scenario executes.
 	Preflight(ctx context.Context, expectedChatID int64) (PreflightReport, error)
 
+	// GetChatMember returns the membership status of userID in chatID
+	// ("creator"/"administrator"/"member"/"restricted"/"left"/"kicked").
+	// Used by preflight G1 to verify pherald-bot presence via a real
+	// getChatMember call (works for non-admin members, unlike
+	// getChatAdministrators).
+	GetChatMember(ctx context.Context, chatID, userID int64) (status string, err error)
+
 	// Close releases any background goroutines / connections. Idempotent.
 	Close() error
 }

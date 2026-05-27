@@ -15,8 +15,13 @@
 //
 // Gate catalogue:
 //
-//	G1  pherald-bot present in chat (rep.PheraldBotPresent) + best-
-//	    effort OTel-port liveness when HERALD_OTEL_PORT is set     → exit 2
+//	G1  pherald-bot present in chat — real getChatMember when
+//	    cfg.PheraldBotUserID is set (status creator|administrator|
+//	    member|restricted → PASS; left|kicked|error → exit 2);
+//	    else fall back to the best-effort admin-scan and DOWNGRADE to
+//	    a non-fatal warn when that is false (scenario round-trips are
+//	    the liveness proof) + best-effort OTel-port liveness when
+//	    HERALD_OTEL_PORT is set                                     → exit 2
 //	G2  qa-bot getMe succeeds + non-empty username                 → exit 2
 //	G3  qa-bot Privacy Mode disabled (CanReadAllGroupMessages)     → exit 3
 //	G4  qa-bot in chat AND chat type is group|supergroup           → exit 4
@@ -170,10 +175,49 @@ func runPreflight(ctx context.Context, msgr, msgrNonOp messenger.MessengerClient
 	}
 
 	// ---- G1 — pherald-bot present in chat --------------------------
-	if !rep.PheraldBotPresent {
-		pe := &PreflightError{Gate: "G1", ExitCode: 2, Reason: fmt.Sprintf("pherald-bot username %q not found in chat — is pherald listen running and joined?", cfg.PheraldBotUsername)}
-		emit("preflight.fail", map[string]string{"gate": pe.Gate, "reason": pe.Reason})
-		return pe
+	//
+	// Two paths:
+	//
+	//  (a) cfg.PheraldBotUserID != 0 — the REAL anti-bluff membership
+	//      proof. getChatMember works for ANY member (including a
+	//      non-admin regular member like pherald-bot), unlike
+	//      getChatAdministrators which only lists admins. A status in
+	//      {creator, administrator, member, restricted} → present; a
+	//      status in {left, kicked} OR an API error → hard FAIL (exit 2).
+	//
+	//  (b) cfg.PheraldBotUserID == 0 — no user-id supplied. Fall back to
+	//      the best-effort admin-scan (rep.PheraldBotPresent). When that
+	//      is ALSO false, DO NOT bluff a PASS — DOWNGRADE G1 to a
+	//      documented non-fatal warning and defer the liveness proof to
+	//      the scenario round-trips (every WaitForReply times out → hard
+	//      FAIL at scenario level if pherald is actually down).
+	if cfg.PheraldBotUserID != 0 {
+		status, gcmErr := msgr.GetChatMember(ctx, cfg.ChatID, cfg.PheraldBotUserID)
+		if gcmErr != nil {
+			pe := &PreflightError{Gate: "G1", ExitCode: 2, Reason: fmt.Sprintf("getChatMember(chat=%d, pherald-bot-user-id=%d) failed: %v — cannot prove pherald-bot membership", cfg.ChatID, cfg.PheraldBotUserID, gcmErr)}
+			emit("preflight.fail", map[string]string{"gate": pe.Gate, "reason": pe.Reason})
+			return pe
+		}
+		switch status {
+		case "creator", "administrator", "member", "restricted":
+			emit("preflight.member", map[string]any{
+				"gate":                "G1",
+				"pherald_bot_user_id": cfg.PheraldBotUserID,
+				"status":              status,
+			})
+		default: // "left", "kicked", or any unexpected status
+			pe := &PreflightError{Gate: "G1", ExitCode: 2, Reason: fmt.Sprintf("pherald-bot (user-id %d) getChatMember status is %q — bot is not an active member; is pherald listen running and joined?", cfg.PheraldBotUserID, status)}
+			emit("preflight.fail", map[string]string{"gate": pe.Gate, "reason": pe.Reason})
+			return pe
+		}
+	} else if !rep.PheraldBotPresent {
+		// No user-id → admin-scan is the only signal, and it is false.
+		// pherald-bot is legitimately a non-admin member, so the
+		// admin-scan CANNOT see it. Downgrade to a warning + continue;
+		// the scenario round-trips are the real liveness proof.
+		warn := "pherald-bot presence unverifiable without HERALD_PHERALD_BOT_USER_ID; relying on scenario round-trips as the liveness proof (if pherald is down, every WaitForReply will time out → hard FAIL at scenario level)"
+		emit("preflight.warn", map[string]string{"gate": "G1", "reason": warn})
+		fmt.Fprintf(os.Stderr, "[lifecycle] WARN [G1] %s\n", warn)
 	}
 
 	// ---- G1.5 — best-effort OTel-port liveness (only when set) -----

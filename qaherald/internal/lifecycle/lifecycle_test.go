@@ -255,6 +255,9 @@ func (f *fakeMessenger) Preflight(ctx context.Context, expectedChatID int64) (me
 		PheraldBotPresent:       true,
 	}, nil
 }
+func (f *fakeMessenger) GetChatMember(context.Context, int64, int64) (string, error) {
+	return "member", nil
+}
 func (f *fakeMessenger) Close() error { return nil }
 
 // Ensure the fake satisfies the interface at compile time.

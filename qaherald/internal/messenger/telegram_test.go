@@ -559,6 +559,73 @@ func TestTelegram_Preflight_StructuredReport(t *testing.T) {
 }
 
 // --------------------------------------------------------------------
+// 8b. GetChatMember — getChatMember JSON shape + status decode.
+//
+// §107 anti-bluff anchor for preflight G1's REAL membership proof: the
+// stub asserts GetChatMember posts {chat_id, user_id} to /getChatMember
+// and decodes .result.status. A no-op returning a synthetic status
+// would FAIL because the stub counts hits on /getChatMember AND asserts
+// the request payload carried the right ids.
+// --------------------------------------------------------------------
+
+func TestGetChatMember(t *testing.T) {
+	stub := newTgStub(t, "TOK")
+	var capturedPayload map[string]any
+	stub.register("getChatMember", func(w http.ResponseWriter, r *http.Request) {
+		body, _ := io.ReadAll(r.Body)
+		_ = json.Unmarshal(body, &capturedPayload)
+		writeJSONResult(w, map[string]any{
+			"user":   map[string]any{"id": 111, "is_bot": true, "username": "pherald_bot"},
+			"status": "member",
+		})
+	})
+
+	c, err := NewTelegramClient("TOK", 999, stub.URL())
+	if err != nil {
+		t.Fatalf("NewTelegramClient: %v", err)
+	}
+	defer c.Close()
+
+	status, err := c.GetChatMember(context.Background(), 999, 111)
+	if err != nil {
+		t.Fatalf("GetChatMember: %v", err)
+	}
+	if status != "member" {
+		t.Fatalf("status = %q; want member", status)
+	}
+	if stub.hitsFor("getChatMember") != 1 {
+		t.Fatalf("getChatMember hit count = %d; want 1 (§107 wire-exercise anchor)", stub.hitsFor("getChatMember"))
+	}
+	if got := fmt.Sprintf("%v", capturedPayload["chat_id"]); got != "999" {
+		t.Fatalf("chat_id in payload = %v; want 999", capturedPayload["chat_id"])
+	}
+	if got := fmt.Sprintf("%v", capturedPayload["user_id"]); got != "111" {
+		t.Fatalf("user_id in payload = %v; want 111", capturedPayload["user_id"])
+	}
+}
+
+func TestGetChatMember_APIError(t *testing.T) {
+	stub := newTgStub(t, "TOK")
+	stub.register("getChatMember", func(w http.ResponseWriter, r *http.Request) {
+		writeJSONError(w, 400, "Bad Request: user not found")
+	})
+
+	c, err := NewTelegramClient("TOK", 999, stub.URL())
+	if err != nil {
+		t.Fatalf("NewTelegramClient: %v", err)
+	}
+	defer c.Close()
+
+	status, err := c.GetChatMember(context.Background(), 999, 111)
+	if err == nil {
+		t.Fatal("GetChatMember: expected error on API failure, got nil")
+	}
+	if status != "" {
+		t.Fatalf("status on error = %q; want empty", status)
+	}
+}
+
+// --------------------------------------------------------------------
 // 8. Send error path — token MUST NOT leak into the error message.
 // --------------------------------------------------------------------
 

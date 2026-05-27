@@ -674,6 +674,35 @@ func (c *TelegramClient) Preflight(ctx context.Context, expectedChatID int64) (P
 	return report, nil
 }
 
+// GetChatMember dispatches getChatMember and returns the membership
+// status string ("creator"/"administrator"/"member"/"restricted"/
+// "left"/"kicked"). Unlike getChatAdministrators, this works for ANY
+// member — including non-admin regular members like pherald-bot — so
+// it is the REAL anti-bluff membership proof preflight G1 uses when a
+// user-id is supplied.
+//
+// On API error returns ("", err). The token never appears in the
+// error (callJSON enforces this).
+func (c *TelegramClient) GetChatMember(ctx context.Context, chatID, userID int64) (string, error) {
+	raw, err := c.callJSON(ctx, "getChatMember", map[string]any{
+		"chat_id": chatID,
+		"user_id": userID,
+	})
+	if err != nil {
+		return "", err
+	}
+	var member struct {
+		Status string `json:"status"`
+	}
+	if jerr := json.Unmarshal(raw, &member); jerr != nil {
+		return "", fmt.Errorf("getChatMember: decode result")
+	}
+	if member.Status == "" {
+		return "", fmt.Errorf("getChatMember: %w (empty status)", ErrEmptyResponse)
+	}
+	return member.Status, nil
+}
+
 // Close is a no-op for the raw HTTP client (no goroutines, no
 // connections to drain — http.Client manages its own pool). Provided
 // for interface compliance.

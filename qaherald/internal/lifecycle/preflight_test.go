@@ -37,6 +37,14 @@ import (
 type preflightStub struct {
 	report messenger.PreflightReport
 	err    error
+
+	// memberStatus / memberErr drive GetChatMember (G1's real
+	// membership-proof path). Default zero-value ("", nil) means tests
+	// that don't set them get an empty status + no error — but those
+	// tests also leave cfg.PheraldBotUserID==0 so GetChatMember is never
+	// called on the admin-scan-fallback path.
+	memberStatus string
+	memberErr    error
 }
 
 func (s *preflightStub) Me(context.Context) (string, int64, error) {
@@ -65,6 +73,9 @@ func (s *preflightStub) Download(context.Context, string) (io.ReadCloser, error)
 }
 func (s *preflightStub) Preflight(context.Context, int64) (messenger.PreflightReport, error) {
 	return s.report, s.err
+}
+func (s *preflightStub) GetChatMember(context.Context, int64, int64) (string, error) {
+	return s.memberStatus, s.memberErr
 }
 func (s *preflightStub) Close() error { return nil }
 
@@ -249,11 +260,75 @@ func TestPreflight_G8_QAOutDirExists_PASS(t *testing.T) {
 
 // ---- G1 — pherald-bot present + OTel-port liveness -----------------
 
-func TestPreflight_G1_PheraldBotAbsent_FAIL(t *testing.T) {
+// G1 with a supplied pherald-bot-user-id verifies presence via a REAL
+// getChatMember call. status="member" → PASS.
+func TestPreflight_G1_GetChatMemberMember_PASS(t *testing.T) {
 	cfg := baseCfg(t, preflightDocsDir(t))
+	cfg.PheraldBotUserID = 111
+	// rep.PheraldBotPresent intentionally false — the admin-scan signal
+	// must be IGNORED when a user-id is supplied (non-admin members are
+	// invisible to the admin-scan; the getChatMember status is authoritative).
 	rep := greenReport()
 	rep.PheraldBotPresent = false
-	assertGate(t, &preflightStub{report: rep}, nil, cfg, "G1", 2)
+	msgr := &preflightStub{report: rep, memberStatus: "member"}
+	if err := runPreflight(context.Background(), msgr, nil, cfg, func(string, string, any) {}); err != nil {
+		t.Fatalf("getChatMember status=member should pass G1, got %v", err)
+	}
+}
+
+// status="left" → G1 hard FAIL exit 2.
+func TestPreflight_G1_GetChatMemberLeft_FAIL(t *testing.T) {
+	cfg := baseCfg(t, preflightDocsDir(t))
+	cfg.PheraldBotUserID = 111
+	msgr := &preflightStub{report: greenReport(), memberStatus: "left"}
+	assertGate(t, msgr, nil, cfg, "G1", 2)
+}
+
+// getChatMember API error → G1 hard FAIL exit 2.
+func TestPreflight_G1_GetChatMemberError_FAIL(t *testing.T) {
+	cfg := baseCfg(t, preflightDocsDir(t))
+	cfg.PheraldBotUserID = 111
+	msgr := &preflightStub{report: greenReport(), memberErr: errors.New("getChatMember: request failed")}
+	assertGate(t, msgr, nil, cfg, "G1", 2)
+}
+
+// user-id 0 + admin-scan false → G1 DOWNGRADES to a non-fatal warning
+// and runPreflight continues (returns nil). The §107 posture: no bluff
+// PASS — a `preflight.warn` event is emitted and the liveness proof is
+// deferred to the scenario round-trips.
+func TestPreflight_G1_NoUserID_AdminScanFalse_WARN_CONTINUE(t *testing.T) {
+	cfg := baseCfg(t, preflightDocsDir(t)) // PheraldBotUserID stays 0
+	rep := greenReport()
+	rep.PheraldBotPresent = false
+	var sawWarn bool
+	var warnReason string
+	emit := func(_ string, kind string, payload any) {
+		if kind == "preflight.warn" {
+			sawWarn = true
+			if m, ok := payload.(map[string]string); ok {
+				warnReason = m["reason"]
+			}
+		}
+	}
+	if err := runPreflight(context.Background(), &preflightStub{report: rep}, nil, cfg, emit); err != nil {
+		t.Fatalf("G1 with no user-id + admin-scan false should WARN+continue (nil), got %v", err)
+	}
+	if !sawWarn {
+		t.Fatal("expected a preflight.warn event for G1 downgrade; none emitted")
+	}
+	if !strings.Contains(warnReason, "HERALD_PHERALD_BOT_USER_ID") {
+		t.Fatalf("warn reason %q must cite HERALD_PHERALD_BOT_USER_ID", warnReason)
+	}
+}
+
+// user-id 0 + admin-scan true → G1 PASS (legacy best-effort path).
+func TestPreflight_G1_NoUserID_AdminScanTrue_PASS(t *testing.T) {
+	cfg := baseCfg(t, preflightDocsDir(t)) // PheraldBotUserID stays 0
+	rep := greenReport()
+	rep.PheraldBotPresent = true
+	if err := runPreflight(context.Background(), &preflightStub{report: rep}, nil, cfg, func(string, string, any) {}); err != nil {
+		t.Fatalf("G1 with no user-id + admin-scan true should pass, got %v", err)
+	}
 }
 
 func TestPreflight_G1_OTelPortUnreachable_FAIL(t *testing.T) {

@@ -47,6 +47,7 @@ type Config struct {
 	QABotTokenNonOp    string
 	ChatID             int64
 	PheraldBotUsername string
+	PheraldBotUserID   int64
 	OutDir             string
 	RunID              string
 	DocsDir            string

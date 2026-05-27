@@ -50,6 +50,7 @@ type lifecycleFlags struct {
 	QABotTokenNonOp    string        // --qa-bot-token-non-operator; env HERALD_QA_BOT_TOKEN_NON_OPERATOR (optional — S9 SKIPs if missing)
 	ChatID             int64         // --chat-id; env HERALD_TGRAM_CHAT_ID
 	PheraldBotUsername string        // --pherald-bot-username; env HERALD_PHERALD_BOT_USERNAME (must NOT start with @)
+	PheraldBotUserID   int64         // --pherald-bot-user-id; env HERALD_PHERALD_BOT_USER_ID (0 → fall back to admin-scan + warn)
 	OutDir             string        // --out; default docs/qa/HRD-101-lifecycle-<run-id>
 	RunID              string        // --run-id; default <ISO-ts>-<4 hex chars>
 	DocsDir            string        // --docs-dir; default docs (for Issues.md / Fixed.md fs-mutation assertions)
@@ -131,6 +132,7 @@ validates required flags, creates the OutDir, and exits with a
 				QABotTokenNonOp:    f.QABotTokenNonOp,
 				ChatID:             f.ChatID,
 				PheraldBotUsername: f.PheraldBotUsername,
+				PheraldBotUserID:   f.PheraldBotUserID,
 				OutDir:             f.OutDir,
 				RunID:              f.RunID,
 				DocsDir:            f.DocsDir,
@@ -151,6 +153,8 @@ validates required flags, creates the OutDir, and exits with a
 		"Telegram group chat-id (env HERALD_TGRAM_CHAT_ID)")
 	cmd.Flags().StringVar(&f.PheraldBotUsername, "pherald-bot-username", "",
 		"pherald-bot username, no @ prefix (env HERALD_PHERALD_BOT_USERNAME)")
+	cmd.Flags().Int64Var(&f.PheraldBotUserID, "pherald-bot-user-id", 0,
+		"pherald-bot numeric user-id (env HERALD_PHERALD_BOT_USER_ID) — when set, G1 verifies presence via a real getChatMember call (works for non-admin members); when 0, G1 falls back to the best-effort admin-scan + warns")
 	cmd.Flags().StringVar(&f.OutDir, "out", "",
 		"Output directory; default docs/qa/HRD-101-lifecycle-<run-id>")
 	cmd.Flags().StringVar(&f.RunID, "run-id", "",
@@ -194,6 +198,13 @@ func resolveLifecycleEnvFallbacks(f *lifecycleFlags) {
 	}
 	if f.PheraldBotUsername == "" {
 		f.PheraldBotUsername = os.Getenv("HERALD_PHERALD_BOT_USERNAME")
+	}
+	if f.PheraldBotUserID == 0 {
+		if s := os.Getenv("HERALD_PHERALD_BOT_USER_ID"); s != "" {
+			// Sscanf intentionally swallows the err — invalid env yields
+			// PheraldBotUserID=0 which trips the admin-scan fallback path.
+			_, _ = fmt.Sscanf(s, "%d", &f.PheraldBotUserID)
+		}
 	}
 	if f.PheraldQAOutDir == "" {
 		f.PheraldQAOutDir = os.Getenv("HERALD_QA_OUT_DIR")
