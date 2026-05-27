@@ -9,10 +9,10 @@
 //  3. Run preflight (Preflight() against the bot endpoint).
 //  4. Filter scenarios by cfg.Scenarios.
 //  5. For each scenario:
-//       a. Capture pherald-transcript file offset at scenario start.
-//       b. Write `scenario.start` event to qaherald transcript.
-//       c. Run the scenario with a per-scenario timeout context.
-//       d. Write `scenario.end` event with the captured Result.
+//     a. Capture pherald-transcript file offset at scenario start.
+//     b. Write `scenario.start` event to qaherald transcript.
+//     c. Run the scenario with a per-scenario timeout context.
+//     d. Write `scenario.end` event with the captured Result.
 //  6. Generate the Markdown report.
 //  7. Return non-nil if any scenario FAILed (SKIP does NOT cause
 //     non-zero exit).
@@ -210,50 +210,6 @@ func Run(ctx context.Context, cfg Config) error {
 // The token is never logged.
 func buildMessenger(token string, chatID int64, baseURL string) (messenger.MessengerClient, error) {
 	return messenger.NewTelegramClient(token, chatID, baseURL)
-}
-
-// runPreflight invokes Preflight() on every messenger and writes
-// the result to the qaherald transcript. Fails when:
-//
-//   - getMe returns no username (any messenger).
-//   - The operator bot's chat is not group|supergroup (single-user
-//     chats reject privacy-mode-disabled bots).
-//
-// Soft warnings (logged but not fatal):
-//
-//   - CanReadAllGroupMessages == false → operator must disable
-//     privacy mode in @BotFather (Telegram-specific advisory).
-//   - InChat == false → bot has not joined; operator must add it.
-func runPreflight(ctx context.Context, msgr, msgrNonOp messenger.MessengerClient, cfg Config, writeEvent func(direction, kind string, payload any)) error {
-	report, err := msgr.Preflight(ctx, cfg.ChatID)
-	if err != nil {
-		writeEvent("in", "preflight.error", map[string]string{"who": "operator-bot", "err": err.Error()})
-		return fmt.Errorf("operator-bot preflight: %w", err)
-	}
-	writeEvent("in", "preflight.operator", report)
-	if report.Username == "" {
-		return errors.New("operator-bot preflight: empty username (getMe failed silently)")
-	}
-	if !report.InChat {
-		fmt.Fprintf(os.Stderr, "[lifecycle][preflight] WARNING: operator-bot %q is NOT in chat %d — pherald will not see its messages\n",
-			report.Username, cfg.ChatID)
-	}
-	if !report.CanReadAllGroupMessages {
-		fmt.Fprintf(os.Stderr, "[lifecycle][preflight] WARNING: operator-bot %q privacy-mode is ENABLED — disable via @BotFather → /setprivacy → Disable\n", report.Username)
-	}
-
-	if msgrNonOp != nil {
-		rep2, err := msgrNonOp.Preflight(ctx, cfg.ChatID)
-		if err != nil {
-			writeEvent("in", "preflight.error", map[string]string{"who": "non-op-bot", "err": err.Error()})
-			return fmt.Errorf("non-op-bot preflight: %w", err)
-		}
-		writeEvent("in", "preflight.non_operator", rep2)
-		if rep2.Username == "" {
-			return errors.New("non-op-bot preflight: empty username")
-		}
-	}
-	return nil
 }
 
 // filterScenarios returns the subset of `all` whose IDs are in

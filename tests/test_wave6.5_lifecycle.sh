@@ -2,27 +2,37 @@
 #
 # Wave 6.5 — 15-scenario comprehensive lifecycle e2e (LIVE).
 #
-# This is PLAN-ONLY in T8: the script is committed but T9 (operator-driven)
-# is what actually runs it. It walks the operator through 15 §32.6
-# command-vocabulary scenarios + §32.6 classifier paths + outbound
-# attachment fan-out + Done:/Reopen: state migration, asserting wire-byte
-# evidence into <QA_OUT>/transcript.jsonl for each scenario.
+# TWO MODES (qaherald-auto T8):
 #
-# §107 anti-bluff anchor: each scenario PASS line cites a SPECIFIC
-# wire-byte string captured from transcript.jsonl — not a generic
-# "scenario ran". If a scenario times out, the script FAILs LOUDLY with
-# the pherald-listen.log tail attached.
+#   1. AUTOMATED (default) — delegates the full 15-scenario lifecycle to
+#      the `qaherald lifecycle` Go binary, which posts each scenario's
+#      input via a SECOND Telegram bot (HERALD_QA_BOT_TOKEN), reads
+#      pherald-bot's replies via getUpdates, asserts wire-byte evidence,
+#      and emits docs/qa/HRD-101-lifecycle-<run-id>/{transcript.jsonl,
+#      report.md,attachments/}. No human typing. qaherald's exit code is
+#      propagated: any scenario FAIL → this script exits non-zero.
 #
-# Driver model (faithful to plan T8 but adapted to actual pherald listen
-# surface):
+#   2. MANUAL (--manual flag OR HERALD_LIFECYCLE_MANUAL=1) — the legacy
+#      operator-typing UX: the script narrates each of the 15 §32.6
+#      scenarios, waits for the operator to type the input into Telegram,
+#      then tails pherald's transcript.jsonl for the wire-byte evidence.
+#
+# §107 anti-bluff anchor: each scenario PASS cites a SPECIFIC wire-byte
+# string (automated: qaherald's report.md per-scenario evidence; manual:
+# the matched transcript.jsonl line) — never a generic "scenario ran".
+#
+# Driver model (faithful to the qaherald-auto plan, adapted to the
+# actual pherald listen + qaherald lifecycle surface):
 #   - pherald listen is ENV-driven (HERALD_TGRAM_BOT_TOKEN +
 #     HERALD_TGRAM_CHAT_ID + HERALD_OPERATOR_IDS + HERALD_CLAUDE_BIN +
 #     HERALD_PROJECT_NAME). No --bot-token / --chat-id flags exist.
-#   - Real env name is HERALD_CLAUDE_BIN (plan said HERALD_CLAUDE_CODE_BINARY).
+#   - qaherald lifecycle is FLAG-driven (--qa-bot-token / --chat-id /
+#     --pherald-bot-username / --out / --docs-dir / --pherald-qa-out-dir).
+#   - Real claude env name is HERALD_CLAUDE_BIN.
 #   - Defaults HERALD_QA_RUN_ID to a timestamped value if unset.
 #
-# Cleanup model: SIGTERM pherald listen on EXIT trap; remove pherald
-# binary; persist QA_OUT contents (the evidence T9 commits).
+# Cleanup model: SIGTERM pherald listen on EXIT trap; remove built
+# binaries; persist QA_OUT contents (the evidence the operator commits).
 
 set -euo pipefail
 
@@ -33,7 +43,17 @@ cd "${REPO_ROOT}"
 skip_with_reason() { echo "SKIP test_wave6.5_lifecycle.sh — $1"; exit 0; }
 fail() { echo "FAIL: $*" >&2; exit 1; }
 
-# --- Pre-flight env gates (skip-with-reason per §11.4.5) ---
+# --- Mode selection: --manual flag OR HERALD_LIFECYCLE_MANUAL=1 ---
+MANUAL_MODE=0
+for arg in "$@"; do
+  case "${arg}" in
+    --manual) MANUAL_MODE=1 ;;
+    *) ;;
+  esac
+done
+[ "${HERALD_LIFECYCLE_MANUAL:-0}" = "1" ] && MANUAL_MODE=1
+
+# --- Pre-flight env gates common to BOTH modes (skip per §11.4.5) ---
 [ -n "${HERALD_TGRAM_BOT_TOKEN:-}" ] || skip_with_reason "HERALD_TGRAM_BOT_TOKEN unset (see docs/guides/OPERATOR_CREDENTIALS.md)"
 [ -n "${HERALD_TGRAM_CHAT_ID:-}" ]   || skip_with_reason "HERALD_TGRAM_CHAT_ID unset"
 [ -n "${HERALD_OPERATOR_IDS:-}" ]    || skip_with_reason "HERALD_OPERATOR_IDS unset — Done:/Reopen: scenarios would fail (operator-role allowlist)"
@@ -52,8 +72,88 @@ export HERALD_QA_RUN_ID
 QA_OUT="docs/qa/HRD-101-lifecycle-${HERALD_QA_RUN_ID}"
 mkdir -p "${QA_OUT}/attachments"
 
+echo "[w6.5-lifecycle] mode=$( [ "${MANUAL_MODE}" = "1" ] && echo manual || echo automated )"
 echo "[w6.5-lifecycle] QA_OUT=${QA_OUT}"
 echo "[w6.5-lifecycle] HERALD_OPERATOR_IDS=${HERALD_OPERATOR_IDS}"
+
+# ====================================================================
+# AUTOMATED MODE (default) — delegate to `qaherald lifecycle`.
+# ====================================================================
+if [ "${MANUAL_MODE}" != "1" ]; then
+  # Automated mode needs a SECOND Telegram bot (qa-bot) distinct from
+  # pherald-bot. Without it, SKIP-with-reason and tell the operator how
+  # to run the legacy manual path instead.
+  if [ -z "${HERALD_QA_BOT_TOKEN:-}" ]; then
+    skip_with_reason "HERALD_QA_BOT_TOKEN unset — automated mode needs a 2nd Telegram bot (see docs/guides/OPERATOR_CREDENTIALS.md). Run with --manual (or HERALD_LIFECYCLE_MANUAL=1) for the operator-typing UX."
+  fi
+
+  PHERALD_BOT_USERNAME="${HERALD_PHERALD_BOT_USERNAME:-atmosphere_worker_bot}"
+
+  echo "[w6.5-lifecycle] building qaherald → /tmp/qaherald ..."
+  go build -o /tmp/qaherald ./qaherald/cmd/qaherald
+
+  echo "[w6.5-lifecycle] building pherald → /tmp/pherald ..."
+  go build -o /tmp/pherald ./pherald/cmd/pherald
+
+  LISTEN_LOG="${QA_OUT}/pherald-listen.log"
+  echo "[w6.5-lifecycle] starting pherald listen (log: ${LISTEN_LOG}) ..."
+  /tmp/pherald listen --docs-dir docs --qa-out-dir "${QA_OUT}" \
+    > "${LISTEN_LOG}" 2>&1 &
+  PHERALD_PID=$!
+
+  auto_cleanup() {
+    if kill -0 "${PHERALD_PID}" 2>/dev/null; then
+      kill -TERM "${PHERALD_PID}" 2>/dev/null || true
+      wait "${PHERALD_PID}" 2>/dev/null || true
+    fi
+    rm -f /tmp/pherald /tmp/qaherald
+  }
+  trap auto_cleanup EXIT
+
+  # Give pherald a moment to boot (telebot.NewBot + getMe + Subscribe).
+  sleep 5
+  if ! kill -0 "${PHERALD_PID}" 2>/dev/null; then
+    echo "FAIL: pherald listen exited prematurely during boot." >&2
+    echo "--- pherald-listen.log tail ---" >&2
+    tail -n 60 "${LISTEN_LOG}" >&2 || true
+    exit 1
+  fi
+  echo "[w6.5-lifecycle] pherald listen PID=${PHERALD_PID}"
+
+  echo "[w6.5-lifecycle] delegating 15 scenarios to qaherald lifecycle ..."
+  set +e
+  /tmp/qaherald lifecycle \
+    --qa-bot-token="${HERALD_QA_BOT_TOKEN}" \
+    --qa-bot-token-non-operator="${HERALD_QA_BOT_TOKEN_NON_OPERATOR:-}" \
+    --chat-id="${HERALD_TGRAM_CHAT_ID}" \
+    --pherald-bot-username="${PHERALD_BOT_USERNAME}" \
+    --out="${QA_OUT}" \
+    --run-id="${HERALD_QA_RUN_ID}" \
+    --docs-dir=docs \
+    --pherald-qa-out-dir="${QA_OUT}" \
+    --scenario-timeout=120s \
+    --overall-timeout=45m
+  AUTO_EXIT=$?
+  set -e
+
+  echo "[w6.5-lifecycle] qaherald lifecycle exit code: ${AUTO_EXIT}"
+  if [ "${AUTO_EXIT}" -ne 0 ]; then
+    echo "FAIL: qaherald lifecycle reported failures (exit ${AUTO_EXIT}) — see ${QA_OUT}/report.md" >&2
+    echo "--- report.md tail ---" >&2
+    tail -n 40 "${QA_OUT}/report.md" 2>/dev/null >&2 || true
+    exit "${AUTO_EXIT}"
+  fi
+  echo "PASS: qaherald lifecycle 15/15 scenarios — evidence: ${QA_OUT}/"
+  echo "  transcript.jsonl, report.md, attachments/"
+  exit 0
+fi
+
+# ====================================================================
+# MANUAL MODE (--manual / HERALD_LIFECYCLE_MANUAL=1) — legacy
+# operator-typing UX. Everything below is the original prompt-based
+# driver, preserved verbatim.
+# ====================================================================
+echo "[w6.5-lifecycle] manual mode — operator drives each scenario by typing into Telegram"
 
 # --- Snapshot docs/Issues.md + docs/Fixed.md BEFORE the run ---
 cp docs/Issues.md "${QA_OUT}/issues-before.md"

@@ -30,6 +30,7 @@ import (
 
 	"github.com/vasic-digital/herald/commons"
 	"github.com/vasic-digital/herald/commons/cli"
+	"github.com/vasic-digital/herald/qaherald/internal/lifecycle"
 )
 
 // version is overridden at build time:
@@ -82,6 +83,12 @@ func main() {
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, "qaherald:", err)
+		// Pre-flight gate failures (G1..G10) carry a DISTINCT exit code
+		// (2..7) so the shell-script adapter can branch on the failure
+		// class. Generic errors fall back to exit 1.
+		if code, ok := lifecycle.PreflightExitCode(err); ok {
+			os.Exit(code)
+		}
 		os.Exit(1)
 	}
 }

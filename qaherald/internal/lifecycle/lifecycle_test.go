@@ -164,6 +164,22 @@ type fakeMessenger struct {
 	sentVoice  []string
 	repliesQ   []messenger.Reply
 	nextMsgID  int64
+
+	// onSend, when set, fires once at the start of the FIRST outbound
+	// call (Send / SendPhoto / SendDocument / SendVoice). Scenario
+	// tests use it to simulate pherald's fs mutation landing DURING a
+	// scenario — i.e. after the scenario's snapshot-before read but
+	// before its snapshot-after read. Fires at most once.
+	onSend     func()
+	onSendDone bool
+}
+
+// fireOnSend invokes onSend exactly once. Caller must hold f.mu.
+func (f *fakeMessenger) fireOnSend() {
+	if f.onSend != nil && !f.onSendDone {
+		f.onSendDone = true
+		f.onSend()
+	}
 }
 
 func (f *fakeMessenger) Me(ctx context.Context) (string, int64, error) {
@@ -172,6 +188,7 @@ func (f *fakeMessenger) Me(ctx context.Context) (string, int64, error) {
 func (f *fakeMessenger) Send(ctx context.Context, text string) (messenger.MessageID, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
+	f.fireOnSend()
 	f.sent = append(f.sent, text)
 	id := atomic.AddInt64(&f.nextMsgID, 1)
 	return messenger.MessageID(fmt.Sprintf("%d", id)), nil
@@ -179,6 +196,7 @@ func (f *fakeMessenger) Send(ctx context.Context, text string) (messenger.Messag
 func (f *fakeMessenger) SendPhoto(ctx context.Context, path, caption string) (messenger.MessageID, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
+	f.fireOnSend()
 	f.sentPhotos = append(f.sentPhotos, path+"|"+caption)
 	id := atomic.AddInt64(&f.nextMsgID, 1)
 	return messenger.MessageID(fmt.Sprintf("%d", id)), nil
@@ -186,6 +204,7 @@ func (f *fakeMessenger) SendPhoto(ctx context.Context, path, caption string) (me
 func (f *fakeMessenger) SendDocument(ctx context.Context, path, caption string) (messenger.MessageID, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
+	f.fireOnSend()
 	f.sentDocs = append(f.sentDocs, path+"|"+caption)
 	id := atomic.AddInt64(&f.nextMsgID, 1)
 	return messenger.MessageID(fmt.Sprintf("%d", id)), nil
@@ -193,6 +212,7 @@ func (f *fakeMessenger) SendDocument(ctx context.Context, path, caption string) 
 func (f *fakeMessenger) SendVoice(ctx context.Context, path string) (messenger.MessageID, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
+	f.fireOnSend()
 	f.sentVoice = append(f.sentVoice, path)
 	id := atomic.AddInt64(&f.nextMsgID, 1)
 	return messenger.MessageID(fmt.Sprintf("%d", id)), nil
@@ -308,10 +328,10 @@ func TestRunS01_HappyPath(t *testing.T) {
 // Result when env.MsgrNonOp is nil — per §11.4.5.
 func TestRunS09_SkipsWhenNonOpNil(t *testing.T) {
 	env := &Env{
-		Msgr:         &fakeMessenger{},
-		MsgrNonOp:    nil,
+		Msgr:          &fakeMessenger{},
+		MsgrNonOp:     nil,
 		LastOpenedHRD: "HRD-999",
-		PerTimeout:   1 * time.Second,
+		PerTimeout:    1 * time.Second,
 	}
 	res := runS09(context.Background(), env)
 	if res.PASS {
