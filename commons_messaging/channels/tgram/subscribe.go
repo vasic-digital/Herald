@@ -11,6 +11,7 @@ import (
 	telebot "gopkg.in/telebot.v3"
 
 	"github.com/vasic-digital/herald/commons"
+	"github.com/vasic-digital/herald/commons_messaging/channels"
 )
 
 // shouldDropBotSelf returns true when msg originates from THIS bot
@@ -25,6 +26,15 @@ import (
 // Scope is deliberately narrow: cross-bot messages (a DIFFERENT bot in
 // the same chat) are KEPT. Multi-bot collaboration is real subscriber
 // traffic; a "drop all bot messages" filter would be too broad.
+//
+// Wave 7 T4 status: the LIVE Subscribe path now routes through the
+// channel-agnostic channels.IsSelfEcho (see stampAndIsSelfEcho below); this
+// helper is preserved byte-for-byte because (a) the Wave 6 M1 paired-mutation
+// gate (tests/test_wave6_mutation_meta.sh) anchors its exact-text regex here
+// and (b) TestSubscribeBotSelfFilter exercises it directly. Both express the
+// SAME §32.9 invariant the live path now expresses generically — the gate
+// stays load-bearing on the tgram-native shape while production runs on the
+// generalized filter.
 func shouldDropBotSelf(msg *telebot.Message, selfUsername string) bool {
 	if msg == nil || msg.Sender == nil {
 		return false
@@ -33,6 +43,22 @@ func shouldDropBotSelf(msg *telebot.Message, selfUsername string) bool {
 		return false
 	}
 	return msg.Sender.Username == selfUsername
+}
+
+// stampAndIsSelfEcho stamps the Telegram sender's native identity (IsBot +
+// @username) into ev.Raw via the channel-agnostic stamper, then asks
+// channels.IsSelfEcho whether ev is THIS bot's own echo. This is the single
+// live self-filter path for all four inbound handlers — replacing the Wave 6
+// per-handler shouldDropBotSelf(msg, selfUsername) early-returns with one
+// channel-agnostic check fed by self captured at Subscribe boot.
+func stampAndIsSelfEcho(ev commons.InboundEvent, msg *telebot.Message, self channels.SelfIdentity) bool {
+	senderBot, senderName := false, ""
+	if msg.Sender != nil {
+		senderBot = msg.Sender.IsBot
+		senderName = msg.Sender.Username
+	}
+	channels.StampSender(ev.Raw, senderBot, channels.IdentityUsername, senderName)
+	return channels.IsSelfEcho(ev, self)
 }
 
 // Subscribe runs the live getUpdates long-poll loop until ctx is cancelled,
@@ -67,6 +93,13 @@ func (a *Adapter) Subscribe(ctx context.Context, h commons.InboundHandler) error
 		return fmt.Errorf("tgram.Subscribe: connect with poller: %w", err)
 	}
 
+	// Wave 7 T4: capture the channel-native SelfIdentity once at boot. We use
+	// the @username from this poller's own bot.Me (populated synchronously by
+	// telebot.NewBot via getMe) rather than a.BotSelfIdentity — Subscribe
+	// constructs its OWN *Bot here (the LongPoller cannot be attached to the
+	// ensureBot-managed a.bot), so this bot.Me is the authoritative self for
+	// the loop that actually receives updates. self is then threaded into
+	// every handler's channels.IsSelfEcho check (channel-agnostic).
 	selfUsername := ""
 	if bot.Me != nil {
 		selfUsername = bot.Me.Username
@@ -79,13 +112,11 @@ func (a *Adapter) Subscribe(ctx context.Context, h commons.InboundHandler) error
 		// is designed to catch.
 		return fmt.Errorf("tgram.Subscribe: bot.Me.Username unset after NewBot — getMe likely failed; refusing to boot without self-filter (echo-loop hazard)")
 	}
+	self := channels.SelfIdentity{Kind: channels.IdentityUsername, Value: selfUsername}
 
 	bot.Handle(telebot.OnText, func(c telebot.Context) error {
 		msg := c.Message()
 		if msg == nil {
-			return nil
-		}
-		if shouldDropBotSelf(msg, selfUsername) {
 			return nil
 		}
 		ev := commons.InboundEvent{
@@ -103,6 +134,12 @@ func (a *Adapter) Subscribe(ctx context.Context, h commons.InboundHandler) error
 				"text":              msg.Text,
 			},
 		}
+		// Wave 7 T4: stamp the sender's native identity into ev.Raw and drop
+		// THIS bot's own echo via the channel-agnostic channels.IsSelfEcho
+		// (replaces the Wave 6 shouldDropBotSelf early-return).
+		if stampAndIsSelfEcho(ev, msg, self) {
+			return nil
+		}
 		// T4 review carry-forward: only set Thread for actual forum-topic
 		// messages. msg.ThreadID == 0 is Telegram's "no topic" sentinel and
 		// must NOT surface as ThreadID="0" — that's a bluff thread identity
@@ -117,8 +154,10 @@ func (a *Adapter) Subscribe(ctx context.Context, h commons.InboundHandler) error
 	})
 
 	// Wave 6 T5 — photo / document / voice handlers. Each one:
-	//   1. drops bot-own (self-echo) messages via shouldDropBotSelf
-	//   2. content-addresses the file under ~/.herald/inbox/tgram/<sha>.<ext>
+	//   1. content-addresses the file under ~/.herald/inbox/tgram/<sha>.<ext>
+	//   2. drops bot-own (self-echo) messages via the channel-agnostic
+	//      stampAndIsSelfEcho (Wave 7 T4 — replaces shouldDropBotSelf) before
+	//      dispatch, so the bot never re-dispatches its own outbound media.
 	//   3. dispatches an InboundEvent with Attachments[] populated so the
 	//      Claude Code pre-text renderer (T3) sees the file alongside the
 	//      caption text.
@@ -134,23 +173,21 @@ func (a *Adapter) Subscribe(ctx context.Context, h commons.InboundHandler) error
 		if msg == nil || msg.Photo == nil {
 			return nil
 		}
-		if shouldDropBotSelf(msg, selfUsername) {
-			return nil
-		}
 		const mime = "image/jpeg"
 		path, sumHex, err := DownloadAttachment(ctx, bot, msg.Photo.FileID, mime)
 		if err != nil {
 			return fmt.Errorf("tgram.Subscribe OnPhoto: download: %w", err)
 		}
-		return h.Handle(ctx, buildEventWithAttachment(msg, msg.Caption, path, sumHex, mime, msg.Photo.FileSize))
+		ev := buildEventWithAttachment(msg, msg.Caption, path, sumHex, mime, msg.Photo.FileSize)
+		if stampAndIsSelfEcho(ev, msg, self) {
+			return nil
+		}
+		return h.Handle(ctx, ev)
 	})
 
 	bot.Handle(telebot.OnDocument, func(c telebot.Context) error {
 		msg := c.Message()
 		if msg == nil || msg.Document == nil {
-			return nil
-		}
-		if shouldDropBotSelf(msg, selfUsername) {
 			return nil
 		}
 		mime := msg.Document.MIME
@@ -161,7 +198,11 @@ func (a *Adapter) Subscribe(ctx context.Context, h commons.InboundHandler) error
 		if err != nil {
 			return fmt.Errorf("tgram.Subscribe OnDocument: download: %w", err)
 		}
-		return h.Handle(ctx, buildEventWithAttachment(msg, msg.Caption, path, sumHex, mime, msg.Document.FileSize))
+		ev := buildEventWithAttachment(msg, msg.Caption, path, sumHex, mime, msg.Document.FileSize)
+		if stampAndIsSelfEcho(ev, msg, self) {
+			return nil
+		}
+		return h.Handle(ctx, ev)
 	})
 
 	bot.Handle(telebot.OnVoice, func(c telebot.Context) error {
@@ -169,15 +210,16 @@ func (a *Adapter) Subscribe(ctx context.Context, h commons.InboundHandler) error
 		if msg == nil || msg.Voice == nil {
 			return nil
 		}
-		if shouldDropBotSelf(msg, selfUsername) {
-			return nil
-		}
 		const mime = "audio/ogg"
 		path, sumHex, err := DownloadAttachment(ctx, bot, msg.Voice.FileID, mime)
 		if err != nil {
 			return fmt.Errorf("tgram.Subscribe OnVoice: download: %w", err)
 		}
-		return h.Handle(ctx, buildEventWithAttachment(msg, msg.Caption, path, sumHex, mime, msg.Voice.FileSize))
+		ev := buildEventWithAttachment(msg, msg.Caption, path, sumHex, mime, msg.Voice.FileSize)
+		if stampAndIsSelfEcho(ev, msg, self) {
+			return nil
+		}
+		return h.Handle(ctx, ev)
 	})
 
 	// 30s safety-net per §32.2 — observational only; telebot.LongPoller
