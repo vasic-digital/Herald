@@ -1990,6 +1990,9 @@ SC_BIND_DIR="$(sc_newest 'HRD-019-*')"
 SC_SAFE_DIR="$(sc_newest 'HRD-020-*')"
 SC_CI_DIR="$(sc_newest 'HRD-021-*')"
 SC_REL_DIR="$(sc_newest 'HRD-022-*')"
+SC_PROJ_DIR="$(sc_newest 'HRD-023-*')"
+SC_INC_DIR="$(sc_newest 'HRD-024-*')"
+SC_SCHED_DIR="$(sc_newest 'HRD-025-*')"
 
 # sc_anchor <invariant-label> <evidence-file> <literal-anchor-string>
 # Asserts the captured-evidence file contains the load-bearing anchor value.
@@ -2080,6 +2083,21 @@ sc_anchor "E92" "${SC_CI_DIR:+${SC_CI_DIR}/gate_result_roundtrip_transcript.txt}
 check "E93 rherald release bindings — tag-mirror/changelog/retest gate-blocked detect→emit→audit (-race)" \
     "go test -race -count=1 ./rherald/internal/bindings/..."
 sc_anchor "E93" "${SC_REL_DIR:+${SC_REL_DIR}/transcript.md}" "digital.vasic.herald.constitution.release.gate.blocked"
+
+# ---- E94: pherald project bindings detect→emit→persist (HRD-023) ----
+check "E94 pherald project bindings — commit-push/submodule/pre-push detect→emit→audit (-race)" \
+    "go test -race -count=1 ./pherald/internal/bindings/..."
+sc_anchor "E94" "${SC_PROJ_DIR:+${SC_PROJ_DIR}/roundtrip_transcript.md}" "digital.vasic.herald.constitution.repo.safety.breach"
+
+# ---- E95: iherald escalation bindings detect→emit→persist (HRD-024) ----
+check "E95 iherald escalation bindings — credential-leak page-out/operator-blocked detect→emit→audit (-race)" \
+    "go test -race -count=1 ./iherald/internal/bindings/..."
+sc_anchor "E95" "${SC_INC_DIR:+${SC_INC_DIR}/escalation_roundtrip_verbose.log}" "PASS: TestPipeline_CredentialLeakRoundTrip"
+
+# ---- E96: scherald scheduled-audit bindings detect→emit→persist (HRD-025) ----
+check "E96 scherald scheduled-audit bindings — status-sweep/digest/stale-item detect→emit→audit (-race)" \
+    "go test -race -count=1 ./scherald/internal/bindings/..."
+sc_anchor "E96" "${SC_SCHED_DIR:+${SC_SCHED_DIR}/roundtrip_transcript.txt}" "PASS: TestPipeline_StatusSweepPolicyViolationRoundTrip"
 
 # ----------------------------------------------------------------------
 echo ""
