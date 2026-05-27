@@ -1,0 +1,74 @@
+QA-ANCHOR: HRD-034-BACKUP-SNAPSHOT-EVIDENCE-20260528T060000Z
+============================================================
+Feature : sherald backup-snapshot <target> (§9.3 hardlinked backup)
+Binary  : freshly built from ./sherald/cmd/sherald (go build)
+Auth env: HERALD_AUTH_MODE / JWT secret UNSET — confirms §107 lazy-verifier (bare CLI runs)
+Date    : 2026-05-28 (UTC run id 20260528T060000Z)
+Host    : Darwin 24.5.0 arm64
+============================================================
+
+## env audit (no auth vars set) ----------------------------------------
+$ env | grep -E "^HERALD_(AUTH|JWT|JWKS)" || echo "(no HERALD auth env set)"
+(no HERALD auth env set)
+
+## sherald version (proves the bare binary runs WITHOUT auth env) -------
+$ sherald version
+System Herald 0.0.0-dev
+  flavor:     s
+  commit:     unknown
+  built:      unknown
+  go_version: go1.26.2
+  os/arch:    darwin/arm64
+
+## prepare a hermetic target dir ---------------------------------------
+WORK=/var/folders/t3/dmp1fb1d61xbl27trnjtr0_c0000gn/T/tmp.rabd5a8GNU
+$ find "$WORK/project" -type f
+project/config.txt
+project/sub/inner.txt
+
+## RUN 1 — backup-snapshot of a DIRECTORY (default --dest) --------------
+$ sherald backup-snapshot "$WORK/project"
+backup-snapshot: hardlinked 2 file(s) under /var/folders/t3/dmp1fb1d61xbl27trnjtr0_c0000gn/T/tmp.rabd5a8GNU/project.bak-20260527T232535Z
+backup-snapshot: hardlinked snapshot of /var/folders/t3/dmp1fb1d61xbl27trnjtr0_c0000gn/T/tmp.rabd5a8GNU/project at /var/folders/t3/dmp1fb1d61xbl27trnjtr0_c0000gn/T/tmp.rabd5a8GNU/project.bak-20260527T232535Z
+[PASS] §9.3: §9.3: hardlinked backup created (audit trail) (/var/folders/t3/dmp1fb1d61xbl27trnjtr0_c0000gn/T/tmp.rabd5a8GNU/project.bak-20260527T232535Z)
+exit code: 0
+
+## prove the snapshot is HARDLINKED (same inode as source) -------------
+snapshot dir: /var/folders/t3/dmp1fb1d61xbl27trnjtr0_c0000gn/T/tmp.rabd5a8GNU/project.bak-20260527T232535Z
+$ ls -li "$WORK/project/config.txt" "$SNAP/config.txt"  (inode + link count)
+258182025 -rw-r--r--@ 2 milosvasic  staff  20 May 28 04:25 /var/folders/t3/dmp1fb1d61xbl27trnjtr0_c0000gn/T/tmp.rabd5a8GNU/project.bak-20260527T232535Z/config.txt
+258182025 -rw-r--r--@ 2 milosvasic  staff  20 May 28 04:25 /var/folders/t3/dmp1fb1d61xbl27trnjtr0_c0000gn/T/tmp.rabd5a8GNU/project/config.txt
+
+# inode equality check (POSIX stat) ------------------------------------
+source inode = 258182025 ; snapshot inode = 258182025
+RESULT: SAME INODE -> hardlink CONFIRMED
+
+## RUN 2 — backup-snapshot of a single FILE with explicit --dest --------
+$ sherald backup-snapshot --dest "$WORK/config.snapshot" "$WORK/project/config.txt"
+backup-snapshot: hardlinked snapshot of /var/folders/t3/dmp1fb1d61xbl27trnjtr0_c0000gn/T/tmp.rabd5a8GNU/project/config.txt at /var/folders/t3/dmp1fb1d61xbl27trnjtr0_c0000gn/T/tmp.rabd5a8GNU/config.snapshot
+[PASS] §9.3: §9.3: hardlinked backup created (audit trail) (/var/folders/t3/dmp1fb1d61xbl27trnjtr0_c0000gn/T/tmp.rabd5a8GNU/config.snapshot)
+exit code: 0
+$ ls -li "$WORK/project/config.txt" "$WORK/config.snapshot"
+258182025 -rw-r--r--@ 3 milosvasic  staff  20 May 28 04:25 /var/folders/t3/dmp1fb1d61xbl27trnjtr0_c0000gn/T/tmp.rabd5a8GNU/config.snapshot
+258182025 -rw-r--r--@ 3 milosvasic  staff  20 May 28 04:25 /var/folders/t3/dmp1fb1d61xbl27trnjtr0_c0000gn/T/tmp.rabd5a8GNU/project/config.txt
+
+## RUN 3 — --emit drives a REAL constitution event ---------------------
+$ sherald backup-snapshot --dest "$WORK/emit.snapshot" --emit "$WORK/project/config.txt"
+backup-snapshot: hardlinked snapshot of /var/folders/t3/dmp1fb1d61xbl27trnjtr0_c0000gn/T/tmp.rabd5a8GNU/project/config.txt at /var/folders/t3/dmp1fb1d61xbl27trnjtr0_c0000gn/T/tmp.rabd5a8GNU/emit.snapshot
+[PASS] §9.3: §9.3: hardlinked backup created (audit trail) (/var/folders/t3/dmp1fb1d61xbl27trnjtr0_c0000gn/T/tmp.rabd5a8GNU/emit.snapshot)
+[emit] §9.3 drove a constitution event for subject /var/folders/t3/dmp1fb1d61xbl27trnjtr0_c0000gn/T/tmp.rabd5a8GNU/emit.snapshot|created=true
+exit code: 0
+
+## RUN 4 — FAIL path: nonexistent target -> §9.3 FAIL + non-zero exit ---
+$ sherald backup-snapshot "$WORK/does-not-exist"
+backup-snapshot: snapshot NOT created: stat target /var/folders/t3/dmp1fb1d61xbl27trnjtr0_c0000gn/T/tmp.rabd5a8GNU/does-not-exist: lstat /var/folders/t3/dmp1fb1d61xbl27trnjtr0_c0000gn/T/tmp.rabd5a8GNU/does-not-exist: no such file or directory
+[FAIL] §9.3: §9.3: hardlinked backup NOT created before destructive op (/var/folders/t3/dmp1fb1d61xbl27trnjtr0_c0000gn/T/tmp.rabd5a8GNU/does-not-exist.bak-20260527T232535Z)
+sherald: §9.3 breach: §9.3: hardlinked backup NOT created before destructive op (/var/folders/t3/dmp1fb1d61xbl27trnjtr0_c0000gn/T/tmp.rabd5a8GNU/does-not-exist.bak-20260527T232535Z)
+exit code: 1 (expected non-zero — §9.3 created=false)
+
+============================================================
+VERDICT: backup-snapshot creates hardlinked snapshots (same inode),
+         classifies §9.3 PASS on create / FAIL on failure, exits
+         non-zero on FAIL, --emit drives a real constitution event,
+         and runs as a BARE CLI with NO auth env (§107 lazy-verifier).
+============================================================

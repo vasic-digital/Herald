@@ -47,7 +47,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>21</td>
+<td>22</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -63,10 +63,20 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>r21 (v1.0.0 Batch C cluster C3 — cherald, COMPLETE) marks
+<td><strong>r22 (v1.0.0 Batch C — §43 catalogue COMPLETE) marks the two
+stragglers HRD-034 (<code>sherald backup-snapshot</code>, §9.3
+hardlinked snapshot) + HRD-047 (<code>scherald status-digest</code>,
+§11.4.45 Status.md sweep) Open→in_progress.</strong> With C1-C5 + these
+two, the ENTIRE §43 command catalogue (HRD-029..056, 30 commands across
+pherald/sherald/cherald/rherald/bherald/scherald) is implemented +
+e2e-proven (E97-E122). backup-snapshot creates <code>os.Link</code>
+hardlinks (inode-verified) → <code>.gate.recovered</code>; status-digest
+sweeps the status doc → <code>.policy.violation</code> on stale/missing.
+Hermetic <code>-race</code> green; e2e <strong>E121-E122</strong> wired.
+<strong>Prior r21 (v1.0.0 Batch C cluster C3 — cherald, COMPLETE) marked
 the 11 cherald §43 docs/compliance commands
 (HRD-036/037/038/039/042/048/050/051/052/054/055) Open→in_progress +
-lands the §107 cherald lazy-verifier fix.</strong> C3a docs-pipeline
+landed the §107 cherald lazy-verifier fix.</strong> C3a docs-pipeline
 (<code>cherald/cmd/cherald/docops_cmds.go</code>):
 <code>docs-sync</code> (§11.4.61), <code>readme-sync</code> (§11.4.59),
 <code>export</code> (§11.4.65 wrapping
@@ -665,13 +675,17 @@ docs/qa/HRD-033-20260528T030000Z/</td>
 <tr>
 <td>HRD-034</td>
 <td>task</td>
-<td>open</td>
+<td>in_progress</td>
 <td>middle</td>
-<td>§9.3 <code>sherald backup snapshot &lt;path&gt;</code> — hardlinked
-snapshot helper</td>
+<td>§9.3 <code>sherald backup-snapshot &lt;target&gt;</code> —
+hardlinked snapshot helper — Batch C straggler: implemented in
+<code>sherald/cmd/sherald/sysops_cmds.go</code> (os.Link hardlinks,
+refuses overwrite, classifies §9.3 SubjectBackup →
+<code>.gate.recovered</code>); hermetic inode-equality -race green</td>
 <td>2026-05-20</td>
-<td>2026-05-20</td>
-<td>spec §43.2 / §9.3; Catalogue-Check: TBD</td>
+<td>2026-05-28</td>
+<td>spec §43.2 / §9.3; Catalogue-Check: TBD; evidence
+<code>docs/qa/HRD-034-20260528T060000Z/</code></td>
 </tr>
 <tr>
 <td>HRD-035</td>
@@ -861,13 +875,18 @@ docs/qa/HRD-046-20260528T030000Z/</td>
 <tr>
 <td>HRD-047</td>
 <td>task</td>
-<td>open</td>
+<td>in_progress</td>
 <td>middle</td>
-<td>§11.4.45 / .56 <code>scherald status digest</code> — periodic
-Status.md sweep + Status_Summary regen</td>
+<td>§11.4.45 / .56 <code>scherald status-digest</code> — periodic
+Status.md sweep + Status_Summary regen — Batch C straggler: implemented
+in <code>scherald/cmd/scherald/digest_cmds.go</code> feeding the HRD-025
+scherald binding (§11.4.45 status-sweep; detect/report +
+<code>--apply</code> regenerates Status_Summary); hermetic -race
+green</td>
 <td>2026-05-20</td>
-<td>2026-05-20</td>
-<td>spec §43.2 / §11.4.45 + §11.4.56; Catalogue-Check: TBD</td>
+<td>2026-05-28</td>
+<td>spec §43.2 / §11.4.45 + §11.4.56; Catalogue-Check: TBD; evidence
+<code>docs/qa/HRD-047-20260528T060000Z/</code></td>
 </tr>
 <tr>
 <td>HRD-048</td>

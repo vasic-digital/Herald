@@ -11,15 +11,16 @@ import (
 
 	"github.com/vasic-digital/herald/commons"
 	"github.com/vasic-digital/herald/commons/cli"
-	"github.com/vasic-digital/herald/scherald/internal/stubs"
 )
 
 // version is overridden at build time:
-//   go build -ldflags "-X main.version=$(git describe --tags)"
+//
+//	go build -ldflags "-X main.version=$(git describe --tags)"
 var version = "0.0.0-dev"
 
 // commit is overridden at build time:
-//   go build -ldflags "-X main.commit=$(git rev-parse --short HEAD)"
+//
+//	go build -ldflags "-X main.commit=$(git rev-parse --short HEAD)"
 var commit = "unknown"
 
 func main() {
@@ -32,7 +33,7 @@ func main() {
 	root.Version = version + " (" + commit + ")"
 
 	root.AddCommand(cli.VersionCmd(branding))
-	stubs.Register(root)
+	registerDigestOps(root)
 
 	if err := root.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, "scherald:", err)

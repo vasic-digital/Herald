@@ -2073,6 +2073,9 @@ SC_SPECVER_DIR="$(sc_newest 'HRD-054-*')"
 SC_CATCHECK_DIR="$(sc_newest 'HRD-055-*')"
 SC_SCRIPTDOCS_DIR="$(sc_newest 'HRD-038-*')"
 SC_CREDSSCAN_DIR="$(sc_newest 'HRD-036-*')"
+# §43 stragglers — HRD-034 sherald backup-snapshot / HRD-047 scherald status-digest.
+SC_SYS_BACKUP_DIR="$(sc_newest 'HRD-034-*')"
+SC_SCHED_DIGEST_DIR="$(sc_newest 'HRD-047-*')"
 
 # sc_anchor <invariant-label> <evidence-file> <literal-anchor-string>
 # Asserts the captured-evidence file contains the load-bearing anchor value.
@@ -2298,6 +2301,16 @@ sc_anchor "E119" "${SC_SCRIPTDOCS_DIR:+${SC_SCRIPTDOCS_DIR}/transcript.txt}" "AN
 check "E120 §16.2→§11.4.10 cherald creds-scan — clean ALLOW + planted-secret BLOCK (hermetic, -race)" \
     "go test -race -count=1 -run 'TestCredsScan_Clean_Allows|TestCredsScan_PlantedSecret_Blocks' ./cherald/cmd/cherald/..."
 sc_anchor "E120" "${SC_CREDSSCAN_DIR:+${SC_CREDSSCAN_DIR}/transcript.txt}" "ANCHOR: HRD-036-CREDS-SCAN-QA"
+
+# ---- E121: §9.3 sherald backup-snapshot command (HRD-034 §43 straggler) ----
+check "E121 §9.3 sherald backup-snapshot — hardlinked snapshot create ALLOW + nonexistent-target BLOCK (hermetic, -race)" \
+    "go test -race -count=1 -run 'TestBackupSnapshot_CreatesHardlinks_Allows|TestBackupSnapshot_NonexistentTarget_Blocks' ./sherald/cmd/sherald/..."
+sc_anchor "E121" "${SC_SYS_BACKUP_DIR:+${SC_SYS_BACKUP_DIR}/transcript.txt}" "QA-ANCHOR: HRD-034-BACKUP-SNAPSHOT-EVIDENCE-20260528T060000Z"
+
+# ---- E122: §11.4.45 scherald status-digest command (HRD-047 §43 straggler) ----
+check "E122 §11.4.45 scherald status-digest — healthy-status ALLOW + missing-Status.md BLOCK (hermetic, -race)" \
+    "go test -race -count=1 -run 'TestStatusDigest_HealthyStatus_Allows|TestStatusDigest_MissingStatus_Blocks' ./scherald/cmd/scherald/..."
+sc_anchor "E122" "${SC_SCHED_DIGEST_DIR:+${SC_SCHED_DIGEST_DIR}/transcript.txt}" "HRD-047-STATUS-DIGEST-E2E-EVIDENCE"
 
 # ----------------------------------------------------------------------
 echo ""

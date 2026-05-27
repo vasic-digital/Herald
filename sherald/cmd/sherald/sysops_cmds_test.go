@@ -318,20 +318,113 @@ func TestMemBudgetWatch_EnvSeam_OverCeiling_Blocks(t *testing.T) {
 	}
 }
 
-// --- registration coverage: the four §43 commands are wired, no stubs remain ---
+// --- HRD-034 backup-snapshot (§9.3) ---
 
-func TestRegisterSysOps_AllFourCommandsLive(t *testing.T) {
+func TestBackupSnapshot_CreatesHardlinks_Allows(t *testing.T) {
+	dir := t.TempDir()
+	// A top-level file + a subdir with a nested file.
+	srcFile := filepath.Join(dir, "data.txt")
+	if err := os.WriteFile(srcFile, []byte("herald §9.3 snapshot source\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	subDir := filepath.Join(dir, "nested")
+	if err := os.MkdirAll(subDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	subFile := filepath.Join(subDir, "inner.txt")
+	if err := os.WriteFile(subFile, []byte("inner content\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	dest := filepath.Join(dir, "snapshot")
+	out, err := run(t, newBackupSnapshotCmd(), "--dest", dest, dir)
+	if err != nil {
+		t.Fatalf("backup-snapshot should ALLOW (exit 0) on a created snapshot, got %v\n%s", err, out)
+	}
+	if !strings.Contains(out, "[PASS] §9.3") {
+		t.Fatalf("expected §9.3 PASS verdict line:\n%s", out)
+	}
+
+	// The dest tree exists.
+	if _, statErr := os.Stat(dest); statErr != nil {
+		t.Fatalf("snapshot dest %s does not exist: %v", dest, statErr)
+	}
+
+	// The hardlinked snapshot file shares the SAME inode as the source — assert
+	// via os.SameFile (the §9.3 cheap/space-free guarantee).
+	srcInfo, err := os.Stat(srcFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	snapFile := filepath.Join(dest, "data.txt")
+	snapInfo, err := os.Stat(snapFile)
+	if err != nil {
+		t.Fatalf("snapshot file %s missing: %v", snapFile, err)
+	}
+	if !os.SameFile(srcInfo, snapInfo) {
+		t.Fatalf("snapshot %s is NOT a hardlink of source %s (different inodes)", snapFile, srcFile)
+	}
+
+	// The nested file is hardlinked too (the dir tree was recreated + linked).
+	subSrcInfo, err := os.Stat(subFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	snapSub := filepath.Join(dest, "nested", "inner.txt")
+	snapSubInfo, err := os.Stat(snapSub)
+	if err != nil {
+		t.Fatalf("nested snapshot file %s missing: %v", snapSub, err)
+	}
+	if !os.SameFile(subSrcInfo, snapSubInfo) {
+		t.Fatalf("nested snapshot %s is NOT a hardlink of %s", snapSub, subFile)
+	}
+}
+
+func TestBackupSnapshot_NonexistentTarget_Blocks(t *testing.T) {
+	dir := t.TempDir()
+	missing := filepath.Join(dir, "does-not-exist")
+	out, err := run(t, newBackupSnapshotCmd(), missing)
+	if err == nil || !strings.Contains(err.Error(), "§9.3") {
+		t.Fatalf("backup-snapshot of a nonexistent target should BLOCK (§9.3 breach), got %v\n%s", err, out)
+	}
+	if !strings.Contains(out, "[FAIL] §9.3") {
+		t.Fatalf("expected §9.3 FAIL verdict line:\n%s", out)
+	}
+	if !strings.Contains(out, "snapshot NOT created") {
+		t.Fatalf("expected snapshot-not-created evidence:\n%s", out)
+	}
+}
+
+func TestBackupSnapshot_Emit_DrivesEvent(t *testing.T) {
+	dir := t.TempDir()
+	srcFile := filepath.Join(dir, "f.txt")
+	if err := os.WriteFile(srcFile, []byte("emit me\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	dest := filepath.Join(dir, "f.snapshot")
+	out, err := run(t, newBackupSnapshotCmd(), "--dest", dest, "--emit", srcFile)
+	if err != nil {
+		t.Fatalf("backup-snapshot --emit (created) should pass, got %v\n%s", err, out)
+	}
+	if !strings.Contains(out, "[emit] §9.3 drove a constitution event") {
+		t.Fatalf("expected emit confirmation:\n%s", out)
+	}
+}
+
+// --- registration coverage: the five §43 commands are wired, no stubs remain ---
+
+func TestRegisterSysOps_AllFiveCommandsLive(t *testing.T) {
 	root := &cobra.Command{Use: "sherald-test"}
 	registerSysOps(root)
 	got := map[string]bool{}
 	for _, c := range root.Commands() {
 		got[c.Name()] = true
-		// §107 anti-bluff: none of the four may be a StubCmd anymore.
+		// §107 anti-bluff: none of the five may be a StubCmd anymore.
 		if strings.Contains(c.Short, "not yet implemented") {
 			t.Errorf("§43 command %q is still a stub: %q", c.Name(), c.Short)
 		}
 	}
-	for _, want := range []string{"destructive-guard", "constitution-pull", "force-push-gate", "mem-budget-watch"} {
+	for _, want := range []string{"destructive-guard", "constitution-pull", "force-push-gate", "mem-budget-watch", "backup-snapshot"} {
 		if !got[want] {
 			t.Errorf("missing live §43 command %q", want)
 		}

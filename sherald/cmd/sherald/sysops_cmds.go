@@ -24,6 +24,10 @@
 //   - constitution-pull wraps fetch+rebase against the discovered constitution
 //     submodule + a post-pull validation gate; it operates against an EXPLICIT
 //     --constitution-dir and only fetches/rebases when the operator runs it.
+//   - backup-snapshot is a SAFE CREATE (HRD-034 / §9.3): it HARDLINKS a snapshot
+//     of an explicit <target> at --dest (no deletion, no overwrite of the
+//     target), then classifies §9.3 (created=true ⇒ PASS audit-trail recovery;
+//     created=false ⇒ FAIL). It touches ONLY <target> + --dest (§12/§107).
 //
 // A PASS (exit 0) from a gate means "safe to proceed"; a FAIL (exit 1) BLOCKS the
 // operator's wrapper. With --emit each command additionally drives the REAL
@@ -51,14 +55,15 @@ import (
 	"github.com/vasic-digital/herald/sherald/internal/bindings"
 )
 
-// registerSysOps replaces the four §43 system/safety stubs with their real
+// registerSysOps replaces the five §43 system/safety stubs with their real
 // command bodies. Called from main.go alongside stubs.Register (which keeps the
-// remaining sherald-owned §42.3 stubs, e.g. backup-snapshot HRD-034).
+// remaining sherald-owned §42.3 stubs).
 func registerSysOps(root *cobra.Command) {
 	root.AddCommand(newDestructiveGuardCmd())
 	root.AddCommand(newConstitutionPullCmd())
 	root.AddCommand(newForcePushGateCmd())
 	root.AddCommand(newMemBudgetWatchCmd())
+	root.AddCommand(newBackupSnapshotCmd())
 }
 
 // resolveRepo returns the repo dir from --repo, or discovers the enclosing repo
@@ -539,3 +544,148 @@ func newMemBudgetWatchCmd() *cobra.Command {
 // detector (checkMemBudget) enforces. Kept here as the watch-mode transition
 // threshold so the daemon emits on the same edge the binding classifies.
 const memBudgetCeilingDoc = 0.60
+
+// --- HRD-034 — sherald backup-snapshot <target> (§9.3) ---
+
+func newBackupSnapshotCmd() *cobra.Command {
+	var (
+		dest string
+		emit bool
+	)
+	cmd := &cobra.Command{
+		Use:   "backup-snapshot <target>",
+		Short: "Create a hardlinked snapshot before a destructive op (§9.3)",
+		Long: "SAFE CREATE: hardlinks a snapshot of <target> (a file or dir) at --dest " +
+			"(default: <target>.bak-<UTC-timestamp> alongside the target) so the snapshot " +
+			"is cheap + space-free — it is the §9.3 \"hardlinked backup before destructive " +
+			"op\" helper. It NEVER deletes or overwrites the target (§12/§107 host-safety: it " +
+			"operates ONLY on the explicit <target>/--dest). After creating the snapshot it " +
+			"builds the §9.3 Subject (created=true ⇒ PASS, the audit-trail recovery event; " +
+			"created=false ⇒ FAIL) and classifies it through the HRD-020 binding, EXITING " +
+			"NON-ZERO when the snapshot could not be created.",
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			ctx := cmd.Context()
+			if ctx == nil {
+				ctx = context.Background()
+			}
+			target := strings.TrimSpace(args[0])
+			if target == "" {
+				return fmt.Errorf("backup-snapshot: empty <target>")
+			}
+			target, err := filepath.Abs(target)
+			if err != nil {
+				return fmt.Errorf("backup-snapshot: resolve target %q: %w", target, err)
+			}
+
+			// Default --dest: <target>.bak-<UTC-timestamp> alongside the target.
+			d := dest
+			if d == "" {
+				ts := time.Now().UTC().Format("20060102T150405Z")
+				d = target + ".bak-" + ts
+			}
+			d, err = filepath.Abs(d)
+			if err != nil {
+				return fmt.Errorf("backup-snapshot: resolve --dest %q: %w", d, err)
+			}
+
+			// Attempt the hardlinked snapshot. created stays false on any failure
+			// (a nonexistent target, an already-present dest, a link error) so the
+			// §9.3 verdict FAILs and the command exits non-zero.
+			created := false
+			if linkErr := hardlinkSnapshot(cmd, target, d); linkErr != nil {
+				fmt.Fprintf(cmd.OutOrStdout(), "backup-snapshot: snapshot NOT created: %v\n", linkErr)
+			} else {
+				created = true
+				fmt.Fprintf(cmd.OutOrStdout(), "backup-snapshot: hardlinked snapshot of %s at %s\n", target, d)
+			}
+
+			subject := constitution.Subject{
+				Kind: bindings.SubjectBackup,
+				ID:   fmt.Sprintf("%s|created=%t", d, created),
+			}
+			// §9.3 is Middle/Enforce: a snapshot that could not be created is a hard
+			// FAIL (allowFail=false) so the operator's wrapper does NOT proceed to the
+			// destructive op without an audit-trail backup.
+			return classifyAndReport(ctx, cmd, "§9.3", subject, emit, false)
+		},
+	}
+	cmd.Flags().StringVar(&dest, "dest", "", "snapshot destination (default: <target>.bak-<UTC-timestamp> alongside target)")
+	cmd.Flags().BoolVar(&emit, "emit", false, "also drive the §9.3 verdict as a real constitution event")
+	return cmd
+}
+
+// hardlinkSnapshot creates a hardlinked snapshot of src at dst. For a regular
+// file it os.Link's it directly. For a directory it recreates the dir tree
+// (os.MkdirAll, mode-preserved) and hardlinks each regular file; symlinks and
+// special files (devices/sockets/fifos) are SKIPPED with a noted warning — a
+// hardlink of a symlink/special node is not meaningful for a §9.3 snapshot.
+//
+// It refuses to overwrite an existing dst (the snapshot is a SAFE CREATE — it
+// never clobbers). §12/§107 host-safety: it touches ONLY paths under src/dst.
+func hardlinkSnapshot(cmd *cobra.Command, src, dst string) error {
+	srcInfo, err := os.Lstat(src)
+	if err != nil {
+		return fmt.Errorf("stat target %s: %w", src, err)
+	}
+	if _, statErr := os.Lstat(dst); statErr == nil {
+		return fmt.Errorf("dest %s already exists (refusing to overwrite)", dst)
+	} else if !os.IsNotExist(statErr) {
+		return fmt.Errorf("stat dest %s: %w", dst, statErr)
+	}
+
+	if srcInfo.Mode()&os.ModeSymlink != 0 {
+		return fmt.Errorf("target %s is a symlink (cannot hardlink a symlink for a §9.3 snapshot)", src)
+	}
+
+	if !srcInfo.IsDir() {
+		// Regular file (or special file): only a regular file is hardlinkable.
+		if !srcInfo.Mode().IsRegular() {
+			return fmt.Errorf("target %s is not a regular file or directory (mode %s)", src, srcInfo.Mode())
+		}
+		if err := os.MkdirAll(filepath.Dir(dst), 0o755); err != nil {
+			return fmt.Errorf("mkdir parent of %s: %w", dst, err)
+		}
+		if err := os.Link(src, dst); err != nil {
+			return fmt.Errorf("hardlink %s -> %s: %w", src, dst, err)
+		}
+		return nil
+	}
+
+	// Directory: recreate the tree and hardlink each regular file.
+	linked := 0
+	walkErr := filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		rel, relErr := filepath.Rel(src, path)
+		if relErr != nil {
+			return relErr
+		}
+		out := filepath.Join(dst, rel)
+		switch {
+		case info.IsDir():
+			return os.MkdirAll(out, info.Mode().Perm())
+		case info.Mode()&os.ModeSymlink != 0:
+			fmt.Fprintf(cmd.OutOrStdout(), "backup-snapshot: skipping symlink %s (not hardlinkable)\n", path)
+			return nil
+		case info.Mode().IsRegular():
+			if mkErr := os.MkdirAll(filepath.Dir(out), 0o755); mkErr != nil {
+				return mkErr
+			}
+			if linkErr := os.Link(path, out); linkErr != nil {
+				return fmt.Errorf("hardlink %s -> %s: %w", path, out, linkErr)
+			}
+			linked++
+			return nil
+		default:
+			fmt.Fprintf(cmd.OutOrStdout(), "backup-snapshot: skipping special file %s (mode %s, not hardlinkable)\n", path, info.Mode())
+			return nil
+		}
+	})
+	if walkErr != nil {
+		return walkErr
+	}
+	fmt.Fprintf(cmd.OutOrStdout(), "backup-snapshot: hardlinked %d file(s) under %s\n", linked, dst)
+	return nil
+}
