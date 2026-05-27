@@ -39,7 +39,7 @@ Herald is pre-implementation. The only currently-tracked work is the V3 r3 cross
       "type":        "task",
       "status":      "in_progress",
       "criticality": "middle",
-      "title":       "V3 r3 cross-doc sync",
+      "title":       "V3 r3 cross-doc sync + HRD tracking-doc scaffold (Issues/Fixed/Status + their _Summary companions + CONTINUATION)",
       "opened":      "2026-05-20",
       "reference":   "spec V3 §30.8"
     }

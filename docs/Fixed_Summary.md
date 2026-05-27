@@ -42,12 +42,12 @@ Zero rollbacks. Inheritance gate stayed 12 PASS / 0 FAIL throughout.
 ```jsonc
 {
   "fixed": [
-    { "id": "HRD-006", "closed": "2026-05-20", "commit": "f8b8073", "title": "V3 r2 flavor refinement" },
-    { "id": "HRD-005", "closed": "2026-05-20", "commit": "e26a8dc", "title": "V3 r1 operator-product layer" },
-    { "id": "HRD-004", "closed": "2026-05-20", "commit": "f4ebba1", "title": "V2 r3 self-review" },
-    { "id": "HRD-003", "closed": "2026-05-19", "commit": "9648545", "title": "V2 r2 self-review" },
-    { "id": "HRD-002", "closed": "2026-05-19", "commit": "96b7cc6", "title": "V2 r1 architecture" },
-    { "id": "HRD-001", "closed": "2026-05-19", "commit": "b421fe1", "title": "V1 MVP specification" }
+    { "id": "HRD-006", "closed": "2026-05-20", "commit": "f8b8073", "title": "V3 r2 flavor refinement — 9 flavors × per-channel interaction tables" },
+    { "id": "HRD-005", "closed": "2026-05-20", "commit": "e26a8dc", "title": "V3 r1 operator-product layer (§31..§36 + §18.2 expansion)" },
+    { "id": "HRD-004", "closed": "2026-05-20", "commit": "f4ebba1", "title": "V2 r3 — Go type contract closure + operational ops detail" },
+    { "id": "HRD-003", "closed": "2026-05-19", "commit": "9648545", "title": "V2 r2 — close prose↔definition gaps + add operational guidance" },
+    { "id": "HRD-002", "closed": "2026-05-19", "commit": "96b7cc6", "title": "V2 r1 — architectural authoring (CloudEvents/Watermill/OTel/RLS/SLSA/9 flavors)" },
+    { "id": "HRD-001", "closed": "2026-05-19", "commit": "b421fe1", "title": "V1 — initial MVP specification + Review section + Recommendations" }
   ],
   "totals": { "fixed": 6, "reopened": 0 }
 }
