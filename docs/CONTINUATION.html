@@ -112,7 +112,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>8</td>
+<td>9</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -120,7 +120,7 @@
 </tr>
 <tr>
 <td>Last modified</td>
-<td>2026-05-23</td>
+<td>2026-05-27</td>
 </tr>
 <tr>
 <td>Status</td>
@@ -128,51 +128,47 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>2026-05-23 session-end checkpoint — safe to shut down. Wave
-6.5 lifecycle layer landed (12/12 implementation tasks + premature
-v0.5.0 tag from a parallel Haiku session). One root-cause bug discovered
-live + fixed: envelope ACTION FORMAT GUIDANCE (commit
-<code>53a7ad3</code>) — before the fix, every Bug:/Task: defaulted to
-<code>action:"reply"</code> and never wrote Issues.md (§107 PASS-bluff
-at the prompt layer). qaherald-auto Go framework T1+T2+T3+T4+T5 of 8
-landed (full 15-scenario lifecycle test framework using a 2nd Telegram
-bot <code>@pherald_qa_bot</code> as automated subscriber). T6+T7+T8
-remaining: pre-flight validator + httptest-driven unit tests +
-tests/test_wave6.5_lifecycle.sh adapter. After T8 + live run + v0.5.1
-tag: ready to start Wave 7 (genericize messenger framework Slack/Email
-per operator mandate) / close 47 remaining HRDs.</strong> v0.4.0 (Wave 6
-closed-loop) + v0.5.0 (Wave 6.5 implementations) both tagged + pushed to
-all 4 mirrors. Live evidence so far under
-<code>docs/qa/HRD-100-2026-05-22T18-27-30-w6live/</code> (4-event closed
-loop) +
-<code>docs/qa/HRD-101-lifecycle-2026-05-22T20-04-04-w6.5live/</code>
-(partial — only S1+S2 evidence; superseded by qaherald-auto). Workspace
-at 16 modules. Spec V3 at r12 + §32.7 + §32.9 + §33.6 + §33.7 captured.
-Constitutional propagation of §107.x docs/qa-evidence + §107.y
-working-tree-quiescence covenant complete across 13 submodules + parent
-constitution + Herald root (QA1 commit <code>bff18db</code> +
-per-submodule <code>a8c1cb4..b464136</code>). Anti-bluff gates green:
-inheritance 15/15 PASS, audit_antibluff 18/0/1, Wave 6 mutation gate 4/4
-PASS, Wave 6.5 mutation gate 6/6 PASS. Pre-existing carry-over:
-Postgres-SASL-dependent e2e invariants (E7-E12, E14-E16, E37-E42 — 15
-FAILs against the running PG container, root cause is local-PG SASL
-handshake; unrelated to Wave 6/6.5).</td>
+<td><strong>2026-05-27 checkpoint (HEAD <code>f833b0b</code>, all 4
+mirrors synced). MAJOR FINDING: the 2nd-bot qaherald-auto automation is
+structurally impossible — Telegram never relays bot-to-bot messages in
+groups (proven; full forensic record
+<code>docs/research/telegram-bot-to-bot-constraint.md</code>, commit
+<code>5267f14</code>). Real-channel inbound automation requires MTProto
+(a real user account via gotd/td) — OPERATOR DECISION PENDING (needs
+my.telegram.org app_id+app_hash + 1-time phone login).</strong> This
+session: (1) pulled HelixConstitution to <code>3a085b9</code> (gained
+§11.4.85 stress+chaos / §11.4.86 / §11.4.87 endless-loop-autonomous /
+§11.4.88 background-push); (2) propagated §11.4.85/87/88 into Herald
+CLAUDE/AGENTS/QWEN + new HERALD_CONSTITUTION §108 (merge
+<code>4888081</code>); (3) built qaherald-auto framework COMPLETE —
+<code>qaherald lifecycle</code> Cobra cmd + MessengerClient interface
+(Telegram impl) + 15 scenarios + orchestrator + report + preflight (10
+gates) + shell adapter, all hermetic tests PASS (T1-T8); (4) fixed
+preflight G1 false-negative (real <code>getChatMember</code> membership
+proof, <code>b45e45d</code>); (5) Wave 7 STARTED — T1 channels.Channel
+interface (<code>688819a</code>) + T2 registry+init
+(<code>22ba96f</code>) + T3 per-channel inbox (<code>0080339</code>) +
+T4 generalized self-filter (<code>f833b0b</code>) → HRD-110/111/112/113
+closed. Prior: v0.4.0 (Wave 6 closed-loop, HRD-100 real human round-trip
+msg 25→26) + v0.5.0 (Wave 6.5 lifecycle, premature S1+S2-only tag) both
+pushed. Anti-bluff gates green; pre-existing carry-over: Postgres-SASL
+e2e FAILs (E7-E12/E14-E16/E37-E42 — local PG SASL, unrelated).</td>
 </tr>
 <tr>
 <td>Issues</td>
 <td>HRD-008, HRD-015, HRD-018 (in_progress), HRD-019..HRD-027,
-HRD-029..HRD-056, HRD-081, HRD-085..HRD-090, HRD-101 (in_progress —
-qaherald-auto + full lifecycle evidence)</td>
+HRD-029..HRD-056, HRD-081, HRD-085..HRD-090, HRD-114..HRD-121 (Wave 7
+T5-T12 pending)</td>
 </tr>
 <tr>
 <td>Issues summary</td>
-<td>see <code>Issues.md</code> — 48 open items (HRD-101 in flight)</td>
+<td>see <code>Issues.md</code>. Wave 7 closed HRD-110/111/112/113 this
+session; HRD-114..121 are the remaining Wave 7 tasks T5-T12.</td>
 </tr>
 <tr>
 <td>Fixed</td>
-<td>HRD-001..HRD-007, HRD-009, HRD-009b, HRD-010, HRD-011, HRD-012,
-HRD-013, HRD-014, HRD-016, HRD-017, HRD-028, HRD-080, HRD-092..HRD-100
-(HRD-018 partial — M1 + M2 components landed)</td>
+<td>HRD-001..HRD-017 (less open), HRD-028, HRD-080, HRD-092..HRD-101,
+HRD-110, HRD-111, HRD-112, HRD-113</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
@@ -180,29 +176,47 @@ HRD-013, HRD-014, HRD-016, HRD-017, HRD-028, HRD-080, HRD-092..HRD-100
 </tr>
 <tr>
 <td>Continuation</td>
-<td><strong>Resume tomorrow at qaherald-auto T6+T7+T8</strong>
-(<code>docs/superpowers/plans/2026-05-23-qaherald-auto.md</code> commit
-<code>52ce679</code>). T1-T5 landed: <code>qaherald lifecycle</code>
-Cobra subcommand + MessengerClient interface (Telegram impl) + 15
-scenarios (S1..S15) + orchestrator + Markdown report — 12 hermetic unit
-tests PASS under <code>-race -count=1</code>. T6: 10-gate pre-flight
-validator (pherald-bot getMe, qa-bot privacy disabled, group membership,
-OPERATOR_IDS contains qa-bot, etc.). T7: full unit-test pass against
-<code>httptest</code> impersonating Bot API + canned pherald
-transcripts. T8: rewrite <code>tests/test_wave6.5_lifecycle.sh</code> to
-delegate to <code>qaherald lifecycle</code> (keep <code>--manual</code>
-for old interactive UX). After T8: live e2e run with operator-supplied
-creds (see §4a below), commit
-<code>docs/qa/HRD-101-lifecycle-&lt;run-id&gt;/</code> + tag
-<code>v0.5.1</code> + 4-mirror push. Subsequent: Wave 7 (genericize
-messenger framework — Slack/Email next per operator 2026-05-22), then
-close-out of HRDs 018..027 + 029..056 + 081 + 085..090 for v1.0.0
-production-ready, then the docs-audit task #147 (operator manuals +
-PDF/HTML/DOCX exports for every wave). Operator restated 2026-05-22/23:
-NO BLUFF, NO FALSE POSITIVES, fix root causes immediately. The 53a7ad3
-envelope fix is the canonical example of that rule operating live. Push
-to all 4 mirrors + every submodule's own origin on every non-trivial
-commit per Universal §12.10.</td>
+<td><strong>Resume at Wave 7 T6</strong>
+(<code>docs/superpowers/plans/2026-05-27-wave7-generic-messenger.md</code>
+line 980; HEAD <code>42448a2</code>). Wave 7 done: T1
+<code>channels.Channel</code> interface (reply method
+<code>SendReplyGeneric</code>) + T2 registry/init + T3 per-channel inbox
++ T4 <code>channels.IsSelfEcho</code>/<code>StampSender</code> + T5
+multi-channel <code>pherald listen</code> (HRD-110..114 closed;
+<code>inbound.TgramReplier</code>→<code>Replier</code> generic-sig
+rename done via a <code>channelReplier</code> shim — tgram's native int
+<code>SendReply</code> untouched,
+<code>channels.Channel.SendReplyGeneric</code> bridged; multi-channel
+fan-in via sync.WaitGroup, NOT errgroup, go.mod unchanged;
+<code>HERALD_CHANNELS=tgram,slack</code> parsed, default
+<code>tgram</code>). Remaining: <strong>T6 Slack adapter (Socket Mode —
+VENDORS slack-go as a new submodule: verify
+<code>tests/test_constitution_inheritance.sh</code> I6 gate still passes
+after the .gitmodules entry; confirm slack-go v0.16.0 field names
+<code>inner.Files</code>/<code>socketmode.EventTypeEventsAPI</code>/<code>UploadFileV2Parameters</code>
+before coding; T5 pre-staged <code>perChannelConfig("slack")</code> +
+blank-import comment in listen.go —
+<code>HERALD_CHANNELS=tgram,slack</code> currently errors
+ErrUnknownChannel until T6 registers slack, by design)</strong> · T7
+qaherald Slack MessengerClient · T8 spec §11.0/§32.2/§43 · T9 e2e
+E81-E88 · T10 paired mutation gate · T11 §11.4.85 stress+chaos · T12
+docs/Issues→Fixed/v0.6.0/4-mirror push. <strong>THREE GATED/DEBT
+ITEMS:</strong> (a) MTProto real-channel automation — OPERATOR must
+provide my.telegram.org app_id+app_hash (folds into a qaherald
+MessengerClient MTProto impl reusing the entire scenario engine);
+operator should also <code>/revoke</code> the leaked
+<code>@pherald_qa_bot</code> token. (b) Wave 6.5 mutation-gate M3 STALE
+— <code>tests/test_wave6.5_mutation_meta.sh</code> M3 regex targets
+<code>opts.ReplyTo</code> but Wave 6.5 T6 renamed to
+<code>textOpts.ReplyTo</code> in send.go → M3 errors "anchor not found",
+non-functional gate (§107 bluff surface, FIX needed). (c) docs/Issues.md
++ docs/Fixed.md PDF/HTML/DOCX siblings stale after HRD-110..113
+migrations — regen
+<code>bash scripts/export_docs.sh docs/Issues.md docs/Fixed.md</code> at
+Wave 7 close. Then: 39 remaining §42/§43 HRDs (018..027, 029..056, 081,
+085..090, 008, 015) for v1.0.0; docs-audit #147. §11.4.87 endless-loop:
+continue until Issues.md zero-active + CONTINUATION §3 empty + no
+subagent in flight. NO BLUFF. Push 4 mirrors every 2-3 commits.</td>
 </tr>
 </tbody>
 </table>

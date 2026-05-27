@@ -110,8 +110,9 @@ items).</td>
 <td>Fixed</td>
 <td>HRD-001..HRD-007, HRD-009, HRD-009b, HRD-010, HRD-011, HRD-012,
 HRD-013, HRD-014, HRD-016, HRD-017, HRD-028, HRD-080, HRD-092, HRD-093,
-HRD-094, HRD-095, HRD-096, HRD-097, HRD-098, HRD-099, HRD-100 (and
-HRD-018 partial — M1 + M2 components landed)</td>
+HRD-094, HRD-095, HRD-096, HRD-097, HRD-098, HRD-099, HRD-100, HRD-110,
+HRD-111, HRD-112, HRD-113, HRD-114 (and HRD-018 partial — M1 + M2
+components landed)</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
@@ -149,6 +150,302 @@ closed atomically.</td>
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>HRD-114</td>
+<td>task</td>
+<td>high</td>
+<td>Wave 7 T5 — multi-channel <code>pherald listen</code>
+(HERALD_CHANNELS fan-in: N Subscribe goroutines → 1 dispatcher).
+<code>pherald/internal/inbound/dispatcher.go</code> renames the Wave-6
+<code>TgramReplier</code> interface (Telegram-native
+<code>int64 chatID</code>/<code>int replyToID</code> signature) →
+generic <code>inbound.Replier</code> with
+<code>SendReply(ctx, recipient commons.Recipient, body string, replyToID string, attachments []commons.Attachment) (string, error)</code>
+— recipient + string ids let any channel satisfy it.
+<code>Config.TgramReply</code> → <code>Config.Reply</code>;
+<code>NewDispatcher</code> nil-check + <code>Dispatcher.reply</code>
+field + the <code>Handle</code> "reply" branch + both
+<code>fastPath</code> branches all migrated to build a
+<code>commons.Recipient{Channel,ChannelUserID}</code> +
+<code>strconv.Itoa(replyToID)</code> (<code>""</code> when 0).
+<code>pherald/cmd/pherald/listen.go</code>:
+<code>listenConfig.Subscriber</code> (singular) →
+<code>Subscribers map[string]func(ctx, InboundHandler) error</code>;
+<code>listenConfig.Replier inbound.TgramReplier</code> →
+<code>inbound.Replier</code>; new <code>loadEnabledChannels()</code>
+parses <code>HERALD_CHANNELS</code> (comma-split, trim, dedupe;
+unset/empty → <code>["tgram"]</code>, Wave-6 single-channel behaviour
+preserved); new <code>perChannelConfig(name)</code> reads namespaced env
+(<code>HERALD_TGRAM_BOT_TOKEN</code>/<code>HERALD_TGRAM_CHAT_ID</code>,
+<code>HERALD_SLACK_BOT_TOKEN</code>/<code>_APP_TOKEN</code>/<code>_CHANNEL_ID</code>)
+→ <code>channels.Config</code> (fail-loud on missing required creds);
+<code>loadListenConfigFromEnv</code> resolves each enabled channel via
+the <code>channels.New(name, cfg)</code> registry (T2), builds
+<code>Subscribers[name]=ch.Subscribe</code> + a
+<code>channelReplier{ch}</code> shim (adapts
+<code>channels.Channel.SendReplyGeneric</code> →
+<code>inbound.Replier.SendReply</code> — the two
+intentionally-differently-named generic methods bridged) per channel,
+and wraps them in a <code>channelRouter</code> that dispatches each
+reply to the adapter for <code>recipient.Channel</code> (fail-loud
+<code>no replier for channel %q</code> on unknown — never silently
+dropped). <code>runListen</code> fans in one goroutine per subscriber
+(manual <code>sync.WaitGroup</code> + buffered error channel; no new dep
+— errgroup-equivalent semantics) all feeding ONE dispatcher; the first
+non-cancel subscriber error cancels siblings + surfaces (T11 chaos
+fail-loud). tgram is blank-imported in listen.go for its
+<code>init()</code> registry registration. <code>journal.go</code>
+<code>journalingReplier</code> migrated to wrap
+<code>inbound.Replier</code> (records
+<code>channel</code>+<code>chat_id</code>+<code>reply_to_message_id</code>
+as strings; JSONL kind kept <code>tgram.send_reply</code> for transcript
+back-compat). Method-name resolution (Wave 7 plan Step 4):
+<code>inbound.Replier.SendReply</code> keeps the <code>SendReply</code>
+name (the inbound package's own, independent of
+<code>channels.Channel.SendReplyGeneric</code>); production wiring
+bridges via the <code>channelReplier</code> shim so the journal
+decorator + dispatcher both stay channel-agnostic. §107 evidence: new
+<code>TestRunListenMultiChannelFanIn</code> (2 stub subscribers
+tgram+slack each publish 1 event) asserts BOTH messages dispatched AND
+both replies recorded (<code>seen["ack (fake)"] &gt;= 2</code>) — NOT
+"both goroutines started"; mutation-proven load-bearing (dropping the
+fan-in loop → <code>seen == map[]</code> → FAIL). Existing
+single-channel <code>TestListenWiresHandlerAndExitsOnCancel</code> +
+<code>TestRunListenRejectsBadConfig</code> migrated to the one-entry
+<code>Subscribers</code> map + still PASS.
+<code>recordingReplier</code>/<code>stubReplierJournal</code> stubs
+(dispatcher_test/listen_test/journal_test) migrated to the generic
+signature; numeric chat_id/reply assertions preserved via decode.
+<code>go build ./pherald/...</code> +
+<code>go test -race -count=1 ./pherald/... ./commons_messaging/...</code>
+all green; <code>go vet</code> clean; §107.y quiescence clean.</td>
+<td>2026-05-27</td>
+<td>(this commit)</td>
+<td>spec V3 §32.2; plan
+<code>docs/superpowers/plans/2026-05-27-wave7-generic-messenger.md</code>;
+Catalogue-Check: reuse (internal, 2026-05-27)</td>
+</tr>
+<tr>
+<td>HRD-113</td>
+<td>task</td>
+<td>high</td>
+<td>Wave 7 T4 — generalize the bot self-filter via
+<code>BotSelfIdentity</code> (channel-agnostic). New file
+<code>commons_messaging/channels/selffilter.go</code> adds the Raw-map
+key constants
+(<code>RawSenderIsBot</code>/<code>RawSenderIdentityKnd</code>/<code>RawSenderIdentity</code>),
+<code>StampSender(raw map[string]any, isBot bool, kind IdentityKind, value string)</code>
+(records the sender's native identity into <code>ev.Raw</code>; nil-map
+no-op), and
+<code>IsSelfEcho(ev commons.InboundEvent, self SelfIdentity) bool</code>
+(the §32.9 anti-echo-loop guarantee made channel-agnostic — compares the
+right native field per <code>IdentityKind</code>: <code>username</code>
+for Telegram, <code>user_id</code> for Slack, <code>address</code> for
+Email). Scope is deliberately narrow: a DIFFERENT bot is KEPT (multi-bot
+collaboration is real subscriber traffic — the §107 anchor that the
+filter is not over-broad); a human is KEPT; an empty
+<code>self.Value</code> never echoes (conservative KEEP → surfaces as
+duplicate traffic, not silent loss; the real guard is Subscribe refusing
+to boot on empty self).
+<code>commons_messaging/channels/tgram/subscribe.go</code> migrated:
+captures
+<code>self := channels.SelfIdentity{Kind: channels.IdentityUsername, Value: bot.Me.Username}</code>
+once at Subscribe boot (keeping the existing empty-username boot-refusal
+echo-loop guard) and routes ALL FOUR live handlers
+(<code>OnText</code>/<code>OnPhoto</code>/<code>OnDocument</code>/<code>OnVoice</code>)
+through a new <code>stampAndIsSelfEcho(ev, msg, self)</code> helper that
+stamps the Telegram sender's <code>IsBot</code>+<code>@username</code>
+into <code>ev.Raw</code> and delegates to
+<code>channels.IsSelfEcho</code> — replacing the four Wave-6
+<code>shouldDropBotSelf(msg, selfUsername)</code> early-returns. The
+Wave-6-native <code>shouldDropBotSelf</code> func + its
+<code>TestSubscribeBotSelfFilter</code> + <code>SelfFilterForTest</code>
+(export_test.go) are PRESERVED BYTE-IDENTICAL: the Wave 6 M1
+paired-mutation gate (<code>tests/test_wave6_mutation_meta.sh</code>)
+anchors an exact-text <code>perl -i -0pe</code> regex on
+<code>shouldDropBotSelf</code>'s body, so keeping it byte-identical
+keeps M1 load-bearing (verified: the M1 regex still matches + applies
+its W6-M1 marker cleanly post-migration). The live path and the gate now
+express the SAME §32.9 invariant — production on the generalized
+<code>IsSelfEcho</code>, the gate on the tgram-native shape. §107
+evidence: <code>TestIsSelfEchoUsername</code> proves all three username
+cases — bot-own DROPPED, different-bot KEPT, human KEPT;
+<code>TestIsSelfEchoUserID</code> proves the Slack <code>user_id</code>
+kind (matching bot id DROPPED, different id KEPT);
+<code>TestIsSelfEchoEmptySelfNeverEchoes</code> proves empty-self KEEP;
+the <code>ev()</code> test helper builds events via the production
+<code>StampSender</code> (DRY — the test can never drift from the
+wire-key contract); <code>TestSubscribeBotSelfFilter</code> still PASSES
+(Wave-6 shape preserved);
+<code>go test -race -count=1 ./commons_messaging/... ./pherald/...</code>
+all green; <code>go vet</code> clean. Live runtime evidence (real
+Telegram getMe self-identity + own-message drop in the closed loop)
+lands via Wave 7 T9 e2e invariant.</td>
+<td>2026-05-27</td>
+<td>(this commit)</td>
+<td>spec V3 §32.9; plan
+<code>docs/superpowers/plans/2026-05-27-wave7-generic-messenger.md</code>;
+Catalogue-Check: reuse (internal, 2026-05-27)</td>
+</tr>
+<tr>
+<td>HRD-112</td>
+<td>task</td>
+<td>middle</td>
+<td>Wave 7 T3 — per-channel inbox subdirs
+<code>~/.herald/inbox/&lt;channel&gt;/&lt;sha256&gt;.&lt;ext&gt;</code>.
+New file <code>commons_messaging/channels/inbox.go</code> adds the
+channel-agnostic <code>InboxDir(channel string) (string, error)</code>
+(resolves <code>~/.herald/inbox/&lt;channel&gt;/</code>, MkdirAll 0700,
+empty-channel error) +
+<code>WriteContentAddressed(channel, mime string, r io.ReadCloser) (path, sha256Hex string, err error)</code>
+(streams <code>r</code> into
+<code>&lt;dir&gt;/&lt;sha256&gt;.&lt;ext&gt;</code> via
+<code>io.MultiWriter(tmp, sha256.New())</code> — never buffers the full
+payload — then atomic temp+rename; idempotent: if the content-addressed
+file already exists the <code>.part</code> temp is dropped and the
+existing path returned unchanged; closes <code>r</code>) +
+<code>MimeToExt(mime string)</code> (the Wave-6 tgram-private
+<code>mimeToExt</code> switch promoted VERBATIM to package level so
+every adapter shares one map).
+<code>commons_messaging/channels/tgram/attachments.go</code>
+<code>DownloadAttachment</code> now does only the Telegram-specific
+<code>bot.File(&amp;telebot.File{FileID})</code> fetch then delegates
+the stream-hash-rename to
+<code>channels.WriteContentAddressed(string(commons.ChannelTelegram), mime, rc)</code>
+— so tgram attachments land under <code>~/.herald/inbox/tgram/</code>
+(the per-channel subdir, was the flat <code>~/.herald/inbox/</code> in
+Wave 6). The tgram-private <code>mimeToExt</code> + the
+<code>crypto/sha256</code>/<code>encoding/hex</code>/<code>io</code>/<code>os</code>/<code>path/filepath</code>
+imports were removed from <code>attachments.go</code> (the helper owns
+them now); the method-form <code>(*Adapter).DownloadAttachment</code>
+(T1) delegates to the package func unchanged, so both forms route
+through the shared helper. §107 evidence:
+<code>TestInboxDirIsPerChannel</code> proves
+<code>InboxDir("tgram")</code> ends in <code>.../inbox/tgram</code> AND
+<code>InboxDir("tgram") != InboxDir("slack")</code> (no flat-inbox
+regression); <code>TestWriteContentAddressedHashesAndIsIdempotent</code>
+pins all three §107 bluff classes on real on-disk state — (a) path shape
+under <code>inbox/slack/</code> named <code>&lt;sha&gt;.txt</code>, (b)
+re-read on-disk bytes byte-equal the payload (sha in path == sha of
+content), (c) 2nd write of same content returns same
+<code>(path,sum)</code> and leaves zero <code>.part</code> residue (real
+<code>os.ReadDir</code> scan); the existing Wave-6
+<code>TestDownloadAttachmentContentAddressed</code> (updated to the
+<code>/tgram/</code> path segment) still PASSES end-to-end against a
+<code>httptest</code> Bot API, proving the routing change is
+behaviour-preserving.
+<code>go test -race -count=1 ./commons_messaging/... ./pherald/... ./qaherald/...</code>
+all green (no path-assumption regressions); <code>go vet</code> clean.
+Live runtime evidence (real Telegram attachment landing under
+<code>inbox/tgram/</code>) lands via Wave 7 T9 e2e invariant E83.</td>
+<td>2026-05-27</td>
+<td>(this commit)</td>
+<td>spec V3 §32; plan
+<code>docs/superpowers/plans/2026-05-27-wave7-generic-messenger.md</code>;
+Catalogue-Check: reuse (internal, 2026-05-27)</td>
+</tr>
+<tr>
+<td>HRD-111</td>
+<td>task</td>
+<td>high</td>
+<td>Wave 7 T2 — channel registry (name→constructor) +
+<code>init()</code>-based registration. New file
+<code>commons_messaging/channels/registry.go</code> adds
+<code>Register(name, Constructor)</code> /
+<code>New(name, Config) (Channel, error)</code> /
+<code>Names() []string</code>, the <code>ErrUnknownChannel</code>
+sentinel, the channel-agnostic <code>Config</code> struct
+(<code>Channel</code>/<code>Token</code>/<code>AppToken</code>/<code>Target</code>/<code>BaseURL</code>/<code>Extra</code>),
+and the <code>Constructor func(Config) (Channel, error)</code> type — a
+<code>sync.RWMutex</code>-guarded <code>map[string]Constructor</code>.
+<code>Register</code> panics on duplicate (a typo in two adapters'
+<code>init()</code> would silently shadow one — a §107 bluff class this
+framework forbids; mirrors the qaherald <code>scenario.Register</code>
+pattern). <code>New</code> wraps <code>ErrUnknownChannel</code>
+(<code>fmt.Errorf("%w: ...")</code>) for unknown names — callers
+(<code>pherald listen</code>) MUST surface it; a silent no-op channel is
+a §107 PASS-bluff.
+<code>commons_messaging/channels/tgram/tgram.go</code> gains an
+<code>init()</code> that calls
+<code>channels.Register(string(commons.ChannelTelegram), ...)</code>
+whose constructor builds
+<code>NewAdapterWithBaseURL(cfg.Token, cfg.Target, cfg.BaseURL)</code>
+when <code>cfg.BaseURL != ""</code> (httptest seam) else
+<code>NewWithCreds(cfg.Token, cfg.Target)</code> — so a blank import
+self-registers the adapter. §107 evidence:
+<code>TestRegistryResolvesRegisteredChannel</code> proves
+<code>New</code> actually constructs + returns a working
+<code>Channel</code> (<code>c.Name()=="fake-rt"</code>, not a no-op);
+<code>TestRegistryUnknownChannelErrors</code> proves
+<code>errors.Is(err, ErrUnknownChannel)</code> for unknown names;
+<code>TestRegistryDuplicatePanics</code> proves the
+duplicate-<code>Register</code> panic;
+<code>TestTgramRegisteredViaInit</code> (blank import
+<code>_ ".../tgram"</code>) proves the <code>init()</code> actually
+registered <code>tgram</code> in <code>Names()</code> (NOT a no-op —
+verified failing before the <code>init()</code> landed:
+<code>Names()=[dup-rt fake-rt]</code> without tgram, PASS after). The
+shared <code>fakeChannel</code> test stub uses
+<code>SendReplyGeneric</code> (the T1-resolved interface method name,
+NOT <code>SendReply</code>).
+<code>go test -race ./commons_messaging/...</code> green (tgram
+regression-free); all 16 workspace modules build;
+<code>go vet ./commons_messaging/...</code> clean. Live runtime evidence
+(real channel resolved by name + round-trip) lands via Wave 7 T9 e2e
+invariants E81/E82.</td>
+<td>2026-05-27</td>
+<td>(this commit)</td>
+<td>spec V3 §11.0; plan
+<code>docs/superpowers/plans/2026-05-27-wave7-generic-messenger.md</code>;
+mirrors qaherald <code>scenario.Register</code>; Catalogue-Check: reuse
+(internal pattern, 2026-05-27)</td>
+</tr>
+<tr>
+<td>HRD-110</td>
+<td>task</td>
+<td>high</td>
+<td>Wave 7 T1 — extract <code>commons_messaging/channels.Channel</code>
+interface (pure refactor). New package
+<code>commons_messaging/channels/</code> defines <code>Channel</code>
+(embeds the §11.0 <code>commons.Channel</code> —
+Name/Capabilities/Send/Subscribe/HealthCheck — plus the three
+inbound-runtime methods Telegram implicitly defined:
+<code>SendReplyGeneric</code> string-typed reply,
+<code>BotSelfIdentity</code> returning
+<code>SelfIdentity{Kind,Value}</code>, <code>DownloadAttachment</code>),
+the <code>SelfIdentity</code> value type, and the
+<code>IdentityKind</code> constants
+(<code>IdentityUsername</code>/<code>IdentityUserID</code>/<code>IdentityAddress</code>).
+<code>*tgram.Adapter</code> gains <code>BotSelfIdentity</code> (getMe
+via ensureBot; empty-username → §107 echo-loop-hazard error),
+<code>SendReplyGeneric</code> (string→int64/int adapter over the native
+Wave-6 <code>SendReply</code>), and a method-form
+<code>DownloadAttachment</code> (routes the package-level func through
+ensureBot's live bot) — so
+<code>var _ channels.Channel = (*tgram.Adapter)(nil)</code> compiles.
+Naming divergence from plan Step 4 text resolved + documented in
+<code>channel.go</code> package doc: the interface reply method is named
+<code>SendReplyGeneric</code> (not <code>SendReply</code>) so tgram
+satisfies it WITHOUT touching its native, §107-mutation-gate-anchored
+int64/int <code>SendReply</code> (whose migration to the generic
+signature is T5's scope) — keeping T1 a pure refactor with zero
+cross-package churn. §107 evidence:
+<code>var _ channels.Channel = (*tgram.Adapter)(nil)</code> compile-time
+assertion in <code>channel_test.go</code> (a renamed method / drifted
+signature breaks the build); <code>TestTgramSatisfiesChannel</code> +
+<code>TestSelfIdentityType</code> PASS; full
+<code>go test -race ./commons_messaging/...</code> green (tgram
+regression-free — pure-refactor proof); all 16 workspace modules build;
+<code>go vet ./commons_messaging/...</code> clean. Live runtime evidence
+(real getMe self-identity + reply round-trip) lands via Wave 7 T9 e2e
+invariant E81.</td>
+<td>2026-05-27</td>
+<td>(this commit)</td>
+<td>spec V3 §11.0 + §32.2; plan
+<code>docs/superpowers/plans/2026-05-27-wave7-generic-messenger.md</code>;
+Catalogue-Check: reuse (extends existing <code>commons.Channel</code>
+§11.0 contract, 2026-05-27)</td>
+</tr>
 <tr>
 <td>HRD-100</td>
 <td>task</td>
