@@ -1,0 +1,5 @@
+surface=bindings scenario=stress_concurrent_mem_budget rule=§12.6 mode=enforce class=host.safety.breach
+workers=8 iters=120 total=960 breaches=480 clean=480 errors=0
+bus_published_host_safety_breach=480 (==breaches: 1)
+NO_HOST_MEMORY_ALLOCATED=1 (used_fraction readings are simulated strings — §12.6 safe)
+p99_ms=0.9380 tput_per_sec=32171.3 race_detector=clean

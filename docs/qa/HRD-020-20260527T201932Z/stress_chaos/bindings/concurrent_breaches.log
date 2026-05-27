@@ -1,0 +1,8 @@
+surface=bindings scenario=stress_concurrent_breaches rule=§9.1 mode=enforce class=repo.safety.breach
+workers=8 iters_per_worker=150 total=1200
+fails=1200 non_fail=0 errors=0
+bus_published_repo_safety_breach=1200 audit_rows=1200
+no_lost_breaches_under_load=1
+detectors_pure_no_op_executed=1
+p50_ms=0.1730 p95_ms=0.5860 p99_ms=0.8610 max_ms=2.0040 tput_per_sec=33027.1
+race_detector=clean

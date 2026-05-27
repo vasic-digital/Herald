@@ -268,14 +268,57 @@ stress_chaos/). e2e: E90 proposed.</td>
 <tr>
 <td>HRD-020</td>
 <td>task</td>
-<td>open</td>
+<td>in_progress</td>
 <td>high</td>
-<td><code>sherald</code> host-safety + repo-safety bindings (§9.1/.2/.3,
-§12.1/.2/.3/.6, §11.4.32, §11.4.36, §11.4.41, §11.4.71) — destructive-op
-detection hook, force-push interceptor, mem-budget watcher</td>
+<td><code>sherald</code> host-safety + repo-safety constitution bindings
+— <code>sherald/internal/bindings</code> Pipeline registers the 15
+sherald-owned §42.3 host/repo-safety rules (§2, §9.1/.2/.3,
+§11.4.24/.26/.32/.36/.41/.47/.71, §12.1/.2/.3/.6) as concrete
+<code>commons_constitution.Evaluator</code> impls routed through 6
+SAFETY event classes
+(<code>.host.safety.breach</code>/<code>.repo.safety.breach</code>/<code>.gate.recovered</code>/<code>.gate.failed</code>/<code>.bundle.updated</code>/<code>.policy.violation</code>)
+over the Batch-A emit+persist+audit foundation, mirroring the proven
+HRD-019 cherald Pipeline pattern. The 3 named DETECTION hooks landed as
+REAL pure classifiers — destructive-op detector (§9.1:
+rm/git-reset/clean without backup → <code>.repo.safety.breach</code>),
+force-push interceptor (§11.4.41/§9.2: force-push without merge-first OR
+session-auth → <code>.repo.safety.breach</code>), mem-budget watcher
+(§12.6: reported used_fraction &gt; 60% →
+<code>.host.safety.breach</code>) — plus forbidden-host-op (§12.1) +
+prereq-marker detectors for the remaining rows. CRITICAL §12-safety:
+every detector DETECTS+REPORTS from a Subject string description; NONE
+performs the destructive op, force-pushes, suspends the host, or
+allocates memory (the mem-budget watcher reads a fabricated fraction —
+no real exhaustion). The §43 command bodies (HRD-033/046/056) supply the
+live op-interception feeding these detectors.</td>
 <td>2026-05-20</td>
-<td>2026-05-20</td>
-<td>spec V3 §42.3 sherald rows + §42.5 step 3; Catalogue-Check: TBD</td>
+<td>2026-05-27</td>
+<td>spec V3 §42.3 sherald rows + §42.5 step 3; Catalogue-Check: no-match
+(bindings are bespoke Helix-governance Evaluator impls;
+emit/persist/audit path is 100% Batch-A wiring + reuses the existing
+<code>commons_constitution.SafetyEvent</code>/<code>HostSafetyBreach</code>/<code>RepoSafetyBreach</code>
+emitter surface per §11.4.74). Evidence:
+docs/qa/HRD-020-20260527T201932Z/ (detect→emit→persist→audit round-trip
+transcript for §9.1/§11.4.41/§12.6/§12.1 + §11.4.85 stress_chaos/).
+§11.4.92 5-pass — Pass-1: TDD RED (no-impl build-fail) → GREEN,
+<code>go test -race -count=3 ./sherald/internal/bindings/...</code>
+deterministic 15/15 PASS ×3. Pass-2 blast-radius: new pkg
+<code>sherald/internal/bindings</code> only; sherald/go.mod gains
+commons_constitution + transitive replace block; existing sherald
+main/routes/safety untouched (Pipeline not yet wired into serve — REST
+<code>/v1/safety/*</code> surface is follow-up). Pass-3 cross-feature:
+independent of the existing in-memory safety.Aggregator + GET
+/v1/safety_state (Wave 3b); no shared state; the §32 Runner pipeline is
+unaffected (sherald owns a separate Pipeline like cherald). Pass-5
+anti-bluff: real MemoryBus+store+ladder+audit round-trip with captured
+emitted wire-event payloads (NOT metadata-only); §12-safe —
+TestDetectors_NeverPerformOps + structural witness confirm no real
+destructive op performed. e2e: E91 proposed (conductor to wire — asserts
+a sherald §9.1 destructive-op Subject → <code>.repo.safety.breach</code>
+detected+persisted+audited via the bindings Pipeline). NOTE: surfaced a
+latent race in <code>commons_constitution/eventbus.go</code> Publish
+PublishedByType sync.Map check-then-act (under-counts by 1 under load) —
+out of this unit's edit scope, flagged for conductor.</td>
 </tr>
 <tr>
 <td>HRD-021</td>

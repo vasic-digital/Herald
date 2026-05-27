@@ -4,10 +4,12 @@ go 1.25.3
 
 require (
 	github.com/gin-gonic/gin v1.12.0
+	github.com/google/uuid v1.6.0
 	github.com/redis/go-redis/v9 v9.6.1
 	github.com/spf13/cobra v1.10.2
 	github.com/vasic-digital/herald/commons v0.0.0
 	github.com/vasic-digital/herald/commons_auth v0.0.0
+	github.com/vasic-digital/herald/commons_constitution v0.0.0
 )
 
 require (
@@ -25,7 +27,6 @@ require (
 	github.com/goccy/go-json v0.10.5 // indirect
 	github.com/goccy/go-yaml v1.19.2 // indirect
 	github.com/golang-jwt/jwt/v5 v5.2.1 // indirect
-	github.com/google/uuid v1.6.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jonboulle/clockwork v0.4.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
@@ -52,3 +53,15 @@ require (
 replace github.com/vasic-digital/herald/commons => ../commons
 
 replace github.com/vasic-digital/herald/commons_auth => ../commons_auth
+
+replace github.com/vasic-digital/herald/commons_constitution => ../commons_constitution
+
+replace github.com/vasic-digital/herald/commons_storage => ../commons_storage
+
+replace github.com/vasic-digital/herald/commons_infra => ../commons_infra
+
+replace digital.vasic.cache => ../submodules/cache
+
+replace digital.vasic.containers => ../containers
+
+replace digital.vasic.database => ../submodules/database
