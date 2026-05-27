@@ -16,14 +16,17 @@
 package tgram
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/url"
+	"strconv"
 	"sync"
 
 	db "digital.vasic.database/pkg/database"
 
 	"github.com/vasic-digital/herald/commons"
+	"github.com/vasic-digital/herald/commons_messaging/channels"
 	telebot "gopkg.in/telebot.v3"
 )
 
@@ -182,3 +185,58 @@ func (a *Adapter) Capabilities() commons.Capabilities {
 // Subscribe is implemented in subscribe.go (live Bot API getUpdates long-poll).
 
 // HealthCheck is implemented in healthcheck.go (live Bot API getMe).
+
+// --- Wave 7 T1: channels.Channel interface satisfaction ---
+//
+// These three methods make *Adapter satisfy commons_messaging/channels.Channel
+// (the richer inbound interface that embeds commons.Channel). They are thin
+// adapters over the existing Wave 6 substrate — pure refactor, no behaviour
+// change. The native int64/int SendReply (send.go) is intentionally left
+// untouched (its migration to the generic signature is T5's scope).
+
+// BotSelfIdentity returns the bot's @username via getMe (ensureBot IS the live
+// roundtrip — telebot.NewBot dispatches getMe synchronously). Empty username =
+// §107 echo-loop hazard; inbound runtime refuses to boot on it.
+func (a *Adapter) BotSelfIdentity(ctx context.Context) (channels.SelfIdentity, error) {
+	_ = ctx // telebot.v3 getMe is not ctx-aware
+	if err := a.ensureBot(); err != nil {
+		return channels.SelfIdentity{}, fmt.Errorf("tgram.BotSelfIdentity: %w", err)
+	}
+	if a.bot == nil || a.bot.Me == nil || a.bot.Me.Username == "" {
+		return channels.SelfIdentity{}, errors.New("tgram.BotSelfIdentity: getMe empty username (echo-loop hazard)")
+	}
+	return channels.SelfIdentity{Kind: channels.IdentityUsername, Value: a.bot.Me.Username}, nil
+}
+
+// SendReplyGeneric adapts the string-typed channels.Channel reply method to the
+// native int64/int Telegram SendReply (send.go). recipient.ChannelUserID =
+// decimal chat_id; replyToID = decimal message_id ("" => no reply). Returns
+// decimal message_id.
+func (a *Adapter) SendReplyGeneric(ctx context.Context, recipient commons.Recipient, body, replyToID string, attachments []commons.Attachment) (string, error) {
+	chatID, err := strconv.ParseInt(recipient.ChannelUserID, 10, 64)
+	if err != nil {
+		return "", fmt.Errorf("tgram.SendReplyGeneric: chatID %q not numeric: %w", recipient.ChannelUserID, err)
+	}
+	replyTo := 0
+	if replyToID != "" {
+		if r, perr := strconv.Atoi(replyToID); perr == nil {
+			replyTo = r
+		}
+	}
+	id, err := a.SendReply(ctx, chatID, body, replyTo, attachments)
+	if err != nil {
+		return "", err
+	}
+	return strconv.Itoa(id), nil
+}
+
+// DownloadAttachment (method) satisfies channels.Channel — routes the package-
+// level DownloadAttachment (attachments.go) through ensureBot's live bot. (T3
+// migrates the package func to per-channel inbox; this method is the stable
+// interface seam.)
+func (a *Adapter) DownloadAttachment(ctx context.Context, externalID, mime string) (string, string, error) {
+	if err := a.ensureBot(); err != nil {
+		return "", "", fmt.Errorf("tgram.DownloadAttachment: %w", err)
+	}
+	return DownloadAttachment(ctx, a.bot, externalID, mime)
+}
