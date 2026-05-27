@@ -64,6 +64,22 @@ Lesson (forensic — Herald-internal): commit `72e81ab` (logo fix, 2026-05-21) s
 
 Qwen-agent-binding rule. Pre-`git add`: grep for mutation markers (`MUTATED for paired`, `// always pass`, `return json.Marshal` shortcuts, `// MUTATION` annotations, `_mutated_*` filenames, `.git/MUTATION_IN_PROGRESS` lockfile); cross-check `git status --porcelain` against declared scope; unaccounted entries ABORT. Active mutation gates serialise before unrelated commits; concurrent subagents use `git worktree add` or the lockfile. The prototype is `tests/test_wave4b_mutation_meta.sh` (`check_quiescence()` at line 92, assertion at line 197). Canonical Helix authority: `<discovered>/Constitution.md` §11.4.84. Canonical Herald authority: `docs/guides/HERALD_CONSTITUTION.md` §107.y.
 
+## Inherited covenant restatements — Helix §11.4.85 / §11.4.87 / §11.4.88 (inherited per §11.4.35)
+
+These three mandates are **inherited** from the HelixConstitution via parent-discovery (§11.4.35) and bind Qwen agents unchanged. This file **restates + cites**, it does NOT redefine or weaken. The literal anchors are required by the §11.4.87 `CM-COVENANT-114-87-PROPAGATION` pre-build gate, which asserts `11.4.85` / `11.4.87` / `11.4.88` appear in every consuming repo's CLAUDE.md / AGENTS.md / QWEN.md.
+
+### §11.4.85 — Stress + Chaos Test Mandate (Helix, 2026-05-24)
+
+No Qwen-driven Herald fix or improvement is done without full-automation **stress** (sustained / concurrent load) AND **chaos** (process-death / network-fault / input-corruption / resource-exhaustion / state-corruption injection) test suites, each PASS citing a captured-evidence artefact under `docs/qa/<run-id>/stress_chaos/` per §11.4.5 + §11.4.69. A happy-path-only PASS is a §11.4 / §107 PASS-bluff at the resilience layer. Canonical authority: HelixConstitution Constitution.md §11.4.85 (inherited per §11.4.35).
+
+### §11.4.87 — Endless-loop autonomous work + zero-idle agent dispatch + anti-bluff testing (Helix, 2026-05-26)
+
+When instructed to "continue in endless loop fully autonomously" (or equivalent), the Qwen agent MUST continue until ALL are simultaneously TRUE — Herald's loop checks `docs/Issues.md` Status-column (zero `In progress`/`Ready for testing`/`In testing`/`Reopened`), `docs/CONTINUATION.md` §3 "Active work" empty, TaskList reports no subagent mid-execution, and no in-flight push/build/sync. Dispatch background subagents for parallelisable non-contending work; idle ONLY while waiting on a result. Every closed item lands four-layer coverage (§11.4.4(b)) with real captured-evidence PASS; tests AND Challenges bound equally. Terminates only on all-clear, explicit operator `STOP`, a §12 host-session-safety demand, or a scheduled wake against a known-future-actionable signal. No `--idle-OK` / `--skip-endless-loop` / `--metadata-only-test-suffices` escape exists. Canonical authority: HelixConstitution Constitution.md §11.4.87 (inherited per §11.4.35).
+
+### §11.4.88 — Background-push mandate (Helix, 2026-05-26)
+
+Every Qwen-driven Herald commit flow MUST release the commit-lock (`.git/.commit_all.lock`) the instant `git commit` returns 0 — BEFORE any push — then spawn the push **detached** (`nohup ./push_all.sh ... &` + `disown`) with a per-remote flock so same-remote pushes serialise while GitHub / GitLab / GitFlic / GitVerse push in parallel. Backgrounded push failures land in `qa-results/push_failures/<TS>_<remote>.log` and the next autonomous-loop tick MUST surface them (silent push-failure is a §11.4 distribution-layer PASS-bluff). The ONLY synchronous-push escape is the explicit `--sync-push` flag for §11.4.41 force-push merge-first paths. Canonical authority: HelixConstitution Constitution.md §11.4.88 (inherited per §11.4.35).
+
 ## Qwen-specific notes
 
 Qwen agents follow the same disciplines documented for Claude Code:
