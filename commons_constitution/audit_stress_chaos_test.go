@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"path/filepath"
 	"sync"
 	"testing"
 
@@ -16,15 +15,18 @@ import (
 	"github.com/vasic-digital/herald/commons_constitution/state"
 )
 
-// qaRoot returns the repo-root docs/qa directory for §107.x / §11.4.85
-// evidence. Tests run from the package dir, so go up one level.
+// qaRoot returns the §107.x / §11.4.85 evidence root. When HERALD_STRESS_QA_DIR
+// is set (explicit evidence-capture runs), artefacts persist there (point it at
+// the repo docs/qa to refresh the committed HRD-018 evidence). Otherwise it
+// returns t.TempDir() so ordinary `go test` / e2e runs NEVER dirty tracked
+// evidence (#194 audit-noise fix — mirrors the events/runner stress tests'
+// HERALD_STRESS_QA_DIR-or-TempDir guard).
 func qaRoot(t *testing.T) string {
 	t.Helper()
-	wd, err := os.Getwd()
-	if err != nil {
-		t.Fatalf("Getwd: %v", err)
+	if dir := os.Getenv("HERALD_STRESS_QA_DIR"); dir != "" {
+		return dir
 	}
-	return filepath.Join(filepath.Dir(wd), "docs", "qa")
+	return t.TempDir()
 }
 
 // TestStress_EmitPersistNoLostWrites is the §11.4.85 stress proof for the
