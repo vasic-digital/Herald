@@ -1986,6 +1986,7 @@ SC_LISTEN_DIR="$(sc_newest '*HRD-126*')"
 SC_CC_DIR="$(sc_newest 'HRD-127-*')"
 SC_RES_DIR="$(sc_newest 'HRD-128-*')"
 SC_CONST_DIR="$(sc_newest 'HRD-018-*')"
+SC_BIND_DIR="$(sc_newest 'HRD-019-*')"
 
 # sc_anchor <invariant-label> <evidence-file> <literal-anchor-string>
 # Asserts the captured-evidence file contains the load-bearing anchor value.
@@ -2056,6 +2057,11 @@ check "E89 constitution audit write-through + mode-flip REST (emit→persist→a
     "go test -race -count=1 ./commons_constitution/... ./cherald/internal/modes/..."
 sc_anchor "E89"  "${SC_CONST_DIR:+${SC_CONST_DIR}/02_admin_rest_flip.txt}" "PASS: TestModes_FlipReflectsImmediately"
 sc_anchor "E89b" "${SC_CONST_DIR:+${SC_CONST_DIR}/01_emit_persist_realpg.txt}" "PASS: TestPostgresRunner_EndToEndAuditPersist"
+
+# ---- E90: cherald constitution bindings detect→emit→persist→query (HRD-019) ----
+check "E90 cherald constitution bindings — violation detect→emit→audit→query round-trip (-race)" \
+    "go test -race -count=1 ./cherald/internal/bindings/... ./cherald/internal/compliance/..."
+sc_anchor "E90" "${SC_BIND_DIR:+${SC_BIND_DIR}/rest/binding_roundtrip_transcript.md}" '"emitted": true'
 
 # ----------------------------------------------------------------------
 echo ""
