@@ -183,11 +183,27 @@ func extractTenant(claims map[string]any) (uuid.UUID, error) {
 // SetNX/Get without binding to a specific *redis.Client. Production
 // passes a real *redis.Client; tests inject fakeRedis directly into the
 // Runner struct (bypassing this adapter).
+//
+// Graceful degradation (per cmd/pherald/main.go:buildRedisClient): when
+// HERALD_REDIS_URL is unset, buildRedisClient returns a nil Cmdable and
+// NewRunner wires it in here. A nil client MUST NOT crash the pipeline —
+// the adapter short-circuits the Redis fast-path so the IdempotencyChecker
+// falls through to the PG events_processed table as the sole duplicate
+// detector (Wave 3 design §4 "Redis-lies-PG-truths"; degraded but
+// functional). A Redis outage therefore degrades to PG-only idempotency
+// rather than panicking pherald.
 type redisAdapter struct {
 	client redis.Cmdable
 }
 
 func (r redisAdapter) SetNX(ctx context.Context, key, value string, ttl time.Duration) (bool, error) {
+	if r.client == nil {
+		// No Redis configured: report "not set" so the IdempotencyChecker
+		// proceeds to its PG Lookup confirmation (the §32.1.1 fallback).
+		// Returning false (not true) is deliberate — true would mean
+		// "fresh, fast-path accept" and skip the PG duplicate check.
+		return false, nil
+	}
 	res, err := r.client.SetNX(ctx, key, value, ttl).Result()
 	if err != nil {
 		return false, err
@@ -196,6 +212,11 @@ func (r redisAdapter) SetNX(ctx context.Context, key, value string, ttl time.Dur
 }
 
 func (r redisAdapter) Get(ctx context.Context, key string) (string, error) {
+	if r.client == nil {
+		// No Redis configured: behave like a cache miss so callers fall
+		// back to the PG-truth path rather than nil-dereferencing.
+		return "", redis.Nil
+	}
 	return r.client.Get(ctx, key).Result()
 }
 
