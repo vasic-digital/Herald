@@ -1297,6 +1297,100 @@ scripts/e2e_bluff_hunt.sh<code>clean; the E81-E88 block run standalone TWICE = 1
 <td>2026-05-27</td>
 </tr>
 <tr>
+<td>HRD-130</td>
+<td>task</td>
+<td>in_progress</td>
+<td>high</td>
+<td>§11.4.85 / §1.1 paired mutation gate for the GAP-3 stress+chaos
+suite — new <code>tests/test_stress_chaos_mutation_meta.sh</code> (GAP-3
+plan §5 / §6 T9). Proves each hermetic stress/chaos detector is
+genuinely LOAD-BEARING: for every load-bearing production
+resilience/recovery property, MUTATE it → assert the matching detector
+FAILs → restore via <code>git checkout</code> → assert it PASSes again.
+Modelled byte-for-byte on the canonical
+<code>tests/test_wave6.5_mutation_meta.sh</code> idiom:
+<code>set -uo pipefail</code>, <code>.git/MUTATION_IN_PROGRESS</code>
+lockfile (touch first, <code>rm -f</code> in
+<code>trap cleanup_all EXIT INT TERM</code>), dirty-tree + lockfile +
+pre-existing-residue refusal pre-flights, <code>run_paired</code> (apply
+perl mutation → assert marker landed → run detector EXPECT-FAIL →
+<code>git checkout</code> restore → <code>assert_restored</code>
+byte-for-byte vs HEAD → re-run detector EXPECT-PASS), and a final
+<code>check_quiescence</code> scan asserting no
+<code>MUTATED SC-M*</code> markers leaked into the four target files
+(§107.y). Runs ONE-AT-A-TIME, FOREGROUND, never backgrounded/concurrent
+(§107.y + the 2026-05-27 concurrent-gate-residue incident memo — it
+transiently mutates production source). FIVE paired mutations, each
+against a hermetic detector (NO container runtime / live PG-Redis / real
+<code>claude</code> needed): <strong>SC-M1</strong> drop the ctx from
+claude_code <code>dispatch.go:92</code>
+<code>exec.CommandContext(ctx,…)</code>→<code>exec.Command(…)</code>
+(ctx still used by <code>bootstrapSession</code> so it compiles) →
+<code>TestDispatch_Chaos_TimeoutContextCancel</code> no longer cancels
+the 30s-sleep shim at the 800ms deadline → 8s watchdog
+<code>t.Fatal</code> (FAIL); <strong>SC-M2</strong> swallow the
+claude_code <code>parseReply</code> decode error
+(<code>dispatch.go:124-126</code>
+<code>return DispatchResponse{}, fmt.Errorf("decode reply JSON…")</code>→<code>_ = err; return resp, nil</code>)
+→ <code>TestDispatch_Chaos_TruncatedReply</code> (truncated shim emits
+<code>{"…":"truncat</code> — the DECODE path) now returns nil error →
+<code>if dispErr == nil { t.Fatalf }</code> (FAIL);
+<strong>SC-M3</strong> make inbound <code>dispatcher.go:339</code>
+<code>extractReplyToMessageID</code> <code>default:</code>
+<code>panic(…)</code> instead of <code>return 0, fmt.Errorf(…)</code> →
+<code>TestInbound_Chaos_ExtractReplyToMessageID_Degrades</code>
+string/bool/slice/map cases panic → per-case recover-guard
+<code>t.Fatalf</code> (FAIL); <strong>SC-M4</strong> mismap the events
+<code>events.go:176-177</code> <code>mapErrorToStatus</code>
+<code>event_parser:</code> case from
+<code>http.StatusBadRequest</code>→<code>http.StatusInternalServerError</code>
+→ <code>TestEventsHTTP_Chaos_InputCorruption</code> malformed bodies now
+5xx → <code>code/100==5</code> bad5xx counter (FAIL;
+<code>http.StatusBadRequest</code> still used by the
+<code>tenant_resolver:</code> case so no unused-import);
+<strong>SC-M5</strong> swallow the disk-full write error in
+commons_storage <code>migrator.go:163</code> <code>applyMigration</code>
+(<code>return fmt.Errorf("exec up: %w", err)</code>→<code>_ = err; return nil</code>)
+→ <code>TestRunMigrations_Chaos_DiskFull_TaggedError</code> ENOSPC now
+reports success → <code>if err == nil { t.Fatalf }</code> silent-swallow
+guard (FAIL). §11.4.92 disclosure — Pass-2 (the mechanical doc): this
+work-item wrote ONLY the gate script + this Issues row; it did NOT
+execute the gate, run <code>go test</code>, or edit production .go
+source. EACH mutation's perl/sed anchor was VERIFIED against the CURRENT
+production source by reading the exact lines
+(<code>dispatch.go:92</code>
+<code>cmd := exec.CommandContext(ctx, d.binaryPath,</code>;
+<code>dispatch.go:124</code>
+<code>if err := dec.Decode(&amp;resp); err != nil {</code>…<code>fmt.Errorf("decode reply JSON: %w (raw: %q)", err, truncate(after[braceIdx:], 512))</code>;
+<code>dispatcher.go:339</code>
+<code>return 0, fmt.Errorf("inbound: Raw.message_id unsupported type %T", v)</code>;
+<code>events.go:176</code>
+<code>case strings.Contains(msg, "event_parser:"):</code> +
+<code>:177</code> <code>return http.StatusBadRequest</code>;
+<code>migrator.go:163</code>
+<code>return fmt.Errorf("exec up: %w", err)</code>) — each anchor
+confirmed to appear EXACTLY once (no stale-anchor §11.4 bluff, per the
+wave4 M2 lesson), each mutation dry-run-applied to a /tmp COPY (tracked
+source never touched) where the marker landed and <code>gofmt -e</code>
+parsed the mutated Go clean. Pass-5 (the substance): once executed (by
+the conductor, one-at-a-time foreground, after the in-flight
+e2e_bluff_hunt completes), the gate will prove all five stress/chaos
+detectors are real anti-bluff guards — each FAILs when its production
+property is removed and PASSes when restored — not
+green-by-construction. <code>bash -n</code> clean; chmod +x. Did NOT
+execute the gate (conductor will).</td>
+<td>2026-05-27</td>
+<td>2026-05-27</td>
+<td>GAP-3 plan
+<code>docs/superpowers/plans/2026-05-27-stress-chaos-suite.md</code> §5
++ §6 T9; Universal §11.4.85 + §1.1 (inherited per §11.4.35) + Herald
+§107.y + §108.a; canonical template
+<code>tests/test_wave6.5_mutation_meta.sh</code>; detectors
+HRD-123/HRD-126/HRD-127/HRD-128; depends on HRD-123..HRD-129;
+Catalogue-Check: no-match — paired-§1.1 shell gate over existing Go
+detectors, no external tool, no new dep (2026-05-27).</td>
+</tr>
+<tr>
 <td>HRD-132</td>
 <td>bug</td>
 <td>open</td>
