@@ -1,0 +1,28 @@
+QA-EVIDENCE-ANCHOR: HRD-031-tag-mirror-rherald-§4-C4
+Feature: rherald tag-mirror <tag> (§4 tag-mirror parity gate) — v1.0.0 Batch C cluster C4
+Recorded: 2026-05-28T04:00:00Z  Binary: rherald 0.0.0-dev (/tmp/rherald)
+Hermetic: temp work repo + 2 file:// bare mirror remotes (mirror0, mirror1). NEVER touches real Herald mirrors.
+
+================================================================
+## Scenario A — gate BLOCK: tag present on only 1 of 2 mirrors
+Setup: push tag v9.9.9 to mirror0 ONLY.
+----------------------------------------------------------------
+$ rherald tag-mirror --repo $WORK --remote mirror0 --remote mirror1 v9.9.9
+tag-mirror: v9.9.9 present on mirror mirror0
+tag-mirror: v9.9.9 MISSING on mirror mirror1
+tag-mirror: v9.9.9 local=true parity=1/2 owned mirrors
+[FAIL] §4: §4: tag v9.9.9 mirror-parity MISS: 1/2 owned mirrors carry the tag
+rherald: §4 breach: §4: tag v9.9.9 mirror-parity MISS: 1/2 owned mirrors carry the tag
+exit=1
+
+================================================================
+## Scenario B — gate ALLOW (+ --emit): tag present on ALL mirrors
+Setup: push tag v9.9.9 to mirror1 too (now full parity).
+----------------------------------------------------------------
+$ rherald tag-mirror --repo $WORK --remote mirror0 --remote mirror1 --emit v9.9.9
+tag-mirror: v9.9.9 present on mirror mirror0
+tag-mirror: v9.9.9 present on mirror mirror1
+tag-mirror: v9.9.9 local=true parity=2/2 owned mirrors
+[PASS] §4: §4: tag v9.9.9 present on all 2 owned mirrors
+[emit] §4 drove a constitution event for subject v9.9.9|tag=present|mirrors=2|with_tag=2
+exit=0

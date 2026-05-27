@@ -15,11 +15,13 @@ import (
 )
 
 // version is overridden at build time:
-//   go build -ldflags "-X main.version=$(git describe --tags)"
+//
+//	go build -ldflags "-X main.version=$(git describe --tags)"
 var version = "0.0.0-dev"
 
 // commit is overridden at build time:
-//   go build -ldflags "-X main.commit=$(git rev-parse --short HEAD)"
+//
+//	go build -ldflags "-X main.commit=$(git rev-parse --short HEAD)"
 var commit = "unknown"
 
 func main() {
@@ -33,6 +35,7 @@ func main() {
 
 	root.AddCommand(cli.VersionCmd(branding))
 	stubs.Register(root)
+	registerBuildOps(root)
 
 	if err := root.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, "bherald:", err)

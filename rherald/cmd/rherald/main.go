@@ -15,11 +15,13 @@ import (
 )
 
 // version is overridden at build time:
-//   go build -ldflags "-X main.version=$(git describe --tags)"
+//
+//	go build -ldflags "-X main.version=$(git describe --tags)"
 var version = "0.0.0-dev"
 
 // commit is overridden at build time:
-//   go build -ldflags "-X main.commit=$(git rev-parse --short HEAD)"
+//
+//	go build -ldflags "-X main.commit=$(git rev-parse --short HEAD)"
 var commit = "unknown"
 
 func main() {
@@ -32,6 +34,10 @@ func main() {
 	root.Version = version + " (" + commit + ")"
 
 	root.AddCommand(cli.VersionCmd(branding))
+	// §43 release-lifecycle commands register via registerReleaseOps (HRD-031
+	// tag-mirror / HRD-032 changelog-generate / HRD-045 gate-retest); the
+	// remaining stubs (currently none) via rherald/internal/stubs.
+	registerReleaseOps(root)
 	stubs.Register(root)
 
 	if err := root.Execute(); err != nil {

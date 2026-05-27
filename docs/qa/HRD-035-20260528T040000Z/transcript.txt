@@ -1,0 +1,42 @@
+QA-ANCHOR: HRD-035-C5-EVIDENCE-CAPTURE-E2E-bherald
+Run-ID: HRD-035-20260528T040000Z
+Command: bherald evidence-capture (§11.4.2 recorded-evidence — RuleID §11.4.2, Subject.Kind evidence, detector checkAntiBluffPASS)
+Binary: Build Herald 0.0.0-dev (built from bherald/cmd/bherald)
+Date: 2026-05-27T22:32:57Z
+Evidence sandbox: /var/folders/t3/dmp1fb1d61xbl27trnjtr0_c0000gn/T/tmp.PDoh6fpcle (transcript.txt = real artefact; empty.txt = touch-only stub)
+============================================================
+
+### [1] GATE-PASS — outcome=pass WITH a present, non-empty evidence artefact + --emit
+$ bherald evidence-capture --test-id E89 --outcome pass --evidence-path /var/folders/t3/dmp1fb1d61xbl27trnjtr0_c0000gn/T/tmp.PDoh6fpcle/transcript.txt --emit
+evidence-capture: test="E89" outcome=pass evidence=true (--evidence-path "/var/folders/t3/dmp1fb1d61xbl27trnjtr0_c0000gn/T/tmp.PDoh6fpcle/transcript.txt" is a 61-byte artefact)
+[PASS] §11.4.2: §11.4.2: E89 PASS with captured evidence
+[emit] §11.4.2 drove a constitution event for subject E89|outcome=pass|evidence=true
+exit=0
+
+### [2] GATE-BLOCK — outcome=pass with NO evidence ⇒ §11.4.2 PASS-BLUFF, non-zero exit
+$ bherald evidence-capture --test-id fake-green --outcome pass
+evidence-capture: test="fake-green" outcome=pass evidence=false (no --evidence-path and --has-evidence not set)
+[FAIL] §11.4.2: §11.4.2/§11.4.5 PASS-BLUFF: fake-green reports PASS with NO captured-evidence artefact (metadata-only PASS is a §11.4 bluff)
+bherald: §11.4.2 breach: §11.4.2/§11.4.5 PASS-BLUFF: fake-green reports PASS with NO captured-evidence artefact (metadata-only PASS is a §11.4 bluff)
+exit=1
+
+### [3] GATE-BLOCK — outcome=pass + a touch-only EMPTY artefact (not evidence) ⇒ FAIL
+$ bherald evidence-capture --test-id touch-only --outcome pass --evidence-path /var/folders/t3/dmp1fb1d61xbl27trnjtr0_c0000gn/T/tmp.PDoh6fpcle/empty.txt
+evidence-capture: test="touch-only" outcome=pass evidence=false (--evidence-path "/var/folders/t3/dmp1fb1d61xbl27trnjtr0_c0000gn/T/tmp.PDoh6fpcle/empty.txt" is empty (touch-only stub is not evidence))
+[FAIL] §11.4.2: §11.4.2/§11.4.5 PASS-BLUFF: touch-only reports PASS with NO captured-evidence artefact (metadata-only PASS is a §11.4 bluff)
+bherald: §11.4.2 breach: §11.4.2/§11.4.5 PASS-BLUFF: touch-only reports PASS with NO captured-evidence artefact (metadata-only PASS is a §11.4 bluff)
+exit=1
+
+### [4] GATE-PASS — an honest outcome=fail is NOT a bluff ⇒ anti-bluff check passes
+$ bherald evidence-capture --test-id broken --outcome fail
+evidence-capture: test="broken" outcome=fail evidence=false (no --evidence-path and --has-evidence not set)
+[PASS] §11.4.2: §11.4.2: broken honestly reported outcome=fail (not a PASS-bluff)
+exit=0
+
+============================================================
+OBSERVATIONS:
+ - [1] PASS verdict '[PASS] §11.4.2' (evidence=true) + exit 0; --emit drove a REAL constitution gate event.
+ - [2] outcome=pass with NO captured evidence is a §107 PASS-bluff ⇒ '[FAIL] §11.4.2 PASS-BLUFF' + EXIT NON-ZERO (BLOCK).
+ - [3] a touch-only empty file is rejected (evidence=false) — a touch stub is itself a bluff ⇒ BLOCK.
+ - [4] an honest FAIL passes the anti-bluff check (the gate correctly reported failure).
+ - PURE: the command stats the artefact for presence+size; it NEVER reads/inspects its content bytes.

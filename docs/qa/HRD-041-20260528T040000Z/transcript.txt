@@ -1,0 +1,32 @@
+QA-ANCHOR: HRD-041-C5-TEST-TIER-VERIFY-E2E-bherald
+Run-ID: HRD-041-20260528T040000Z
+Command: bherald test-tier-verify (§11.4.27 / §40.2 — RuleID §11.4.27, Subject.Kind test-tier, detector checkTestTierVerify)
+Binary: Build Herald 0.0.0-dev (built from bherald/cmd/bherald)
+Date: 2026-05-27T22:32:36Z
+============================================================
+
+### [1] GATE-PASS — full §40.2 8-tier matrix present (--all-tiers) + --emit
+$ bherald test-tier-verify --pkg commons --all-tiers --emit
+test-tier-verify: pkg="commons" observed tiers=[unit,component,integration,contract,e2e_sandbox,e2e_live,mutation,chaos]
+[PASS] §11.4.27: §11.4.27/§40.2: commons carries all 8 canonical test tiers
+[emit] §11.4.27 drove a constitution event for subject commons|tiers=unit,component,integration,contract,e2e_sandbox,e2e_live,mutation,chaos
+exit=0
+
+### [2] GATE-PASS — all 8 tiers supplied explicitly via --tier
+$ bherald test-tier-verify --pkg pherald --tier unit,component,integration,contract --tier e2e_sandbox,e2e_live,mutation,chaos
+test-tier-verify: pkg="pherald" observed tiers=[unit,component,integration,contract,e2e_sandbox,e2e_live,mutation,chaos]
+[PASS] §11.4.27: §11.4.27/§40.2: pherald carries all 8 canonical test tiers
+exit=0
+
+### [3] GATE-BLOCK — missing tiers (only unit/component/integration) ⇒ §11.4.27 FAIL, non-zero exit
+$ bherald test-tier-verify --pkg commons_messaging --tier unit,component,integration
+test-tier-verify: pkg="commons_messaging" observed tiers=[unit,component,integration]
+[FAIL] §11.4.27: §11.4.27/§40.2: commons_messaging missing test tiers: contract,e2e_sandbox,e2e_live,mutation,chaos
+exit=1
+
+============================================================
+OBSERVATIONS:
+ - [1]/[2] PASS verdict line '[PASS] §11.4.27' + exit 0 (gate satisfied).
+ - [1] --emit drove a REAL constitution gate event ('[emit] §11.4.27 drove ...').
+ - [3] FAIL verdict line '[FAIL] §11.4.27' names the missing tiers + EXITS NON-ZERO (BLOCK).
+ - PURE: no build run, no suite executed — the command classifies the recorded tier coverage.

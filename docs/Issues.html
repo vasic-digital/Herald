@@ -47,7 +47,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>19</td>
+<td>20</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -63,8 +63,24 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>r19 (v1.0.0 Batch C cluster C2) marks HRD-033/040/046/056
-(sherald §43 system/safety commands) Open→in_progress + lands a §107
+<td><strong>r20 (v1.0.0 Batch C clusters C4+C5) marks HRD-031/032/045
+(rherald §43 release) + HRD-041/035 (bherald §43 build/CI)
+Open→in_progress.</strong> rherald
+(<code>rherald/cmd/rherald/release_cmds.go</code>, HRD-022 binding):
+<code>tag-mirror</code> (§4 multi-mirror tag-parity →
+<code>.release.gate_blocked</code>), <code>changelog-generate</code> (§5
+Conventional-Commits → <code>docs/changelogs/&lt;v&gt;.md</code>),
+<code>gate-retest</code> (§11.4.40 pre-tag full-suite retest gate) —
+reuse the shared <code>commons/gitops</code>
+(<code>TagExists</code>/<code>RemoteHasTag</code>/<code>LogSubjects</code>).
+bherald (<code>bherald/cmd/bherald/build_cmds.go</code>, HRD-021
+binding): <code>test-tier-verify</code> (§11.4.27 8-tier matrix),
+<code>evidence-capture</code> (§11.4.2 anti-bluff recorded-evidence).
+Each DETECTS+classifies+exits-non-zero; all hermetic <code>-race</code>
+green; e2e <strong>E105-E109</strong> wired, each anchored to its
+<code>docs/qa/HRD-0NN-20260528T040000Z/transcript.txt</code>.
+<strong>Prior r19 (v1.0.0 Batch C cluster C2) marked HRD-033/040/046/056
+(sherald §43 system/safety commands) Open→in_progress + landed a §107
 lazy-verifier usability fix.</strong> The four sherald §43 commands
 landed as PRE-FLIGHT GATES
 (<code>sherald/cmd/sherald/sysops_cmds.go</code>) feeding the HRD-020
@@ -575,24 +591,33 @@ tests -race green</td>
 <tr>
 <td>HRD-031</td>
 <td>task</td>
-<td>open</td>
+<td>in_progress</td>
 <td>middle</td>
 <td>§4 <code>rherald tag mirror</code> — assert tag exists on every
-owned submodule</td>
+owned submodule — Batch C: implemented as rherald §43 release command
+(<code>rherald/cmd/rherald/release_cmds.go</code>) feeding the HRD-022
+rherald binding; reuses shared <code>commons/gitops</code>; hermetic
+-race green</td>
 <td>2026-05-20</td>
-<td>2026-05-20</td>
-<td>spec §43.2 / §4; Catalogue-Check: TBD</td>
+<td>2026-05-28</td>
+<td>spec §43.2 / §4; Catalogue-Check: TBD;
+docs/qa/HRD-031-20260528T040000Z/</td>
 </tr>
 <tr>
 <td>HRD-032</td>
 <td>task</td>
-<td>open</td>
+<td>in_progress</td>
 <td>low</td>
 <td>§5 <code>rherald changelog generate</code> — Conventional Commits →
-<code>docs/changelogs/&lt;v&gt;.md</code> + multi-format export</td>
+<code>docs/changelogs/&lt;v&gt;.md</code> + multi-format export — Batch
+C: implemented as rherald §43 release command
+(<code>rherald/cmd/rherald/release_cmds.go</code>) feeding the HRD-022
+rherald binding; reuses shared <code>commons/gitops</code>; hermetic
+-race green</td>
 <td>2026-05-20</td>
-<td>2026-05-20</td>
-<td>spec §43.2 / §5 / §36; Catalogue-Check: TBD</td>
+<td>2026-05-28</td>
+<td>spec §43.2 / §5 / §36; Catalogue-Check: TBD;
+docs/qa/HRD-032-20260528T040000Z/</td>
 </tr>
 <tr>
 <td>HRD-033</td>
@@ -625,13 +650,16 @@ snapshot helper</td>
 <tr>
 <td>HRD-035</td>
 <td>task</td>
-<td>open</td>
+<td>in_progress</td>
 <td>middle</td>
 <td>§11.4.2 <code>bherald evidence capture &lt;test_id&gt;</code> —
-captured-evidence recorder</td>
+captured-evidence recorder — Batch C: implemented as bherald §43
+build/CI command (<code>bherald/cmd/bherald/build_cmds.go</code>)
+feeding the HRD-021 bherald binding; hermetic -race green</td>
 <td>2026-05-20</td>
-<td>2026-05-20</td>
-<td>spec §43.2 / §11.4.2 + §11.4.5; Catalogue-Check: TBD</td>
+<td>2026-05-28</td>
+<td>spec §43.2 / §11.4.2 + §11.4.5; Catalogue-Check: TBD;
+docs/qa/HRD-035-20260528T040000Z/</td>
 </tr>
 <tr>
 <td>HRD-036</td>
@@ -700,13 +728,16 @@ docs/qa/HRD-040-20260528T030000Z/</td>
 <tr>
 <td>HRD-041</td>
 <td>task</td>
-<td>open</td>
+<td>in_progress</td>
 <td>middle</td>
 <td>§11.4.27 <code>bherald test-tier verify</code> — 8-tier matrix
-verification</td>
+verification — Batch C: implemented as bherald §43 build/CI command
+(<code>bherald/cmd/bherald/build_cmds.go</code>) feeding the HRD-021
+bherald binding; hermetic -race green</td>
 <td>2026-05-20</td>
-<td>2026-05-20</td>
-<td>spec §43.2 / §11.4.27 + §40.2; Catalogue-Check: TBD</td>
+<td>2026-05-28</td>
+<td>spec §43.2 / §11.4.27 + §40.2; Catalogue-Check: TBD;
+docs/qa/HRD-041-20260528T040000Z/</td>
 </tr>
 <tr>
 <td>HRD-042</td>
@@ -751,13 +782,17 @@ git binary); --emit feeds HRD-023 binding; hermetic temp-repo tests
 <tr>
 <td>HRD-045</td>
 <td>task</td>
-<td>open</td>
+<td>in_progress</td>
 <td>high</td>
 <td>§11.4.40 <code>rherald gate retest</code> — pre-tag full-suite
-retest gate</td>
+retest gate — Batch C: implemented as rherald §43 release command
+(<code>rherald/cmd/rherald/release_cmds.go</code>) feeding the HRD-022
+rherald binding; reuses shared <code>commons/gitops</code>; hermetic
+-race green</td>
 <td>2026-05-20</td>
-<td>2026-05-20</td>
-<td>spec §43.2 / §11.4.40; Catalogue-Check: TBD</td>
+<td>2026-05-28</td>
+<td>spec §43.2 / §11.4.40; Catalogue-Check: TBD;
+docs/qa/HRD-045-20260528T040000Z/</td>
 </tr>
 <tr>
 <td>HRD-046</td>

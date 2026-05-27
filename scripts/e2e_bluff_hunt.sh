@@ -2047,6 +2047,15 @@ SC_SYS_CONSTPULL_DIR="$(sc_newest 'HRD-040-*')"
 SC_SYS_FORCEPUSH_DIR="$(sc_newest 'HRD-046-*')"
 SC_SYS_MEMBUDGET_DIR="$(sc_newest 'HRD-056-*')"
 
+# v1.0.0 Batch C clusters C4 (rherald §43 release) + C5 (bherald §43 build/CI)
+# (HRD-031 tag-mirror / HRD-032 changelog-generate / HRD-045 gate-retest /
+# HRD-041 test-tier-verify / HRD-035 evidence-capture).
+SC_REL_TAGMIRROR_DIR="$(sc_newest 'HRD-031-*')"
+SC_REL_CHANGELOG_DIR="$(sc_newest 'HRD-032-*')"
+SC_REL_RETEST_DIR="$(sc_newest 'HRD-045-*')"
+SC_BUILD_TIER_DIR="$(sc_newest 'HRD-041-*')"
+SC_BUILD_EVIDENCE_DIR="$(sc_newest 'HRD-035-*')"
+
 # sc_anchor <invariant-label> <evidence-file> <literal-anchor-string>
 # Asserts the captured-evidence file contains the load-bearing anchor value.
 # SKIP-with-reason when the evidence dir/file is absent (fresh clone before
@@ -2191,6 +2200,31 @@ sc_anchor "E103" "${SC_SYS_FORCEPUSH_DIR:+${SC_SYS_FORCEPUSH_DIR}/transcript.txt
 check "E104 §12.6 sherald mem-budget-watch — over-ceiling BLOCK + under-ceiling ALLOW (hermetic, -race)" \
     "go test -race -count=1 -run 'TestMemBudgetWatch_OverCeiling_Blocks|TestMemBudgetWatch_UnderCeiling_Allows' ./sherald/cmd/sherald/..."
 sc_anchor "E104" "${SC_SYS_MEMBUDGET_DIR:+${SC_SYS_MEMBUDGET_DIR}/transcript.txt}" "mem-budget-watch blocked at used_fraction>=0.60 host.safety_breach"
+
+# ---- E105: §4 rherald tag-mirror command (HRD-031) ----
+check "E105 §4 rherald tag-mirror — all-mirrors-have-tag ALLOW + missing-on-mirror BLOCK (hermetic, -race)" \
+    "go test -race -count=1 -run 'TestTagMirror_AllMirrorsHaveTag_Allows|TestTagMirror_MissingOnMirror_Blocks' ./rherald/cmd/rherald/..."
+sc_anchor "E105" "${SC_REL_TAGMIRROR_DIR:+${SC_REL_TAGMIRROR_DIR}/transcript.txt}" "QA-EVIDENCE-ANCHOR: HRD-031-tag-mirror-rherald-§4-C4"
+
+# ---- E106: §5 rherald changelog-generate command (HRD-032) ----
+check "E106 §5 rherald changelog-generate — conventional-commits changelog from git log (hermetic, -race)" \
+    "go test -race -count=1 -run 'TestChangelogGenerate_WritesConventionalCommits' ./rherald/cmd/rherald/..."
+sc_anchor "E106" "${SC_REL_CHANGELOG_DIR:+${SC_REL_CHANGELOG_DIR}/transcript.txt}" "QA-EVIDENCE-ANCHOR: HRD-032-changelog-generate-rherald-§5-C4"
+
+# ---- E107: §11.4.40 rherald gate-retest command (HRD-045) ----
+check "E107 §11.4.40 rherald gate-retest — retest-passed ALLOW + retest-failed BLOCK (hermetic, -race)" \
+    "go test -race -count=1 -run 'TestGateRetest_RetestPassed_Allows|TestGateRetest_RetestFailed_Blocks' ./rherald/cmd/rherald/..."
+sc_anchor "E107" "${SC_REL_RETEST_DIR:+${SC_REL_RETEST_DIR}/transcript.txt}" "QA-EVIDENCE-ANCHOR: HRD-045-gate-retest-rherald-§11.4.40-C4"
+
+# ---- E108: §11.4.27 bherald test-tier-verify command (HRD-041) ----
+check "E108 §11.4.27 bherald test-tier-verify — all-tiers-present ALLOW + missing-tier BLOCK (hermetic, -race)" \
+    "go test -race -count=1 -run 'TestTestTierVerify_AllTiersPresent_Allows|TestTestTierVerify_MissingTier_Blocks' ./bherald/cmd/bherald/..."
+sc_anchor "E108" "${SC_BUILD_TIER_DIR:+${SC_BUILD_TIER_DIR}/transcript.txt}" "QA-ANCHOR: HRD-041-C5-TEST-TIER-VERIFY-E2E-bherald"
+
+# ---- E109: §11.4.2 bherald evidence-capture command (HRD-035) ----
+check "E109 §11.4.2 bherald evidence-capture — with-evidence ALLOW + metadata-only BLOCK (hermetic, -race)" \
+    "go test -race -count=1 -run 'TestEvidenceCapture_WithEvidence_Allows|TestEvidenceCapture_MetadataOnly_Blocks' ./bherald/cmd/bherald/..."
+sc_anchor "E109" "${SC_BUILD_EVIDENCE_DIR:+${SC_BUILD_EVIDENCE_DIR}/transcript.txt}" "QA-ANCHOR: HRD-035-C5-EVIDENCE-CAPTURE-E2E-bherald"
 
 # ----------------------------------------------------------------------
 echo ""

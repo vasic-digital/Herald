@@ -133,6 +133,18 @@ var canonicalTiers = []string{
 	"e2e_sandbox", "e2e_live", "mutation", "chaos",
 }
 
+// CanonicalTiers returns a fresh copy of the §40.2 8-tier canonical matrix the
+// checkTestTierVerify detector enforces. The HRD-041 test-tier-verify §43 command
+// body uses it to build the full-matrix Subject (--all-tiers) and to order the
+// observed tiers deterministically — so the detector and the command body cite
+// the SAME source of truth (no drift). A fresh slice is returned so callers
+// cannot mutate the package-level matrix.
+func CanonicalTiers() []string {
+	out := make([]string, len(canonicalTiers))
+	copy(out, canonicalTiers)
+	return out
+}
+
 // checkTestTierVerify implements §11.4.27 (no-fakes + 100% test-type coverage)
 // via the §40.2 8-tier matrix. It reads the present tiers from the Subject
 // ("tiers=unit,component,...") and FAILs when ANY canonical tier is missing.

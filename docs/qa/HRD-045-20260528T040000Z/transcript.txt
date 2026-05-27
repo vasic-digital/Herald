@@ -1,0 +1,48 @@
+QA-EVIDENCE-ANCHOR: HRD-045-gate-retest-rherald-§11.4.40-C4
+Feature: rherald gate-retest (§11.4.40 pre-tag full-suite retest GATE, Critical/Enforce) — v1.0.0 Batch C cluster C4
+Recorded: 2026-05-28T04:00:00Z  Binary: rherald 0.0.0-dev (/tmp/rherald)
+Hermetic: --retest-result / --results-file seam supplies the RECORDED retest outcome — the gate NEVER runs the real suite (§12/§107).
+
+================================================================
+## Scenario A — gate BLOCK: default (no recorded retest ⇒ skipped)
+----------------------------------------------------------------
+$ rherald gate-retest
+gate-retest: recorded retest=skipped tiers=8
+[FAIL] §11.4.40: §11.4.40: tag retest-gate attempted WITHOUT the mandatory full-suite retest (release gate BLOCKED)
+rherald: §11.4.40 breach: §11.4.40: tag retest-gate attempted WITHOUT the mandatory full-suite retest (release gate BLOCKED)
+exit=1
+
+================================================================
+## Scenario B — gate BLOCK: recorded RED retest
+----------------------------------------------------------------
+$ rherald gate-retest --retest-result fail --tiers 8
+gate-retest: recorded retest=red tiers=8
+[FAIL] §11.4.40: §11.4.40: pre-tag retest for retest-gate is RED — refusing to allow the tag
+rherald: §11.4.40 breach: §11.4.40: pre-tag retest for retest-gate is RED — refusing to allow the tag
+exit=1
+
+================================================================
+## Scenario C — gate BLOCK: green but incomplete §40.2 tier coverage (5/8)
+----------------------------------------------------------------
+$ rherald gate-retest --retest-result green --tiers 5
+gate-retest: recorded retest=green tiers=5
+[FAIL] §11.4.40: §11.4.40: retest for retest-gate green but only 5/8 §40.2 tiers covered
+rherald: §11.4.40 breach: §11.4.40: retest for retest-gate green but only 5/8 §40.2 tiers covered
+exit=1
+
+================================================================
+## Scenario D — gate ALLOW (+ --emit): green all-8-tier retest
+----------------------------------------------------------------
+$ rherald gate-retest --retest-result pass --tiers 8 --emit
+gate-retest: recorded retest=green tiers=8
+[PASS] §11.4.40: §11.4.40: full-suite retest for retest-gate green across all 8 §40.2 tiers
+[emit] §11.4.40 drove a constitution event for subject retest-gate|retest=green|tiers=8
+exit=0
+
+================================================================
+## Scenario E — gate ALLOW: green outcome read from a --results-file
+----------------------------------------------------------------
+$ rherald gate-retest --results-file $RF --tiers 8
+gate-retest: recorded retest=green tiers=8
+[PASS] §11.4.40: §11.4.40: full-suite retest for retest-gate green across all 8 §40.2 tiers
+exit=0

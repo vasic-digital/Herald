@@ -10,8 +10,11 @@ import (
 )
 
 // Register attaches every §43 stub command targeted at bherald.
+//
+// HRD-035 evidence-capture + HRD-041 test-tier-verify are now LIVE command
+// bodies (v1.0.0 Batch C, cluster C5 — see build_cmds.go / registerBuildOps);
+// their stubs are removed. The gate-retest HRD-045 alias remains a stub:
+// rherald owns the real impl, bherald keeps only the alias placeholder.
 func Register(root *cobra.Command) {
-	root.AddCommand(cli.StubCmd("evidence-capture", "HRD-035", "CI evidence-bundle capture per §11.4.27"))
-	root.AddCommand(cli.StubCmd("test-tier-verify", "HRD-041", "Tier-1/2/3 test promotion gate per §11.4.34"))
 	root.AddCommand(cli.StubCmd("gate-retest", "HRD-045", "Re-run composite gate post-fix per §11.4.38 (alias shared with rherald)"))
 }

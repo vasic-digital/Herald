@@ -148,6 +148,43 @@ func (r *Runner) SetRemote(ctx context.Context, name, url string) error {
 	return err
 }
 
+// TagExists reports whether tag is present in the local repo's tag list
+// (`git tag -l <tag>` prints the tag name on a hit, nothing on a miss).
+func (r *Runner) TagExists(ctx context.Context, tag string) bool {
+	out, err := r.Git(ctx, "tag", "-l", tag)
+	return err == nil && strings.TrimSpace(out) == tag
+}
+
+// RemoteHasTag reports whether the named remote carries tag, observed via
+// `git ls-remote --tags <remote> refs/tags/<tag>`. A non-empty match line ⇒
+// the remote has the tag. Read-only — it never pushes or creates the tag.
+func (r *Runner) RemoteHasTag(ctx context.Context, remote, tag string) bool {
+	out, err := r.Git(ctx, "ls-remote", "--tags", remote, "refs/tags/"+tag)
+	if err != nil {
+		return false
+	}
+	return strings.Contains(out, "refs/tags/"+tag)
+}
+
+// LogSubjects returns the commit subjects (one per line, newest-first) reachable
+// from HEAD, optionally bounded to the range since..HEAD when since is non-empty
+// (e.g. a previous tag). Uses `git log --pretty=%s`. Read-only.
+func (r *Runner) LogSubjects(ctx context.Context, since string) ([]string, error) {
+	args := []string{"log", "--pretty=%s"}
+	if since != "" {
+		args = append(args, since+"..HEAD")
+	}
+	out, err := r.Git(ctx, args...)
+	if err != nil {
+		return nil, err
+	}
+	out = strings.TrimSpace(out)
+	if out == "" {
+		return nil, nil
+	}
+	return strings.Split(out, "\n"), nil
+}
+
 // RepoRoot walks up from startDir looking for the enclosing git repo root
 // (the dir containing .git). Returns "" if none is found before the
 // filesystem root. PURE filesystem walk — never runs git.
