@@ -8,15 +8,15 @@
 
 | Field | Value |
 |---|---|
-| Revision | 6 |
+| Revision | 7 |
 | Created | 2026-05-15 |
-| Last modified | 2026-05-20 |
+| Last modified | 2026-05-27 |
 | Status | active |
-| Status summary | r5: added the End-user-usability covenant section restating the verbatim operator mandate at Herald agent-rule level; binds every CLI agent (Claude Code, Codex, Cursor, Gemini, Aider, subagents) to the §11.4 anti-bluff enforcement; ties to HERALD_CONSTITUTION.md §107 + inheritance-gate invariant I8b. |
+| Status summary | r7: propagated HelixConstitution §11.4.85 (stress + chaos test mandate) + §11.4.87 (endless-loop autonomous work + zero-idle agent dispatch + anti-bluff testing) + §11.4.88 (background-push) into the agent-rule covenant cluster as short-form restatements citing the literal section numbers, inherited per §11.4.35; required by the §11.4.87 `CM-COVENANT-114-87-PROPAGATION` pre-build gate (literal anchor `11.4.87` MUST be present in every CLAUDE.md/AGENTS.md/QWEN.md; same expectation for §11.4.85/§11.4.88 per cascade pattern). Agents restate + cite, never redefine or weaken. Prior r5: added the End-user-usability covenant section restating the verbatim operator mandate at Herald agent-rule level; binds every CLI agent (Claude Code, Codex, Cursor, Gemini, Aider, subagents) to the §11.4 anti-bluff enforcement; ties to HERALD_CONSTITUTION.md §107 + inheritance-gate invariant I8b. |
 | Issues | none |
 | Issues summary | — |
-| Fixed | R-14 (V2), V3-path-sync (V3 r3), Go-scaffold-status-update (V3 r4), §107 mandate restatement + I8b anchor (r5) |
-| Fixed summary | aligned with HRD-009/HRD-009b/HRD-013/HRD-014 landing in the same commit; r5 closes the Herald-level explicit-restatement gap identified by the 2026-05-20 audit. |
+| Fixed | R-14 (V2), V3-path-sync (V3 r3), Go-scaffold-status-update (V3 r4), §107 mandate restatement + I8b anchor (r5), Helix §11.4.85 + §11.4.87 + §11.4.88 propagation (r7) |
+| Fixed summary | aligned with HRD-009/HRD-009b/HRD-013/HRD-014 landing in the same commit; r5 closes the Herald-level explicit-restatement gap identified by the 2026-05-20 audit; r7 propagates the three new inherited HelixConstitution mandates (§11.4.85 stress+chaos, §11.4.87 endless-loop autonomous work + zero-idle dispatch + anti-bluff testing, §11.4.88 background-push) into this agent-rules file per the §11.4.87 `CM-COVENANT-114-87-PROPAGATION` pre-build gate, inherited per §11.4.35; restated + cited, not redefined. |
 | Continuation | bump again when first-implementation cycle completes HRD-010..HRD-012/HRD-016 live integrations. |
 
 ## Table of contents
@@ -25,6 +25,7 @@
 - [Herald-specific agent rules](#herald-specific-agent-rules)
   - [Project status (load-bearing for every task)](#project-status-load-bearing-for-every-task)
   - [End-user-usability covenant (Herald §107 / Helix §11.4 — MANDATORY ANTI-BLUFF)](#end-user-usability-covenant-herald-107--helix-114--mandatory-anti-bluff)
+  - [Inherited covenant restatements — Helix §11.4.85 / §11.4.87 / §11.4.88](#inherited-covenant-restatements--helix-11485--11487--11488-inherited-per-11435)
   - [Inheritance gate (run before any commit that touches root docs or `constitution/`)](#inheritance-gate-run-before-any-commit-that-touches-root-docs-or-constitution)
   - [Spec-change rule (load-bearing — `docs/specs/mvp/specification.V3.md` §"Specification documents")](#spec-change-rule-load-bearing-docsspecsmvpspecificationmd-specification-documents)
   - [Multi-host mirror convention (Herald's own upstreams)](#multi-host-mirror-convention-heralds-own-upstreams)
@@ -133,6 +134,16 @@ CI / release gates MUST refuse to tag a release whose feature-shipping commits l
 **Prototype.** `tests/test_wave4b_mutation_meta.sh` carries the canonical Herald implementation (`check_quiescence()` at line 92; assertion at line 197). Generalising to all paired-§1.1 gates is open work. The planned universal scanner is `scripts/mutation_residue_audit.sh`.
 
 Canonical Helix authority: `<discovered>/Constitution.md` §11.4.84. Canonical Herald authority: `docs/guides/HERALD_CONSTITUTION.md` §107.y. A mutation marker that lands in a tagged Herald commit is a critical defect regardless of how briefly it persisted — see `72e81ab` / `d5bd360` as proof.
+
+### Inherited covenant restatements — Helix §11.4.85 / §11.4.87 / §11.4.88
+
+These three mandates are **inherited** from the HelixConstitution via parent-discovery (§11.4.35). Every agent — Claude Code, Codex, Cursor, Gemini, Aider, any CLI subagent — is bound by them; this file **restates + cites**, it does NOT redefine or weaken. The literal anchors are required by the §11.4.87 `CM-COVENANT-114-87-PROPAGATION` pre-build gate (asserts `11.4.85` / `11.4.87` / `11.4.88` present in every CLAUDE.md / AGENTS.md / QWEN.md).
+
+**§11.4.85 — Stress + Chaos Test Mandate (Helix, 2026-05-24).** Agent-binding rule: no agent may declare a Herald fix or improvement done without full-automation **stress** (sustained / concurrent load) AND **chaos** (process-death / network-fault / input-corruption / resource-exhaustion / state-corruption injection) test suites, each PASS citing a captured-evidence artefact under `docs/qa/<run-id>/stress_chaos/` per §11.4.5 + §11.4.69. A happy-path-only PASS is a §11.4 / §107 PASS-bluff at the resilience layer. Binds Herald's flavor binaries (`pherald listen` under concurrent updates, Gin `/v1/*` under load, claude_code dispatch under process-death, container flows under disk/OOM pressure). Canonical authority: HelixConstitution Constitution.md §11.4.85 (inherited per §11.4.35).
+
+**§11.4.87 — Endless-loop autonomous work + zero-idle agent dispatch + anti-bluff testing (Helix, 2026-05-26).** Agent-binding rule: when instructed to "continue in endless loop fully autonomously" (or equivalent), the agent MUST continue until ALL are simultaneously TRUE — Herald's loop checks `docs/Issues.md` Status-column (zero `In progress`/`Ready for testing`/`In testing`/`Reopened` per §11.4.15), `docs/CONTINUATION.md` §3 "Active work" empty, TaskList reports no subagent mid-execution, and no in-flight push/build/sync. The agent MUST dispatch background subagents for parallelisable non-contending work rather than serialise; idle is permitted ONLY while waiting on a result. Every closed item lands four-layer coverage (§11.4.4(b)) with real captured-evidence PASS; tests AND Challenges are bound equally. The loop terminates only on all-clear, explicit operator `STOP`, a §12 host-session-safety demand, or a scheduled wake against a known-future-actionable signal. No `--idle-OK` / `--skip-endless-loop` / `--metadata-only-test-suffices` escape exists. Canonical authority: HelixConstitution Constitution.md §11.4.87 (inherited per §11.4.35).
+
+**§11.4.88 — Background-push mandate (Helix, 2026-05-26).** Agent-binding rule: every Herald commit flow MUST release the commit-lock (`.git/.commit_all.lock`) the instant `git commit` returns 0 — BEFORE any push — then spawn the push **detached** (`nohup ./push_all.sh ... &` + `disown`) with a per-remote flock (`.git/.push.<remote>.lock`) so same-remote pushes serialise while GitHub / GitLab / GitFlic / GitVerse push in parallel. The orchestrator's exit code reports COMMIT success, not push success. Backgrounded push failures land in `qa-results/push_failures/<TS>_<remote>.log` and the next autonomous-loop tick MUST surface them (silent push-failure is a §11.4 distribution-layer PASS-bluff). The ONLY synchronous-push escape is the explicit `--sync-push` flag for §11.4.41 force-push merge-first paths. Canonical authority: HelixConstitution Constitution.md §11.4.88 (inherited per §11.4.35).
 
 ### Inheritance gate (run before any commit that touches root docs or `constitution/`)
 

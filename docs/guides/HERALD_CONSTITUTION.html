@@ -112,7 +112,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>4</td>
+<td>5</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -120,7 +120,7 @@
 </tr>
 <tr>
 <td>Last modified</td>
-<td>2026-05-20</td>
+<td>2026-05-27</td>
 </tr>
 <tr>
 <td>Status</td>
@@ -128,7 +128,14 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td>r4: added §107 End-user-usability covenant (verbatim operator
+<td>r5: added §108 (with §108.a/b/c) restating the three inherited
+HelixConstitution mandates — §11.4.85 stress + chaos test mandate,
+§11.4.87 endless-loop autonomous work + zero-idle agent dispatch +
+anti-bluff testing, §11.4.88 background-push — at Herald
+project-constitution level per §1.1 multi-file propagation discipline;
+inherited per §11.4.35, restated + cited, not redefined. Required by the
+§11.4.87 <code>CM-COVENANT-114-87-PROPAGATION</code> pre-build gate.
+Prior r4: added §107 End-user-usability covenant (verbatim operator
 mandate restated at Herald level per §1.1 propagation) + paired gate
 invariant I8a–c; corrected stale "Owned-submodule set: (none)" to
 reflect the 10 vendored modules (9 Helix-stack + containers).</td>
@@ -144,7 +151,8 @@ reflect the 10 vendored modules (9 Helix-stack + containers).</td>
 <tr>
 <td>Fixed</td>
 <td>R-14 (V2), V3-path-sync (V3 r3), §107 mandate + I8 gate invariant +
-owned-submodule list (r4)</td>
+owned-submodule list (r4), §108 Helix §11.4.85 + §11.4.87 + §11.4.88
+propagation (r5)</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
@@ -153,7 +161,12 @@ owned-submodule list (r4)</td>
 r4 adds the end-user-usability covenant at Herald level (Helix §11.4 is
 the canonical authority; Herald restates per §1.1 multi-file propagation
 discipline) and the I8 gate invariant that asserts the mandate is
-present in CLAUDE.md + AGENTS.md + this file.</td>
+present in CLAUDE.md + AGENTS.md + this file. r5 adds §108 (§108.a
+stress+chaos §11.4.85, §108.b endless-loop autonomous work §11.4.87,
+§108.c background-push §11.4.88) restating the three new inherited
+HelixConstitution mandates at Herald level per the §11.4.87
+<code>CM-COVENANT-114-87-PROPAGATION</code> pre-build gate, inherited
+per §11.4.35; restated + cited, not redefined.</td>
 </tr>
 <tr>
 <td>Continuation</td>
@@ -180,6 +193,10 @@ Spec-change rule (extends Universal §11.4)</a></li>
 href="#107-end-user-usability-covenant-extends-universal-114--mandatory-anti-bluff">§107.
 End-user-usability covenant (extends Universal §11.4 — MANDATORY
 ANTI-BLUFF)</a></li>
+<li><a
+href="#108-inherited-covenant-restatements-helix-11485--11487--11488">§108.
+Inherited covenant restatements (Helix §11.4.85 / §11.4.87 /
+§11.4.88)</a></li>
 </ul></li>
 <li><a href="#overrides-of-universal-constitution">Overrides of
 Universal Constitution</a></li>
@@ -407,6 +424,342 @@ gate.</p>
 binary may be tagged, no submodule may be propagated, and no
 operator-handoff (<code>docs/CONTINUATION.md</code>) may be published
 while a §107 evidence-gap is open.</p>
+<h3
+id="107x-docsqa-evidence-mandate-operator-mandate-2026-05-22--extends-107-cascades-from-helix-11483">§107.x.
+docs/qa/ Evidence Mandate (operator mandate, 2026-05-22 — extends §107;
+cascades from Helix §11.4.83)</h3>
+<p><strong>Forensic anchor — verbatim operator mandate
+(2026-05-22):</strong></p>
+<blockquote>
+<p>"every feature that ships MUST carry a recorded e2e communication
+transcript + any attached materials under
+<code>docs/qa/&lt;run-id&gt;/</code> (per-feature subdirectories). A
+feature with no QA transcript is itself a §107 PASS-bluff — it claims to
+work but has no auditable runtime evidence. Bot-driven automation (e.g.
+Herald's planned <code>qaherald</code> binary) MUST preserve full
+bidirectional communication threads as proof."</p>
+</blockquote>
+<p><strong>Canonical authority.</strong> Helix Universal Constitution
+§11.4.83 (the rule was added at universal level in the same propagation
+cycle as this §107.x). Herald §107.x is the project-binding
+restatement.</p>
+<p><strong>Operative rule (Herald-binding).</strong></p>
+<ol type="1">
+<li>Every Herald feature that ships — every flavor binary route
+(<code>/v1/events</code>, <code>/v1/compliance</code>,
+<code>/v1/safety_state</code>, …), every Telegram bot interaction
+(HRD-011), every Claude Code dispatch path (HRD-012), every
+container-orchestrated flow, every QA-bot transcript (planned
+<code>qaherald</code> per HRD-NNN-to-be-assigned) — MUST carry a
+<code>docs/qa/&lt;run-id&gt;/</code> directory committed in the same
+logical work effort (per V3 §8.3 HRD lifecycle).
+<code>&lt;run-id&gt;</code> is monotonic + greppable:
+<code>HRD-NNN</code>, <code>HRD-NNN-&lt;TS&gt;</code> (multi-run), or a
+free <code>&lt;TS&gt;</code> tag.</li>
+<li>Transcripts are <strong>full bidirectional</strong> — for Telegram:
+both user→bot and bot→user halves; for Gin: both request payload (JSON
+or TOON per Wave 4b) and full response body + status line + relevant
+headers; for Claude Code: both the prompt sent and the response
+received; for container flows: container stdin → container stdout/stderr
++ container logs.</li>
+<li>Attached materials are committed <strong>in-repo</strong>, never
+linked. Screenshots in <code>.png</code>; JSON / TOON payloads as their
+natural extension; container logs as <code>.log</code>; OpenTelemetry
+trace exports as <code>.json</code> / <code>.otlp</code>. External-only
+links (Slack URL, Drive URL, Telegram message URL) are §11.4.13
+sink-side violations — the artefact lives in
+<code>docs/qa/&lt;run-id&gt;/</code>.</li>
+<li>The planned <code>qaherald</code> binary (HRD-NNN to be assigned) is
+Herald's authoritative QA automation. It drives <code>pherald</code> ↔︎
+Telegram (and analogous round-trips for the other flavors) and preserves
+the full conversation thread under
+<code>docs/qa/qaherald-&lt;TS&gt;/</code>. A <code>qaherald</code> run
+that stores only the final PASS/FAIL line is itself a §107.x bluff at
+the QA-automation layer.</li>
+<li>New e2e_bluff_hunt invariants for features added after 2026-05-22
+MUST cite their <code>docs/qa/&lt;run-id&gt;/</code> artefact as
+positive-evidence anchor (composes with §11.4.2 / §11.4.5). A new
+<code>E_N</code> invariant without a corresponding <code>docs/qa/</code>
+directory is a §107.x violation in the same logical work effort.</li>
+<li>Release-gate enforcement: <code>scripts/release.sh</code> (when
+implemented) + the existing tag-time guard MUST refuse to tag a Herald
+release whose feature-shipping commits since the previous tag lack their
+matching <code>docs/qa/&lt;run-id&gt;/</code> directories.</li>
+</ol>
+<p><strong>Propagation.</strong> §107.x is restated (in summary form,
+citing this section as the canonical Herald source) in Herald's
+<code>CLAUDE.md</code>, <code>AGENTS.md</code>, <code>QWEN.md</code>.
+The universal mandate at Helix §11.4.83 is cascaded into the 11
+Helix-stack submodules (<code>auth</code>, <code>background</code>,
+<code>cache</code>, <code>Concurrency</code>, <code>config</code>,
+<code>database</code>, <code>eventbus</code>, <code>middleware</code>,
+<code>Models</code>, <code>observability</code>, <code>recovery</code>)
+per §1.1 multi-file propagation discipline.</p>
+<p><strong>Non-compliance is a release blocker.</strong> No
+<code>--qa-evidence-optional</code>, <code>--qa-transcript-later</code>,
+<code>--qa-bot-summary-suffices</code> flag exists.</p>
+<h3
+id="107y-working-tree-quiescence-rule-operator-mandate-2026-05-22--extends-107-cascades-from-helix-11484">§107.y.
+Working-Tree Quiescence Rule (operator mandate, 2026-05-22 — extends
+§107; cascades from Helix §11.4.84)</h3>
+<p><strong>Short tag:</strong> <code>working-tree quiescence</code>.</p>
+<p><strong>Forensic anchor — verbatim operator mandate
+(2026-05-22):</strong></p>
+<blockquote>
+<p>"no subagent commit may proceed while any concurrent mutation gate is
+in flight in the same checkout. Before <code>git add</code>, the
+committing agent MUST <code>grep</code> its own working tree for
+mutation markers (<code>MUTATED for paired</code>,
+<code>// always pass</code>, <code>return json.Marshal</code> shortcut
+paths, etc.). Any unexplained file in the staging area triggers
+ABORT."</p>
+</blockquote>
+<p><strong>Canonical authority.</strong> Helix Universal Constitution
+§11.4.84. Herald §107.y is the project-binding restatement.</p>
+<p><strong>Lesson (forensic case study — Herald-internal,
+2026-05-21).</strong> A logo-fix subagent (commit <code>72e81ab</code>,
+"Fix: replace pandoc {width=96px} image attr with HTML <img> tag") ran
+in this very checkout while a paired §1.1 Wave 4b mutation gate had
+temporarily injected an <code>// always pass</code> shortcut into
+<code>commons_auth/middleware.go</code> (JWT-bypass mutation, intended
+for the mutate → assert FAIL → restore cycle). The subagent's
+<code>git add</code> swept the mutation residue into its commit; the
+commit was pushed to all four mirrors before any other agent caught it.
+Within the hour the SECURITY FIX (<code>d5bd360</code>, "SECURITY FIX:
+restore commons_auth/middleware.go JWT verify (mutation residue in
+72e81ab)") restored the verify path. But the
+production-equivalent-binary-with-bypassed-JWT window is a real
+security-defect window — small, but non-zero, and demonstrably
+exploitable in that interval. The rule below is the constitutional
+outcome. This is no longer a hypothetical; it is documented Herald
+history.</p>
+<p><strong>Operative rule (Herald-binding).</strong></p>
+<ol type="1">
+<li><strong>Pre-<code>git add</code> quiescence check.</strong> Every
+commit flow (main thread + every dispatched subagent) MUST grep the
+working tree for the canonical Herald mutation markers BEFORE
+<code>git add</code>:
+<ul>
+<li><code>MUTATED for paired</code> (the canonical paired-§1.1 marker
+emitted by <code>tests/test_wave4b_mutation_meta.sh</code> + future
+generalisations)</li>
+<li><code>// always pass</code>, <code>// MUTATION</code>,
+<code># MUTATION</code> (Go + shell mutation annotations)</li>
+<li><code>return json.Marshal</code> shortcut paths in
+<code>commons/</code> or <code>commons_messaging/</code> (Wave 4b TOON
+mutation residue)</li>
+<li><code>_mutated_*</code> filename suffixes</li>
+<li><code>.git/MUTATION_IN_PROGRESS</code> (the lockfile)</li>
+</ul></li>
+<li><strong>Scope-match.</strong> Cross-check
+<code>git status --porcelain</code> against the subagent's declared
+scope. Any file outside the declared scope → ABORT. The subagent MUST
+explicitly account for every modified / untracked / staged entry.</li>
+<li><strong>Lockfile serialisation.</strong> When any mutation gate is
+in flight, its first action is
+<code>touch .git/MUTATION_IN_PROGRESS</code>; its last action
+(trap-on-exit) is <code>rm .git/MUTATION_IN_PROGRESS</code>. Any
+subagent finding this lockfile present MUST refuse to
+<code>git add</code> and ABORT until the gate completes its mutate →
+assert FAIL → restore → assert PASS cycle and removes the lockfile.</li>
+<li><strong>Worktree isolation (preferred).</strong> When parallel
+subagents are required (§11.4.20 / §11.4.70 subagent-driven default),
+prefer <code>git worktree add</code> per subagent over single-checkout
+concurrency — eliminates the cross-mutation race by construction.</li>
+<li><strong>Pre-push mutation-residue scanner.</strong>
+<code>scripts/mutation_residue_audit.sh</code> (planned, HRD-NNN to be
+assigned) MUST run before every push. Any commit in the pushed range
+containing a mutation marker → push BLOCKED.</li>
+</ol>
+<p><strong>Prototype.</strong>
+<code>tests/test_wave4b_mutation_meta.sh</code> ALREADY includes the
+canonical Herald implementation:</p>
+<ul>
+<li><code>check_quiescence()</code> at line 92 — the working-tree
+quiescence guard (returns 0 if NO MUTATED markers in tracked
+files).</li>
+<li>Line 197 — the "Working-tree quiescence — assert no MUTATED markers
+leaked" assertion.</li>
+</ul>
+<p>The Wave 4b test is the prototype; generalising the check across
+every paired-§1.1 gate (Wave 2, Wave 3, Wave 4a) is open work. The
+planned universal scanner <code>scripts/mutation_residue_audit.sh</code>
+is the roll-out vehicle.</p>
+<p><strong>Composes with</strong> §107 (a security-bypass mutation that
+ships to production is the gravest §107 PASS-bluff), §1.1
+(paired-mutation discipline — the rule protects the mutation cycle from
+concurrent contamination), §11.4.20 / §11.4.70 (subagent-driven default
+— quiescence rule makes parallel subagent dispatch safe), §11.4.10
+(credentials handling — same class of "no unrelated content in a
+commit"), §11.4.27 (no-fakes-beyond-unit — a mutation residue swept into
+a commit IS a fake-pass surface in production).</p>
+<p><strong>Propagation.</strong> §107.y is restated (in summary form,
+citing this section as the canonical Herald source) in Herald's
+<code>CLAUDE.md</code>, <code>AGENTS.md</code>, <code>QWEN.md</code>.
+The universal mandate at Helix §11.4.84 is cascaded into the 11
+Helix-stack submodules per §1.1 multi-file propagation discipline.</p>
+<p><strong>Non-compliance is a release blocker.</strong> A mutation
+marker that lands in a tagged Herald commit is a critical defect
+regardless of how briefly it persisted — see commits
+<code>72e81ab</code> / <code>d5bd360</code> as forensic proof. No
+<code>--allow-residue</code>, <code>--skip-quiescence</code>,
+<code>--mutation-cleanup-later</code> flag exists.</p>
+<h3
+id="108-inherited-covenant-restatements-helix-11485--11487--11488">§108.
+Inherited covenant restatements (Helix §11.4.85 / §11.4.87 /
+§11.4.88)</h3>
+<p>These three mandates are <strong>inherited</strong> from the Helix
+Universal Constitution via parent-discovery (§11.4.35). Herald
+<strong>restates + cites</strong> them at project-constitution level per
+the §1.1 multi-file propagation discipline — it does
+<strong>NOT</strong> redefine, narrow, or weaken them; the parent
+<code>constitution/Constitution.md</code> is the canonical authority for
+each. The literal anchors (<code>11.4.85</code>, <code>11.4.87</code>,
+<code>11.4.88</code>) are required across Herald's
+<code>CLAUDE.md</code> / <code>AGENTS.md</code> / <code>QWEN.md</code>
+by the §11.4.87 <code>CM-COVENANT-114-87-PROPAGATION</code> pre-build
+gate, which strips the literal in a paired §1.1 meta-test mutation and
+asserts the gate FAILs.</p>
+<h4
+id="108a-stress--chaos-test-mandate-extends-universal-11485-helix-2026-05-24">§108.a.
+Stress + Chaos Test Mandate (extends Universal §11.4.85; Helix
+2026-05-24)</h4>
+<p><strong>Forensic anchor — verbatim user mandate
+(2026-05-24):</strong></p>
+<blockquote>
+<p>"Every fix or improvement you do MUST BE covered with full automation
+stress and chaos tests so we are sure nothing can break the
+functionality and all edge cases are monitored and polished and
+additionally fixed if that is needed! Everything must produce rock solid
+proofs and follow fully no-bluff policy!"</p>
+</blockquote>
+<p><strong>Canonical authority.</strong> Helix Universal Constitution
+§11.4.85. Herald §108.a is the project-binding restatement.</p>
+<p><strong>Operative rule (Herald-binding).</strong> Every fix or
+improvement landed in Herald MUST ship with full-automation
+<strong>stress</strong> AND <strong>chaos</strong> test suites. Stress =
+sustained load (N ≥ 100 iterations or ≥ 30 s, p50/p95/p99 recorded)
+and/or concurrent contention (N ≥ 10 parallel, no deadlock / leak / data
+race) and/or boundary conditions (empty / max / off-by-one, each
+producing a categorised result). Chaos = at least one failure-injection
+category appropriate to the fix-class: process-death, network-fault,
+input-corruption, resource-exhaustion (disk-full / OOM / fd-exhaustion),
+or state-corruption (DB-lock-loss / partial-write / cache-invalidation).
+Every stress + chaos PASS cites a captured-evidence artefact under
+<code>docs/qa/&lt;run-id&gt;/stress_chaos/</code> per §11.4.5 + §11.4.69
+(latency.json / throughput.csv / categorised_errors.txt /
+recovery_trace.log); chaos-injection cleanup is non-negotiable
+(<code>trap '...' EXIT</code> restores corrupted <code>.env</code>,
+<code>rm</code>s disk-fillers, verifies killed processes restart). For
+Herald this binds the flavor binaries: <code>pherald listen</code>
+inbound long-poll under concurrent Telegram updates, Gin
+<code>/v1/*</code> routes under sustained load, claude_code dispatch
+under process-death, container-orchestrated flows under disk/OOM
+pressure. A happy-path-only PASS is a §107 / §11.4 PASS-bluff at the
+resilience layer. No <code>--skip-stress</code> /
+<code>--no-chaos</code> / <code>--happy-path-suffices</code> /
+<code>--stress-test-later</code> escape exists.</p>
+<h4
+id="108b-endless-loop-autonomous-work--zero-idle-agent-dispatch--anti-bluff-testing-extends-universal-11487-helix-2026-05-26">§108.b.
+Endless-loop autonomous work + zero-idle agent dispatch + anti-bluff
+testing (extends Universal §11.4.87; Helix 2026-05-26)</h4>
+<p><strong>Forensic anchor — verbatim user mandate (2026-05-26,
+condensed):</strong></p>
+<blockquote>
+<p>"all work MUST BE continued in endless loop until there is no any
+open items, no unfinished workable items from our Issues docs, or from
+Continuation document or any unfinished work by agents … fully
+autonomously. You will spawn agents or agents-driven work whenever that
+is possible or required! Not a single agent or main work stream will sit
+idle except if it waits for the results of something … All work MUST BE
+always covered with comprehensive tests … which produce real proofs …
+and in complete anti-bluff manner!"</p>
+</blockquote>
+<p><strong>Canonical authority.</strong> Helix Universal Constitution
+§11.4.87. Herald §108.b is the project-binding restatement.</p>
+<p><strong>Operative rule (Herald-binding).</strong> When the operator
+instructs Herald work to "continue in endless loop fully autonomously"
+(or equivalent), it is a HARD-CONTRACT covenant: (A)
+<strong>continuation</strong> — continue until ALL are simultaneously
+TRUE: Herald's autonomous loop checks <code>docs/Issues.md</code>
+Status-column has zero <code>In progress</code> /
+<code>Ready for testing</code> / <code>In testing</code> /
+<code>Reopened</code> entries (§11.4.15 closed-set),
+<code>docs/CONTINUATION.md</code> §3 "Active work" is empty, the
+TaskList reports no subagent mid-execution, and no in-flight external
+dependency (build, push, sync) remains; (B) <strong>zero-idle
+dispatch</strong> — dispatch background subagents for parallelisable,
+non-file-scope-contending work rather than serialising; idle is
+permitted ONLY while waiting on a result; (C) <strong>comprehensive test
+coverage with real (physical) proofs</strong> — every closed item lands
+four-layer coverage per §11.4.4(b) with captured-evidence PASS; (D)
+<strong>anti-bluff end-to-end</strong> — tests AND Challenges are bound
+equally (a Challenge that scores PASS on a non-functional feature is the
+same defect class as a unit test that does); (E)
+<strong>termination</strong> — only on all-clear, an explicit operator
+<code>STOP</code> / <code>END LOOP</code>, a §12 host-session-safety
+demand, or a scheduled wake against a known-future-actionable signal.
+Composes with §107 (anti-bluff) and §12.10 (CONTINUATION-doc maintenance
+— the source-of-truth state the loop checks). No <code>--idle-OK</code>
+/ <code>--skip-endless-loop</code> /
+<code>--bluff-permitted-for-this-task</code> /
+<code>--metadata-only-test-suffices</code> /
+<code>--no-physical-proof-required</code> escape exists.</p>
+<h4
+id="108c-background-push-mandate-commit-lock-release-immediately-after-commit-push-runs-detached-extends-universal-11488-helix-2026-05-26">§108.c.
+Background-push mandate: commit-lock release immediately after commit,
+push runs detached (extends Universal §11.4.88; Helix 2026-05-26)</h4>
+<p><strong>Forensic anchor — verbatim user mandate (2026-05-26,
+condensed):</strong></p>
+<blockquote>
+<p>"Make sure all these pushes are being done ALWAYS in background in
+parallel with main work stream so we do not loose time waiting.
+Everything is committed anyway? … We MUST ensure that main work stream
+has always something to do, or wait for the results only when that is
+absolutely required!"</p>
+</blockquote>
+<p><strong>Canonical authority.</strong> Helix Universal Constitution
+§11.4.88. Herald §108.c is the project-binding restatement.</p>
+<p><strong>Operative rule (Herald-binding).</strong> (A) <strong>Flock
+release immediately after commit</strong> — once <code>git commit</code>
+returns 0 (commit object durable on local disk), the
+<code>.git/.commit_all.lock</code> flock MUST be released BEFORE any
+push runs; gating further local work on a remote round-trip is the exact
+zero-idle anti-pattern §108.b / §11.4.87 prohibits. (B) <strong>Push
+runs detached</strong> —
+<code>nohup ./push_all.sh ... &gt; &lt;log&gt; 2&gt;&amp;1 &amp;</code>
+then <code>disown</code>; the orchestrator's exit code reports COMMIT
+success, not push success. (C) <strong>Per-remote serialisation,
+multi-remote parallelism</strong> — <code>push_all.sh</code> acquires a
+per-remote flock (<code>.git/.push.&lt;remote&gt;.lock</code>) so
+same-remote invocations serialise (no non-fast-forward race) while
+Herald's four mirrors (GitHub / GitLab / GitFlic / GitVerse) push in
+parallel. (D) <strong>Failure surface</strong> — backgrounded push
+failures land in
+<code>qa-results/push_failures/&lt;TS&gt;_&lt;remote&gt;.log</code>; the
+next autonomous-loop tick MUST check that directory (the §108.b(A) "no
+external dependency in-flight" check) and surface failures — silent
+push-failure is a §11.4 PASS-bluff at the distribution layer. (E)
+<strong>Synchronous-push escape</strong> — the explicit
+<code>--sync-push</code> flag preserves legacy synchronous behaviour for
+§11.4.41 force-push merge-first paths; it is the ONLY escape. Composes
+with §103 (mirror parity — §108.c makes the four-mirror fan-out
+non-blocking) and §108.b (this is the implementation seam that makes the
+endless loop genuinely zero-idle for the dominant blocker class).</p>
+<p><strong>Propagation.</strong> §108 (with §108.a/b/c) is restated (in
+summary form, citing this section as the canonical Herald source) in
+Herald's <code>CLAUDE.md</code>, <code>AGENTS.md</code>,
+<code>QWEN.md</code>. The universal mandates at Helix §11.4.85 /
+§11.4.87 / §11.4.88 are cascaded into the Helix-stack submodules per
+§1.1 multi-file propagation discipline. The §11.4.87
+<code>CM-COVENANT-114-87-PROPAGATION</code> pre-build gate enforces the
+literal anchors <code>11.4.85</code> / <code>11.4.87</code> /
+<code>11.4.88</code> in all three Herald root docs.</p>
+<p><strong>Non-compliance is a release blocker.</strong> Each sub-clause
+carries its inherited no-escape-hatch posture: no
+<code>--skip-stress</code> / <code>--no-chaos</code> (§108.a), no
+<code>--idle-OK</code> / <code>--skip-endless-loop</code> (§108.b), no
+synchronous push without <code>--sync-push</code> (§108.c).</p>
 <hr />
 <h2 id="overrides-of-universal-constitution">Overrides of Universal
 Constitution</h2>
