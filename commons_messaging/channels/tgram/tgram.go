@@ -162,6 +162,18 @@ func NewWithStorage(rawURL string, pool db.Database) (*Adapter, error) {
 	return a, nil
 }
 
+// init registers the Telegram adapter with the channels registry (Wave 7 T2)
+// so `pherald listen` can resolve "tgram" by name. cfg.Token is the bot
+// token; cfg.Target is the chat_id; cfg.BaseURL is the httptest seam.
+func init() {
+	channels.Register(string(commons.ChannelTelegram), func(cfg channels.Config) (channels.Channel, error) {
+		if cfg.BaseURL != "" {
+			return NewAdapterWithBaseURL(cfg.Token, cfg.Target, cfg.BaseURL), nil
+		}
+		return NewWithCreds(cfg.Token, cfg.Target), nil
+	})
+}
+
 // Name returns the canonical channel ID.
 func (a *Adapter) Name() string { return string(commons.ChannelTelegram) }
 
