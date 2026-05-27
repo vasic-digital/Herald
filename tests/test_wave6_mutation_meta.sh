@@ -43,12 +43,15 @@
 #       slice and asserts contiguous [--model, claude-opus-4-7]; with the
 #       mutation argv contains claude-sonnet-4-6 → FAIL.
 #
-#   M3. Drop opts.ReplyTo assignment in
+#   M3. Drop textOpts.ReplyTo assignment in
 #       commons_messaging/channels/tgram/send.go:
-#       `opts.ReplyTo = &telebot.Message{ID: replyToID}` → no-op.
+#       `textOpts.ReplyTo = &telebot.Message{ID: replyToID}` → no-op.
+#       (Renamed opts→textOpts in Wave 6.5 T6 when attachment fan-out
+#       split the text-reply SendOptions from the per-attachment ones;
+#       anchor updated 2026-05-27 debt-clearing.)
 #       Detector: TestSendReplyEmitsReplyToMessageID — httptest decodes
 #       sendMessage JSON body and asserts reply_to_message_id == "42";
-#       with the mutation opts.ReplyTo stays nil, the field is absent
+#       with the mutation textOpts.ReplyTo stays nil, the field is absent
 #       from the wire payload → FAIL.
 #
 # Returns 0 only when every mutation causes its detector to FAIL AND every
@@ -204,16 +207,17 @@ run_paired \
     'MUTATED W6-M2'
 
 # ----------------------------------------------------------------------
-# M3: Drop opts.ReplyTo assignment in SendReply.
+# M3: Drop textOpts.ReplyTo assignment in SendReply.
 # Detector: TestSendReplyEmitsReplyToMessageID asserts wire-byte body
 # contains reply_to_message_id == "42". Mutation no-ops the ReplyTo
 # assignment so the field is absent from the wire payload → test FAILs
 # with got "" want "42".
+# (anchor `opts.`→`textOpts.` per Wave 6.5 T6 rename; fixed 2026-05-27.)
 # ----------------------------------------------------------------------
 run_paired \
     "M3-reply-to" \
     "${SEND_GO}" \
-    "perl -i -pe 's|\t\topts\.ReplyTo = &telebot\.Message\{ID: replyToID\}|\t\t// MUTATED W6-M3: opts.ReplyTo assignment dropped (reply degrades to fresh message)\n\t\t_ = replyToID|' '${SEND_GO}'" \
+    "perl -i -pe 's|\t\ttextOpts\.ReplyTo = &telebot\.Message\{ID: replyToID\}|\t\t// MUTATED W6-M3: textOpts.ReplyTo assignment dropped (reply degrades to fresh message)\n\t\t_ = replyToID|' '${SEND_GO}'" \
     "go test -run 'TestSendReplyEmitsReplyToMessageID' -count=1 ./commons_messaging/channels/tgram/..." \
     'MUTATED W6-M3'
 
