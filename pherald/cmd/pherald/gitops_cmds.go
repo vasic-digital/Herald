@@ -6,7 +6,7 @@
 // bindings classify. These replace the cli.StubCmd registrations in stubs.go.
 //
 // §11.4.74 catalogue-first: the git/repo primitives are the shared
-// pherald/internal/gitops package (FindScript prefers a wrappable canonical
+// commons/gitops package (FindScript prefers a wrappable canonical
 // constitution-submodule script when the parent project provides one; falls back
 // to the git binary in a standalone Herald checkout). The reopen command REUSES
 // the existing inbound.CommandsConfig atomic Issues↔Fixed migration (Wave 6.5 T5)
@@ -36,11 +36,11 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/vasic-digital/herald/commons"
+	"github.com/vasic-digital/herald/commons/gitops"
 	constitution "github.com/vasic-digital/herald/commons_constitution"
 	"github.com/vasic-digital/herald/commons_constitution/ladder"
 	"github.com/vasic-digital/herald/commons_constitution/state"
 	"github.com/vasic-digital/herald/pherald/internal/bindings"
-	"github.com/vasic-digital/herald/pherald/internal/gitops"
 	"github.com/vasic-digital/herald/pherald/internal/inbound"
 )
 

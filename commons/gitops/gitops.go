@@ -1,5 +1,11 @@
-// Package gitops provides the REAL git/repo primitives the pherald §43
-// project-lifecycle command bodies (HRD-029/030/043/044/049/053) build on.
+// Package gitops provides the REAL git/repo primitives the Herald §43 flavor
+// command bodies build on. It lives in the L0 commons module (pure stdlib, zero
+// external deps) so every flavor binary can share it: pherald
+// (HRD-029/030/043/044/049/053 — commit-push / submodule-propagate /
+// install-upstreams / fetch-guard / reopen / pre-push) and the §43 git-bearing
+// commands of sherald (constitution-pull / force-push-gate / destructive-guard),
+// rherald (tag-mirror), etc. Promoted here from pherald/internal/gitops so the
+// primitives are not duplicated across flavor modules (§11.4.74 catalogue-first).
 //
 // Why a dedicated package (§11.4.74 catalogue-first posture): the parent
 // project's constitution submodule ships canonical shell scripts

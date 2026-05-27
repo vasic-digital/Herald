@@ -67,7 +67,9 @@
 HRD-029/030/043/044/049/053 (pherald §43 gitops command catalogue)
 Open→in_progress.</strong> The six commands landed (commit
 <code>502ebf6</code>) as
-<code>pherald/internal/gitops/{gitops.go,upstreams.go}</code> +
+<code>commons/gitops/{gitops.go,upstreams.go}</code> (promoted from
+<code>pherald/internal/gitops</code> to the L0 commons module so C2-C5
+flavors can reuse the git primitives — §11.4.74) +
 <code>pherald/cmd/pherald/gitops_cmds.go</code>:
 <code>commit-push</code> (single locked entrypoint + multi-mirror push),
 <code>submodule propagate</code> (owned-submodule walk in propagation

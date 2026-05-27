@@ -16,7 +16,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/vasic-digital/herald/pherald/internal/gitops"
+	"github.com/vasic-digital/herald/commons/gitops"
 )
 
 // initRepo creates a fresh git repo in a t.TempDir() subdir with one commit
