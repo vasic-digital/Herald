@@ -1,0 +1,7 @@
+surface=bindings scenario=stress_concurrent_gate_failures rule=§1 mode=enforce
+workers=8 iters_per_worker=150 total=1200
+fails=1200 non_fail=0 errors=0
+bus_published_gate_failed=1200 audit_rows=1200
+no_lost_events_under_load=1
+p50_ms=0.1290 p95_ms=0.3720 p99_ms=0.7020 max_ms=1.0340 tput_per_sec=47032.2
+race_detector=clean

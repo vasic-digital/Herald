@@ -1,0 +1,42 @@
+HERALD bherald CI/test constitution-binding round-trip — HRD-021 §107.x evidence
+captured: 2026-05-28T01:39:36+05:00
+tenant:   988cf861-add2-41fe-b460-ae40cbacbab5
+foundation: REAL MemoryBus + REAL Memory state/ladder/audit + REAL emitter (no mocks)
+
+=== STEP 1: CI gate reports a FAILED test-coverage gate (§1, enforce) ===
+>>> INBOUND  (CI → bherald): rule=§1 subject.kind=gate-result subject.id="test-suite|outcome=fail"
+<<< OUTBOUND (bherald → constitution bus): decision=fail emitted=true audited=true mode=enforce class=.gate.failed
+
+=== STEP 2: a PASS-bluff — gate reports PASS with NO captured evidence (§11.4.2, enforce) ===
+>>> INBOUND  (CI → bherald): rule=§11.4.2 subject.id="TestFoo|outcome=pass|evidence=false"
+<<< OUTBOUND: decision=fail emitted=true — the §107 covenant detector FAILed a metadata-only PASS
+
+=== STEP 3: a missing test tier (§11.4.27 / §40.2, enforce) ===
+>>> INBOUND  (CI → bherald): rule=§11.4.27 subject.id="pkg/foo|tiers=unit,component"
+<<< OUTBOUND: decision=fail emitted=true — missing 6 of 8 §40.2 tiers
+
+=== STEP 4: the §1 gate recovers — coverage restored (transition fail→pass) ===
+>>> INBOUND  (CI → bherald): rule=§1 subject.id="test-suite|outcome=pass" (same gate key as STEP 1 → recovery transition)
+<<< OUTBOUND: decision=pass emitted=true class=.gate.recovered
+
+=== PERSISTED STATE (queryable via the future /v1/build pull surface) ===
+state: rule=§1        subject="test-suite|outcome=fail"                  decision=fail
+state: rule=§11.4.2   subject="TestFoo|outcome=pass|evidence=false"      decision=fail
+state: rule=§11.4.27  subject="pkg/foo|tiers=unit,component"             decision=fail
+state: rule=§1        subject="test-suite|outcome=pass"                  decision=pass
+
+=== PERSISTED AUDIT TRAIL (durable, §11.4.2) ===
+audit: rule=§1        subject="test-suite|outcome=pass"                  new=pass mode=enforce
+audit: rule=§11.4.27  subject="pkg/foo|tiers=unit,component"             new=fail mode=enforce
+audit: rule=§11.4.2   subject="TestFoo|outcome=pass|evidence=false"      new=fail mode=enforce
+audit: rule=§1        subject="test-suite|outcome=fail"                  new=fail mode=enforce
+
+=== WIRE EVENTS OBSERVED ON THE CONSTITUTION BUS ===
+bus.Published=4 .gate.failed=3 .gate.recovered=1
+wire: .gate.recovered type=digital.vasic.herald.constitution.gate.recovered id=e78617fe-5096-4728-b2bf-c88d42ff5c4d source=digital.vasic.herald/bherald
+wire: .gate.failed    type=digital.vasic.herald.constitution.gate.failed id=1271a549-dc5d-410b-a943-65b81d0cfd4e source=digital.vasic.herald/bherald
+wire: .gate.failed    type=digital.vasic.herald.constitution.gate.failed id=c714fd88-3bca-4a26-8a7c-392cd6eede07 source=digital.vasic.herald/bherald
+wire: .gate.failed    type=digital.vasic.herald.constitution.gate.failed id=4dc82c39-434a-4145-ac66-ab10ac7a7130 source=digital.vasic.herald/bherald
+
+ANTI-BLUFF VERDICT: every PASS above carries a persisted state row + audit row +
+a wire event observed on the bus — NOT a metadata-only assertion (§107 / §11.4.5).
