@@ -86,7 +86,7 @@ func TestDownloadAttachmentContentAddressed(t *testing.T) {
 	if gotSha != wantSha {
 		t.Fatalf("sha mismatch: got %s want %s", gotSha, wantSha)
 	}
-	wantPath := filepath.Join(home, ".herald", "inbox", wantSha+".jpg")
+	wantPath := filepath.Join(home, ".herald", "inbox", "tgram", wantSha+".jpg")
 	if gotPath != wantPath {
 		t.Fatalf("path mismatch: got %s want %s", gotPath, wantPath)
 	}
@@ -123,8 +123,9 @@ func TestDownloadAttachmentContentAddressed(t *testing.T) {
 	if info1.Size() != info2.Size() {
 		t.Fatalf("idempotence: file size changed across duplicate downloads: %d -> %d", info1.Size(), info2.Size())
 	}
-	// Confirm no stray temp file was left behind in the inbox dir.
-	inboxDir := filepath.Join(home, ".herald", "inbox")
+	// Confirm no stray temp file was left behind in the per-channel inbox
+	// dir (Wave 7 T3: now ~/.herald/inbox/tgram/, not the flat inbox).
+	inboxDir := filepath.Join(home, ".herald", "inbox", "tgram")
 	entries, err := os.ReadDir(inboxDir)
 	if err != nil {
 		t.Fatalf("readdir inbox: %v", err)

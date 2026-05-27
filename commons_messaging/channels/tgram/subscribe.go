@@ -118,7 +118,7 @@ func (a *Adapter) Subscribe(ctx context.Context, h commons.InboundHandler) error
 
 	// Wave 6 T5 — photo / document / voice handlers. Each one:
 	//   1. drops bot-own (self-echo) messages via shouldDropBotSelf
-	//   2. content-addresses the file under ~/.herald/inbox/<sha>.<ext>
+	//   2. content-addresses the file under ~/.herald/inbox/tgram/<sha>.<ext>
 	//   3. dispatches an InboundEvent with Attachments[] populated so the
 	//      Claude Code pre-text renderer (T3) sees the file alongside the
 	//      caption text.
