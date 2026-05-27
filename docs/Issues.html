@@ -373,14 +373,68 @@ detected+persisted+audited via the bindings Pipeline).</td>
 <tr>
 <td>HRD-022</td>
 <td>task</td>
-<td>open</td>
+<td>in_progress</td>
 <td>middle</td>
-<td><code>rherald</code> release bindings (§4 tag mirroring, §5
-changelog, §11.4.38 installable-asset evidence, §11.4.40 full-suite
-retest)</td>
+<td><code>rherald</code> release constitution bindings —
+<code>rherald/internal/bindings</code> Pipeline registers the 4
+rherald-owned §42.3 release-lifecycle rules (§4 tag mirroring, §5
+changelog + multi-format export [shared with cherald], §11.4.38
+installable-asset evidence, §11.4.40 full-suite retest before release
+tag) as concrete <code>commons_constitution.Evaluator</code> impls
+routed through 2 event classes (<code>.release.gate.blocked</code> via
+the existing <code>ReleaseEvent</code>/<code>ReleaseGateBlocked</code>
+emitter surface for §4/§11.4.38/§11.4.40 +
+<code>.policy.violation</code> for the shared §5 changelog row; a
+release recovery maps to the shared <code>.gate.recovered</code>
+companion since the release class family has no distinct "recovered"
+leaf) over the Batch-A emit+persist+audit foundation, mirroring the
+proven HRD-019/020/021 Pipeline pattern. rherald is the RELEASE flavor.
+4 bespoke PURE detectors landed: tag-mirror-parity (§4 — tag present on
+parent but missing on any owned mirror,
+<code>with_tag&lt;mirrors</code>, → <code>.release.gate.blocked</code>),
+changelog-conformance (§5 — non-Conventional-Commits changelog OR stale
+multi-format export → <code>.policy.violation</code>),
+pre-tag-retest-gate (§11.4.40 CRITICAL — tag attempted without a green
+all-8-§40.2-tier retest → <code>.release.gate.blocked</code>),
+installable-asset-evidence (§11.4.38 — release asset fails its install
+check → <code>.release.gate.blocked</code>). CRITICAL §12-safety: every
+detector CLASSIFIES a recorded release-op outcome string; NONE tags,
+pushes, force-pushes, runs git, downloads, or installs — the live
+release-op interception is scope-locked to the §43 follow-ups
+(HRD-031/032/045).</td>
 <td>2026-05-20</td>
-<td>2026-05-20</td>
-<td>spec V3 §42.3 rherald rows + §42.5 step 5; Catalogue-Check: TBD</td>
+<td>2026-05-28</td>
+<td>spec V3 §42.3 rherald rows + §42.5 step 5; Catalogue-Check: no-match
+(bindings are bespoke Helix-governance Evaluator impls;
+emit/persist/audit path is 100% Batch-A
+<code>commons_constitution</code> wiring + reuses the existing
+<code>ReleaseEvent</code>/<code>ReleaseGateBlocked</code> emitter
+surface per §11.4.74). v1.0.0 Batch B unit 4. Evidence:
+docs/qa/HRD-022-20260528T015202Z/ (release-gate-blocked detect→emit
+<code>.release.gate.blocked</code>→persist→audit→query round-trip
+transcript for §4/§5/§11.4.38/§11.4.40 + §11.4.85 stress_chaos/ — 1200
+concurrent release-blocks 0 errors, 1200 emits + 1200 audit rows,
+bus-drop chaos 800/800 faults surface 0 swallowed). §11.4.92 5-pass —
+Pass-1: TDD RED (injected always-pass bluff into §11.4.40 retest
+detector → 4 sub-cases FAIL) → reverted → GREEN,
+<code>go test -race -count=3 ./rherald/internal/bindings/...</code>
+deterministic 14/14 PASS ×3. Pass-2 blast-radius: new pkg
+<code>rherald/internal/bindings</code> only; rherald/go.mod gains
+commons_constitution + google/uuid + transitive replace block (database
+submodule); existing rherald main/stubs untouched (Pipeline not yet
+wired into a serve plane — rherald is CLI-only, DefaultPort=0; the §43
+<code>rherald tag mirror</code>/<code>changelog generate</code>/<code>gate retest</code>
+command bodies are HRD-031/032/045 follow-ups). Pass-3 cross-feature:
+mirrors HRD-019/020/021 emit-class routing; no shared state with
+cherald/sherald/bherald (each flavor owns a separate Pipeline); the
+shared §5 row is registered independently in both rherald
+(conformance/export-staleness facet) and cherald packages. Pass-5
+anti-bluff: real MemoryBus+store+ladder+audit round-trip with captured
+emitted wire-event payloads (NOT metadata-only); §12-safe — no real
+tag/push/git/install performed. e2e: E93 proposed (conductor to wire —
+asserts a rherald §11.4.40 tag-without-retest Subject →
+<code>.release.gate.blocked</code> detected+persisted+audited via the
+bindings Pipeline).</td>
 </tr>
 <tr>
 <td>HRD-023</td>

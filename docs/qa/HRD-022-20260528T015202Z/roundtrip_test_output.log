@@ -1,0 +1,16 @@
+=== RUN   TestPipeline_ReleaseGateBlockedRoundTrip
+--- PASS: TestPipeline_ReleaseGateBlockedRoundTrip (0.01s)
+=== RUN   TestPipeline_ReleaseGateRecoveredOnPass
+--- PASS: TestPipeline_ReleaseGateRecoveredOnPass (0.01s)
+=== RUN   TestPipeline_ChangelogPolicyViolation
+--- PASS: TestPipeline_ChangelogPolicyViolation (0.00s)
+=== RUN   TestDetector_TagMirrorParity
+--- PASS: TestDetector_TagMirrorParity (0.00s)
+=== RUN   TestDetector_ChangelogConformance
+--- PASS: TestDetector_ChangelogConformance (0.00s)
+=== RUN   TestDetector_PreTagRetestGate
+--- PASS: TestDetector_PreTagRetestGate (0.00s)
+=== RUN   TestDetector_InstallableAssetEvidence
+--- PASS: TestDetector_InstallableAssetEvidence (0.00s)
+PASS
+ok  	github.com/vasic-digital/herald/rherald/internal/bindings	1.277s
