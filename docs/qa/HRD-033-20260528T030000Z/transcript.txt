@@ -1,0 +1,33 @@
+ANCHOR: destructive-guard blocked rm/reset/clean without hardlinked backup repo.safety_breach
+===================================================================
+HRD-033 destructive-guard (§9.1) — sherald §43 system/safety command
+v1.0.0 Batch C cluster C2 — REAL binary run, 2026-05-27T22:10:13Z
+binary: sherald (built from sherald/cmd/sherald), auth=hmac dummy (CLI path)
+§12/§107-SAFE: this is a PRE-FLIGHT GUARD — it NEVER runs rm / git reset --hard /
+git push --force. PASS (exit 0) = safe to proceed; FAIL (exit 1) = BLOCK the op.
+
+### GATE-BLOCK — destructive op WITHOUT a preceding hardlinked backup
+$ sherald destructive-guard git reset --hard HEAD~1
+destructive-guard: op="git reset --hard HEAD~1" backup=false
+[FAIL] §9.1: destructive-op §9.1: git reset --hard HEAD~1 attempted WITHOUT a preceding hardlinked backup
+sherald: §9.1 breach: destructive-op §9.1: git reset --hard HEAD~1 attempted WITHOUT a preceding hardlinked backup
+exit=1 (non-zero ⇒ BLOCK)
+
+### GATE-PASS — destructive op WITH --backup-exists asserted --emit
+$ sherald destructive-guard --backup-exists --emit rm -rf build/
+destructive-guard: op="rm -rf build/" backup=true
+[PASS] §9.1: destructive-op §9.1: backup recorded before rm -rf build/
+[emit] §9.1 drove a constitution event for subject rm -rf build/|backup=true
+exit=0
+
+### GATE-PASS — backup detected via a real present --backup-path
+$ sherald destructive-guard --backup-path /var/folders/t3/dmp1fb1d61xbl27trnjtr0_c0000gn/T/tmp.tZHYuQFc9n/.backup-snapshot git clean -fd
+destructive-guard: op="git clean -fd" backup=true
+[PASS] §9.1: destructive-op §9.1: backup recorded before git clean -fd
+exit=0
+
+### NON-DESTRUCTIVE op — nothing to guard, passes cleanly
+$ sherald destructive-guard git status
+destructive-guard: "git status" is not a recognized destructive op — nothing to guard
+[PASS] §9.1: destructive-op §9.1: backup recorded before git status
+exit=0

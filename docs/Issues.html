@@ -47,7 +47,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>18</td>
+<td>19</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -63,7 +63,35 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>r18 (v1.0.0 Batch C cluster C1) marks
+<td><strong>r19 (v1.0.0 Batch C cluster C2) marks HRD-033/040/046/056
+(sherald §43 system/safety commands) Open→in_progress + lands a §107
+lazy-verifier usability fix.</strong> The four sherald §43 commands
+landed as PRE-FLIGHT GATES
+(<code>sherald/cmd/sherald/sysops_cmds.go</code>) feeding the HRD-020
+sherald binding — <code>destructive-guard</code> (§9.1
+rm/reset/force-push), <code>constitution-pull</code> (§11.4.26/.32
+fetch+rebase+validate → <code>.bundle.updated</code>),
+<code>force-push-gate</code> (§11.4.41 merge-first+session-auth),
+<code>mem-budget-watch</code> (§12.6 60%-ceiling →
+<code>.host.safety_breach</code>); each
+DETECTS+classifies+exits-non-zero, never performs the op; reuse the
+shared <code>commons/gitops</code> + <code>commons/stresschaos</code>;
+hermetic <code>-race</code> green. <strong>§107 fix:</strong> sherald's
+<code>main.go</code> now builds the JWT verifier LAZILY inside
+<code>serve</code> (mirroring pherald) so the §43 CLI commands run bare
+without <code>HERALD_AUTH_MODE</code> — previously EVERY subcommand
+(even <code>sherald version</code>) died with "build verifier:
+HERALD_AUTH_MODE must be set", a §107 usability bluff (the cmd "exists"
+but no operator could run it). Also promoted
+<code>pherald/internal/gitops</code> → <code>commons/gitops</code>
+(commit <code>4a6b0ec</code>) so C2-C5 reuse the git primitives, and
+root-caused a flaky e2e E53 (cross-call byte-diff on the dynamic
+<code>/v1/safety_state</code> body). e2e: E31 rewritten (real HRD-033
+§9.1 gate + bare-CLI §107 proof), <strong>E101-E104</strong> wired
+(destructive-guard / constitution-pull / force-push-gate /
+mem-budget-watch), each anchored to its
+<code>docs/qa/HRD-0NN-20260528T030000Z/transcript.txt</code>.
+<strong>Prior r18 (v1.0.0 Batch C cluster C1) marked
 HRD-029/030/043/044/049/053 (pherald §43 gitops command catalogue)
 Open→in_progress.</strong> The six commands landed (commit
 <code>502ebf6</code>) as
@@ -569,13 +597,19 @@ owned submodule</td>
 <tr>
 <td>HRD-033</td>
 <td>task</td>
-<td>open</td>
+<td>in_progress</td>
 <td>high</td>
 <td>§9.1 <code>sherald destructive guard &lt;op&gt;</code> — wrap
-rm/git-reset/git-push-force with prerequisite checks</td>
+rm/git-reset/git-push-force with prerequisite checks — Batch C:
+implemented as sherald §43 command
+(<code>sherald/cmd/sherald/sysops_cmds.go</code>) feeding the HRD-020
+sherald binding; PRE-FLIGHT GATE (detects+classifies+exits-nonzero,
+never performs the op); hermetic -race green; §107 lazy-verifier fix so
+the CLI runs without a JWT secret</td>
 <td>2026-05-20</td>
-<td>2026-05-20</td>
-<td>spec §43.2 / §9.1; Catalogue-Check: TBD</td>
+<td>2026-05-28</td>
+<td>spec §43.2 / §9.1; Catalogue-Check: TBD;
+docs/qa/HRD-033-20260528T030000Z/</td>
 </tr>
 <tr>
 <td>HRD-034</td>
@@ -649,13 +683,19 @@ colorizer</td>
 <tr>
 <td>HRD-040</td>
 <td>task</td>
-<td>open</td>
+<td>in_progress</td>
 <td>high</td>
 <td>§11.4.26 <code>sherald constitution pull</code> — wrap fetch +
-rebase + validation gate, emits <code>.bundle.updated</code></td>
+rebase + validation gate, emits <code>.bundle.updated</code> — Batch C:
+implemented as sherald §43 command
+(<code>sherald/cmd/sherald/sysops_cmds.go</code>) feeding the HRD-020
+sherald binding; PRE-FLIGHT GATE (detects+classifies+exits-nonzero,
+never performs the op); hermetic -race green; §107 lazy-verifier fix so
+the CLI runs without a JWT secret</td>
 <td>2026-05-20</td>
-<td>2026-05-20</td>
-<td>spec §43.2 / §11.4.26 + §11.4.32; Catalogue-Check: TBD</td>
+<td>2026-05-28</td>
+<td>spec §43.2 / §11.4.26 + §11.4.32; Catalogue-Check: TBD;
+docs/qa/HRD-040-20260528T030000Z/</td>
 </tr>
 <tr>
 <td>HRD-041</td>
@@ -722,13 +762,19 @@ retest gate</td>
 <tr>
 <td>HRD-046</td>
 <td>task</td>
-<td>open</td>
+<td>in_progress</td>
 <td>high</td>
 <td>§11.4.41 <code>sherald force-push gate</code> — merge-first +
-per-session-auth enforcement</td>
+per-session-auth enforcement — Batch C: implemented as sherald §43
+command (<code>sherald/cmd/sherald/sysops_cmds.go</code>) feeding the
+HRD-020 sherald binding; PRE-FLIGHT GATE
+(detects+classifies+exits-nonzero, never performs the op); hermetic
+-race green; §107 lazy-verifier fix so the CLI runs without a JWT
+secret</td>
 <td>2026-05-20</td>
-<td>2026-05-20</td>
-<td>spec §43.2 / §11.4.41 + §9.2; Catalogue-Check: TBD</td>
+<td>2026-05-28</td>
+<td>spec §43.2 / §11.4.41 + §9.2; Catalogue-Check: TBD;
+docs/qa/HRD-046-20260528T030000Z/</td>
 </tr>
 <tr>
 <td>HRD-047</td>
@@ -843,13 +889,19 @@ mandate)</td>
 <tr>
 <td>HRD-056</td>
 <td>task</td>
-<td>open</td>
+<td>in_progress</td>
 <td>high</td>
 <td>§12.6 <code>sherald mem-budget watch</code> — daemon-mode 60%
-threshold watcher emitting <code>.host.safety_breach</code></td>
+threshold watcher emitting <code>.host.safety_breach</code> — Batch C:
+implemented as sherald §43 command
+(<code>sherald/cmd/sherald/sysops_cmds.go</code>) feeding the HRD-020
+sherald binding; PRE-FLIGHT GATE (detects+classifies+exits-nonzero,
+never performs the op); hermetic -race green; §107 lazy-verifier fix so
+the CLI runs without a JWT secret</td>
 <td>2026-05-20</td>
-<td>2026-05-20</td>
-<td>spec §43.2 / §12.6; Catalogue-Check: TBD</td>
+<td>2026-05-28</td>
+<td>spec §43.2 / §12.6; Catalogue-Check: TBD;
+docs/qa/HRD-056-20260528T030000Z/</td>
 </tr>
 <tr>
 <td>HRD-081</td>

@@ -1,0 +1,32 @@
+ANCHOR: force-push-gate blocked force-push without merge-first or session-auth repo.safety_breach
+===================================================================
+HRD-046 force-push-gate (§11.4.41 / §9.2) — sherald §43 system/safety command
+v1.0.0 Batch C cluster C2 — REAL binary run, 2026-05-27T22:10:29Z
+binary: sherald (built from sherald/cmd/sherald), auth=hmac dummy (CLI path)
+Hermetic: file:// bare remote + work clone under $TMPDIR — NEVER a real mirror.
+§12/§107-SAFE: PRE-FLIGHT GUARD — it NEVER performs the force-push itself.
+merge-first proven via AheadBehind (behind==0 ⇒ merged); auth via --authorized/env.
+
+### GATE-PASS — merged (behind==0) AND --authorized --emit
+$ sherald force-push-gate --repo $WORK --upstream origin/main --authorized --emit main
+force-push-gate: main is 0 commit(s) behind origin/main (merge-first=true)
+force-push-gate: authorized=true
+[PASS] §11.4.41: force-push §11.4.41/§9.2: main merge-first + authorized
+[emit] §11.4.41 drove a constitution event for subject main|merged=true|authorized=true
+exit=0
+
+### GATE-BLOCK — clone is BEHIND upstream (merge-first violated), even though authorized
+$ sherald force-push-gate --repo $CLONE --upstream origin/main --authorized --fetch main
+force-push-gate: main is 1 commit(s) behind origin/main (merge-first=false)
+force-push-gate: authorized=true
+[FAIL] §11.4.41: force-push §11.4.41: main attempted without a preceding merge (merge-first violated)
+sherald: §11.4.41 breach: force-push §11.4.41: main attempted without a preceding merge (merge-first violated)
+exit=1 (non-zero ⇒ BLOCK)
+
+### GATE-BLOCK — merged but NOT authorized (§9.2 per-session auth missing)
+$ sherald force-push-gate --repo $WORK --upstream origin/main main
+force-push-gate: main is 0 commit(s) behind origin/main (merge-first=true)
+force-push-gate: authorized=false
+[FAIL] §11.4.41: force-push §9.2: main attempted without explicit per-session authorization
+sherald: §11.4.41 breach: force-push §9.2: main attempted without explicit per-session authorization
+exit=1 (non-zero ⇒ BLOCK)

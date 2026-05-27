@@ -630,20 +630,45 @@ for entry in "sherald:24993:HRD-098:safety_state:GET:401" "cherald:24992:HRD-028
 done
 
 echo ""
-echo "== E31: Representative §43 stub exits non-zero + HRD pointer =="
+echo "== E31: REAL §43 destructive-guard (HRD-033) §9.1 gate + §107 lazy-verifier =="
+# v1.0.0 Batch C: destructive-guard is now a REAL §43 command (replacing the old
+# stub that just exited non-zero with an HRD-033 pointer). E31 now exercises the
+# real HRD-033 command (sherald/cmd/sherald/sysops_cmds.go) AND proves the §107
+# lazy-verifier usability fix: the §43 CLI subcommands run BARE — with the JWT
+# auth env UNSET (`env -u HERALD_AUTH_MODE -u HERALD_AUTH_HMAC_SECRET`) — because
+# sherald now builds its JWT verifier LAZILY inside `serve`, not at process start.
+# E31a = §9.1 BLOCK path (no backup); E31b = §9.1 ALLOW path (--backup-exists).
 bin="/tmp/sherald-stub-$$"
 if go build -o "${bin}" "./sherald/cmd/sherald" > /tmp/e2e_out 2>&1; then
+    # E31a: destructive op, NO backup, NO auth env → NON-ZERO + [FAIL] §9.1 verdict.
     set +e
-    "${bin}" destructive-guard > /tmp/e31.out 2>&1
-    rc=$?
+    env -u HERALD_AUTH_MODE -u HERALD_AUTH_HMAC_SECRET \
+        "${bin}" destructive-guard git reset --hard > /tmp/e31a.out 2>&1
+    rc_a=$?
     set -e
-    if [ "${rc}" != "0" ] && grep -q 'HRD-033' /tmp/e31.out; then
-        echo "PASS  E31 sherald destructive-guard exits non-zero (rc=${rc}) with HRD-033 in stderr"
+    if [ "${rc_a}" != "0" ] \
+        && grep -qF '[FAIL] §9.1' /tmp/e31a.out \
+        && grep -qF 'WITHOUT a preceding hardlinked backup' /tmp/e31a.out; then
+        echo "PASS  E31a destructive-guard (no auth env) blocks 'git reset --hard' without backup (rc=${rc_a}, [FAIL] §9.1)"
         pass=$((pass+1))
     else
-        echo "FAIL  E31 sherald destructive-guard: rc=${rc} hrd-present=$(grep -q 'HRD-033' /tmp/e31.out && echo yes || echo no)"
-        tail -5 /tmp/e31.out | sed 's/^/      /'
-        fail=$((fail+1)); fail_names+=("E31")
+        echo "FAIL  E31a destructive-guard no-backup: rc=${rc_a} fail-verdict=$(grep -qF '[FAIL] §9.1' /tmp/e31a.out && echo yes || echo no) reason=$(grep -qF 'WITHOUT a preceding hardlinked backup' /tmp/e31a.out && echo yes || echo no)"
+        tail -5 /tmp/e31a.out | sed 's/^/      /'
+        fail=$((fail+1)); fail_names+=("E31a")
+    fi
+    # E31b: same op WITH --backup-exists, NO auth env → ZERO + [PASS] §9.1 verdict.
+    set +e
+    env -u HERALD_AUTH_MODE -u HERALD_AUTH_HMAC_SECRET \
+        "${bin}" destructive-guard --backup-exists git reset --hard > /tmp/e31b.out 2>&1
+    rc_b=$?
+    set -e
+    if [ "${rc_b}" = "0" ] && grep -qF '[PASS] §9.1' /tmp/e31b.out; then
+        echo "PASS  E31b destructive-guard (no auth env) allows 'git reset --hard' with --backup-exists (rc=${rc_b}, [PASS] §9.1)"
+        pass=$((pass+1))
+    else
+        echo "FAIL  E31b destructive-guard --backup-exists: rc=${rc_b} pass-verdict=$(grep -qF '[PASS] §9.1' /tmp/e31b.out && echo yes || echo no)"
+        tail -5 /tmp/e31b.out | sed 's/^/      /'
+        fail=$((fail+1)); fail_names+=("E31b")
     fi
     rm -f "${bin}"
 else
@@ -2014,6 +2039,13 @@ SC_GITOPS_CP_DIR="$(sc_newest 'HRD-029-*')"
 SC_GITOPS_REOPEN_DIR="$(sc_newest 'HRD-049-*')"
 SC_GITOPS_INSTUP_DIR="$(sc_newest 'HRD-043-*')"
 SC_GITOPS_FETCHGUARD_DIR="$(sc_newest 'HRD-044-*')"
+# v1.0.0 Batch C C2 — sherald §43 system/safety command transcripts
+# (HRD-033 destructive-guard / HRD-040 constitution-pull / HRD-046
+# force-push-gate / HRD-056 mem-budget-watch).
+SC_SYS_DESTRUCT_DIR="$(sc_newest 'HRD-033-*')"
+SC_SYS_CONSTPULL_DIR="$(sc_newest 'HRD-040-*')"
+SC_SYS_FORCEPUSH_DIR="$(sc_newest 'HRD-046-*')"
+SC_SYS_MEMBUDGET_DIR="$(sc_newest 'HRD-056-*')"
 
 # sc_anchor <invariant-label> <evidence-file> <literal-anchor-string>
 # Asserts the captured-evidence file contains the load-bearing anchor value.
@@ -2139,6 +2171,26 @@ sc_anchor "E99" "${SC_GITOPS_INSTUP_DIR:+${SC_GITOPS_INSTUP_DIR}/transcript.txt}
 check "E100 §11.4.37/§11.4.71 pherald fetch-guard — pre-edit fetch + rebase enforcement (hermetic, -race)" \
     "go test -race -count=1 -run 'TestFetchGuard_Rebased_PASS' ./pherald/cmd/pherald/..."
 sc_anchor "E100" "${SC_GITOPS_FETCHGUARD_DIR:+${SC_GITOPS_FETCHGUARD_DIR}/transcript.txt}" "edit on main was made on a tree rebased on origin"
+
+# ---- E101: §9.1 sherald destructive-guard command (HRD-033) ----
+check "E101 §9.1 sherald destructive-guard — no-backup BLOCK + --backup-exists ALLOW (hermetic, -race)" \
+    "go test -race -count=1 -run 'TestDestructiveGuard_NoBackup_Blocks|TestDestructiveGuard_WithBackup_Allows' ./sherald/cmd/sherald/..."
+sc_anchor "E101" "${SC_SYS_DESTRUCT_DIR:+${SC_SYS_DESTRUCT_DIR}/transcript.txt}" "destructive-guard blocked rm/reset/clean without hardlinked backup repo.safety_breach"
+
+# ---- E102: §11.4.26/.32 sherald constitution-pull command (HRD-040) ----
+check "E102 §11.4.26/.32 sherald constitution-pull — fetch+rebase then post-pull validation gate (hermetic, -race)" \
+    "go test -race -count=1 -run 'TestConstitutionPull_FetchRebaseValidate_EmitsBundleUpdated' ./sherald/cmd/sherald/..."
+sc_anchor "E102" "${SC_SYS_CONSTPULL_DIR:+${SC_SYS_CONSTPULL_DIR}/transcript.txt}" "constitution-pull fetch+rebase ok then post-pull validation gate bundle.updated"
+
+# ---- E103: §11.4.41 sherald force-push-gate command (HRD-046) ----
+check "E103 §11.4.41 sherald force-push-gate — not-merged BLOCK + merged/authorized ALLOW (hermetic, -race)" \
+    "go test -race -count=1 -run 'TestForcePushGate_NotMerged_Blocks|TestForcePushGate_MergedAndAuthorized_Allows' ./sherald/cmd/sherald/..."
+sc_anchor "E103" "${SC_SYS_FORCEPUSH_DIR:+${SC_SYS_FORCEPUSH_DIR}/transcript.txt}" "force-push-gate blocked force-push without merge-first or session-auth repo.safety_breach"
+
+# ---- E104: §12.6 sherald mem-budget-watch command (HRD-056) ----
+check "E104 §12.6 sherald mem-budget-watch — over-ceiling BLOCK + under-ceiling ALLOW (hermetic, -race)" \
+    "go test -race -count=1 -run 'TestMemBudgetWatch_OverCeiling_Blocks|TestMemBudgetWatch_UnderCeiling_Allows' ./sherald/cmd/sherald/..."
+sc_anchor "E104" "${SC_SYS_MEMBUDGET_DIR:+${SC_SYS_MEMBUDGET_DIR}/transcript.txt}" "mem-budget-watch blocked at used_fraction>=0.60 host.safety_breach"
 
 # ----------------------------------------------------------------------
 echo ""

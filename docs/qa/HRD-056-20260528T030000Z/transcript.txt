@@ -1,0 +1,35 @@
+ANCHOR: mem-budget-watch blocked at used_fraction>=0.60 host.safety_breach
+===================================================================
+HRD-056 mem-budget-watch (§12.6) — sherald §43 system/safety command
+v1.0.0 Batch C cluster C2 — REAL binary run, 2026-05-27T22:09:59Z
+binary: sherald (built from sherald/cmd/sherald), auth=hmac dummy (CLI path)
+§12.6-SAFE: the guard READS the host used-fraction; it NEVER allocates memory.
+Test seam --used-fraction drives PASS/BLOCK deterministically.
+
+### GATE-PASS (under the 60% ceiling) — used_fraction=0.30 --emit
+$ sherald mem-budget-watch --used-fraction 0.30 --emit
+mem-budget-watch: test-seam used_fraction=0.3000
+[PASS] §12.6: mem-budget §12.6: used_fraction=0.3000 within the 60% ceiling
+[emit] §12.6 drove a constitution event for subject used_fraction=0.3000
+exit=0
+
+### GATE-BLOCK (over the 60% ceiling) — used_fraction=0.85
+$ sherald mem-budget-watch --used-fraction 0.85
+mem-budget-watch: test-seam used_fraction=0.8500
+[FAIL] §12.6: mem-budget §12.6: used_fraction=0.8500 exceeds the 60% ceiling
+sherald: §12.6 breach: mem-budget §12.6: used_fraction=0.8500 exceeds the 60% ceiling
+exit=1 (non-zero ⇒ BLOCK)
+
+### GATE-BLOCK via env seam — HERALD_MEM_FRACTION=0.91
+$ HERALD_MEM_FRACTION=0.91 sherald mem-budget-watch
+mem-budget-watch: env HERALD_MEM_FRACTION=0.9100
+[FAIL] §12.6: mem-budget §12.6: used_fraction=0.9100 exceeds the 60% ceiling
+sherald: §12.6 breach: mem-budget §12.6: used_fraction=0.9100 exceeds the 60% ceiling
+exit=1 (non-zero ⇒ BLOCK)
+
+### REAL host probe (no seam) — one-shot live sample on this host
+$ sherald mem-budget-watch
+mem-budget-watch: host probe (darwin) used_fraction=0.6308
+[FAIL] §12.6: mem-budget §12.6: used_fraction=0.6308 exceeds the 60% ceiling
+sherald: §12.6 breach: mem-budget §12.6: used_fraction=0.6308 exceeds the 60% ceiling
+exit=1

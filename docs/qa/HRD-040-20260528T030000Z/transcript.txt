@@ -1,0 +1,27 @@
+ANCHOR: constitution-pull fetch+rebase ok then post-pull validation gate bundle.updated
+===================================================================
+HRD-040 constitution-pull (§11.4.26 + §11.4.32) — sherald §43 command
+v1.0.0 Batch C cluster C2 — REAL binary run, 2026-05-27T22:10:44Z
+binary: sherald (built from sherald/cmd/sherald), auth=hmac dummy (CLI path)
+Hermetic: file:// bare remote + clone treated as the constitution submodule.
+Drives REAL git fetch + rebase against --constitution-dir; classifies §11.4.26
+(pull ok?) THEN §11.4.32 (post-pull validation?), emitting .bundle.updated.
+
+### GATE-PASS — fetch + rebase ok AND --assume-validated --emit
+$ sherald constitution-pull --constitution-dir $CDIR --remote origin --assume-validated --emit
+constitution-pull: fetched + rebased onto origin/main (HEAD ab6db58)
+[PASS] §11.4.26: §11.4.26: constitution pulled successfully (ab6db58)
+[emit] §11.4.26 drove a constitution event for subject ab6db58|ok=true
+constitution-pull: post-pull validation validated=true (bundle constitution@ab6db58)
+[PASS] §11.4.32: §11.4.32: post-pull validation gate PASSED (constitution@ab6db58)
+[emit] §11.4.32 drove a constitution event for subject constitution@ab6db58|validated=true
+exit=0
+
+### GATE-BLOCK — fetch + rebase ok (§11.4.26 PASS) but --skip-validate (§11.4.32 FAIL)
+$ sherald constitution-pull --constitution-dir $CDIR --remote origin --skip-validate
+constitution-pull: fetched + rebased onto origin/main (HEAD ab6db58)
+[PASS] §11.4.26: §11.4.26: constitution pulled successfully (ab6db58)
+constitution-pull: post-pull validation validated=false (bundle constitution@ab6db58)
+[FAIL] §11.4.32: §11.4.32: post-pull validation gate FAILED (constitution@ab6db58)
+sherald: §11.4.32 breach: §11.4.32: post-pull validation gate FAILED (constitution@ab6db58)
+exit=1 (non-zero ⇒ BLOCK)

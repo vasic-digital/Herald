@@ -6,13 +6,21 @@
 //     (lifecycle bound to a SIGTERM-cancelled context)
 //   - sherald/internal/safety.Handler serving GET /v1/safety_state
 //
-// §43 stub commands still register via sherald/internal/stubs.
+// §43 system/safety commands register via registerSysOps (HRD-033/040/046/056);
+// the remaining stubs via sherald/internal/stubs.
 //
-// §107 anti-bluff posture: the serve plane refuses to start without a
-// usable JWT verifier (HERALD_AUTH_MODE + the matching secret/URL must be
-// set). The mem-sampler context is bound to os.Interrupt + syscall.SIGTERM
-// so the background goroutine cleanly exits on shutdown rather than leaking
-// — silently leaking a goroutine on shutdown would be a §107 PASS-bluff.
+// §107 anti-bluff posture: the serve plane refuses to start without a usable JWT
+// verifier (HERALD_AUTH_MODE + the matching secret/URL must be set) — but that
+// check, the safety Aggregator, and the mem-sampler goroutine are all built
+// LAZILY inside the `serve` command's RunE (mirroring pherald). This is
+// load-bearing for §107 end-user usability: the §43 CLI commands
+// (`sherald destructive-guard`, `mem-budget-watch`, …) are designed for bare
+// CI/cron/agent invocation and MUST run WITHOUT a JWT secret or a spawned
+// background sampler. Eagerly building the verifier in main() (the prior Wave 3a
+// wiring) made every subcommand — even `sherald version` — die with "build
+// verifier: HERALD_AUTH_MODE must be set", which is itself a §107 PASS-bluff:
+// the command "exists" but no operator can run it. The sampler context is bound
+// to os.Interrupt + syscall.SIGTERM so the goroutine cleanly exits on shutdown.
 package main
 
 import (
@@ -24,6 +32,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
+	"github.com/spf13/cobra"
 
 	"github.com/vasic-digital/herald/commons"
 	"github.com/vasic-digital/herald/commons/cli"
@@ -49,45 +58,84 @@ func main() {
 
 	branding := commons.DefaultBranding("s", version)
 
-	// Process-global Aggregator + sampler goroutine. Lifecycle bound to a
-	// top-level context so SIGTERM cleanly terminates the sampler. The
-	// cli.ServeCmd cobra command has its own server-side signal trap; the
-	// sampler runs outside that lifecycle so it needs its own ctx.
-	agg := safety.NewAggregator()
-	samplerCtx, stopSampler := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stopSampler()
-	safety.StartMemSampler(samplerCtx, agg)
-
-	// Build the auth verifier. Redis is optional — JWKS-mode caches keys
-	// in Redis when available; HMAC mode ignores rdb entirely.
-	var rdb redis.Cmdable
-	if url := os.Getenv("HERALD_REDIS_URL"); url != "" {
-		opts, err := redis.ParseURL(url)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, "sherald: parse HERALD_REDIS_URL:", err)
-			os.Exit(1)
-		}
-		rdb = redis.NewClient(opts)
-	}
-	verifier, err := commons_auth.NewVerifierFromEnv(rdb)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "sherald: build verifier:", err)
-		os.Exit(1)
-	}
-
 	root := cli.NewRootCmd(branding)
 	root.Version = version + " (" + commit + ")"
 
 	root.AddCommand(cli.VersionCmd(branding))
-	root.AddCommand(cli.ServeCmd(cli.ServeOpts{
-		Branding:   branding,
-		Routes:     flavhttp.Routes(agg),
-		Middleware: []gin.HandlerFunc{commons_auth.GinMiddleware(verifier)},
-	}))
+	root.AddCommand(newServeCmd(branding))
 	stubs.Register(root)
+	registerSysOps(root)
 
 	if rerr := root.Execute(); rerr != nil {
 		fmt.Fprintln(os.Stderr, "sherald:", rerr)
 		os.Exit(1)
 	}
+}
+
+// newServeCmd builds the sherald `serve` command with LAZY dependency
+// construction: the safety Aggregator, the mem-sampler goroutine, and the JWT
+// verifier are all built inside RunE, so the §43 CLI subcommands run WITHOUT
+// requiring HERALD_AUTH_MODE / a JWT secret and WITHOUT spawning a background
+// sampler (§107 end-user usability — see the package doc). An anonymous serve
+// plane is still refused: the verifier check fires when `serve` actually runs.
+// Flags + listener behavior are identical to cli.ServeCmd (shared BindServeFlags
+// + RunServe — the §107 lockstep-flag-UX contract).
+func newServeCmd(branding commons.Branding) *cobra.Command {
+	var (
+		port     int
+		tlsCert  string
+		tlsKey   string
+		noBrotli bool
+	)
+	cmd := &cobra.Command{
+		Use:   "serve",
+		Short: "Start the " + branding.DisplayName + " HTTP server",
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			ctx := cmd.Context()
+			if ctx == nil {
+				ctx = context.Background()
+			}
+
+			// Aggregator + sampler goroutine, lifecycle bound to the serve ctx
+			// so SIGINT/SIGTERM cleanly terminates the sampler.
+			agg := safety.NewAggregator()
+			samplerCtx, stopSampler := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
+			defer stopSampler()
+			safety.StartMemSampler(samplerCtx, agg)
+
+			// JWT verifier (Redis optional — JWKS caches keys when present;
+			// HMAC ignores rdb). Built here, not in main(), so CLI subcommands
+			// never require auth env.
+			var rdb redis.Cmdable
+			if url := os.Getenv("HERALD_REDIS_URL"); url != "" {
+				opts, err := redis.ParseURL(url)
+				if err != nil {
+					return fmt.Errorf("parse HERALD_REDIS_URL: %w", err)
+				}
+				rdb = redis.NewClient(opts)
+			}
+			verifier, err := commons_auth.NewVerifierFromEnv(rdb)
+			if err != nil {
+				return fmt.Errorf("build verifier: %w", err)
+			}
+
+			opts := cli.ServeOpts{
+				Branding:   branding,
+				Routes:     flavhttp.Routes(agg),
+				Middleware: []gin.HandlerFunc{commons_auth.GinMiddleware(verifier)},
+			}
+			if tlsCert != "" {
+				opts.TLSCertPath = tlsCert
+			}
+			if tlsKey != "" {
+				opts.TLSKeyPath = tlsKey
+			}
+			if noBrotli {
+				opts.DisableBrotli = true
+			}
+			return cli.RunServe(ctx, opts, port)
+		},
+	}
+	cli.BindServeFlags(cmd, &port, &tlsCert, &tlsKey, &noBrotli)
+	return cmd
 }
