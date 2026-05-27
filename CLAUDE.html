@@ -754,8 +754,12 @@ id="11493--sqlite-backed-single-source-of-truth-for-workable-items-helix-2026-05
 <code>Fixed.md</code> / <code>*_Summary.md</code> /
 <code>Status.md</code> / <code>CONTINUATION.md</code> §3) migrate to a
 SQLite single-source-of-truth (<code>docs/.workable_items.db</code>,
-gitignored with a regeneration mechanism per §11.4.30) with
-bidirectional MD↔︎DB regeneration so sync-drift is mechanically
+<strong>version-controlled as Herald's authoritative SSoT</strong> per
+operator mandate 2026-05-27 — a deliberate Herald divergence from the
+parent §11.4.93 gitignored-with-regeneration default, since for Herald
+the DB IS the authoritative artefact and MUST be committed, not
+regenerated-on-clone; only the transient WAL/SHM sidecars stay ignored)
+with bidirectional MD↔︎DB regeneration so sync-drift is mechanically
 impossible. The Go binary lives in the constitution submodule
 (<code>constitution/scripts/workable-items/</code>) — Herald references
 it per §11.4.74 catalogue-first, never reimplements. Migration is

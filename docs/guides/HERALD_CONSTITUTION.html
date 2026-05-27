@@ -919,10 +919,18 @@ not reinvent it."</p>
 HRD trackers (<code>docs/Issues.md</code> / <code>docs/Fixed.md</code> /
 the <code>*_Summary.md</code> variants / <code>docs/Status.md</code> /
 <code>docs/CONTINUATION.md</code> §3) migrate to a SQLite
-single-source-of-truth (<code>docs/.workable_items.db</code>, gitignored
-with a committed regeneration mechanism per §11.4.30) with bidirectional
-MD↔︎DB regeneration so sync-drift is mechanically impossible. The
-migration Go binary lives in the constitution submodule
+single-source-of-truth (<code>docs/.workable_items.db</code>,
+<strong>version-controlled as Herald's authoritative SSoT</strong> —
+operator mandate 2026-05-27: "We should not git ignore our workable
+items database since it is our single source of truth regarding items we
+have to do on the project!". This is a deliberate Herald divergence from
+the parent §11.4.93 gitignored-with-regeneration default: for Herald the
+DB IS the authoritative artefact, so it is committed and
+version-controlled, NOT regenerated-on-clone; only the transient SQLite
+WAL/SHM sidecars (<code>docs/.workable_items.db-wal</code> /
+<code>-shm</code>) stay gitignored) with bidirectional MD↔︎DB
+regeneration so sync-drift is mechanically impossible. The migration Go
+binary lives in the constitution submodule
 (<code>constitution/scripts/workable-items/</code>) — Herald references
 it per §11.4.74 catalogue-first, and never reimplements it. The
 migration is 6-phase; Herald files the tracking HRD (Phase 1) and

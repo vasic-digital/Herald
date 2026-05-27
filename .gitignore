@@ -39,7 +39,11 @@ go.work.sum
 # §11.4.89 background-test + §11.4.88 background-push transient logs
 qa-results/
 
-# §11.4.93 SQLite workable-items single-source-of-truth (regenerated via the
-# constitution submodule's `workable-items sync` Go binary; never hand-committed)
-docs/.workable_items.db
-docs/.workable_items.db-*
+# NOTE: docs/.workable_items.db (§11.4.93 SQLite workable-items SSoT) is deliberately
+# NOT gitignored. Operator mandate 2026-05-27: it is Herald's single source of truth for
+# project workable items and MUST be version-controlled. This is a deliberate Herald
+# divergence from the parent §11.4.93 "gitignored-with-regeneration" default — for Herald
+# the DB IS the authoritative artefact, so it is committed, not regenerated-on-clone.
+# The transient SQLite WAL/SHM sidecars are the only DB files that stay ignored:
+docs/.workable_items.db-shm
+docs/.workable_items.db-wal
