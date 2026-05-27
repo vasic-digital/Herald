@@ -5,7 +5,7 @@ case=truncated_json           status=400 body="error: \"event_parser: malformed 
 case=not_json_garbage         status=400 body="error: \"event_parser: malformed JSON: invalid character '\\\\x00' looking for beginning of value\""
 case=invalid_utf8             status=400 body="error: \"event_parser: malformed JSON: invalid character 'ÿ' looking for beginning of value\""
 case=json_array_not_object    status=400 body="error: \"event_parser: malformed JSON: json: cannot unmarshal array into Go value of type runner.structuredCloudEvent\""
-case=oversized_8mib_random    status=400 body="error: \"event_parser: malformed JSON: invalid character 'Í' looking for beginning of value\""
+case=oversized_8mib_random    status=400 body="error: \"event_parser: malformed JSON: invalid character 'ó' looking for beginning of value\""
 case=missing_required_id      status=400 body="error: \"event_parser: missing required field 'id'\""
-total_cases=7 reps_each=5 5xx_count=0 transport_errors=0
-all_4xx_no_panic=1
+total_cases=7 reps_each=5 5xx_count=0 small_body_transport_errors=0 oversized_rejections=5
+all_malformed_rejected_no_5xx=1

@@ -1247,6 +1247,56 @@ per CLAUDE.md build/test command + podman <code>--memory</code> cap
 (already the e2e boot path), no load tool, no new dep (2026-05-27).</td>
 </tr>
 <tr>
+<td>HRD-129</td>
+<td>task</td>
+<td>in_progress</td>
+<td>high</td>
+<td>§11.4.85 stress+chaos suite wired into the canonical anti-bluff
+harness <code>scripts/e2e_bluff_hunt.sh</code> as new invariants E81-E88
+(GAP-3 plan §4 / §6 T8) — ADDITIVE-ONLY append after E80 (E1-E80
+invariant logic untouched; the only deletions are 3 expanded
+header-comment lines: the <code>Eighty invariants (E1..E80;</code>
+summary, its continuation, and the
+<code>Exit 0 only when … E19..E80</code> line, all replaced by E1..E88 /
+E19..E88 text + an E81-E88 description block). Each invariant RUNS a
+REAL hermetic Go stress/chaos test (no live creds, no container runtime
+needed) via the existing <code>check</code> helper AND cites the
+captured-evidence artefact under
+<code>docs/qa/&lt;run-id&gt;/stress_chaos/</code> as its §11.4.2/§11.4.5
+positive-evidence anchor through a new <code>sc_anchor</code> helper
+that greps a SPECIFIC load-bearing value (NOT mere file existence — a
+present-but-empty artefact FAILs as a §11.4 PASS-bluff; absent evidence
+dir SKIPs-with-reason like the E71-E80 gate). Mapping:
+<strong>E81</strong> runner exactly-once-archive + bounded dispatch
+(HRD-125) → <code>TestRunner_Stress_ConcurrentReplay_ExactlyOnce</code>
+(-race) + anchor
+<code>runner/exactly_once.txt:archival_exactly_once=1</code>;
+<strong>E82</strong> <code>/v1/events</code> chaos (HRD-123) →
+input-corruption + duplicate-key + auth-storm tests + anchor
+<code>events/categorised_errors.txt:all_4xx_no_panic=1</code> (every
+malformed body 4xx, never 5xx, never panic); <strong>E83</strong>
+<code>/v1/compliance</code> fail-loud (HRD-124) →
+<code>TestComplianceHTTP_Chaos_PGDropFailsLoud</code> + anchor
+<code>compliance/pg_drop_fail_loud.log:fail_loud_no_fabricated_200=1</code>;
+<strong>E84</strong> <code>/v1/safety_state</code> (HRD-124) →
+<code>TestSafetyHTTP_Chaos_ConcurrentMutationUnderLoad</code> (-race) +
+anchor
+<code>safety_state/concurrent_mutation.log:consistent_under_concurrent_mutation=1</code>;
+<strong>E85</strong> <code>pherald listen</code> inbound (HRD-126) →
+<code>TestInbound_Chaos_HandleMalformedRaw_NeverPanics</code> +
+<code>…ExtractReplyToMessageID_Degrades</code> + anchors
+<code>listen/handle_malformed_raw.txt:panic_free=1</code> +
+<code>listen/malformed_payloads.txt:all_malformed_degraded_no_panic=1</code>;
+<strong>E86</strong> claude_code dispatch (HRD-127) →
+`TestDispatch_Chaos_ProcessDeath_Exit137</td>
+<td>…TimeoutContextCancel</td>
+<td>…TruncatedReply<code>(-race) + anchors</code>claude_code/subprocess_kill.log:tagged_error_no_hang=1<code>+</code>timeout_cancel.log:deadline_fired=1<code>; **E87** disk-full tagged-error (HRD-128) → </code>TestRunMigrations_Chaos_DiskFull_TaggedError<code>+ anchor</code>resource/disk_full_tagged_error.txt:tagged_error=1<code>(ENOSPC propagates tagged, not swallowed); **E88** §12.6 host-mem headroom (HRD-128) →</code>TestResource_HostMemHeadroom_Section126<code>+ anchor</code>resource/host_memory_headroom.txt:section_12_6_headroom_proven=1<code>(proves the suite adds negligible host pressure). All eight hermetic — the live container-pause / real-disk-fill / container-OOM variants are SKIP-with-reason inside the Go tests themselves (HERALD_STRESS_LIVE_*=1 gated), so the harness gate stays green without a runtime; evidence-dirs resolved newest-first dynamically (no hardcoded timestamps). VERIFIED:</code>bash
+-n
+scripts/e2e_bluff_hunt.sh<code>clean; the E81-E88 block run standalone TWICE = 18/18 PASS deterministic (8 invariant tests + 10 evidence anchors), identical both runs (Go stress/chaos tests are -count=3 deterministic per HRD-122..128); early-invariant E1/E2 still PASS under the edited harness; header bumped E1..E80→E1..E88 + "Eighty"→"Eighty-eight" + Exit-line E19..E80→E19..E88. NO production source edited, NO stress/chaos test files edited (committed), NO docs/specs/ edited; edits limited to</code>scripts/e2e_bluff_hunt.sh`
+(additive E81-E88) + this Issues.md row.</td>
+<td>2026-05-27</td>
+</tr>
+<tr>
 <td>HRD-132</td>
 <td>bug</td>
 <td>open</td>

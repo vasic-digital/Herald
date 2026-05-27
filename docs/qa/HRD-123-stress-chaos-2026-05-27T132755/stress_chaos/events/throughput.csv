@@ -2,7 +2,7 @@ surface=events scenario=stress_healthy_path transport=httptest+net/http.Client
 workers=12 iterations_per_worker=200 total_requests=2400
 errors=0 non_202=0
 status_2xx=2400 status_4xx=0 status_5xx=0
-throughput_per_sec=13322.4 elapsed_ms=180.1
-p50_ms=0.7060 p95_ms=1.7550 p99_ms=2.6650 max_ms=5.7220 min_ms=0.3140 count=2400
+throughput_per_sec=33339.1 elapsed_ms=72.0
+p50_ms=0.2310 p95_ms=0.8820 p99_ms=1.7320 max_ms=2.5570 min_ms=0.0660 count=2400
 zero_5xx_healthy=1
 race_detector=clean

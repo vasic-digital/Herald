@@ -4,4 +4,4 @@ random_token_bytes=32 token_encoding=base64url
 status_401=1000 non_401=0 (AUTH BYPASS count — MUST be 0)
 status_2xx=0 status_3xx=0 status_5xx=0
 all_401_no_bypass=1
-p99_ms=2.1730 max_ms=4.4630 count=1000 errors=0
+p99_ms=0.3420 max_ms=0.6300 count=1000 errors=0

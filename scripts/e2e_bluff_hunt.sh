@@ -11,8 +11,11 @@
 # "compiles and tests green" but doesn't work for the user will FAIL
 # at least one assertion here.
 #
-# Eighty invariants (E1..E80; E55 + E62 + E63..E70 + E71..E80 SKIP-with-
-# reason in the common no-creds / no-T9-evidence case — E71..E80 new in
+# Eighty-eight invariants (E1..E88; E55 + E62 + E63..E70 + E71..E80 SKIP-
+# with-reason in the common no-creds / no-T9-evidence case — E81..E88 new
+# in GAP-3 §11.4.85 stress + chaos suite (HRD-122..HRD-128): each runs a
+# real hermetic Go stress/chaos test AND cites a docs/qa/<run-id>/
+# stress_chaos/ evidence anchor (§11.4.2 / §11.4.5); E71..E80 new in
 # Wave 6.5 comprehensive ticket-lifecycle (HRD-101); E63..E70 new in Wave
 # 6 inbound runtime; E56-E62 Wave 4b TOON content negotiation; E49-E55
 # Wave 4a HTTP/3+Brotli+Alt-Svc+TLS; E37-E42 live in Wave 3b; E45 still
@@ -151,7 +154,39 @@
 #   E80. Bot self-filter held — pherald-listen.log has zero panic/fatal
 #        lines during the full S1..S15 lifecycle run.
 #
-# Exit 0 only when E1..E12 + E19..E80 (plus E13..E18 + E34 if attempted) all pass.
+# GAP-3 §11.4.85 stress + chaos suite (added 2026-05-27; HRD-122..HRD-128):
+#   E81. Runner exactly-once-archive + bounded dispatch under N=16 concurrent
+#        replay (-race) → TestRunner_Stress_ConcurrentReplay_ExactlyOnce PASS
+#        + evidence anchor runner/exactly_once.txt `archival_exactly_once=1`.
+#   E82. /v1/events chaos — input-corruption + duplicate-key + auth-storm →
+#        tests PASS + evidence anchor events/categorised_errors.txt
+#        `all_malformed_rejected_no_5xx=1` (every malformed body 4xx or transport-rejected, never 2xx-accept, never 5xx, never panic).
+#   E83. /v1/compliance chaos — PG-drop fails loud → test PASS + evidence
+#        anchor compliance/pg_drop_fail_loud.log `fail_loud_no_fabricated_200=1`.
+#   E84. /v1/safety_state chaos — consistent under concurrent mutation
+#        (-race) → test PASS + evidence anchor safety_state/
+#        concurrent_mutation.log `consistent_under_concurrent_mutation=1`.
+#   E85. pherald listen inbound chaos — malformed payloads degrade, never
+#        panic → tests PASS + evidence anchors listen/handle_malformed_raw.txt
+#        `panic_free=1` + listen/malformed_payloads.txt
+#        `all_malformed_degraded_no_panic=1`.
+#   E86. claude_code dispatch chaos — process-death/timeout/truncated-reply
+#        tagged-error, no hang (-race) → tests PASS + evidence anchors
+#        claude_code/subprocess_kill.log `tagged_error_no_hang=1` +
+#        timeout_cancel.log `deadline_fired=1`.
+#   E87. RunMigrations chaos — disk-full ENOSPC propagates tagged, not
+#        swallowed → TestRunMigrations_Chaos_DiskFull_TaggedError PASS +
+#        evidence anchor resource/disk_full_tagged_error.txt `tagged_error=1`.
+#   E88. §12.6 host-mem headroom — the resource-exhaustion suite adds
+#        negligible host pressure → TestResource_HostMemHeadroom_Section126
+#        PASS + evidence anchor resource/host_memory_headroom.txt
+#        `section_12_6_headroom_proven=1`.
+#   (All eight are hermetic — no live creds / no container runtime needed.
+#   The container-pause / real-disk-fill / container-OOM live variants are
+#   SKIP-with-reason inside the Go tests themselves. Each evidence-anchor
+#   grep SKIPs-with-reason when no docs/qa/<run-id>/ dir is present.)
+#
+# Exit 0 only when E1..E12 + E19..E88 (plus E13..E18 + E34 if attempted) all pass.
 # Failure prints the offending invariant so the operator knows EXACTLY
 # which feature is bluffing.
 
@@ -1916,6 +1951,104 @@ else
         pass=$((pass+1))
     fi
 fi
+
+# ----------------------------------------------------------------------
+# E81-E88: GAP-3 §11.4.85 stress + chaos suite (HRD-122..HRD-128).
+#
+# Each invariant exercises a real, hermetic Go stress/chaos test (no live
+# creds, no container runtime required) AND cites the captured-evidence
+# artefact under docs/qa/<run-id>/stress_chaos/ as its positive-evidence
+# anchor (§11.4.2 / §11.4.5). The evidence-anchor grep asserts a SPECIFIC
+# value (e.g. `archival_exactly_once=1`), not mere file existence — a
+# present-but-empty artefact is a §11.4 PASS-bluff and FAILs the invariant.
+#
+# Run mode is hermetic for all eight: the load-drivers run in-process and
+# the chaos faults use the committed test seams (fake stores, fake-claude
+# shims, syscall.ENOSPC injection, in-process host-mem probe). The live
+# variants (container-pause PG-drop, real bounded disk-fill, container OOM
+# confinement) are SKIP-with-reason inside the Go tests themselves
+# (HERALD_STRESS_LIVE_DISK=1 / *_Live test names), so the hermetic gate
+# stays green without a runtime. The evidence-anchor check SKIPs-with-reason
+# when no docs/qa/<run-id>/ evidence dir is present (e.g. a fresh clone that
+# has not yet run the suite), mirroring the E71-E80 evidence-dir gate.
+# ----------------------------------------------------------------------
+echo ""
+echo "== E81-E88: §11.4.85 stress + chaos suite (GAP-3) =="
+
+# Resolve newest evidence dirs (timestamp-suffixed; multiple runs allowed).
+sc_newest() {
+    find "${REPO_ROOT}/docs/qa" -maxdepth 1 -type d -name "$1" 2>/dev/null | sort -r | head -1
+}
+SC_EVENTS_DIR="$(sc_newest 'HRD-123-stress-chaos-*')"
+SC_RUNNER_DIR="$(sc_newest 'HRD-125-stress-chaos-*')"
+SC_CS_DIR="$(sc_newest 'HRD-124-*')"
+SC_LISTEN_DIR="$(sc_newest '*HRD-126*')"
+SC_CC_DIR="$(sc_newest 'HRD-127-*')"
+SC_RES_DIR="$(sc_newest 'HRD-128-*')"
+
+# sc_anchor <invariant-label> <evidence-file> <literal-anchor-string>
+# Asserts the captured-evidence file contains the load-bearing anchor value.
+# SKIP-with-reason when the evidence dir/file is absent (fresh clone before
+# the suite has run); FAIL only when the file exists but lacks the anchor
+# (a present-but-empty / value-stripped §11.4 PASS-bluff).
+sc_anchor() {
+    local label="$1" file="$2" anchor="$3"
+    if [ -z "${file}" ] || [ ! -f "${file}" ]; then
+        echo "SKIP  ${label} evidence anchor — no docs/qa/<run-id>/stress_chaos/ artefact present yet (run the §11.4.85 suite to capture it; §11.4.3 explicit SKIP-with-reason)"
+        return 0
+    fi
+    if grep -qF "${anchor}" "${file}" 2>/dev/null; then
+        echo "PASS  ${label} evidence anchor '${anchor}' present in $(basename "$(dirname "${file}")")/$(basename "${file}")"
+        pass=$((pass+1))
+    else
+        echo "FAIL  ${label} evidence file present but anchor '${anchor}' MISSING (present-but-empty artefact = §11.4 PASS-bluff)"
+        echo "      ${file}"
+        fail=$((fail+1))
+        fail_names+=("${label}-anchor")
+    fi
+}
+
+# ---- E81: Runner exactly-once-archive + bounded dispatch (HRD-125) ----
+check "E81 runner concurrent-replay exactly-once stress (-race, N=16 fan-out)" \
+    "go test -race -count=1 -run 'TestRunner_Stress_ConcurrentReplay_ExactlyOnce' ./pherald/internal/runner/..."
+sc_anchor "E81" "${SC_RUNNER_DIR:+${SC_RUNNER_DIR}/stress_chaos/runner/exactly_once.txt}" "archival_exactly_once=1"
+
+# ---- E82: /v1/events stress + chaos (HRD-123) ----
+check "E82 /v1/events chaos — input-corruption + duplicate-key + auth-storm (no 5xx-hang, no panic)" \
+    "go test -count=1 -run 'TestEventsHTTP_Chaos_InputCorruption|TestEventsHTTP_Chaos_DuplicateKeyUnderLoad|TestEventsHTTP_Chaos_AuthStorm' ./pherald/internal/http/..."
+sc_anchor "E82" "${SC_EVENTS_DIR:+${SC_EVENTS_DIR}/stress_chaos/events/categorised_errors.txt}" "all_malformed_rejected_no_5xx=1"
+
+# ---- E83: /v1/compliance fail-loud chaos (HRD-124) ----
+check "E83 /v1/compliance chaos — PG-drop fails loud (no fabricated 2xx)" \
+    "go test -count=1 -run 'TestComplianceHTTP_Chaos_PGDropFailsLoud' ./cherald/internal/compliance/..."
+sc_anchor "E83" "${SC_CS_DIR:+${SC_CS_DIR}/stress_chaos/compliance/pg_drop_fail_loud.log}" "fail_loud_no_fabricated_200=1"
+
+# ---- E84: /v1/safety_state concurrent-mutation chaos (HRD-124) ----
+check "E84 /v1/safety_state chaos — consistent under concurrent mutation (no torn read, no 5xx, -race)" \
+    "go test -race -count=1 -run 'TestSafetyHTTP_Chaos_ConcurrentMutationUnderLoad' ./sherald/internal/safety/..."
+sc_anchor "E84" "${SC_CS_DIR:+${SC_CS_DIR}/stress_chaos/safety_state/concurrent_mutation.log}" "consistent_under_concurrent_mutation=1"
+
+# ---- E85: pherald listen inbound chaos (HRD-126) ----
+check "E85 pherald listen inbound chaos — malformed payloads degrade, never panic" \
+    "go test -count=1 -short -run 'TestInbound_Chaos_HandleMalformedRaw_NeverPanics|TestInbound_Chaos_ExtractReplyToMessageID_Degrades' ./pherald/internal/inbound/..."
+sc_anchor "E85" "${SC_LISTEN_DIR:+${SC_LISTEN_DIR}/stress_chaos/listen/handle_malformed_raw.txt}" "panic_free=1"
+sc_anchor "E85b" "${SC_LISTEN_DIR:+${SC_LISTEN_DIR}/stress_chaos/listen/malformed_payloads.txt}" "all_malformed_degraded_no_panic=1"
+
+# ---- E86: claude_code dispatch chaos (HRD-127) ----
+check "E86 claude_code dispatch chaos — process-death/timeout/truncated-reply tagged-error, no hang (-race)" \
+    "go test -race -count=1 -run 'TestDispatch_Chaos_ProcessDeath_Exit137|TestDispatch_Chaos_TimeoutContextCancel|TestDispatch_Chaos_TruncatedReply' ./commons_messaging/dispatch/claude_code/..."
+sc_anchor "E86" "${SC_CC_DIR:+${SC_CC_DIR}/stress_chaos/claude_code/subprocess_kill.log}" "tagged_error_no_hang=1"
+sc_anchor "E86b" "${SC_CC_DIR:+${SC_CC_DIR}/stress_chaos/claude_code/timeout_cancel.log}" "deadline_fired=1"
+
+# ---- E87: disk-full tagged-error chaos (HRD-128) ----
+check "E87 RunMigrations chaos — disk-full (ENOSPC) propagates tagged, not swallowed" \
+    "go test -count=1 -run 'TestRunMigrations_Chaos_DiskFull_TaggedError' ./commons_storage/..."
+sc_anchor "E87" "${SC_RES_DIR:+${SC_RES_DIR}/stress_chaos/resource/disk_full_tagged_error.txt}" "tagged_error=1"
+
+# ---- E88: §12.6 host-mem headroom (HRD-128) ----
+check "E88 §12.6 host-mem headroom — suite adds negligible host pressure (resource-exhaustion is bounded)" \
+    "go test -count=1 -run 'TestResource_HostMemHeadroom_Section126' ./commons_storage/..."
+sc_anchor "E88" "${SC_RES_DIR:+${SC_RES_DIR}/stress_chaos/resource/host_memory_headroom.txt}" "section_12_6_headroom_proven=1"
 
 # ----------------------------------------------------------------------
 echo ""

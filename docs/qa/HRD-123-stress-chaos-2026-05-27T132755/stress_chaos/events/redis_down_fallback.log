@@ -4,7 +4,7 @@ workers=12 iterations_per_worker=100 total=1200 keys=per-worker(DUP-KEY-<w>)
 accepted_202=12 (==workers, one fresh accept per key) replayed_200=1188 other=0
 errors=0 (transport/hang errors)
 no_5xx_under_duplicate_load=1
-p99_ms=2.5280 max_ms=3.2470 count=1200
+p99_ms=0.8880 max_ms=1.0380 count=1200
 FINDING (HRD-132): a SHARED-key 12-way concurrent replay flood triggers a REAL
   data race at runner.go:132 (rc.CachedRcpt.WasReplay mutates a *Receipt the
   Receipt-caching events_processed store hands to every concurrent replay). This
