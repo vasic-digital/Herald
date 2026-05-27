@@ -1,0 +1,9 @@
+surface=claude_code scenario=stress_concurrent_cold_start_bootstrap binary=counting-claude.sh
+workers=16 (each one Dispatch, no pre-seeded anchor)
+shim_invocations=32 resumes=16 bootstraps=16 (bound: >=1, <=workers=16)
+persisted_anchor_uuid=d026745e-ce48-4763-bd6d-b7c04649e276 (exactly one — last-writer-wins)
+all_dispatches_succeeded=1 race_detector=clean
+FINDING=cold-start concurrent bootstrap is NOT exactly-once by design
+  (bootstrap.go:50-52: not serialised, last-writer-wins, first orphan inert).
+  Asserting bootstrap_count==1 would be a §107 PASS-bluff; honest bound recorded.
+  Fix direction if ever required: advisory flock on the anchor before bootstrap.

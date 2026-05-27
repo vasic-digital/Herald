@@ -1085,6 +1085,96 @@ HRD-125 (once-only contract) + HRD-132; Catalogue-Check: no-match — Go
 command (2026-05-27).</td>
 </tr>
 <tr>
+<td>HRD-127</td>
+<td>task</td>
+<td>in_progress</td>
+<td>high</td>
+<td>§11.4.85 claude_code dispatch stress+chaos tests (GAP-3 plan §1 row
+5 / §6 T6) — new
+<code>commons_messaging/dispatch/claude_code/dispatch_stress_chaos_test.go</code>
+(in-package <code>claude_code</code>, so it exercises the UNEXPORTED
+<code>buildCmd</code>/<code>bootstrapSession</code>/<code>parseReply</code>)
++ 5 committed hermetic shims under
+<code>commons_messaging/dispatch/claude_code/testdata/fake-claude-*.sh</code>.
+Per §11.4.27 only the EXTERNAL boundary — the <code>claude</code> CLI
+binary — is faked, via those committed shims selected through the
+EXISTING <code>New(binaryPath,...)</code> constructor seam (the same
+seam <code>bootstrap_test.go</code>'s <code>writeFakeClaudeBinary</code>
+uses); NO production source edited, NO production env var added, NO new
+<code>go.mod</code> dep (<code>commons/stresschaos</code> resolves via
+the existing <code>commons</code> replace chain), NO real
+<code>claude</code> invoked. STRESS: (1) N=24 workers × 25 = 600
+concurrent <code>Dispatch</code> calls (steady-state
+<code>--resume</code> path, anchor pre-seeded) — 0 errors, 0
+bad-replies, every reply REALLY parsed from the shim's
+<code>&lt;&lt;&lt;HERALD-REPLY&gt;&gt;&gt;</code> line, every call
+resumed the SAME pre-seeded UUID (no double-bootstrap), anchor never
+drifted; p50=62.9ms/p95=96.4ms/p99=116.9ms/max=147.6ms ~363 dispatch/s
+(latency dominated by the per-call shell-shim <code>fork/exec</code> —
+honest exec round-trip cost); (2) N=16 concurrent COLD-START bootstrap
+(no anchor) — all dispatches succeed, exactly one anchor UUID persists,
+<code>-race</code> clean. CHAOS: (a) process-death —
+<code>exit 137</code> (128+SIGKILL, partial stdout) → tagged
+<code>claude_code: dispatch claude --resume &lt;u&gt;: exit 137: killed mid-write</code>
+error, no hang (10s watchdog), partial stdout NOT accepted; +
+self-<code>kill -KILL $$</code> → tagged error, no hang; (b) timeout —
+fake <code>claude</code> sleeps 30s, ctx deadline 800ms →
+<code>exec.CommandContext</code> cancellation fires, Dispatch returns in
+803ms (NOT 30s), tagged error; + bootstrap-timeout variant (600ms budget
+→ returns 603ms, anchor NOT persisted on failure); (c) truncated
+<code>&lt;&lt;&lt;HERALD-REPLY&gt;&gt;&gt;</code> (half-JSON, exit 0) →
+<code>parseReply</code> returns explicit <code>decode reply JSON</code>
+error, NEVER a silent partial-accept; UNIT corruption taxonomy
+(truncated_json / half_marker / marker_no_brace / missing_closing_brace
+/ empty) each → explicit error, well-formed reply still parses
+(discriminating, not blanket-reject). Verified
+<code>go test -race -count=3</code> deterministically green across ALL 3
+runs (<code>DATA_RACE_lines=0</code>; assertions are value-true: exact
+parsed-reply fields, tagged-error substrings, bounded-time returns — not
+timing-sensitive). Captured evidence under
+<code>docs/qa/HRD-127-stress-chaos-2026-05-27T090518/stress_chaos/claude_code/</code>
+(latency.json, latency_histogram.csv, dispatch_latency.txt,
+cold_start_bootstrap.txt, subprocess_kill.log,
+subprocess_self_sigkill.log, timeout_cancel.log,
+bootstrap_timeout_cancel.log, truncated_reply.txt, race_clean.log,
+host_memory_headroom.txt, summary.md). <strong>FINDING-1: cold-start
+concurrent bootstrap is NOT exactly-once by design</strong>
+(<code>bootstrap.go:50-52</code> — last-writer-wins, not serialised,
+first orphan inert); asserting <code>bootstrap_count==1</code> would be
+a §107 PASS-bluff, honest bound (bootstraps∈[1,workers]) asserted
+instead; fix direction if ever required = advisory flock on the anchor.
+<strong>FINDING-2: timeout-cancellation latency depends on
+<code>claude</code> being a single process</strong> — production
+<code>Dispatch</code> wires ctx into <code>exec.CommandContext</code>
+whose default Cancel SIGKILLs only the DIRECT child, and
+<code>cmd.Output()</code> blocks until the stdout pipe is closed by ALL
+descendants; the real <code>claude</code> is a single long-lived process
+so on SIGKILL it closes its own stdout and Output() unblocks immediately
+(verified 803ms). The fake sleep shim uses <code>exec sleep</code>
+(single PID, replace-in-place) to model this faithfully; if
+<code>claude</code> ever spawns helper subprocesses that outlive a
+SIGKILL while holding stdout, cancellation latency would degrade —
+hardening direction = <code>Cmd.Cancel</code> + process-group kill
+(Setpgid + kill(-pgid)); flagged for the dispatcher owner, out of scope
+for the HRD-127 test layer. Bounded load only (§12/§12.6): N≤24
+goroutines, each spawning ONE short-lived fake-shim child the test
+owns+reaps; the ONLY process ever killed is a fake-shim child this test
+spawned (self-SIGKILL or ctx-driven kill) — never a real
+<code>claude</code> or host process; no fork/GB-alloc/host-net change.
+claude_code is an in-process <code>exec</code> surface (not a
+resource-exhaustion surface) so the §12.6 60%-memory ceiling does not
+gate it (same posture as HRD-123/HRD-126); host-mem probe recorded for
+the audit trail.</td>
+<td>2026-05-27</td>
+<td>2026-05-27</td>
+<td>GAP-3 plan §1 row 5 + §6 T6; Universal §11.4.85 (inherited per
+§11.4.35) + Herald §108.a / §107.x; depends on HRD-122; cross-refs
+HRD-126 (same pattern) + HRD-156 (HRD-012 bootstrap); Catalogue-Check:
+no-match — Go <code>testing</code> + <code>-race</code> per CLAUDE.md
+build/test command + committed shell shims as the §11.4.27 boundary
+fake, no load tool, no new dep (2026-05-27).</td>
+</tr>
+<tr>
 <td>HRD-132</td>
 <td>bug</td>
 <td>open</td>

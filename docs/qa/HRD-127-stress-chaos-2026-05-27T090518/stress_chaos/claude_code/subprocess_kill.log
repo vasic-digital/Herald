@@ -1,0 +1,6 @@
+surface=claude_code scenario=chaos_process_death_exit137 binary=fake-claude-exit137.sh
+subprocess_wrote_partial_stdout=true then exit 137 (128+SIGKILL)
+dispatch_hung=false (returned within 10s watchdog)
+dispatch_error_tagged=true error="claude_code: dispatch claude --resume 4e821213-c686-4e88-8aff-47f36e407de1: exit 137: killed mid-write"
+partial_stdout_accepted=false (no fabricated reply)
+tagged_error_no_hang=1

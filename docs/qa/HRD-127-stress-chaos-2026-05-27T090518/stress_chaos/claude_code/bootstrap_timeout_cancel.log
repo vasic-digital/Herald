@@ -1,0 +1,5 @@
+surface=claude_code scenario=chaos_bootstrap_timeout binary=fake-claude-sleep.sh
+bootstrap_timeout=600ms shim_sleep=30s
+bootstrap_returned_after=602ms (bounded) error="claude_code: bootstrap: claude --session-id f7a8ba22-5d96-408c-9e11-b31ec6a185ae exited -1 (timeout=600ms); stderr: "
+anchor_not_persisted_on_failure=true
+deadline_fired=1

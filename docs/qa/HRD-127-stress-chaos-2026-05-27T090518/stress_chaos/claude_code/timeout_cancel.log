@@ -1,0 +1,5 @@
+surface=claude_code scenario=chaos_timeout_context_cancel binary=fake-claude-sleep.sh
+context_deadline=800ms shim_sleep=30s
+dispatch_returned_after=802ms (bounded: << 30s shim sleep)
+context_cancel_fired=true dispatch_error_tagged=true error="claude_code: dispatch claude --resume 5e40dfb9-b83e-4bf4-b33c-c2c6e597d064: exit -1: "
+deadline_fired=1

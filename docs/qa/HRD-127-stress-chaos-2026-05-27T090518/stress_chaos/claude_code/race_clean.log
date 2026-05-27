@@ -1,0 +1,24 @@
+# HRD-127 claude_code dispatch — go test -race run log (race detector clean)
+# command: go test -race -count=1 -v -run 'TestDispatch_Stress|TestDispatch_Chaos|TestBootstrap_Chaos' ./commons_messaging/dispatch/claude_code/
+# go: go version go1.26.2 darwin/arm64
+# captured: 2026-05-27T090549Z
+# (zero 'DATA RACE' lines below == -race clean)
+----------------------------------------------------------------------
+=== RUN   TestDispatch_Stress_ConcurrentResume
+--- PASS: TestDispatch_Stress_ConcurrentResume (1.52s)
+=== RUN   TestDispatch_Stress_ConcurrentColdStartBootstrap
+--- PASS: TestDispatch_Stress_ConcurrentColdStartBootstrap (0.38s)
+=== RUN   TestDispatch_Chaos_ProcessDeath_Exit137
+--- PASS: TestDispatch_Chaos_ProcessDeath_Exit137 (0.01s)
+=== RUN   TestDispatch_Chaos_ProcessDeath_SelfSIGKILL
+--- PASS: TestDispatch_Chaos_ProcessDeath_SelfSIGKILL (0.01s)
+=== RUN   TestDispatch_Chaos_TimeoutContextCancel
+--- PASS: TestDispatch_Chaos_TimeoutContextCancel (0.81s)
+=== RUN   TestBootstrap_Chaos_TimeoutContextCancel
+--- PASS: TestBootstrap_Chaos_TimeoutContextCancel (0.61s)
+=== RUN   TestDispatch_Chaos_TruncatedReply
+--- PASS: TestDispatch_Chaos_TruncatedReply (0.03s)
+PASS
+ok  	github.com/vasic-digital/herald/commons_messaging/dispatch/claude_code	4.679s
+----------------------------------------------------------------------
+DATA_RACE_lines=0

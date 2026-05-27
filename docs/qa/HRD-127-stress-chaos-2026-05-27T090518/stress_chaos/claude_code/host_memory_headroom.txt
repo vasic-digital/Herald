@@ -1,0 +1,1 @@
+{Available:true TotalBytes:19327352832 FreeBytes:4939284480 UsedBytes:14388068352 UsedFraction:0.7444407145182291 Platform:darwin Note: CapturedAtRFC:2026-05-27T14:05:20+05:00}

@@ -1,0 +1,5 @@
+surface=claude_code scenario=chaos_process_death_self_sigkill binary=fake-claude-selfkill.sh
+subprocess_self_terminated=true (kill -KILL $$ — bounded to shim's own PID, §12 host-safe)
+dispatch_hung=false (returned within 10s watchdog)
+dispatch_error_tagged=true error="claude_code: dispatch claude --resume 1c61e9ce-dba6-469b-89d9-df12048fceab: exit -1: "
+tagged_error_no_hang=1

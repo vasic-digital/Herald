@@ -1,0 +1,7 @@
+surface=claude_code scenario=chaos_truncated_reply binary=fake-claude-truncated.sh
+subprocess_exit=0 reply_truncated_after_marker=true
+dispatch_error_tagged=true (parse reply) error="claude_code: dispatch parse reply: decode reply JSON: unexpected EOF (raw: \"{\\\"outcome\\\":\\\"answered\\\",\\\"summary\\\":\\\"truncat\")"
+parseReply corruption taxonomy (each → explicit error, none silently accepted):
+  truncated_json=err half_marker=err marker_no_brace=err missing_closing_brace=err empty=err
+well_formed_reply_still_parses=true (discriminating, not blanket-reject)
+explicit_parse_error=1

@@ -1,0 +1,8 @@
+surface=claude_code scenario=stress_concurrent_resume binary=fake-claude-reply.sh
+workers=24 iterations_per_worker=25 total_dispatches=600
+errors=0 bad_replies=0
+resumed_uuid=199c3383-45e0-456a-998b-afcfae8e99c1 (constant across all 600 dispatches — no double-bootstrap)
+bootstrap_count=0 (anchor pre-seeded → steady-state --resume path)
+session_resolution_concurrency_safe=1
+race_detector=clean
+p50_ms=62.8710 p95_ms=96.3900 p99_ms=116.9010 max_ms=147.6450 min_ms=8.2710 count=600 throughput_per_sec=362.5
