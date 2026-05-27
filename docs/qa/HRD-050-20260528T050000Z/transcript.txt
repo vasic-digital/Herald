@@ -1,0 +1,22 @@
+QA-ANCHOR: HRD-050-README-SYNC-C3A-20260528T050000Z
+Feature: cherald readme-sync (§11.4.59 README always-sync) — v1.0.0 Batch C cluster C3a.
+Evidence kind: REAL built-binary runs (PASS + drift/BLOCK) against a hermetic temp-repo
+fixture. Binary run with auth env UNSET (proves the §107 lazy-verifier fix).
+
+=== PASS path: every README doc-link row resolves to a file on disk ===
+$ cherald readme-sync --repo <fixture>
+readme-sync: 0 dangling doc-link row(s) in README.md
+[PASS] §11.4.59: §11.4.59 ok on README.md in sync
+[exit=0]
+
+=== VIOLATION/BLOCK path: README links a doc that does NOT exist ⇒ FAIL + non-zero exit ===
+# (fixture README mutated to link docs/missing.md)
+$ cherald readme-sync --repo <fixture>
+readme-sync: 1 dangling doc-link row(s) in README.md
+[FAIL] §11.4.59: §11.4.59 violation on README.md dangling links: docs/missing.md
+cherald: §11.4.59 breach: §11.4.59 violation on README.md dangling links: docs/missing.md
+[exit=1]
+
+RuleID: §11.4.59   Subject.Kind: "violation" (FAIL) / "ok" (PASS)   EventClass: ClassPolicyViolation
+Flags: --repo, --apply (regenerate README siblings via export script), --script (test seam), --emit
+Unit tests: TestReadmeSync_InSync_Allows, TestReadmeSync_Drift_Blocks

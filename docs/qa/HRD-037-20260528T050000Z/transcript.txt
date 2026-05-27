@@ -1,0 +1,55 @@
+QA-ANCHOR: HRD-037-DOCS-SYNC-C3A-20260528T050000Z
+Feature: cherald docs-sync (§11.4.61 Markdown metadata + ToC) — v1.0.0 Batch C cluster C3a.
+Evidence kind: REAL built-binary runs (PASS + violation/BLOCK + --emit + --apply) against a
+hermetic temp-repo fixture. NO pandoc; --apply points --script at a fake export script.
+Binary: go build -o cherald ./cherald/cmd/cherald  (run with HERALD_AUTH_MODE / HERALD_PG_DSN
+/ HERALD_REDIS_URL UNSET — proving the §107 lazy-verifier fix; see PART-B section below).
+
+=== §107 PROOF: bare `cherald version` runs WITHOUT auth env ===
+$ env -u HERALD_AUTH_MODE -u HERALD_PG_DSN -u HERALD_REDIS_URL cherald version
+Constitution Herald 0.0.0-dev
+  flavor:     c
+  commit:     unknown
+  built:      unknown
+  go_version: go1.26.2
+  os/arch:    darwin/arm64
+[exit=0]
+# Before the C3a PART-B fix, this died with "build verifier: HERALD_AUTH_MODE must be set".
+
+=== PART B: serve STILL refuses an anonymous plane (verifier check fires lazily in RunE) ===
+$ env -u HERALD_AUTH_MODE cherald serve --http-port 0
+cherald: build verifier: HERALD_AUTH_MODE must be set ('hmac' or 'jwks')
+[exit=1]
+
+=== PASS path: doc carries §11.4.61 metadata (Revision row) + ToC heading ===
+$ cherald docs-sync --repo <fixture> docs/good.md
+docs-sync: checked 1 doc(s); 0 missing §11.4.61 metadata/ToC
+[PASS] §11.4.61: §11.4.61 ok on 1-docs-checked
+[exit=0]
+
+=== --emit: PASS verdict ALSO drives a REAL constitution event through the in-memory pipeline ===
+$ cherald docs-sync --repo <fixture> docs/good.md --emit
+docs-sync: checked 1 doc(s); 0 missing §11.4.61 metadata/ToC
+[PASS] §11.4.61: §11.4.61 ok on 1-docs-checked
+[emit] §11.4.61 drove a constitution event for subject 1-docs-checked
+[exit=0]
+
+=== VIOLATION/BLOCK path: doc missing metadata + ToC ⇒ FAIL verdict + non-zero exit ===
+$ cherald docs-sync --repo <fixture> docs/bad.md
+docs-sync: checked 1 doc(s); 1 missing §11.4.61 metadata/ToC
+[FAIL] §11.4.61: §11.4.61 violation on missing-metadata: docs/bad.md
+cherald: §11.4.61 breach: §11.4.61 violation on missing-metadata: docs/bad.md
+[exit=1]
+
+=== --apply: regenerate siblings via the resolved export script (fake script; NO pandoc) ===
+$ cherald docs-sync --repo <fixture> --apply --script <fixture>/fake_export.sh docs/good.md
+docs-sync: checked 1 doc(s); 0 missing §11.4.61 metadata/ToC
+docs-sync --apply: regenerating siblings via <fixture>/fake_export.sh
+FAKE-EXPORT-INVOKED args: <fixture>/docs/good.md
+[PASS] §11.4.61: §11.4.61 ok on 1-docs-checked
+[exit=0]
+
+RuleID: §11.4.61   Subject.Kind: "violation" (FAIL) / "ok" (PASS)   EventClass: ClassPolicyViolation
+Unit tests (cherald/cmd/cherald/docops_cmds_test.go):
+  TestDocsSync_MetadataPresent_Allows, TestDocsSync_MissingMetadata_Blocks,
+  TestDocsSync_Emit_DrivesEvent, TestDocsSync_ApplyInvokesScript

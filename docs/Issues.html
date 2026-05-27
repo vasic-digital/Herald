@@ -47,7 +47,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>20</td>
+<td>21</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -63,7 +63,33 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>r20 (v1.0.0 Batch C clusters C4+C5) marks HRD-031/032/045
+<td><strong>r21 (v1.0.0 Batch C cluster C3 — cherald, COMPLETE) marks
+the 11 cherald §43 docs/compliance commands
+(HRD-036/037/038/039/042/048/050/051/052/054/055) Open→in_progress +
+lands the §107 cherald lazy-verifier fix.</strong> C3a docs-pipeline
+(<code>cherald/cmd/cherald/docops_cmds.go</code>):
+<code>docs-sync</code> (§11.4.61), <code>readme-sync</code> (§11.4.59),
+<code>export</code> (§11.4.65 wrapping
+<code>scripts/export_docs.sh</code>), <code>fixed-summary-sync</code>
+(§11.4.53), <code>fixed-align</code> (§11.4.53 drift-detect) —
+detect-by-default + <code>--apply</code>. C3b verify/check
+(<code>cherald/cmd/cherald/checkops_cmds.go</code>):
+<code>submanifest-verify</code> (§11.4.31), <code>composite-gate</code>
+(§11.4.60), <code>spec-version-check</code> (§11.4.73
+<code>checkSpecDrift</code>), <code>catalogue-check</code> (§11.4.74
+<code>checkCatalogueMiss</code>), <code>script-docs-check</code>
+(→§11.4.60, §11.4.62 has no cherald rule), <code>creds-scan</code>
+(→§11.4.10 credential-leak; findings REDACTED — no secret value ever
+printed, per the no-leak mandate). All feed the HRD-019 cherald binding
+(<code>markerCheck</code> keys on <code>Subject.Kind</code>); the §107
+fix mirrors sherald (verifier built lazily inside <code>serve</code>, so
+<code>cherald version</code> + the §43 CLI run bare without a JWT
+secret). Hermetic <code>-race</code> green; e2e
+<strong>E110-E120</strong> wired, each anchored to its
+<code>docs/qa/HRD-0NN-20260528T050000Z/transcript.txt</code>. With C1-C5
+landed, the §43 command catalogue (HRD-029..056) is implemented except
+HRD-034 (sherald backup-snapshot) + HRD-047 (scherald status-digest).
+<strong>Prior r20 (v1.0.0 Batch C clusters C4+C5) marked HRD-031/032/045
 (rherald §43 release) + HRD-041/035 (bherald §43 build/CI)
 Open→in_progress.</strong> rherald
 (<code>rherald/cmd/rherald/release_cmds.go</code>, HRD-022 binding):
@@ -664,49 +690,66 @@ docs/qa/HRD-035-20260528T040000Z/</td>
 <tr>
 <td>HRD-036</td>
 <td>task</td>
-<td>open</td>
+<td>in_progress</td>
 <td>high</td>
 <td>§11.4.10 <code>cherald creds scan</code> — gitleaks/trufflehog
-integration, emits <code>.credential.leak</code></td>
+integration, emits <code>.credential.leak</code> — Batch C: implemented
+as cherald §43 verify/check command
+(<code>cherald/cmd/cherald/checkops_cmds.go</code>) feeding the HRD-019
+cherald binding; detect-only; hermetic -race green (routed to §11.4.10
+credential-leak; findings REDACTED — no secret value printed)</td>
 <td>2026-05-20</td>
-<td>2026-05-20</td>
+<td>2026-05-28</td>
 <td>spec §43.2 / §11.4.10; Catalogue-Check: TBD — likely an existing OSS
-scanner</td>
+scanner; docs/qa/HRD-036-20260528T050000Z/</td>
 </tr>
 <tr>
 <td>HRD-037</td>
 <td>task</td>
-<td>open</td>
+<td>in_progress</td>
 <td>low</td>
 <td>§11.4.12 <code>cherald docs sync</code> — regen Issues_Summary /
-Fixed_Summary / Status_Summary</td>
+Fixed_Summary / Status_Summary — Batch C: implemented as cherald §43
+docs-pipeline command (<code>cherald/cmd/cherald/docops_cmds.go</code>)
+feeding the HRD-019 cherald binding; detect-by-default +
+<code>--apply</code> to regenerate; ships the §107 lazy-verifier fix so
+the CLI runs without a JWT secret; hermetic -race green</td>
 <td>2026-05-20</td>
-<td>2026-05-20</td>
+<td>2026-05-28</td>
 <td>spec §43.2 / §11.4.12; Catalogue-Check: TBD (likely existing
-constitution-submodule script)</td>
+constitution-submodule script); docs/qa/HRD-037-20260528T050000Z/</td>
 </tr>
 <tr>
 <td>HRD-038</td>
 <td>task</td>
-<td>open</td>
+<td>in_progress</td>
 <td>low</td>
 <td>§11.4.18 <code>cherald script-docs check</code> — assert sibling .md
-for every scripts/**/*.sh</td>
+for every scripts/**/*.sh — Batch C: implemented as cherald §43
+verify/check command (<code>cherald/cmd/cherald/checkops_cmds.go</code>)
+feeding the HRD-019 cherald binding; detect-only; hermetic -race green
+(routed to §11.4.60 — §11.4.62 has no cherald rule)</td>
 <td>2026-05-20</td>
-<td>2026-05-20</td>
-<td>spec §43.2 / §11.4.18; Catalogue-Check: TBD</td>
+<td>2026-05-28</td>
+<td>spec §43.2 / §11.4.18; Catalogue-Check: TBD;
+docs/qa/HRD-038-20260528T050000Z/</td>
 </tr>
 <tr>
 <td>HRD-039</td>
 <td>task</td>
-<td>open</td>
+<td>in_progress</td>
 <td>low</td>
 <td>§11.4.19 / .23 <code>cherald fixed align</code> +
-<code>cherald colorize</code> — Issues/Fixed format + HTML
-colorizer</td>
+<code>cherald colorize</code> — Issues/Fixed format + HTML colorizer —
+Batch C: implemented as cherald §43 docs-pipeline command
+(<code>cherald/cmd/cherald/docops_cmds.go</code>) feeding the HRD-019
+cherald binding; detect-by-default + <code>--apply</code> to regenerate;
+ships the §107 lazy-verifier fix so the CLI runs without a JWT secret;
+hermetic -race green</td>
 <td>2026-05-20</td>
-<td>2026-05-20</td>
-<td>spec §43.2 / §11.4.19 + §11.4.23; Catalogue-Check: TBD</td>
+<td>2026-05-28</td>
+<td>spec §43.2 / §11.4.19 + §11.4.23; Catalogue-Check: TBD;
+docs/qa/HRD-039-20260528T050000Z/</td>
 </tr>
 <tr>
 <td>HRD-040</td>
@@ -742,13 +785,17 @@ docs/qa/HRD-041-20260528T040000Z/</td>
 <tr>
 <td>HRD-042</td>
 <td>task</td>
-<td>open</td>
+<td>in_progress</td>
 <td>low</td>
 <td>§11.4.31 <code>cherald submanifest verify</code> —
-Submodule-Dependency-Manifest gate</td>
+Submodule-Dependency-Manifest gate — Batch C: implemented as cherald §43
+verify/check command (<code>cherald/cmd/cherald/checkops_cmds.go</code>)
+feeding the HRD-019 cherald binding; detect-only; hermetic -race
+green</td>
 <td>2026-05-20</td>
-<td>2026-05-20</td>
-<td>spec §43.2 / §11.4.31; Catalogue-Check: TBD</td>
+<td>2026-05-28</td>
+<td>spec §43.2 / §11.4.31; Catalogue-Check: TBD;
+docs/qa/HRD-042-20260528T050000Z/</td>
 </tr>
 <tr>
 <td>HRD-043</td>
@@ -825,14 +872,18 @@ Status.md sweep + Status_Summary regen</td>
 <tr>
 <td>HRD-048</td>
 <td>task</td>
-<td>open</td>
+<td>in_progress</td>
 <td>low</td>
 <td>§11.4.53 <code>cherald fixed-summary sync</code> — standalone
-Fixed_Summary backfill</td>
+Fixed_Summary backfill — Batch C: implemented as cherald §43
+docs-pipeline command (<code>cherald/cmd/cherald/docops_cmds.go</code>)
+feeding the HRD-019 cherald binding; detect-by-default +
+<code>--apply</code> to regenerate; ships the §107 lazy-verifier fix so
+the CLI runs without a JWT secret; hermetic -race green</td>
 <td>2026-05-20</td>
-<td>2026-05-20</td>
+<td>2026-05-28</td>
 <td>spec §43.2 / §11.4.53; Catalogue-Check: TBD (likely existing
-script)</td>
+script); docs/qa/HRD-048-20260528T050000Z/</td>
 </tr>
 <tr>
 <td>HRD-049</td>
@@ -851,36 +902,49 @@ HRD flow); evidence <code>docs/qa/HRD-049-20260527T213201Z/</code></td>
 <tr>
 <td>HRD-050</td>
 <td>task</td>
-<td>open</td>
+<td>in_progress</td>
 <td>middle</td>
 <td>§11.4.59 <code>cherald readme sync</code> — README doc-link regen +
-multi-format re-export</td>
+multi-format re-export — Batch C: implemented as cherald §43
+docs-pipeline command (<code>cherald/cmd/cherald/docops_cmds.go</code>)
+feeding the HRD-019 cherald binding; detect-by-default +
+<code>--apply</code> to regenerate; ships the §107 lazy-verifier fix so
+the CLI runs without a JWT secret; hermetic -race green</td>
 <td>2026-05-20</td>
-<td>2026-05-20</td>
-<td>spec §43.2 / §11.4.57 + §11.4.59; Catalogue-Check: TBD</td>
+<td>2026-05-28</td>
+<td>spec §43.2 / §11.4.57 + §11.4.59; Catalogue-Check: TBD;
+docs/qa/HRD-050-20260528T050000Z/</td>
 </tr>
 <tr>
 <td>HRD-051</td>
 <td>task</td>
-<td>open</td>
+<td>in_progress</td>
 <td>high</td>
 <td>§11.4.60 <code>cherald composite-gate</code> — canonical
-implementation of CM-DOCS-COMPOSITE-SYNC</td>
+implementation of CM-DOCS-COMPOSITE-SYNC — Batch C: implemented as
+cherald §43 verify/check command
+(<code>cherald/cmd/cherald/checkops_cmds.go</code>) feeding the HRD-019
+cherald binding; detect-only; hermetic -race green</td>
 <td>2026-05-20</td>
-<td>2026-05-20</td>
-<td>spec §43.2 / §11.4.60; Catalogue-Check: TBD</td>
+<td>2026-05-28</td>
+<td>spec §43.2 / §11.4.60; Catalogue-Check: TBD;
+docs/qa/HRD-051-20260528T050000Z/</td>
 </tr>
 <tr>
 <td>HRD-052</td>
 <td>task</td>
-<td>open</td>
+<td>in_progress</td>
 <td>middle</td>
 <td>§11.4.65 <code>cherald export</code> — bulk Markdown export wrapper
-(md/html/pdf/docx)</td>
+(md/html/pdf/docx) — Batch C: implemented as cherald §43 docs-pipeline
+command (<code>cherald/cmd/cherald/docops_cmds.go</code>) feeding the
+HRD-019 cherald binding; detect-by-default + <code>--apply</code> to
+regenerate; ships the §107 lazy-verifier fix so the CLI runs without a
+JWT secret; hermetic -race green</td>
 <td>2026-05-20</td>
-<td>2026-05-20</td>
+<td>2026-05-28</td>
 <td>spec §43.2 / §11.4.65 + §36; Catalogue-Check: extend (built atop
-Pandoc + WeasyPrint)</td>
+Pandoc + WeasyPrint); docs/qa/HRD-052-20260528T050000Z/</td>
 </tr>
 <tr>
 <td>HRD-053</td>
@@ -899,27 +963,31 @@ of git binary); --emit feeds HRD-023 binding; hermetic temp-repo tests
 <tr>
 <td>HRD-054</td>
 <td>task</td>
-<td>open</td>
+<td>in_progress</td>
 <td>middle</td>
 <td>§11.4.73 <code>cherald spec-version check</code> — Revision-vs-edits
-drift detection</td>
+drift detection — Batch C: implemented as cherald §43 verify/check
+command (<code>cherald/cmd/cherald/checkops_cmds.go</code>) feeding the
+HRD-019 cherald binding; detect-only; hermetic -race green</td>
 <td>2026-05-20</td>
-<td>2026-05-20</td>
-<td>spec §43.2 / §11.4.73; Catalogue-Check: no-match (very-new
-mandate)</td>
+<td>2026-05-28</td>
+<td>spec §43.2 / §11.4.73; Catalogue-Check: no-match (very-new mandate);
+docs/qa/HRD-054-20260528T050000Z/</td>
 </tr>
 <tr>
 <td>HRD-055</td>
 <td>task</td>
-<td>open</td>
+<td>in_progress</td>
 <td>middle</td>
 <td>§11.4.74 <code>cherald catalogue-check &lt;pr&gt;</code> — scan PR
 for Catalogue-Check + survey runner over vasic-digital +
-HelixDevelopment</td>
+HelixDevelopment — Batch C: implemented as cherald §43 verify/check
+command (<code>cherald/cmd/cherald/checkops_cmds.go</code>) feeding the
+HRD-019 cherald binding; detect-only; hermetic -race green</td>
 <td>2026-05-20</td>
-<td>2026-05-20</td>
-<td>spec §43.2 / §11.4.74; Catalogue-Check: no-match (very-new
-mandate)</td>
+<td>2026-05-28</td>
+<td>spec §43.2 / §11.4.74; Catalogue-Check: no-match (very-new mandate);
+docs/qa/HRD-055-20260528T050000Z/</td>
 </tr>
 <tr>
 <td>HRD-056</td>

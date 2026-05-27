@@ -1,0 +1,24 @@
+ANCHOR: HRD-038-SCRIPT-DOCS-CHECK-QA
+Feature: cherald script-docs-check (§11.4.62 — NOT a cherald rule → routed §11.4.60 Documentation composite covenant)
+Binary: /tmp/cherald, run 2026-05-27T23:07:15Z
+Rule choice: §11.4.62 is absent from CheraldRules; classified against §11.4.60 (closest cherald-owned doc rule) via markerCheck.
+
+=== PASS: every scripts/*.sh carries a leading header docstring ===
+$ cherald script-docs-check --repo t38/pass
+script-docs-check: scanned 2 script(s); 0 undocumented
+[PASS] §11.4.60: §11.4.60 ok on all scripts carry a header docstring
+exit=0
+
+=== BLOCK: scripts/bad.sh has no header docstring ===
+$ cherald script-docs-check --repo t38/fail
+script-docs-check: scanned 2 script(s); 1 undocumented
+[FAIL] §11.4.60: §11.4.60 violation on undocumented scripts: scripts/bad.sh
+cherald: §11.4.60 breach: §11.4.60 violation on undocumented scripts: scripts/bad.sh
+exit=1
+
+=== PASS + --emit ===
+$ cherald script-docs-check --repo t38/pass --emit
+script-docs-check: scanned 2 script(s); 0 undocumented
+[PASS] §11.4.60: §11.4.60 ok on all scripts carry a header docstring
+[emit] §11.4.60 drove a constitution event for subject all scripts carry a header docstring
+exit=0

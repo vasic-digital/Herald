@@ -1,0 +1,26 @@
+ANCHOR: HRD-055-CATALOGUE-CHECK-QA
+Feature: cherald catalogue-check (§11.4.74 submodule-catalogue-first / detector checkCatalogueMiss)
+Binary: /tmp/cherald, run 2026-05-27T23:07:15Z
+RuleID §11.4.74 | checkCatalogueMiss | Subject.Kind missing-catalogue-check⇒FAIL / pull-request⇒PASS
+
+=== PASS: PR body carries a Catalogue-Check: line ===
+$ cherald catalogue-check --pr-body 'Adds a submodule.
+
+Catalogue-Check: searched; nothing fits.' PR-42
+catalogue-check: PR-42 (trivial=false, has-catalogue-check=true) from --pr-body (literal)
+[PASS] §11.4.74: catalogue-check present: PR-42
+exit=0
+
+=== BLOCK: non-trivial PR with NO Catalogue-Check line ===
+$ cherald catalogue-check --pr-body 'Adds a new vendored dep without checking the catalogue.' PR-43
+catalogue-check: PR-43 (trivial=false, has-catalogue-check=false) from --pr-body (literal)
+[FAIL] §11.4.74: catalogue miss §11.4.74: PR-43 is a non-trivial change with no Catalogue-Check line
+cherald: §11.4.74 breach: catalogue miss §11.4.74: PR-43 is a non-trivial change with no Catalogue-Check line
+exit=1
+
+=== PASS + --emit: via --diff-file ===
+$ cherald catalogue-check --diff-file /tmp/diff55.txt --emit PR-44
+catalogue-check: PR-44 (trivial=false, has-catalogue-check=true) from --diff-file /tmp/diff55.txt
+[PASS] §11.4.74: catalogue-check present: PR-44
+[emit] §11.4.74 drove a constitution event for subject PR-44
+exit=0

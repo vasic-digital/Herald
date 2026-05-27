@@ -1,0 +1,33 @@
+ANCHOR: HRD-036-CREDS-SCAN-QA
+Feature: cherald creds-scan (§16.2 — NOT a cherald rule → routed §11.4.10 Credentials-handling)
+Binary: /tmp/cherald, run 2026-05-27T23:07:47Z
+Rule choice: §16.2 is absent from CheraldRules; classified against §11.4.10 (Subject.Kind credential on a hit ⇒ FAIL).
+SECURITY: every finding is REDACTED — the actual secret value is NEVER printed.
+Planted DUMMY secret: a fake AWS access-key-id from AWS public docs examples (NOT a real credential).
+  (the raw value is intentionally NOT reproduced anywhere in this transcript — see the redacted [LEAK] line below.)
+
+=== PASS (ALLOW): clean dir, no credential patterns ===
+$ cherald creds-scan --path t36/clean
+creds-scan: scanned /tmp/t36/clean; 0 leaked-credential finding(s)
+[PASS] §11.4.10: no credential leak: /tmp/t36/clean/<scan>
+exit=0
+
+=== BLOCK: planted fake AWS key id + PEM private key — REDACTED in output ===
+$ cherald creds-scan --path t36/dirty
+creds-scan: scanned /tmp/t36/dirty; 2 leaked-credential finding(s)
+  [LEAK] config/id_rsa:1 pem-private-key = ----****REDACTED****
+  [LEAK] config/leak.txt:1 aws-access-key-id = AKIA****REDACTED****
+[FAIL] §11.4.10: credential leak §11.4.10: plaintext credential detected in 2 leaked-credential finding(s) under /tmp/t36/dirty (values redacted)
+cherald: §11.4.10 breach: credential leak §11.4.10: plaintext credential detected in 2 leaked-credential finding(s) under /tmp/t36/dirty (values redacted)
+exit=1
+
+=== PASS + --emit: clean dir drives a real constitution event ===
+$ cherald creds-scan --path t36/clean --emit
+creds-scan: scanned /tmp/t36/clean; 0 leaked-credential finding(s)
+[PASS] §11.4.10: no credential leak: /tmp/t36/clean/<scan>
+[emit] §11.4.10 drove a constitution event for subject /tmp/t36/clean/<scan>
+exit=0
+
+=== REDACTION PROOF (run at transcript-capture time) ===
+The command output above NEVER contains the raw secret; only a 4-char prefix + a fixed mask.
+Verified: the [LEAK] line reads 'aws-access-key-id = AKIA****REDACTED****' (prefix only, body masked).

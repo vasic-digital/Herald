@@ -1,0 +1,37 @@
+QA-ANCHOR: HRD-039-FIXED-ALIGN-C3A-20260528T050000Z
+Feature: cherald fixed-align (Issues.md ↔ Fixed.md reconciliation) — v1.0.0 Batch C C3a.
+Evidence kind: REAL built-binary runs (no-drift PASS + cross-tracker drift BLOCK + --emit)
+against a hermetic temp-repo fixture. Binary run with auth env UNSET (§107 lazy-verifier fix).
+
+RULE CHOICE: §11.4.55 is NOT a cherald-owned rule (it is pherald's reopen binding). The
+closest cherald-owned rule for a Fixed-document reconciliation is §11.4.53 "Fixed_Summary
+parity" — the Fixed-document hygiene/parity binding. fixed-align therefore classifies its
+Issues.md↔Fixed.md drift against §11.4.53. fixed-align is DETECT-ONLY: it NEVER migrates an
+HRD (that atomic Issues↔Fixed migration is pherald's reopen command, §11.4.55).
+
+=== PASS path: disjoint trackers (no HRD-id present in both) ⇒ aligned ===
+$ cherald fixed-align --repo <fixture-aligned>
+fixed-align: 1 in Issues.md, 1 in Fixed.md; 0 present in BOTH (drift)
+[PASS] §11.4.53: §11.4.53 ok on Issues.md/Fixed.md aligned
+[exit=0]
+
+=== VIOLATION/BLOCK path: HRD-002 present in BOTH Issues.md AND Fixed.md (drift) ===
+# (a closure that was never removed from Issues.md — the §11.4.19 atomic-migration breach)
+$ cherald fixed-align --repo <fixture-drift>
+fixed-align: 2 in Issues.md, 2 in Fixed.md; 1 present in BOTH (drift)
+[FAIL] §11.4.53: §11.4.53 violation on drift — HRD present in both Issues.md and Fixed.md: HRD-002
+cherald: §11.4.53 breach: §11.4.53 violation on drift — HRD present in both Issues.md and Fixed.md: HRD-002
+[exit=1]
+
+=== --emit: the FAIL verdict ALSO drives a REAL constitution event (then still exits non-zero) ===
+$ cherald fixed-align --repo <fixture-drift> --emit
+fixed-align: 2 in Issues.md, 2 in Fixed.md; 1 present in BOTH (drift)
+[FAIL] §11.4.53: §11.4.53 violation on drift — HRD present in both Issues.md and Fixed.md: HRD-002
+[emit] §11.4.53 drove a constitution event for subject drift — HRD present in both Issues.md and Fixed.md: HRD-002
+cherald: §11.4.53 breach: §11.4.53 violation on drift — HRD present in both Issues.md and Fixed.md: HRD-002
+[exit=1]
+
+RuleID: §11.4.53 (closest cherald rule; see RULE CHOICE above)   Subject.Kind: "violation"/"ok"
+EventClass: ClassPolicyViolation   Default = detect-only (no migration).
+Flags: --repo, --emit
+Unit tests: TestFixedAlign_NoDrift_Allows, TestFixedAlign_Drift_Blocks, TestFixedAlign_Emit_DrivesEvent

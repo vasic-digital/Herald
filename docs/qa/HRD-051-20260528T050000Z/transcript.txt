@@ -1,0 +1,24 @@
+ANCHOR: HRD-051-COMPOSITE-GATE-QA
+Feature: cherald composite-gate (§11.4.60 Documentation composite covenant / CM-DOCS-COMPOSITE-SYNC)
+Binary: /tmp/cherald, run 2026-05-27T23:06:47Z
+RuleID §11.4.60 | markerCheck | aggregates §11.4.61 metadata + §11.4.59 README links + §11.4.53 Fixed_Summary parity
+
+=== PASS: all composite sub-checks hold ===
+$ cherald composite-gate --repo t51/pass
+composite-gate: checked 4 doc(s); 0 composite breach(es)
+[PASS] §11.4.60: §11.4.60 ok on doc-composite covenant holds
+exit=0
+
+=== BLOCK: README dangling link + Fixed_Summary parity gap ===
+$ cherald composite-gate --repo t51/fail
+composite-gate: checked 3 doc(s); 2 composite breach(es)
+[FAIL] §11.4.60: §11.4.60 violation on composite breaches: §11.4.59 README dangling links: docs/missing.md | §11.4.53 Fixed_Summary missing: HRD-002
+cherald: §11.4.60 breach: §11.4.60 violation on composite breaches: §11.4.59 README dangling links: docs/missing.md | §11.4.53 Fixed_Summary missing: HRD-002
+exit=1
+
+=== PASS + --emit ===
+$ cherald composite-gate --repo t51/pass --emit
+composite-gate: checked 4 doc(s); 0 composite breach(es)
+[PASS] §11.4.60: §11.4.60 ok on doc-composite covenant holds
+[emit] §11.4.60 drove a constitution event for subject doc-composite covenant holds
+exit=0

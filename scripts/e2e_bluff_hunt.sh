@@ -2056,6 +2056,24 @@ SC_REL_RETEST_DIR="$(sc_newest 'HRD-045-*')"
 SC_BUILD_TIER_DIR="$(sc_newest 'HRD-041-*')"
 SC_BUILD_EVIDENCE_DIR="$(sc_newest 'HRD-035-*')"
 
+# v1.0.0 Batch C cluster C3 (cherald §43 docs-pipeline C3a + verify/check C3b).
+# C3a (docs_cmds): HRD-037 docs-sync / HRD-050 readme-sync / HRD-052 export /
+#   HRD-048 fixed-summary-sync / HRD-039 fixed-align.
+# C3b (checkops): HRD-042 submanifest-verify / HRD-051 composite-gate /
+#   HRD-054 spec-version-check / HRD-055 catalogue-check /
+#   HRD-038 script-docs-check / HRD-036 creds-scan.
+SC_DOCS_SYNC_DIR="$(sc_newest 'HRD-037-*')"
+SC_README_SYNC_DIR="$(sc_newest 'HRD-050-*')"
+SC_EXPORT_DIR="$(sc_newest 'HRD-052-*')"
+SC_FIXEDSUM_DIR="$(sc_newest 'HRD-048-*')"
+SC_FIXEDALIGN_DIR="$(sc_newest 'HRD-039-*')"
+SC_SUBMANIFEST_DIR="$(sc_newest 'HRD-042-*')"
+SC_COMPOSITE_DIR="$(sc_newest 'HRD-051-*')"
+SC_SPECVER_DIR="$(sc_newest 'HRD-054-*')"
+SC_CATCHECK_DIR="$(sc_newest 'HRD-055-*')"
+SC_SCRIPTDOCS_DIR="$(sc_newest 'HRD-038-*')"
+SC_CREDSSCAN_DIR="$(sc_newest 'HRD-036-*')"
+
 # sc_anchor <invariant-label> <evidence-file> <literal-anchor-string>
 # Asserts the captured-evidence file contains the load-bearing anchor value.
 # SKIP-with-reason when the evidence dir/file is absent (fresh clone before
@@ -2225,6 +2243,61 @@ sc_anchor "E108" "${SC_BUILD_TIER_DIR:+${SC_BUILD_TIER_DIR}/transcript.txt}" "QA
 check "E109 §11.4.2 bherald evidence-capture — with-evidence ALLOW + metadata-only BLOCK (hermetic, -race)" \
     "go test -race -count=1 -run 'TestEvidenceCapture_WithEvidence_Allows|TestEvidenceCapture_MetadataOnly_Blocks' ./bherald/cmd/bherald/..."
 sc_anchor "E109" "${SC_BUILD_EVIDENCE_DIR:+${SC_BUILD_EVIDENCE_DIR}/transcript.txt}" "QA-ANCHOR: HRD-035-C5-EVIDENCE-CAPTURE-E2E-bherald"
+
+# ---- E110: §11.4.61 cherald docs-sync command (HRD-037, C3a) ----
+check "E110 §11.4.61 cherald docs-sync — metadata-present ALLOW + missing-metadata BLOCK (hermetic, -race)" \
+    "go test -race -count=1 -run 'TestDocsSync_MetadataPresent_Allows|TestDocsSync_MissingMetadata_Blocks' ./cherald/cmd/cherald/..."
+sc_anchor "E110" "${SC_DOCS_SYNC_DIR:+${SC_DOCS_SYNC_DIR}/transcript.txt}" "QA-ANCHOR: HRD-037-DOCS-SYNC-C3A-20260528T050000Z"
+
+# ---- E111: §11.4.59 cherald readme-sync command (HRD-050, C3a) ----
+check "E111 §11.4.59 cherald readme-sync — in-sync ALLOW + drift BLOCK (hermetic, -race)" \
+    "go test -race -count=1 -run 'TestReadmeSync_InSync_Allows|TestReadmeSync_Drift_Blocks' ./cherald/cmd/cherald/..."
+sc_anchor "E111" "${SC_README_SYNC_DIR:+${SC_README_SYNC_DIR}/transcript.txt}" "QA-ANCHOR: HRD-050-README-SYNC-C3A-20260528T050000Z"
+
+# ---- E112: §11.4.65 cherald export command (HRD-052, C3a) ----
+check "E112 §11.4.65 cherald export — invokes-script ALLOW (hermetic, -race)" \
+    "go test -race -count=1 -run 'TestExport_InvokesScript_Allows' ./cherald/cmd/cherald/..."
+sc_anchor "E112" "${SC_EXPORT_DIR:+${SC_EXPORT_DIR}/transcript.txt}" "QA-ANCHOR: HRD-052-EXPORT-C3A-20260528T050000Z"
+
+# ---- E113: §11.4.53 cherald fixed-summary-sync command (HRD-048, C3a) ----
+check "E113 §11.4.53 cherald fixed-summary-sync — parity ALLOW + drift BLOCK (hermetic, -race)" \
+    "go test -race -count=1 -run 'TestFixedSummarySync_Parity_Allows|TestFixedSummarySync_Drift_Blocks' ./cherald/cmd/cherald/..."
+sc_anchor "E113" "${SC_FIXEDSUM_DIR:+${SC_FIXEDSUM_DIR}/transcript.txt}" "QA-ANCHOR: HRD-048-FIXED-SUMMARY-SYNC-C3A-20260528T050000Z"
+
+# ---- E114: §11.4.53 cherald fixed-align command (HRD-039, C3a) ----
+check "E114 §11.4.53 cherald fixed-align — no-drift ALLOW + drift BLOCK (hermetic, -race)" \
+    "go test -race -count=1 -run 'TestFixedAlign_NoDrift_Allows|TestFixedAlign_Drift_Blocks' ./cherald/cmd/cherald/..."
+sc_anchor "E114" "${SC_FIXEDALIGN_DIR:+${SC_FIXEDALIGN_DIR}/transcript.txt}" "QA-ANCHOR: HRD-039-FIXED-ALIGN-C3A-20260528T050000Z"
+
+# ---- E115: §11.4.31 cherald submanifest-verify command (HRD-042, C3b) ----
+check "E115 §11.4.31 cherald submanifest-verify — present ALLOW + missing BLOCK (hermetic, -race)" \
+    "go test -race -count=1 -run 'TestSubmanifestVerify_Present_Allows|TestSubmanifestVerify_Missing_Blocks' ./cherald/cmd/cherald/..."
+sc_anchor "E115" "${SC_SUBMANIFEST_DIR:+${SC_SUBMANIFEST_DIR}/transcript.txt}" "ANCHOR: HRD-042-SUBMANIFEST-VERIFY-QA"
+
+# ---- E116: §11.4.60 cherald composite-gate command (HRD-051, C3b) ----
+check "E116 §11.4.60 cherald composite-gate — all-pass ALLOW + violation BLOCK (hermetic, -race)" \
+    "go test -race -count=1 -run 'TestCompositeGate_AllPass_Allows|TestCompositeGate_Violation_Blocks' ./cherald/cmd/cherald/..."
+sc_anchor "E116" "${SC_COMPOSITE_DIR:+${SC_COMPOSITE_DIR}/transcript.txt}" "ANCHOR: HRD-051-COMPOSITE-GATE-QA"
+
+# ---- E117: §11.4.73 cherald spec-version-check command (HRD-054, C3b) ----
+check "E117 §11.4.73 cherald spec-version-check — no-drift ALLOW + drift BLOCK (hermetic, -race)" \
+    "go test -race -count=1 -run 'TestSpecVersionCheck_NoDrift_Allows|TestSpecVersionCheck_Drift_Blocks' ./cherald/cmd/cherald/..."
+sc_anchor "E117" "${SC_SPECVER_DIR:+${SC_SPECVER_DIR}/transcript.txt}" "ANCHOR: HRD-054-SPEC-VERSION-CHECK-QA"
+
+# ---- E118: §11.4.74 cherald catalogue-check command (HRD-055, C3b) ----
+check "E118 §11.4.74 cherald catalogue-check — has-catalogue-line ALLOW + missing BLOCK (hermetic, -race)" \
+    "go test -race -count=1 -run 'TestCatalogueCheck_HasCatalogueLine_Allows|TestCatalogueCheck_Missing_Blocks' ./cherald/cmd/cherald/..."
+sc_anchor "E118" "${SC_CATCHECK_DIR:+${SC_CATCHECK_DIR}/transcript.txt}" "ANCHOR: HRD-055-CATALOGUE-CHECK-QA"
+
+# ---- E119: §11.4.62→§11.4.60 cherald script-docs-check command (HRD-038, C3b) ----
+check "E119 §11.4.62→§11.4.60 cherald script-docs-check — all-documented ALLOW + undocumented BLOCK (hermetic, -race)" \
+    "go test -race -count=1 -run 'TestScriptDocsCheck_AllDocumented_Allows|TestScriptDocsCheck_Undocumented_Blocks' ./cherald/cmd/cherald/..."
+sc_anchor "E119" "${SC_SCRIPTDOCS_DIR:+${SC_SCRIPTDOCS_DIR}/transcript.txt}" "ANCHOR: HRD-038-SCRIPT-DOCS-CHECK-QA"
+
+# ---- E120: §16.2→§11.4.10 cherald creds-scan command (HRD-036, C3b) ----
+check "E120 §16.2→§11.4.10 cherald creds-scan — clean ALLOW + planted-secret BLOCK (hermetic, -race)" \
+    "go test -race -count=1 -run 'TestCredsScan_Clean_Allows|TestCredsScan_PlantedSecret_Blocks' ./cherald/cmd/cherald/..."
+sc_anchor "E120" "${SC_CREDSSCAN_DIR:+${SC_CREDSSCAN_DIR}/transcript.txt}" "ANCHOR: HRD-036-CREDS-SCAN-QA"
 
 # ----------------------------------------------------------------------
 echo ""

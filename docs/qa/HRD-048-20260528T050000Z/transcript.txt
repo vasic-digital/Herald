@@ -1,0 +1,31 @@
+QA-ANCHOR: HRD-048-FIXED-SUMMARY-SYNC-C3A-20260528T050000Z
+Feature: cherald fixed-summary-sync (§11.4.53 Fixed_Summary parity) — v1.0.0 Batch C C3a.
+Evidence kind: REAL built-binary runs (drift/BLOCK + --apply backfill restoring parity)
+against a hermetic temp-repo fixture (docs/Fixed.md + docs/Fixed_Summary.md).
+Binary run with auth env UNSET (proves the §107 lazy-verifier fix).
+
+=== VIOLATION/BLOCK path: Fixed.md has HRD-001+HRD-002, Fixed_Summary.md only HRD-001 ===
+$ cherald fixed-summary-sync --repo <fixture>
+fixed-summary-sync: 2 HRD(s) in Fixed.md; 1 missing from Fixed_Summary.md
+[FAIL] §11.4.53: §11.4.53 violation on Fixed_Summary missing: HRD-002
+cherald: §11.4.53 breach: §11.4.53 violation on Fixed_Summary missing: HRD-002
+[exit=1]
+
+=== --apply: backfill the missing summary line, parity restored ⇒ PASS ===
+$ cherald fixed-summary-sync --repo <fixture> --apply
+fixed-summary-sync: 2 HRD(s) in Fixed.md; 1 missing from Fixed_Summary.md
+fixed-summary-sync --apply: backfilled 1 summary line(s)
+[PASS] §11.4.53: §11.4.53 ok on Fixed_Summary parity restored (backfilled HRD-002)
+[exit=0]
+
+=== PASS path: re-run after backfill confirms parity (0 missing) ===
+$ cherald fixed-summary-sync --repo <fixture>
+fixed-summary-sync: 2 HRD(s) in Fixed.md; 0 missing from Fixed_Summary.md
+[PASS] §11.4.53: §11.4.53 ok on Fixed_Summary parity ok
+[exit=0]
+
+RuleID: §11.4.53   Subject.Kind: "violation" (FAIL) / "ok" (PASS)   EventClass: ClassPolicyViolation
+Default = detect-only; mutation (backfill into docs/Fixed_Summary.md) behind --apply.
+Flags: --repo, --apply, --emit
+Unit tests: TestFixedSummarySync_Parity_Allows, TestFixedSummarySync_Drift_Blocks,
+            TestFixedSummarySync_ApplyBackfills

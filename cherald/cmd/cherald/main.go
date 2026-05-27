@@ -5,13 +5,27 @@
 //   - commons_constitution.ConstitutionStore (Postgres via state.NewPostgres
 //     when HERALD_PG_DSN is set, Memory fallback otherwise)
 //   - cherald/internal/compliance.Handler serving GET /v1/compliance
+//   - cherald/internal/modes admin surface (/v1/compliance/modes) — HRD-027
 //
-// §43 stub commands still register via cherald/internal/stubs.
+// §43 commands register via:
+//   - registerDocsOps (HRD-037/039/048/050/052 — the docs-pipeline command
+//     bodies that PRODUCE the Subjects the HRD-019 cherald bindings classify)
+//   - cherald/internal/stubs (the remaining §43 verify/check stubs — cluster
+//     C3b: HRD-036/038/042/051/054/055).
 //
-// §107 anti-bluff posture: the serve plane refuses to start without a
-// usable JWT verifier (HERALD_AUTH_MODE + the matching secret/URL must be
-// set). Silently running an unauthenticated /v1/compliance would be a
-// PASS-bluff — better to fail loudly at startup.
+// §107 anti-bluff posture: the serve plane refuses to start without a usable
+// JWT verifier (HERALD_AUTH_MODE + the matching secret/URL must be set) — but
+// that check, the ConstitutionStore + ModeLadder + bindings pipeline + Redis
+// client are all built LAZILY inside the `serve` command's RunE (mirroring
+// pherald + sherald). This is load-bearing for §107 end-user usability: the
+// §43 CLI commands (`cherald docs-sync`, `cherald fixed-align`, …) plus
+// `cherald version` are designed for bare CI/cron/agent invocation and MUST
+// run WITHOUT a JWT secret, a Postgres DSN, or a Redis URL. Eagerly building
+// the verifier / store / pipeline in main() (the prior Wave 3a wiring) made
+// every subcommand — even `cherald version` — die with "build verifier:
+// HERALD_AUTH_MODE must be set", which is itself a §107 PASS-bluff: the
+// command "exists" but no operator can run it. Building an unauthenticated
+// serve plane is still refused — the verifier check fires when `serve` runs.
 package main
 
 import (
@@ -21,6 +35,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
+	"github.com/spf13/cobra"
 
 	"github.com/vasic-digital/herald/cherald/internal/bindings"
 	flavhttp "github.com/vasic-digital/herald/cherald/internal/http"
@@ -50,58 +65,95 @@ func main() {
 
 	branding := commons.DefaultBranding("c", version)
 
-	// Build the ConstitutionStore + ModeLadder. Postgres if HERALD_PG_DSN is
-	// present (production path), Memory otherwise (dev/CI quickstart path).
-	// Both back-ends implement their interfaces identically; the compliance +
-	// modes handlers don't care which is wired. A single pool backs both.
-	store, modeLadder, err := buildStoreAndLadder(context.Background())
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "cherald:", err)
-		os.Exit(1)
-	}
-
-	// Build the HRD-019 bindings pipeline: it registers cherald's §42.3 rule
-	// catalogue and drives the detect→emit→persist→audit flow that backs
-	// POST /v1/compliance/evaluate. The emitter publishes onto an in-process
-	// EventBus (the M1 substrate; the M2 swap to digital.vasic.eventbus is a
-	// drop-in per the Foundation Catalogue-Check). Audit is shared with the
-	// store backend selection: PostgresAudit when HERALD_PG_DSN is set,
-	// MemoryAudit otherwise. A bundle-hash is captured from the discovered
-	// Constitution.md when present (replayability per §42.1.3).
-	pipeline, err := buildPipeline(modeLadder, store)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "cherald:", err)
-		os.Exit(1)
-	}
-
-	// Build the auth verifier. Redis is optional — JWKS-mode caches keys
-	// in Redis when available; HMAC mode ignores rdb entirely.
-	rdb, err := buildRedis()
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "cherald:", err)
-		os.Exit(1)
-	}
-	verifier, err := commons_auth.NewVerifierFromEnv(rdb)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "cherald: build verifier:", err)
-		os.Exit(1)
-	}
-
 	root := cli.NewRootCmd(branding)
 	root.Version = version + " (" + commit + ")"
 
 	root.AddCommand(cli.VersionCmd(branding))
-	root.AddCommand(cli.ServeCmd(cli.ServeOpts{
-		Branding:   branding,
-		Routes:     flavhttp.Routes(store, modeLadder, pipeline),
-		Middleware: []gin.HandlerFunc{commons_auth.GinMiddleware(verifier)},
-	}))
-	stubs.Register(root)
+	root.AddCommand(newServeCmd(branding)) // builds store/ladder/pipeline/verifier lazily inside serve
+	stubs.Register(root)                   // remaining §43 stubs (now empty — cluster C3b landed)
+	registerDocsOps(root)                  // v1.0.0 Batch C C3a: §43 docs-pipeline command bodies (HRD-037/039/048/050/052)
+	registerCheckOps(root)                 // v1.0.0 Batch C C3b: §43 verify/check command bodies (HRD-036/038/042/051/054/055)
 
 	if rerr := root.Execute(); rerr != nil {
 		fmt.Fprintln(os.Stderr, "cherald:", rerr)
 		os.Exit(1)
 	}
+}
+
+// newServeCmd builds the cherald `serve` command with LAZY dependency
+// construction: the ConstitutionStore + ModeLadder, the HRD-019 bindings
+// pipeline, the Redis client, and the JWT verifier are all built inside RunE,
+// so the §43 CLI subcommands run WITHOUT requiring HERALD_AUTH_MODE / a JWT
+// secret / HERALD_PG_DSN (§107 end-user usability — see the package doc). An
+// anonymous serve plane is still refused: the verifier check fires when
+// `serve` actually runs. Flags + listener behavior are identical to
+// cli.ServeCmd (shared BindServeFlags + RunServe — the §107 lockstep-flag-UX
+// contract).
+func newServeCmd(branding commons.Branding) *cobra.Command {
+	var (
+		port     int
+		tlsCert  string
+		tlsKey   string
+		noBrotli bool
+	)
+	cmd := &cobra.Command{
+		Use:   "serve",
+		Short: "Start the " + branding.DisplayName + " HTTP server",
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			ctx := cmd.Context()
+			if ctx == nil {
+				ctx = context.Background()
+			}
+
+			// ConstitutionStore + ModeLadder. Postgres when HERALD_PG_DSN is
+			// present (production path), Memory otherwise (dev/CI). Both back-ends
+			// satisfy their interfaces identically; the compliance + modes
+			// handlers don't care which is wired. Built here, not in main(), so
+			// CLI subcommands never require a database.
+			store, modeLadder, err := buildStoreAndLadder(ctx)
+			if err != nil {
+				return err
+			}
+
+			// HRD-019 bindings pipeline: registers cherald's §42.3 rule catalogue
+			// and drives the detect→emit→persist→audit flow behind
+			// POST /v1/compliance/evaluate.
+			pipeline, err := buildPipeline(modeLadder, store)
+			if err != nil {
+				return err
+			}
+
+			// JWT verifier (Redis optional — JWKS-mode caches keys when present;
+			// HMAC ignores rdb). Built here, not in main(), so CLI subcommands
+			// never require auth env.
+			rdb, err := buildRedis()
+			if err != nil {
+				return err
+			}
+			verifier, err := commons_auth.NewVerifierFromEnv(rdb)
+			if err != nil {
+				return fmt.Errorf("build verifier: %w", err)
+			}
+
+			opts := cli.ServeOpts{
+				Branding:   branding,
+				Routes:     flavhttp.Routes(store, modeLadder, pipeline),
+				Middleware: []gin.HandlerFunc{commons_auth.GinMiddleware(verifier)},
+			}
+			if tlsCert != "" {
+				opts.TLSCertPath = tlsCert
+			}
+			if tlsKey != "" {
+				opts.TLSKeyPath = tlsKey
+			}
+			if noBrotli {
+				opts.DisableBrotli = true
+			}
+			return cli.RunServe(ctx, opts, port)
+		},
+	}
+	cli.BindServeFlags(cmd, &port, &tlsCert, &tlsKey, &noBrotli)
+	return cmd
 }
 
 // buildStoreAndLadder returns the ConstitutionStore + ModeLadder selected by

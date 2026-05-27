@@ -1,0 +1,24 @@
+ANCHOR: HRD-042-SUBMANIFEST-VERIFY-QA
+Feature: cherald submanifest-verify (§11.4.31 Submodule-Dependency-Manifest)
+Binary: /tmp/cherald (go build ./cherald/cmd/cherald), run 2026-05-27T23:06:34Z
+RuleID §11.4.31 | markerCheck | Subject.Kind violation⇒FAIL / ok⇒PASS
+
+=== PASS: well-formed .gitmodules (path + url) ===
+$ cherald submanifest-verify --repo t42/pass
+submanifest-verify: 0 submodule-manifest problem(s) under /tmp/t42/pass
+[PASS] §11.4.31: §11.4.31 ok on submodule manifest well-formed
+exit=0
+
+=== BLOCK: malformed stanza missing url= ===
+$ cherald submanifest-verify --repo t42/fail
+submanifest-verify: 1 submodule-manifest problem(s) under /tmp/t42/fail
+[FAIL] §11.4.31: §11.4.31 violation on submodule manifest problems: submodule "broken" missing `url =`
+cherald: §11.4.31 breach: §11.4.31 violation on submodule manifest problems: submodule "broken" missing `url =`
+exit=1
+
+=== PASS + --emit: drives a real constitution event ===
+$ cherald submanifest-verify --repo t42/pass --emit
+submanifest-verify: 0 submodule-manifest problem(s) under /tmp/t42/pass
+[PASS] §11.4.31: §11.4.31 ok on submodule manifest well-formed
+[emit] §11.4.31 drove a constitution event for subject submodule manifest well-formed
+exit=0

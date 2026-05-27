@@ -1,0 +1,31 @@
+QA-ANCHOR: HRD-052-EXPORT-C3A-20260528T050000Z
+Feature: cherald export <md...> (§11.4.65 Universal Markdown export) — v1.0.0 Batch C C3a.
+Evidence kind: REAL built-binary runs (PASS via fake export script + BLOCK on script failure)
+against a hermetic temp-repo fixture. NO pandoc — --script points at a fake shell script.
+Binary run with auth env UNSET (proves the §107 lazy-verifier fix).
+
+=== PASS path: export script invoked, exits 0 ⇒ §11.4.65 PASS ===
+$ cherald export --repo <fixture> --script <fixture>/fake_export.sh docs/good.md
+export: invoking <fixture>/fake_export.sh for 1 doc(s)
+FAKE-EXPORT-INVOKED args: <fixture>/docs/good.md
+[PASS] §11.4.65: §11.4.65 ok on export ok via fake_export.sh (1 docs)
+[exit=0]
+
+=== VIOLATION/BLOCK path: export script exits non-zero (7) ⇒ §11.4.65 FAIL + non-zero exit ===
+$ cherald export --repo <fixture> --script <fixture>/fail_export.sh docs/good.md
+export: invoking <fixture>/fail_export.sh for 1 doc(s)
+FAKE-EXPORT-FAILING
+[FAIL] §11.4.65: §11.4.65 violation on export FAILED via fail_export.sh: exit status 7
+cherald: §11.4.65 breach: §11.4.65 violation on export FAILED via fail_export.sh: exit status 7
+[exit=1]
+
+=== Guard: no resolvable export script ⇒ explicit error (not a silent pass) ===
+$ cherald export --repo <empty-fixture>
+Error: export: no export script found (pass --script or add scripts/export_docs.sh under --repo)
+[exit=1]
+
+RuleID: §11.4.65   Subject.Kind: "violation" (FAIL) / "ok" (PASS)   EventClass: ClassPolicyViolation
+Script resolution: --script override (test seam) > gitops.FindScript(repo,"export_docs.sh")
+                   > <repo>/scripts/export_docs.sh (§11.4.74 catalogue-first)
+Flags: --repo, --script, --emit
+Unit tests: TestExport_InvokesScript_Allows, TestExport_ScriptFails_Blocks, TestExport_NoScript_Errors

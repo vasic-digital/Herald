@@ -1,0 +1,26 @@
+ANCHOR: HRD-054-SPEC-VERSION-CHECK-QA
+Feature: cherald spec-version-check (§11.4.73 main-spec versioning / detector checkSpecDrift)
+Binary: /tmp/cherald, run 2026-05-27T23:06:58Z
+RuleID §11.4.73 | checkSpecDrift | Subject.Kind revision-unchanged⇒FAIL / spec-doc⇒PASS
+
+=== PASS: working tree == HEAD (no content change, no drift) ===
+$ cherald spec-version-check --repo t54 --spec docs/spec.md
+spec-version-check: revision worktree="1" HEAD="1" (content-changed=false, revision-changed=false)
+[PASS] §11.4.73: spec revision in sync: docs/spec.md
+exit=0
+
+--- now edit the spec BODY but leave Revision at 1 (drift) ---
+=== BLOCK: content changed, Revision unchanged ===
+$ cherald spec-version-check --repo t54 --spec docs/spec.md
+spec-version-check: revision worktree="1" HEAD="1" (content-changed=true, revision-changed=false)
+[FAIL] §11.4.73: spec drift §11.4.73: docs/spec.md content changed without a Revision bump
+cherald: §11.4.73 breach: spec drift §11.4.73: docs/spec.md content changed without a Revision bump
+exit=1
+
+--- now ALSO bump the Revision to 2 (discipline followed) ---
+=== PASS + --emit: content changed AND Revision bumped ===
+$ cherald spec-version-check --repo t54 --spec docs/spec.md --emit
+spec-version-check: revision worktree="2" HEAD="1" (content-changed=true, revision-changed=true)
+[PASS] §11.4.73: spec revision in sync: docs/spec.md
+[emit] §11.4.73 drove a constitution event for subject docs/spec.md
+exit=0
