@@ -37,11 +37,17 @@ type evidenceStore interface {
 }
 
 // eventsProcessedStore is the subset of events_processed-table access
-// this stage performs. The Lookup half is shared with the
-// IdempotencyChecker; OutcomeRecorder owns the Insert half (archive on
-// fresh-accept). The real PG adapter (T9) implements both.
+// this stage performs. The Lookup + Claim halves are shared with the
+// IdempotencyChecker (Stage 2 now CLAIMS the archive row — HRD-132);
+// OutcomeRecorder owns the Insert half. Post-HRD-132 the archive row is
+// already durable by the time OutcomeRecorder runs (the Stage-2 claim
+// wrote it), so Insert is an idempotent ON CONFLICT DO NOTHING that
+// re-asserts the bookkeeping (refreshes first_seen_at-class columns); it
+// is NOT the first write and MUST NOT error on the pre-existing row. The
+// real PG adapter implements all three methods.
 type eventsProcessedStore interface {
 	Lookup(ctx context.Context, tenantID uuid.UUID, idemKey string) (*eventsProcessedRow, bool)
+	Claim(ctx context.Context, row eventsProcessedRow) (claimed bool, err error)
 	Insert(ctx context.Context, row eventsProcessedRow) error
 }
 

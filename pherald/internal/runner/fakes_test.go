@@ -93,11 +93,30 @@ func (s *fakeEventsProcessedStore) Insert(ctx context.Context, row eventsProcess
 	defer s.mu.Unlock()
 	key := row.TenantID.String() + "/" + row.IdemKey
 	if _, exists := s.rows[key]; exists {
-		// PK constraint would reject this in real PG; fake mimics that.
-		return errors.New("fake events_processed: duplicate PK")
+		// Post-HRD-132 the Stage-2 claim already wrote this row, so the
+		// Stage-7 archive Insert is an idempotent ON CONFLICT DO NOTHING
+		// no-op — model that (NOT a PK error, matching the production
+		// pgEventsProcessedAdapter.Insert which uses ON CONFLICT DO NOTHING).
+		return nil
 	}
 	s.rows[key] = row
 	return nil
+}
+
+// Claim models the HRD-132 authoritative dispatch gate: an atomic
+// `INSERT … ON CONFLICT DO NOTHING` reporting whether THIS caller inserted
+// the row (claimed=true → fresh) or it already existed (claimed=false →
+// duplicate). Concurrent-safe under the same mutex the production PK
+// serialises on.
+func (s *fakeEventsProcessedStore) Claim(ctx context.Context, row eventsProcessedRow) (bool, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	key := row.TenantID.String() + "/" + row.IdemKey
+	if _, exists := s.rows[key]; exists {
+		return false, nil // ON CONFLICT DO NOTHING → 0 rows affected
+	}
+	s.rows[key] = row
+	return true, nil
 }
 
 // makeRunCtx is a helper that builds a RunCtx with EventParser already run.

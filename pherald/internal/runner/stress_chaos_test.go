@@ -112,6 +112,8 @@ func (s *concurrentEventsProcessed) Lookup(ctx context.Context, tenantID uuid.UU
 
 // Insert mimics `INSERT ... ON CONFLICT DO NOTHING`: a duplicate (tenant,
 // idem_key) insert is silently ignored (no error), exactly like production.
+// Post-HRD-132 the Stage-2 Claim already wrote the row, so OutcomeRecorder's
+// Stage-7 Insert is an idempotent no-op here.
 func (s *concurrentEventsProcessed) Insert(ctx context.Context, row eventsProcessedRow) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -124,10 +126,78 @@ func (s *concurrentEventsProcessed) Insert(ctx context.Context, row eventsProces
 	return nil
 }
 
+// Claim models the HRD-132 authoritative dispatch gate: atomic
+// `INSERT … ON CONFLICT DO NOTHING` returning whether THIS caller inserted
+// the row (claimed=true). The mutex serialises concurrent claims exactly
+// as the PG PRIMARY KEY(tenant_id, idempotency_key) does in production, so
+// EXACTLY ONE concurrent caller per key observes claimed=true.
+func (s *concurrentEventsProcessed) Claim(ctx context.Context, row eventsProcessedRow) (bool, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	key := row.TenantID.String() + "/" + row.IdemKey
+	if _, exists := s.rows[key]; exists {
+		return false, nil // already claimed → 0 rows affected → duplicate
+	}
+	s.rows[key] = row
+	atomic.AddInt64(&s.firstInserts, 1)
+	return true, nil
+}
+
 func (s *concurrentEventsProcessed) RowCount() int {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return len(s.rows)
+}
+
+// receiptCachingEventsProcessed models the PLANNED Wave-4+ events_processed
+// store that DOES cache the full Receipt (unlike production today, which
+// returns Receipt=nil). Its Lookup returns the SAME shared *Receipt pointer to
+// every concurrent same-key replay — the exact precondition for the
+// runner.go:132 CachedRcpt.WasReplay data race. The Runner's replay
+// short-circuit MUST NOT mutate this shared pointer in place (HRD-132 race
+// fix returns a COPY). This store is used by the dedicated race-fix test below
+// so the race fix is proven load-bearing INDEPENDENTLY of the claim change.
+type receiptCachingEventsProcessed struct {
+	mu     sync.Mutex
+	rows   map[string]eventsProcessedRow
+	shared *Receipt // the one cached Receipt handed to every replay (shared)
+}
+
+func newReceiptCachingEventsProcessed(shared *Receipt) *receiptCachingEventsProcessed {
+	return &receiptCachingEventsProcessed{rows: map[string]eventsProcessedRow{}, shared: shared}
+}
+
+func (s *receiptCachingEventsProcessed) Lookup(ctx context.Context, tenantID uuid.UUID, idemKey string) (*eventsProcessedRow, bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	r, ok := s.rows[tenantID.String()+"/"+idemKey]
+	if !ok {
+		return nil, false
+	}
+	// Hand back the SHARED Receipt pointer (Wave-4+ caching semantics).
+	r.Receipt = s.shared
+	return &r, true
+}
+
+func (s *receiptCachingEventsProcessed) Claim(ctx context.Context, row eventsProcessedRow) (bool, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	key := row.TenantID.String() + "/" + row.IdemKey
+	if _, exists := s.rows[key]; exists {
+		return false, nil
+	}
+	s.rows[key] = row
+	return true, nil
+}
+
+func (s *receiptCachingEventsProcessed) Insert(ctx context.Context, row eventsProcessedRow) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	key := row.TenantID.String() + "/" + row.IdemKey
+	if _, exists := s.rows[key]; !exists {
+		s.rows[key] = row
+	}
+	return nil
 }
 
 // countingChannel is a concurrent-safe commons.Channel that counts Send calls
@@ -263,18 +333,17 @@ func qaSurface(t *testing.T, surface string) (*stresschaos.SurfaceDir, bool) {
 //     1 row for the shared key + 1 per fresh key (PG UNIQUE + ON CONFLICT DO
 //     NOTHING). This is the load-bearing replay-prevention invariant.
 //   - each FRESH key dispatches exactly once (no contention on unique keys).
-//   - the shared key dispatches a BOUNDED number of times (>=1, <=workers).
+//   - the shared key dispatches EXACTLY once (HRD-132 claim-before-dispatch).
 //
-// FINDING (HRD-132, see report): the shared key is NOT guaranteed to dispatch
-// EXACTLY once under concurrent replay. The events_processed archive row is
-// written at the END of the pipeline (OutcomeRecorder, Stage 7), so the window
-// between "Redis SETNX wins / fresh verdict" (Stage 2) and "archive row
-// committed" (Stage 7) lets concurrent replays that arrive in that window all
-// pass the idempotency check and dispatch. SETNX makes ONE goroutine take the
-// fresh fast-path, but the LOSERS fall through to a PG Lookup that has not yet
-// been populated → they too are judged fresh → they too dispatch. Asserting
-// "shared_sends == 1" here would be a §107 PASS-bluff: the code does not
-// deliver it. The honest, code-true bound is recorded instead.
+// HRD-132 (FIXED): the shared key now dispatches EXACTLY once under concurrent
+// replay. The events_processed CLAIM (atomic INSERT … ON CONFLICT DO NOTHING)
+// moved to Stage 2 is the authoritative dispatch gate: the PG PRIMARY KEY
+// serialises the concurrent claims so exactly one goroutine wins (claimed=true
+// → dispatch) and every replay loses (claimed=false → short-circuit duplicate,
+// no dispatch). Before the fix the archive row landed at Stage 7, so the
+// Stage-2→Stage-7 window admitted a bounded handful of concurrent dispatches;
+// asserting shared_sends==1 then would have been a §107 PASS-bluff. It is now
+// a code-true assertion.
 func TestRunner_Stress_ConcurrentReplay_ExactlyOnce(t *testing.T) {
 	const (
 		workers       = 16
@@ -320,14 +389,12 @@ func TestRunner_Stress_ConcurrentReplay_ExactlyOnce(t *testing.T) {
 	if got := pg.RowCount(); got != wantRows {
 		t.Errorf("events_processed rows = %d, want %d (1 shared + %d fresh) — archival exactly-once broken", got, wantRows, totalFresh)
 	}
-	// Shared-key dispatch is bounded by the concurrent window, NOT exactly-once
-	// (see FINDING / HRD-132). Must be >=1 and never the full replay count.
+	// Shared-key dispatch is EXACTLY-ONCE (HRD-132 claim-before-dispatch): the
+	// shared key is replayed workers*iterPerWorker times concurrently, yet the
+	// Stage-2 atomic claim grants dispatch to exactly one caller.
 	sharedSends := ch.SendsForKey(sharedKey)
-	if sharedSends < 1 {
-		t.Errorf("shared-key channel sends = %d, want >= 1 (at least one dispatch)", sharedSends)
-	}
-	if sharedSends > workers {
-		t.Errorf("shared-key channel sends = %d exceeds the race-window bound (workers=%d) — idempotency not engaging", sharedSends, workers)
+	if sharedSends != 1 {
+		t.Errorf("shared-key channel sends = %d, want EXACTLY 1 (HRD-132 dispatch exactly-once under concurrent replay)", sharedSends)
 	}
 	// Total sends = sharedSends (bounded) + totalFresh (exactly one each).
 	wantTotalSends := sharedSends + totalFresh
@@ -350,27 +417,29 @@ func TestRunner_Stress_ConcurrentReplay_ExactlyOnce(t *testing.T) {
 	exactlyOnce := fmt.Sprintf(
 		"surface=runner scenario=stress_concurrent_replay redis=live(atomic SETNX)\n"+
 			"workers=%d iterations_per_worker=%d total_runs=%d\n"+
-			"shared_key=%q shared_key_sends=%d (bounded: >=1, <=workers=%d)\n"+
+			"shared_key=%q shared_key_sends=%d want=1 (DISPATCH exactly-once: PASS)\n"+
 			"fresh_keys=%d fresh_key_errors=%d\n"+
 			"events_processed_rows=%d want=%d (ARCHIVAL exactly-once: PASS)\n"+
 			"total_channel_sends=%d (shared %d + fresh %d)\n"+
 			"evidence_rows=%d (==sends)\n"+
 			"archival_exactly_once=1\n"+ // anchor grepped by E83
+			"dispatch_exactly_once=1\n"+ // HRD-132 stronger-guarantee anchor
 			"race_detector=clean\n"+
-			"FINDING=HRD-132 dispatch-exactly-once NOT guaranteed under concurrent replay;\n"+
-			"  events_processed archive row is written at Stage 7 (end of pipeline), so the\n"+
-			"  SETNX-win .. archive-commit window admits concurrent duplicate dispatch.\n"+
-			"  Archival (events_processed) IS exactly-once. See report.\n"+
+			"HRD-132=FIXED claim-before-dispatch — events_processed CLAIM moved to Stage 2\n"+
+			"  (atomic INSERT … ON CONFLICT DO NOTHING is the authoritative dispatch gate);\n"+
+			"  the PG PRIMARY KEY serialises concurrent claims so exactly one caller wins and\n"+
+			"  dispatches, every replay loses and short-circuits. Both archival AND dispatch\n"+
+			"  are now exactly-once. See report.\n"+
 			"p50_ms=%.4f p95_ms=%.4f p99_ms=%.4f max_ms=%.4f count=%d errors=%d\n",
-		workers, iterPerWorker, 2*totalFresh, sharedKey, sharedSends, workers,
+		workers, iterPerWorker, 2*totalFresh, sharedKey, sharedSends,
 		totalFresh, freshErrs, pg.RowCount(), wantRows,
 		ch.TotalSends(), sharedSends, totalFresh, evid.Count(),
 		sum.Latency.P50MS, sum.Latency.P95MS, sum.Latency.P99MS, sum.Latency.MaxMS, sum.Count, sum.Errors)
 	if _, err := sd.WriteFile("exactly_once.txt", exactlyOnce); err != nil {
 		t.Fatalf("write exactly_once.txt: %v", err)
 	}
-	t.Logf("stress[live-redis] shared_sends=%d (bound<=%d) archive_rows=%d p50=%.3fms p95=%.3fms p99=%.3fms max=%.3fms count=%d errors=%d (persistent=%v dir=%s)",
-		sharedSends, workers, pg.RowCount(),
+	t.Logf("stress[live-redis] shared_sends=%d (exactly-once) archive_rows=%d p50=%.3fms p95=%.3fms p99=%.3fms max=%.3fms count=%d errors=%d (persistent=%v dir=%s)",
+		sharedSends, pg.RowCount(),
 		sum.Latency.P50MS, sum.Latency.P95MS, sum.Latency.P99MS, sum.Latency.MaxMS, sum.Count, sum.Errors, persistent, filepath.Dir(jsonPath))
 }
 
@@ -387,6 +456,92 @@ func firstErrors(sum stresschaos.LoadSummary, n int) []stresschaos.LoadResult {
 	return out
 }
 
+// TestRunner_Race_SharedCachedReceiptReplay_NoDataRace is the dedicated,
+// claim-independent proof that the HRD-132 latent data race (runner.go:132
+// CachedRcpt.WasReplay mutating a SHARED *Receipt) is FIXED. It uses a store
+// that models the PLANNED Wave-4+ Receipt-caching behaviour: Lookup hands the
+// SAME *Receipt pointer back to every concurrent same-key replay. Under the
+// pre-fix code the replay short-circuit mutated that shared pointer in place,
+// which `-race` flags as a write/read data race; the fix returns a COPY with
+// WasReplay flipped, so the shared original is never written.
+//
+// N=32 workers each replay the same key M=40 times (1280 concurrent replays of
+// one cached Receipt). The assertion: every returned replay receipt has
+// WasReplay=true (the copy carries the flag) AND the run is `-race` clean. A
+// failing -race run here is the load-bearing signal the fix prevents.
+func TestRunner_Race_SharedCachedReceiptReplay_NoDataRace(t *testing.T) {
+	const (
+		workers       = 32
+		iterPerWorker = 40
+	)
+	tenantID := mustParse("eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee")
+	const sharedKey = "RACE-SHARED-RECEIPT-KEY"
+
+	// The single shared Receipt every concurrent replay will observe.
+	shared := &Receipt{EventID: "evt-orig", IdempotencyKey: sharedKey, Recipients: 1}
+	pg := newReceiptCachingEventsProcessed(shared)
+	evid := &concurrentEvidence{}
+	ch := newCountingChannel("null")
+	subs := newFakeSubscribersStore()
+	subs.Add(tenantID, subscriberRow{
+		ID:      uuid.New(),
+		Handle:  "carol",
+		Aliases: []subscriberAliasRow{{Channel: "null", ChannelUserID: "sandbox-carol"}},
+	})
+	r := &Runner{
+		parser:  &EventParser{},
+		idem:    &IdempotencyChecker{Redis: newAtomicRedis(), PG: pg, TTL: 24 * time.Hour},
+		tenant:  &TenantResolver{},
+		policy:  &PolicyGate{Registry: constitution.NewRegistry()},
+		subs:    &SubscriberResolver{Subscribers: subs},
+		chans:   &ChannelDispatcher{Channels: map[commons.ChannelID]commons.Channel{commons.ChannelNull: ch}},
+		outcome: &OutcomeRecorder{Evidence: evid, EventsProcessed: pg},
+	}
+	claims := map[string]any{"tenant": tenantID.String()}
+
+	var replayCount, freshCount, badReplay int64
+	sum := stresschaos.RunLoad(workers, iterPerWorker, func(workerID, iter int) error {
+		rcpt, err := r.Run(context.Background(),
+			eventBody(t, fmt.Sprintf("evt-race-%d-%d", workerID, iter), sharedKey), claims)
+		if err != nil {
+			return fmt.Errorf("race replay run: %w", err)
+		}
+		if rcpt == nil {
+			atomic.AddInt64(&badReplay, 1)
+			return fmt.Errorf("nil receipt")
+		}
+		if rcpt.WasReplay {
+			atomic.AddInt64(&replayCount, 1)
+		} else {
+			atomic.AddInt64(&freshCount, 1)
+		}
+		return nil
+	})
+
+	if sum.Errors != 0 {
+		t.Fatalf("shared-cached-receipt race flood reported %d errors (want 0): %+v", sum.Errors, firstErrors(sum, 3))
+	}
+	if badReplay != 0 {
+		t.Fatalf("shared-cached-receipt race flood: %d nil/bad receipts", badReplay)
+	}
+	// Exactly one fresh dispatch (the claim winner); the rest are replays that
+	// observed the shared cached Receipt and returned a WasReplay=true COPY.
+	if freshCount != 1 {
+		t.Errorf("fresh dispatches = %d, want EXACTLY 1 (claim winner)", freshCount)
+	}
+	if got := ch.SendsForKey(sharedKey); got != 1 {
+		t.Errorf("channel sends = %d, want EXACTLY 1 (dispatch exactly-once)", got)
+	}
+	// CRITICAL: the shared original Receipt MUST NOT have been mutated. The
+	// pre-fix in-place mutation would have flipped shared.WasReplay (and raced);
+	// the fix copies, leaving the original untouched.
+	if shared.WasReplay {
+		t.Errorf("shared cached Receipt.WasReplay was mutated to true — replay path mutated the SHARED pointer (HRD-132 race not fixed)")
+	}
+	t.Logf("race[shared-cached-receipt]: %d concurrent replays (workers=%d) → fresh=%d replay=%d sends=%d, -race clean, shared.WasReplay=%v (want false)",
+		sum.Count, workers, freshCount, replayCount, ch.SendsForKey(sharedKey), shared.WasReplay)
+}
+
 // ----------------------------------------------------------------------
 // CHAOS (a): duplicate-event flood — 1000× same key, 50 parallel
 // (production-NORMAL: live Redis SETNX → exactly-once dispatch under flood).
@@ -394,18 +549,17 @@ func firstErrors(sum stresschaos.LoadSummary, n int) []stresschaos.LoadResult {
 
 // TestRunner_Chaos_DuplicateFlood floods the pipeline with 1000 copies of the
 // SAME idempotency key across 50 parallel workers (live Redis SETNX gate) and
-// asserts the once-only-side-effect property the Runner ACTUALLY delivers:
+// asserts the once-only-side-effect property the Runner now delivers post-HRD-132:
 //
 //   - ARCHIVAL is exactly-once: exactly 1 events_processed row survives the
 //     1000× flood (PG UNIQUE + ON CONFLICT DO NOTHING) — load-bearing.
-//   - DISPATCH is bounded by the concurrent window (>=1, <=workers), never the
-//     full 1000. (See FINDING / HRD-132 — dispatch exactly-once is not
-//     guaranteed because the archive row lands at Stage 7.)
-//
-// Asserting "exactly 1 send" would be a §107 PASS-bluff: the code does not
-// deliver it. The bounded assertion is the honest, code-true contract and is
-// still load-bearing — it proves the idempotency check collapses 1000 events
-// down to a small handful of dispatches, not 1000.
+//   - DISPATCH is EXACTLY-ONCE: the 1000× flood collapses to exactly 1 send.
+//     The HRD-132 claim-before-dispatch fix makes the Stage-2 events_processed
+//     CLAIM (atomic INSERT … ON CONFLICT DO NOTHING) the authoritative dispatch
+//     gate — exactly one concurrent caller wins the claim and dispatches; every
+//     loser short-circuits as a duplicate BEFORE Stage 6. This is the stronger
+//     assertion HRD-125 deliberately could NOT make (the §107 PASS-bluff it
+//     refused to encode) before the fix landed.
 func TestRunner_Chaos_DuplicateFlood(t *testing.T) {
 	const (
 		workers = 50
@@ -434,13 +588,14 @@ func TestRunner_Chaos_DuplicateFlood(t *testing.T) {
 	if got := pg.RowCount(); got != 1 {
 		t.Errorf("duplicate flood: events_processed rows = %d, want exactly 1 (archival exactly-once)", got)
 	}
-	// DISPATCH bounded by the concurrent window.
+	// DISPATCH EXACTLY-ONCE (HRD-132 claim-before-dispatch). The 1000× flood
+	// MUST collapse to exactly 1 send — the Stage-2 atomic claim is the
+	// authoritative gate, so exactly one caller dispatches and all 999 losers
+	// short-circuit as duplicates. This is the assertion HRD-125 refused to
+	// make as a §107 PASS-bluff before the fix.
 	sends := ch.SendsForKey(floodKey)
-	if sends < 1 {
-		t.Errorf("duplicate flood: channel sends = %d, want >= 1", sends)
-	}
-	if sends > workers {
-		t.Errorf("duplicate flood: channel sends = %d exceeds race-window bound (workers=%d) — 1000× flood was NOT collapsed", sends, workers)
+	if sends != 1 {
+		t.Errorf("duplicate flood: channel sends = %d, want EXACTLY 1 (HRD-132 dispatch exactly-once under 1000× flood)", sends)
 	}
 	// Evidence rows track sends 1:1.
 	if got := evid.Count(); got != sends {
@@ -452,18 +607,19 @@ func TestRunner_Chaos_DuplicateFlood(t *testing.T) {
 		"surface=runner scenario=chaos_duplicate_flood redis=live(atomic SETNX)\n"+
 			"flood_total=%d parallel_workers=%d key=%q\n"+
 			"events_processed_rows=%d want=1 (ARCHIVAL exactly-once: PASS)\n"+
-			"channel_sends=%d (bounded: >=1, <=workers=%d; collapsed from %d)\n"+
+			"channel_sends=%d want=1 (DISPATCH exactly-once: PASS; collapsed from %d)\n"+
 			"evidence_rows=%d (==sends)\n"+
 			"archival_exactly_once=1\n"+ // anchor grepped by E83
-			"FINDING=HRD-132 dispatch-exactly-once NOT guaranteed (Stage-7 archive window)\n"+
+			"dispatch_exactly_once=1\n"+ // HRD-132 stronger-guarantee anchor
+			"HRD-132=FIXED claim-before-dispatch (Stage-2 atomic INSERT ON CONFLICT DO NOTHING gate)\n"+
 			"p99_ms=%.4f max_ms=%.4f count=%d\n",
-		total, workers, floodKey, pg.RowCount(), sends, workers, total, evid.Count(),
+		total, workers, floodKey, pg.RowCount(), sends, total, evid.Count(),
 		sum.Latency.P99MS, sum.Latency.MaxMS, sum.Count)
 	if _, err := sd.WriteFile("duplicate_flood.txt", floodTxt); err != nil {
 		t.Fatalf("write duplicate_flood.txt: %v", err)
 	}
-	t.Logf("duplicate flood[live-redis]: %d events collapsed → %d send(s) (bound<=%d), %d archive row(s), p99=%.3fms",
-		total, sends, workers, pg.RowCount(), sum.Latency.P99MS)
+	t.Logf("duplicate flood[live-redis]: %d events collapsed → %d send(s) (exactly-once), %d archive row(s), p99=%.3fms",
+		total, sends, pg.RowCount(), sum.Latency.P99MS)
 }
 
 // ----------------------------------------------------------------------
@@ -478,12 +634,13 @@ func TestRunner_Chaos_DuplicateFlood(t *testing.T) {
 // design explicitly tolerates a NARROW race window in which two concurrent
 // fresh events both miss the not-yet-committed archive row and BOTH dispatch.
 //
-// The load-bearing guarantee that MUST hold even in the degrade is: PG
+// HRD-132 strengthens the degrade contract: with the events_processed CLAIM
+// moved to Stage 2 (atomic INSERT … ON CONFLICT DO NOTHING), the PG claim is
+// the authoritative dispatch gate REGARDLESS of Redis. So even with no Redis
+// fast-path, exactly one concurrent caller wins the PG claim and dispatches —
+// dispatch is now EXACTLY-once in the degrade too, not merely bounded. PG
 // `ON CONFLICT DO NOTHING` keeps archival exactly-once (exactly 1
-// events_processed row), and dispatch is bounded (≥1 send, and in practice a
-// small handful within the race window — never the full 1000). This is the
-// honest contract; asserting "exactly 1 send" here would be a §107 PASS-bluff
-// because the degrade path does not promise it.
+// events_processed row). This is the honest, code-true contract post-fix.
 func TestRunner_Chaos_DuplicateFlood_NilRedisDegrade(t *testing.T) {
 	const (
 		workers = 50
@@ -509,15 +666,14 @@ func TestRunner_Chaos_DuplicateFlood_NilRedisDegrade(t *testing.T) {
 	if got := pg.RowCount(); got != 1 {
 		t.Errorf("nil-Redis degrade: events_processed rows = %d, want exactly 1 (ON CONFLICT DO NOTHING)", got)
 	}
+	// DISPATCH EXACTLY-ONCE even in the nil-Redis degrade (HRD-132): the PG
+	// claim is the authoritative gate, so the 1000× flood collapses to 1 send
+	// regardless of the missing Redis fast-path.
 	sends := ch.SendsForKey(floodKey)
-	if sends < 1 {
-		t.Errorf("nil-Redis degrade: channel sends = %d, want >= 1 (at least one dispatch)", sends)
+	if sends != 1 {
+		t.Errorf("nil-Redis degrade: channel sends = %d, want EXACTLY 1 (HRD-132 PG-claim dispatch exactly-once even without Redis)", sends)
 	}
-	if sends > workers {
-		t.Errorf("nil-Redis degrade: channel sends = %d exceeds the race-window bound (workers=%d) — fallback dedup is not engaging at all", sends, workers)
-	}
-	// Evidence rows track sends 1:1 in this path (each dispatching goroutine
-	// writes its own evidence before the archive ON CONFLICT no-ops).
+	// Evidence rows track sends 1:1 in this path.
 	if got := evid.Count(); got != sends {
 		t.Errorf("nil-Redis degrade: evidence rows = %d, want == sends (%d)", got, sends)
 	}
@@ -525,23 +681,25 @@ func TestRunner_Chaos_DuplicateFlood_NilRedisDegrade(t *testing.T) {
 	sd, _ := qaSurface(t, "runner")
 	degradeTxt := fmt.Sprintf(
 		"surface=runner scenario=chaos_duplicate_flood_nil_redis_degrade redis=ABSENT(nil client)\n"+
-			"contract=Redis-lies-PG-truths (Wave 3 §4): PG fallback dedup, race-window double-send TOLERATED\n"+
+			"contract=Redis-lies-PG-truths (Wave 3 §4) + HRD-132 PG-claim dispatch gate\n"+
 			"flood_total=%d parallel_workers=%d key=%q\n"+
 			"events_processed_rows=%d want=1 (archival exactly-once via ON CONFLICT DO NOTHING)\n"+
-			"channel_sends=%d (>=1, <=workers=%d — bounded by race window, NOT %d)\n"+
+			"channel_sends=%d want=1 (DISPATCH exactly-once via Stage-2 PG claim; collapsed from %d)\n"+
 			"evidence_rows=%d (==sends)\n"+
+			"archival_exactly_once=1\n"+
+			"dispatch_exactly_once=1\n"+ // HRD-132 stronger-guarantee anchor (degrade path)
 			"p99_ms=%.4f max_ms=%.4f count=%d\n"+
-			"NOTE: dispatch exactly-once is NOT guaranteed in EITHER posture (live Redis or\n"+
-			"  nil-Redis) — see HRD-132. The events_processed archival row IS exactly-once in\n"+
-			"  both. Live Redis (TestRunner_Chaos_DuplicateFlood) tightens the dispatch race\n"+
-			"  window but does not close it, because the archive row lands at Stage 7.\n",
-		total, workers, floodKey, pg.RowCount(), sends, workers, total, evid.Count(),
+			"NOTE: HRD-132 FIXED — dispatch exactly-once now holds in BOTH postures (live\n"+
+			"  Redis AND nil-Redis degrade) because the Stage-2 events_processed CLAIM (atomic\n"+
+			"  INSERT … ON CONFLICT DO NOTHING) is the authoritative dispatch gate; the PG\n"+
+			"  PRIMARY KEY serialises concurrent claims independent of Redis.\n",
+		total, workers, floodKey, pg.RowCount(), sends, total, evid.Count(),
 		sum.Latency.P99MS, sum.Latency.MaxMS, sum.Count)
 	if _, err := sd.WriteFile("nil_redis_degrade.txt", degradeTxt); err != nil {
 		t.Fatalf("write nil_redis_degrade.txt: %v", err)
 	}
-	t.Logf("duplicate flood[nil-redis degrade]: %d events → %d send(s) (race-window bounded by %d workers), %d archive row(s)",
-		total, sends, workers, pg.RowCount())
+	t.Logf("duplicate flood[nil-redis degrade]: %d events → %d send(s) (exactly-once via PG claim), %d archive row(s)",
+		total, sends, pg.RowCount())
 }
 
 // ----------------------------------------------------------------------
@@ -559,6 +717,14 @@ type faultyEventsProcessed struct {
 
 func (s *faultyEventsProcessed) Lookup(ctx context.Context, tenantID uuid.UUID, idemKey string) (*eventsProcessedRow, bool) {
 	return nil, false
+}
+
+// Claim always succeeds (claimed=true) so the pipeline proceeds to dispatch
+// and reaches the Stage-7 OutcomeRecorder.Insert where the scripted deadlock
+// fires — faithfully modelling a deadlock on the Stage-7 archive write
+// (NOT on the Stage-2 claim), preserving this test's original intent.
+func (s *faultyEventsProcessed) Claim(ctx context.Context, row eventsProcessedRow) (bool, error) {
+	return true, nil
 }
 func (s *faultyEventsProcessed) Insert(ctx context.Context, row eventsProcessedRow) error {
 	if atomic.AddInt64(&s.calls, 1) == s.failAt {

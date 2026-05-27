@@ -1,13 +1,13 @@
 {
   "count": 640,
-  "elapsed_ms": 18.175,
+  "elapsed_ms": 21.29,
   "errors": 0,
   "iterations_each": 40,
-  "max_ms": 3.228,
-  "min_ms": 0.119,
-  "p50_ms": 0.252,
-  "p95_ms": 1.075,
-  "p99_ms": 2.966,
-  "throughput_per_sec": 35212.07545309551,
+  "max_ms": 3.663,
+  "min_ms": 0.087,
+  "p50_ms": 0.314,
+  "p95_ms": 1.44,
+  "p99_ms": 2.562,
+  "throughput_per_sec": 30060.061882394893,
   "workers": 16
 }

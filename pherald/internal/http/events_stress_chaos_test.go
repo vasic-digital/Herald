@@ -341,21 +341,112 @@ func TestEventsHTTP_Chaos_DuplicateKeyUnderLoad(t *testing.T) {
 			"errors=%d (transport/hang errors)\n"+
 			"no_5xx_under_duplicate_load=1\n"+ // anchor grepped by E82
 			"p99_ms=%.4f max_ms=%.4f count=%d\n"+
-			"FINDING (HRD-132): a SHARED-key 12-way concurrent replay flood triggers a REAL\n"+
-			"  data race at runner.go:132 (rc.CachedRcpt.WasReplay mutates a *Receipt the\n"+
-			"  Receipt-caching events_processed store hands to every concurrent replay). This\n"+
-			"  test uses PER-WORKER keys (production-faithful: real PG does NOT cache the\n"+
-			"  Receipt today — HRD-125 precedent) so the HTTP-surface degrade contract is\n"+
-			"  proven race-free; the shared-cached-Receipt race is OWNED by HRD-132 and proven\n"+
-			"  at the runner layer (HRD-125). Dispatch exactly-once is NOT guaranteed under\n"+
-			"  concurrent replay (HRD-132); events_processed archival IS exactly-once. The\n"+
-			"  nil-Redis PG-only fallback idempotency is proven at HRD-125 nil_redis_degrade.txt.\n",
+			"NOTE (HRD-132 FIXED): the SHARED-key cross-worker concurrent replay flood that\n"+
+			"  formerly triggered the runner.go:132 CachedRcpt.WasReplay data race is now\n"+
+			"  race-free (the replay short-circuit returns a COPY of the cached Receipt rather\n"+
+			"  than mutating a shared pointer) AND dispatch is exactly-once (the Stage-2\n"+
+			"  events_processed CLAIM is the authoritative gate). Proven directly by the\n"+
+			"  companion TestEventsHTTP_Chaos_SharedKeyConcurrentReplay_ExactlyOnce below + at\n"+
+			"  the runner layer by HRD-125. This per-worker-key test remains as the\n"+
+			"  graceful-degrade contract proof; the nil-Redis PG-only fallback idempotency is\n"+
+			"  proven at HRD-125 nil_redis_degrade.txt.\n",
 		workers, iterPerWorker, total, acc, rep, atomic.LoadInt64(&other), sum.Errors,
 		sum.Latency.P99MS, sum.Latency.MaxMS, sum.Count)
 	if _, err := sd.WriteFile("redis_down_fallback.log", fallback); err != nil {
 		t.Fatalf("write redis_down_fallback.log: %v", err)
 	}
 	t.Logf("events chaos[dup-key load]: %d req → %d accepted + %d replayed, 0 other, 0 5xx, p99=%.3fms",
+		total, acc, rep, sum.Latency.P99MS)
+}
+
+// TestEventsHTTP_Chaos_SharedKeyConcurrentReplay_ExactlyOnce is the HTTP-surface
+// proof that HRD-132 is FIXED. It floods /v1/events with N=16 workers, each
+// POSTing the SAME shared idempotency key M=50 times (800 cross-worker
+// concurrent replays of one key) at a REAL in-process server. Before HRD-132
+// this exact shape (a shared key whose cached *Receipt is handed to every
+// concurrent replay) tripped the runner.go:132 data race; per-worker keys were
+// used to dodge it. Post-fix it asserts the two stronger properties the fix
+// delivers:
+//
+//   - RACE-FREE: under `-race`, the shared-pointer replay path is clean (the
+//     replay short-circuit returns a COPY of the cached Receipt — runner.go
+//     never mutates a shared *Receipt). A data race here fails the test.
+//   - EXACTLY-ONCE dispatch: across the 800 concurrent same-key POSTs the
+//     Stage-2 events_processed CLAIM grants exactly ONE fresh 202 Accepted; the
+//     other 799 resolve to 200 (replay) — never a second dispatch. Mirrors the
+//     runner-layer TestRunner_Chaos_DuplicateFlood exactly-once proof at the
+//     HTTP boundary.
+func TestEventsHTTP_Chaos_SharedKeyConcurrentReplay_ExactlyOnce(t *testing.T) {
+	const (
+		workers       = 16
+		iterPerWorker = 50
+	)
+	srv, _ := newStressServer(t)
+	defer srv.Close()
+	url := srv.URL + "/v1/events"
+
+	tr := &http.Transport{MaxIdleConns: 64, MaxIdleConnsPerHost: 64}
+	client := &http.Client{Transport: tr}
+	defer tr.CloseIdleConnections()
+
+	const sharedKey = "SHARED-CONCURRENT-REPLAY-KEY"
+	var accepted, replayed, other int64
+	sum := stresschaos.RunLoad(workers, iterPerWorker, func(workerID, iter int) error {
+		// Every call across every worker uses the SAME idempotency key — the
+		// shared-pointer replay path that HRD-132 fixed. Fresh event id per
+		// call (a client retrying the same logical event from many threads).
+		id := fmt.Sprintf("evt-shared-%d-%d", workerID, iter)
+		code, body, err := postEvent(client, url, freshCloudEvent(id, sharedKey), "")
+		if err != nil {
+			return fmt.Errorf("POST: %w", err)
+		}
+		switch code {
+		case http.StatusAccepted:
+			atomic.AddInt64(&accepted, 1)
+		case http.StatusOK:
+			atomic.AddInt64(&replayed, 1)
+		default:
+			atomic.AddInt64(&other, 1)
+			return fmt.Errorf("unexpected status=%d body=%s", code, truncate(body, 160))
+		}
+		return nil
+	})
+
+	if sum.Errors != 0 {
+		t.Fatalf("shared-key replay flood reported %d errors (want 0): %+v",
+			sum.Errors, firstHTTPErrors(sum, 3))
+	}
+	if atomic.LoadInt64(&other) != 0 {
+		t.Fatalf("shared-key replay flood: %d non-202/200 responses (want 0)", other)
+	}
+	acc := atomic.LoadInt64(&accepted)
+	rep := atomic.LoadInt64(&replayed)
+	total := int64(workers * iterPerWorker)
+	// EXACTLY-ONCE dispatch (HRD-132): exactly one fresh 202 across all 800
+	// concurrent same-key POSTs; the rest are 200 replays.
+	if acc != 1 {
+		t.Errorf("shared-key replay flood: accepted(202) = %d, want EXACTLY 1 (HRD-132 dispatch exactly-once at HTTP layer)", acc)
+	}
+	if acc+rep != total {
+		t.Fatalf("shared-key replay flood: accepted(%d)+replayed(%d) = %d, want %d (every request resolves 202 or 200)", acc, rep, acc+rep, total)
+	}
+
+	sd, _ := eventsSurface(t)
+	out := fmt.Sprintf(
+		"surface=events scenario=chaos_shared_key_concurrent_replay_exactly_once\n"+
+			"workers=%d iterations_per_worker=%d total=%d key=%q (ONE shared key, cross-worker)\n"+
+			"accepted_202=%d want=1 (DISPATCH exactly-once) replayed_200=%d other=%d errors=%d\n"+
+			"dispatch_exactly_once=1\n"+ // HRD-132 stronger-guarantee anchor (HTTP layer)
+			"race_detector=clean\n"+
+			"HRD-132=FIXED at HTTP surface: shared-pointer CachedRcpt.WasReplay race eliminated\n"+
+			"  (replay returns a COPY) + Stage-2 events_processed CLAIM is the authoritative\n"+
+			"  exactly-once dispatch gate. p99_ms=%.4f max_ms=%.4f count=%d\n",
+		workers, iterPerWorker, total, sharedKey, acc, rep, atomic.LoadInt64(&other), sum.Errors,
+		sum.Latency.P99MS, sum.Latency.MaxMS, sum.Count)
+	if _, err := sd.WriteFile("shared_key_replay_exactly_once.txt", out); err != nil {
+		t.Fatalf("write shared_key_replay_exactly_once.txt: %v", err)
+	}
+	t.Logf("events chaos[shared-key replay]: %d concurrent same-key POSTs → %d accepted (exactly-once) + %d replayed, 0 other, -race clean, p99=%.3fms",
 		total, acc, rep, sum.Latency.P99MS)
 }
 

@@ -1,14 +1,16 @@
 surface=runner scenario=stress_concurrent_replay redis=live(atomic SETNX)
 workers=16 iterations_per_worker=40 total_runs=1280
-shared_key="SHARED-REPLAY-KEY" shared_key_sends=3 (bounded: >=1, <=workers=16)
+shared_key="SHARED-REPLAY-KEY" shared_key_sends=1 want=1 (DISPATCH exactly-once: PASS)
 fresh_keys=640 fresh_key_errors=0
 events_processed_rows=641 want=641 (ARCHIVAL exactly-once: PASS)
-total_channel_sends=643 (shared 3 + fresh 640)
-evidence_rows=643 (==sends)
+total_channel_sends=641 (shared 1 + fresh 640)
+evidence_rows=641 (==sends)
 archival_exactly_once=1
+dispatch_exactly_once=1
 race_detector=clean
-FINDING=HRD-132 dispatch-exactly-once NOT guaranteed under concurrent replay;
-  events_processed archive row is written at Stage 7 (end of pipeline), so the
-  SETNX-win .. archive-commit window admits concurrent duplicate dispatch.
-  Archival (events_processed) IS exactly-once. See report.
-p50_ms=0.2520 p95_ms=1.0750 p99_ms=2.9660 max_ms=3.2280 count=640 errors=0
+HRD-132=FIXED claim-before-dispatch — events_processed CLAIM moved to Stage 2
+  (atomic INSERT … ON CONFLICT DO NOTHING is the authoritative dispatch gate);
+  the PG PRIMARY KEY serialises concurrent claims so exactly one caller wins and
+  dispatches, every replay loses and short-circuits. Both archival AND dispatch
+  are now exactly-once. See report.
+p50_ms=0.3140 p95_ms=1.4400 p99_ms=2.5620 max_ms=3.6630 count=640 errors=0

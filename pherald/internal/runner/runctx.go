@@ -66,6 +66,11 @@ type RunCtx struct {
 	// Stage 2 outputs:
 	Duplicate  bool
 	CachedRcpt *Receipt
+	// Claimed is true when THIS caller won the atomic events_processed
+	// claim at Stage 2 (HRD-132 claim-before-dispatch). It signals that
+	// the archive row is already durable, so Stage 7 OutcomeRecorder's
+	// archive Insert is an idempotent no-op rather than the first write.
+	Claimed bool
 
 	// Stage 3 outputs:
 	TenantPGCtx context.Context

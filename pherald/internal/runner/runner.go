@@ -117,20 +117,25 @@ func (r *Runner) Run(ctx context.Context, raw []byte, claims map[string]any) (*R
 		return nil, err
 	}
 	if rc.Duplicate {
-		// Replay short-circuit: return the prior Receipt with WasReplay=true.
+		// Replay short-circuit: return a replay Receipt with WasReplay=true.
 		// If CachedRcpt is nil (real-PG path before full Receipt-caching
 		// lands in Wave 4+), synthesise a minimal one so the client still
 		// gets a 200 with WasReplay=true and the event_id echoed.
 		if rc.CachedRcpt == nil {
-			rc.CachedRcpt = &Receipt{
+			return &Receipt{
 				EventID:        rc.Event.ID,
 				IdempotencyKey: rc.IdemKey,
 				WasReplay:      true,
-			}
-			return rc.CachedRcpt, nil
+			}, nil
 		}
-		rc.CachedRcpt.WasReplay = true
-		return rc.CachedRcpt, nil
+		// HRD-132 race fix: the cached *Receipt may be SHARED across
+		// concurrent same-key replays (a store that caches the Receipt
+		// hands the same pointer to every loser of the claim). Mutating
+		// rc.CachedRcpt.WasReplay in place is a data race. Return a COPY
+		// with WasReplay flipped instead of mutating the shared original.
+		replay := *rc.CachedRcpt
+		replay.WasReplay = true
+		return &replay, nil
 	}
 	if err := r.tenant.Process(ctx, rc); err != nil {
 		return nil, err
@@ -263,6 +268,30 @@ func (a pgEventsProcessedAdapter) Insert(ctx context.Context, row eventsProcesse
 		 ON CONFLICT DO NOTHING`,
 		row.TenantID, row.IdemKey, row.EventID, row.FirstSeenAt)
 	return err
+}
+
+// Claim is the HRD-132 authoritative dispatch gate. It performs the SAME
+// `INSERT … ON CONFLICT DO NOTHING` as Insert but inspects the command
+// tag's rows-affected: exactly 1 means THIS caller inserted the row (won
+// the claim → fresh → dispatch); 0 means the (tenant, idempotency_key)
+// PRIMARY KEY already held a row (lost → duplicate). PG serialises
+// concurrent inserts on the PK, so at most one concurrent caller per key
+// sees claimed==true. Used by the Stage-2 IdempotencyChecker; the
+// Stage-7 OutcomeRecorder.Insert (also ON CONFLICT DO NOTHING) is then an
+// idempotent no-op on the row this claim wrote.
+func (a pgEventsProcessedAdapter) Claim(ctx context.Context, row eventsProcessedRow) (bool, error) {
+	if a.pool == nil {
+		return false, fmt.Errorf("pg_events_processed: nil pool (no PG configured)")
+	}
+	tag, err := a.pool.Exec(ctx,
+		`INSERT INTO events_processed(tenant_id, idempotency_key, event_id, first_seen_at)
+		 VALUES($1, $2, $3, $4)
+		 ON CONFLICT DO NOTHING`,
+		row.TenantID, row.IdemKey, row.EventID, row.FirstSeenAt)
+	if err != nil {
+		return false, err
+	}
+	return tag.RowsAffected() == 1, nil
 }
 
 // pgSubscribersAdapter is the real PG-backed implementation of the

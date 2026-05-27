@@ -189,10 +189,29 @@ func (s *testFakeEventsProcessedStore) Insert(ctx context.Context, row eventsPro
 	defer s.mu.Unlock()
 	key := row.TenantID.String() + "/" + row.IdemKey
 	if _, exists := s.rows[key]; exists {
-		return errors.New("runnertest events_processed: duplicate PK")
+		// Post-HRD-132 the Stage-2 Claim already wrote this row; the
+		// Stage-7 archive Insert is an idempotent ON CONFLICT DO NOTHING
+		// no-op (matches production pgEventsProcessedAdapter.Insert).
+		return nil
 	}
 	s.rows[key] = row
 	return nil
+}
+
+// Claim models the HRD-132 authoritative dispatch gate: atomic
+// `INSERT … ON CONFLICT DO NOTHING` returning whether THIS caller inserted
+// the row (claimed=true → fresh) or it already existed (claimed=false →
+// duplicate). The mutex serialises concurrent claims as the PG PRIMARY KEY
+// does in production, so exactly one concurrent caller per key wins.
+func (s *testFakeEventsProcessedStore) Claim(ctx context.Context, row eventsProcessedRow) (bool, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	key := row.TenantID.String() + "/" + row.IdemKey
+	if _, exists := s.rows[key]; exists {
+		return false, nil
+	}
+	s.rows[key] = row
+	return true, nil
 }
 
 type testFakeSubscribersStore struct {
