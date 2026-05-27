@@ -112,7 +112,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>13</td>
+<td>14</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -120,7 +120,7 @@
 </tr>
 <tr>
 <td>Last modified</td>
-<td>2026-05-27</td>
+<td>2026-05-28</td>
 </tr>
 <tr>
 <td>Status</td>
@@ -128,9 +128,47 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>2026-05-27 v1.0.0 Batch A complete checkpoint (HEAD
-<code>854d301</code>; constitution at <code>3c9c4e9</code>). v1.0.0
-readiness workstream (workstream 3) STARTED — plan
+<td><strong>2026-05-28 (day-2) — v1.0.0 Batch B COMPLETE + constitution
+sync + 3 fixes (HEAD <code>74649bb</code>; constitution pulled
+<code>3c9c4e9</code>→<code>15cd4bc</code>). (a) Constitution sync —
+pulled HelixConstitution <code>3c9c4e9</code>→<code>15cd4bc</code>
+(gained §11.4.95 workable-items-DB-tracked-not-gitignored / §11.4.96
+safe-parallel-work-with-long-build catalogue / §11.4.97 max-idle +
+progress-update cadence) and propagated all three into CLAUDE.md r13 /
+AGENTS.md r9 / HERALD_CONSTITUTION.md r7 §108.j-l (commit
+<code>d5b9895</code>); Herald already complied with §11.4.95 (DB
+version-controlled per the 2026-05-27 operator divergence); inheritance
+gate 15 PASS / 0 FAIL. (b) Three real fixes — #194
+<code>audit_stress_chaos_test.go</code> now gates its qaRoot on
+<code>HERALD_STRESS_QA_DIR</code> via <code>t.TempDir()</code> (commit
+<code>a8ad4f7</code>, stops the suite littering <code>docs/qa/</code> on
+every run); <code>commons_constitution/eventbus.go</code>
+<code>PublishedByType</code> data race →
+<code>sync.Map.LoadOrStore</code> (commit <code>f5d1367</code> — a REAL
+<code>-race</code> regression on E3 latent since Batch A, surfaced by
+the Batch-B bindings stress test); E17 e2e SKIP-guard now requires a
+live Postgres (commit <code>75e7a49</code> — E17 was FAILing instead of
+honestly SKIPping when PG is absent). (c) v1.0.0 Batch B COMPLETE — all
+7 §42 flavor constitution bindings (HRD-019..025) landed, wiring each
+flavor to emit through the Batch-A <code>commons_constitution</code>
+Evaluator+audit foundation: HRD-019 cherald (<code>f33b5e4</code>, e2e
+E90 <code>c3e3cff</code>), HRD-020 sherald (<code>5ebad4f</code>, E91
+<code>75e7a49</code>), HRD-021 bherald (<code>46ca77e</code>, E92
+<code>f31615f</code>), HRD-022 rherald (<code>f73195f</code>, E93
+<code>0206f8f</code>), HRD-023/024/025 pherald/iherald/scherald
+(<code>3fb753a</code>, landed in one parallel pass; E94/E95/E96
+<code>74649bb</code>). Each flavor:
+<code>&lt;flavor&gt;/internal/bindings/</code> Pipeline + rule catalogue
++ bespoke PURE detectors, <code>-race -count=3</code> green, §107.x
+evidence under <code>docs/qa/HRD-0XX-*/</code>, §11.4.85 stress (1200
+concurrent → 1200 emits+audit rows). All HRD-019..025 remain
+<strong>in_progress</strong> — mechanism + rules + detectors are done,
+but live operation-interception (the Subjects fed to the detectors) is
+Batch C §43 command bodies. e2e invariants now run through E96 (E89
+Batch-A foundation + E90-E96 Batch B). Prior r13 (still valid
+history):</strong> <strong>2026-05-27 v1.0.0 Batch A complete checkpoint
+(HEAD <code>854d301</code>; constitution at <code>3c9c4e9</code>).
+v1.0.0 readiness workstream (workstream 3) STARTED — plan
 <code>docs/superpowers/plans/2026-05-27-v1.0.0-execution.md</code>
 (<code>9da90ba</code>), 39 HRDs + Wave 7 batched A→E with tag cadence
 v0.5→v1.0.0. Batch A DONE (commits <code>b19cb43</code> +
@@ -257,19 +295,28 @@ closed (HRD-110..114). PENDING-OPERATOR: MTProto real-channel automation
 </tr>
 <tr>
 <td>Issues</td>
-<td>HRD-008, HRD-015, HRD-019..HRD-025, HRD-029..HRD-056, HRD-081,
-HRD-085..HRD-090, HRD-115..HRD-121 (Wave 7 T6-T12 pending), HRD-131
-(SQLite SSoT Phase 1, OPEN-deferred — blocked on constitution binary) —
-<strong>37 open</strong></td>
+<td>HRD-008, HRD-015, HRD-019..HRD-025 (Batch B bindings landed —
+<strong>in_progress</strong>, live-op deferred to Batch C),
+HRD-029..HRD-056, HRD-081, HRD-085..HRD-090, HRD-115..HRD-121 (Wave 7
+T6-T12 pending), HRD-131 (SQLite SSoT Phase 1, OPEN-deferred — blocked
+on constitution binary) — <strong>37 open</strong></td>
 </tr>
 <tr>
 <td>Issues summary</td>
-<td>see <code>Issues.md</code> (r17). v1.0.0 Batch A migrated HRD-018 /
-HRD-026 / HRD-027 Issues→Fixed (40→37 open, §11.4.19 atomic). Wave 7
-closed HRD-110/111/112/113/114; HRD-115..121 are the remaining Wave 7
-tasks T6-T12. HRD-122..HRD-130 (§11.4.85 stress+chaos suite, GAP-3) +
-HRD-132 (Runner idempotency-window bug) MIGRATED to Fixed.md in r16/r15.
-HRD-131 is §11.4.93 SQLite workable-items SSoT migration Phase 1 — now
+<td>see <code>Issues.md</code>. v1.0.0 Batch A migrated HRD-018 /
+HRD-026 / HRD-027 Issues→Fixed (§11.4.19 atomic). v1.0.0 Batch B
+(HRD-019..025, §42 flavor constitution bindings) is
+<strong>in_progress</strong> — each flavor's
+<code>internal/bindings/</code> Pipeline + rule catalogue + PURE
+detectors + emit-through-audit foundation + §107.x evidence + §11.4.85
+stress all landed
+(<code>f33b5e4</code>/<code>5ebad4f</code>/<code>46ca77e</code>/<code>f73195f</code>/<code>3fb753a</code>),
+but live operation-interception (the Subjects the detectors classify) is
+deferred to Batch C §43 command bodies, so these stay open not Fixed.
+Wave 7 closed HRD-110/111/112/113/114; HRD-115..121 are the remaining
+Wave 7 tasks T6-T12. HRD-122..HRD-130 (§11.4.85 stress+chaos suite,
+GAP-3) + HRD-132 (Runner idempotency-window bug) MIGRATED to Fixed.md.
+HRD-131 is §11.4.93 SQLite workable-items SSoT migration Phase 1 —
 <strong>OPEN-deferred</strong> per operator 2026-05-27: Phase 2 adoption
 blocked on the unimplemented + schema-incompatible constitution
 migration binary (assessment <code>36fa90b</code>); a §11.4.74
@@ -288,18 +335,20 @@ HRD-092..HRD-101, HRD-110..HRD-114, HRD-122..HRD-130, HRD-132</td>
 <td>Continuation</td>
 <td><strong>Resume — v1.0.0 readiness (workstream 3) per plan
 <code>docs/superpowers/plans/2026-05-27-v1.0.0-execution.md</code>;
-Batch A DONE, next is Batch B:</strong> <strong>(1) Batch B —
-HRD-019..025, §42 flavor constitution bindings (IMMEDIATE NEXT
-UNIT)</strong> — these depend on the now-complete
-<code>commons_constitution</code> Evaluator + emit + audit write-through
-foundation Batch A just landed; wire each flavor's per-binding
-constitution evaluation + emit + audit + mode-ladder. <strong>(2) Batch
-C — §43 command catalogue HRD-029..056</strong> (the flavor CLI
-subcommand surface). <strong>(3) Batch D — commons_infra HRD-081 +
-HRD-085..090.</strong> <strong>(4) Batch E — Wave 7 T6-T12 Slack adapter
-HRD-115..121</strong> (vendored slack-go submodule — <strong>verify the
-I6 inheritance-gate check after the <code>.gitmodules</code>
-entry</strong>; confirm slack-go v0.16.0 field names
+Batch A + Batch B DONE, next is Batch C:</strong> <strong>(1) Batch C —
+§43 command catalogue HRD-029..056 (IMMEDIATE NEXT UNIT)</strong> — the
+live CLI command bodies that PRODUCE the Subjects the Batch-B detectors
+classify (pherald commit-push, sherald destructive-guard, cherald
+creds-scan, rherald tag-mirror, bherald evidence-capture, etc.), grouped
+into 5 flavor clusters per the v1.0.0 plan. Closing Batch C is what
+flips HRD-019..025 from in_progress→Fixed (their bindings have no live
+Subjects until the command surface lands). <strong>NOTE — the e2e
+invariant counter is at E96; next free is E97+.</strong> <strong>(2)
+Batch D — commons_infra HRD-081 + HRD-085..090.</strong> <strong>(3)
+Batch E — Wave 7 T6-T12 Slack adapter HRD-115..121</strong> (vendored
+slack-go submodule — <strong>verify the I6 inheritance-gate check after
+the <code>.gitmodules</code> entry</strong>; confirm slack-go v0.16.0
+field names
 <code>inner.Files</code>/<code>socketmode.EventTypeEventsAPI</code>/<code>UploadFileV2Parameters</code>;
 then qaherald Slack MessengerClient, spec §11.0/§32.2/§43, e2e, mutation
 gate, Issues→Fixed/v0.6.0/4-mirror push; T5 pre-staged
@@ -332,15 +381,27 @@ engine; Telegram never relays bot-to-bot in groups — see
 <code>docs/research/telegram-bot-to-bot-constraint.md</code>); operator
 should also <code>/revoke @pherald_qa_bot</code> (leaked plaintext
 token). §11.4.90 obsolescence — zero current Obsolete rows; convention
-in place, periodic re-audit pending. (RESOLVED this session: v1.0.0
-Batch A — HRD-018/026/027 closed atomically Issues→Fixed, e2e <strong>81
-PASS / 0 FAIL</strong> (E89 wired), <code>commons_constitution</code>
-audit write-through §107 bluff FIXED + admin mode-flip REST;
-conductor-verified <code>-race -count=3</code> + real-PG + §11.4.85
-stress 512-row no-lost-writes. Earlier this session: GAP-3 §11.4.85
-stress+chaos suite IMPLEMENTED — e2e 78 PASS / 0 FAIL — AND atomically
-migrated Issues→Fixed (HRD-122..130 Completed); HRD-132 Runner
-idempotency-window bug FIXED <code>354b883</code>
+in place, periodic re-audit pending. (RESOLVED this session (2026-05-28
+day-2): v1.0.0 Batch B COMPLETE — all 7 §42 flavor constitution bindings
+HRD-019..025 landed
+(<code>f33b5e4</code>/<code>5ebad4f</code>/<code>46ca77e</code>/<code>f73195f</code>/<code>3fb753a</code>),
+each <code>internal/bindings/</code> Pipeline + rule catalogue + PURE
+detectors + §107.x evidence + §11.4.85 stress 1200-concurrent, e2e
+E90-E96 wired (HRD-019..025 stay in_progress — live-op interception is
+Batch C); constitution pulled <code>3c9c4e9</code>→<code>15cd4bc</code>
++ §11.4.95-97 propagated (<code>d5b9895</code>, gate 15/0); 3 fixes —
+#194 audit-test qaRoot t.TempDir guard (<code>a8ad4f7</code>), eventbus
+<code>PublishedByType</code> data race → LoadOrStore
+(<code>f5d1367</code>, a real E3 -race regression latent since Batch A),
+E17 e2e SKIP-guard now requires live PG (<code>75e7a49</code>). Prior
+r13: v1.0.0 Batch A — HRD-018/026/027 closed atomically Issues→Fixed,
+e2e <strong>81 PASS / 0 FAIL</strong> (E89 wired),
+<code>commons_constitution</code> audit write-through §107 bluff FIXED +
+admin mode-flip REST; conductor-verified <code>-race -count=3</code> +
+real-PG + §11.4.85 stress 512-row no-lost-writes. Earlier: GAP-3
+§11.4.85 stress+chaos suite IMPLEMENTED — e2e 78 PASS / 0 FAIL — AND
+atomically migrated Issues→Fixed (HRD-122..130 Completed); HRD-132
+Runner idempotency-window bug FIXED <code>354b883</code>
 (claim-before-dispatch, exactly-once <code>sends==1</code>) + migrated
 to Fixed.md; constitution §11.4.89-94 propagation + residue scanner;
 HRD-123 flaky oversized-body assertion + E82 stale-anchor anti-bluff
@@ -406,11 +467,16 @@ canonical build info;
 stubbed with HRD-NNN pointers.</li>
 <li><strong>Inheritance gate:</strong> 15 PASS / 0 FAIL. Meta-test
 ✓.</li>
-<li><strong>e2e_bluff_hunt:</strong> 81 PASS / 0 FAIL (was 78; +3 =
-v1.0.0 Batch A E89 constitution audit write-through + mode-flip; prior
-+18 = GAP-3 E81-E88 §11.4.85 stress+chaos + anchor sub-checks). Plus
-SKIP-with-reason for hardware/credential-absent invariants (live OOM,
-MTProto).</li>
+<li><strong>e2e_bluff_hunt:</strong> invariants now run through
+<strong>E96</strong> (E89 Batch-A audit write-through + mode-flip;
+E90-E96 = Batch B flavor-bindings round-trips HRD-019..025; prior
+E81-E88 = GAP-3 §11.4.85 stress+chaos). Full e2e CONFIRMED this session
+= <strong>79 PASS / 0 FAIL</strong> (E1-E96 all green; E94/E95/E96 PASS
+verified post-commit <code>74649bb</code>; E3 -race green after the
+eventbus race fix <code>f5d1367</code>; E17 SKIP-with-reason on absent
+live-PG). Plus SKIP-with-reason for hardware/credential-absent
+invariants (live OOM, MTProto). Next free invariant id is
+<strong>E97+</strong>.</li>
 <li><strong>Stress+chaos mutation gate:</strong>
 <code>tests/test_stress_chaos_mutation_meta.sh</code> (HRD-130) 6 PASS /
 0 FAIL (5 load-bearing mutations).</li>
@@ -519,13 +585,48 @@ constitution's migration binary (0/7 subcommands + schema-incompatible;
 assessment <code>36fa90b</code>).</td>
 </tr>
 <tr>
-<td>Batch B (HRD-019..025)</td>
+<td>HRD-019..025</td>
+<td>in_progress</td>
+<td><strong>v1.0.0 Batch B COMPLETE (bindings)</strong> — all 7 §42
+flavor constitution bindings landed: HRD-019 cherald
+(<code>f33b5e4</code>, E90 <code>c3e3cff</code>), HRD-020 sherald
+(<code>5ebad4f</code>, E91 <code>75e7a49</code>), HRD-021 bherald
+(<code>46ca77e</code>, E92 <code>f31615f</code>), HRD-022 rherald
+(<code>f73195f</code>, E93 <code>0206f8f</code>), HRD-023/024/025
+pherald/iherald/scherald (<code>3fb753a</code>, E94/E95/E96
+<code>74649bb</code>). Each:
+<code>&lt;flavor&gt;/internal/bindings/</code> Pipeline + rule catalogue
++ PURE detectors, emit-through Batch-A audit foundation,
+<code>-race -count=3</code> green, §107.x evidence
+<code>docs/qa/HRD-0XX-*/</code>, §11.4.85 stress 1200-concurrent → 1200
+emits+audit rows. <strong>Stay in_progress</strong> — live
+operation-interception (the Subjects the detectors classify) is Batch C
+§43 command bodies; these flip →Fixed once Batch C lands.</td>
+</tr>
+<tr>
+<td>#194 / eventbus race / E17</td>
+<td>Fixed</td>
+<td>3 day-2 fixes: #194 <code>audit_stress_chaos_test.go</code> qaRoot
+gated on <code>HERALD_STRESS_QA_DIR</code> via <code>t.TempDir()</code>
+(<code>a8ad4f7</code>, stops docs/qa noise);
+<code>commons_constitution/eventbus.go</code>
+<code>PublishedByType</code> data race →
+<code>sync.Map.LoadOrStore</code> (<code>f5d1367</code>, real E3 -race
+regression latent since Batch A); E17 e2e SKIP-guard now requires live
+PG (<code>75e7a49</code>, was FAILing instead of SKIPping when PG
+absent).</td>
+</tr>
+<tr>
+<td>Batch C (HRD-029..056)</td>
 <td>next</td>
-<td>§42 flavor constitution bindings — <strong>IMMEDIATE NEXT
-UNIT</strong>; depends on the now-complete commons_constitution
-Evaluator+emit+audit foundation Batch A landed. Then Batch C (§43
-HRD-029..056), Batch D (commons_infra HRD-081/085..090), Batch E (Wave 7
-T6-T12 Slack HRD-115..121). Plan
+<td><strong>§43 command catalogue — IMMEDIATE NEXT UNIT.</strong> Live
+CLI command bodies that PRODUCE the Subjects the Batch-B detectors
+classify (pherald commit-push, sherald destructive-guard, cherald
+creds-scan, rherald tag-mirror, bherald evidence-capture, …), grouped
+into 5 flavor clusters. Closing Batch C flips HRD-019..025 →Fixed. Next
+free e2e invariant id is <strong>E97+</strong>. Then Batch D
+(commons_infra HRD-081/085..090), Batch E (Wave 7 T6-T12 Slack
+HRD-115..121), then §11.4.93 SQLite (deferred). Plan
 <code>docs/superpowers/plans/2026-05-27-v1.0.0-execution.md</code>.</td>
 </tr>
 </tbody>
