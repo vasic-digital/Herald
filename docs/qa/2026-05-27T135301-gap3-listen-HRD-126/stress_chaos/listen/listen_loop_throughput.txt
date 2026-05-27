@@ -1,0 +1,7 @@
+surface=listen scenario=stress_burst_loop unit=REAL runListen (full pherald listen loop)
+burst_events=400 dispatched=400 replied=400 (==events: nothing dropped)
+elapsed_ms=22.0 throughput_per_sec=18150.2
+clean_shutdown_on_cancel=1 (runListen returned nil within 3s under load)
+goroutines_before=2 goroutines_after=2 leaked=0 slack=8 (no_goroutine_leak=1)
+loop_no_drop_under_burst=1
+race_detector=clean

@@ -1,0 +1,3 @@
+surface=listen scenario=chaos_process_death_restart
+verdict=SKIP-with-reason
+SKIP host-safety/no-runtime: real-binary SIGKILL+restart of `pherald listen` requires operator-supplied Telegram creds (HERALD_TGRAM_BOT_TOKEN/CHAT_ID) + a booted herald-postgres + a built pherald binary (set HERALD_STRESS_LIVE_LISTEN=1 with those present). The once-only-side-effect property is proven hermetically by TestInbound_Chaos_OnceOnlySideEffectUnderFlood (exactly-one durable row under a 1000× redelivery flood).

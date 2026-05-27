@@ -1024,6 +1024,67 @@ no-match — Go <code>testing</code> + <code>-race</code> per CLAUDE.md
 build/test command (2026-05-27).</td>
 </tr>
 <tr>
+<td>HRD-126</td>
+<td>task</td>
+<td>in_progress</td>
+<td>high</td>
+<td>§11.4.85 <code>pherald listen</code> inbound-path stress+chaos tests
+(GAP-3 plan §1 row 4 / §6 T5) — two new test files:
+<code>pherald/internal/inbound/stress_chaos_test.go</code> (in-package
+<code>inbound</code>, so it can exercise the UNEXPORTED
+<code>extractReplyToMessageID</code>) +
+<code>pherald/cmd/pherald/listen_stress_chaos_test.go</code> (drives the
+REAL <code>runListen</code> loop seam). Per §11.4.27 only the channel
+boundary (Subscriber) + CC boundary (<code>CodeDispatcher</code>) are
+faked; the <code>inbound.Dispatcher</code>, its action-routing switch,
+the <code>runListen</code> fan-in orchestration + clean-shutdown path
+run unmodified. STRESS: (1) N=16 workers × 50 = 800 concurrent
+<code>Dispatcher.Handle</code> calls — 0 errors, exactly-once reply per
+event (800/800), goroutine 2→2 (leaked=0),
+p50=0.41ms/p95=1.64ms/p99=2.21ms/max=3.12ms ~25k dispatch/s; (2)
+400-event burst through the full <code>runListen</code> loop — nothing
+dropped, clean shutdown on cancel (&lt;3s, SIGTERM analogue), no leak,
+~18k events/s. CHAOS: (a) table-driven corrupt <code>Raw</code> payloads
+(nil map, missing/nil/string/bool/slice/map <code>message_id</code>) →
+<code>extractReplyToMessageID</code> degrades to (0,err); valid
+int/int64/int32/float64/float32 decode; under a 64-dispatch corrupt-Raw
+flood <code>Dispatcher.Handle</code> is panic-free (recover-guard), 0
+errors, degraded <code>replyTo=""</code> (no bogus quote id) — HERMETIC
+CORE; (b) CC subprocess fault — 6 cases (subprocess-killed
+<code>errors.Is</code>-reachable / truncated / marker-less / empty /
+unknown-action) → stage-tagged <code>inbound:</code> error, NO reply
+leak, no hang (3s watchdog); (c) once-only side-effect — 50 workers × 20
+= 1000 redeliveries of the same <code>issue.open</code> collapse to
+exactly-ONE durable sink row (every redelivery reaches the sink:
+attempts==1000) — the in-process analogue of a crash+restart redelivery
+loop, leaning on the once-only contract HRD-125 proved at the Runner
+layer; the real-binary SIGKILL+restart variant is SKIP-with-reason
+(<code>HERALD_STRESS_LIVE_LISTEN=1</code> needed: operator Telegram
+creds + live PG + built pherald). Verified
+<code>go test -race -count=3</code> deterministically green across ALL 3
+runs on both packages (assertions are value-true: exactly-once reply
+count, exactly-one durable row, tagged-error substrings — not
+timing-sensitive). NO production source edited, NO new
+<code>go.mod</code> dep (<code>commons/stresschaos</code> resolves via
+the existing <code>commons</code> replace chain). Captured evidence
+under
+<code>docs/qa/2026-05-27T135301-gap3-listen-HRD-126/stress_chaos/listen/</code>
+(latency.json, latency_histogram.csv, throughput.txt,
+listen_loop_throughput.txt, malformed_payloads.txt,
+handle_malformed_raw.txt, cc_fault.txt, once_only_side_effect.txt,
+channel_death.txt, process_death_restart.log, hostmem.txt, summary.md).
+Bounded load only (§12/§12.6): N≤50 goroutines, KiB-scale alloc,
+in-process <code>context.CancelFunc</code> only — no host/system process
+signalled, no fork/GB-alloc/host-net-change.</td>
+<td>2026-05-27</td>
+<td>2026-05-27</td>
+<td>GAP-3 plan §1 row 4 + §6 T5; Universal §11.4.85 (inherited per
+§11.4.35) + Herald §108.a / §107.x; depends on HRD-122; cross-refs
+HRD-125 (once-only contract) + HRD-132; Catalogue-Check: no-match — Go
+<code>testing</code> + <code>-race</code> per CLAUDE.md build/test
+command (2026-05-27).</td>
+</tr>
+<tr>
 <td>HRD-132</td>
 <td>bug</td>
 <td>open</td>

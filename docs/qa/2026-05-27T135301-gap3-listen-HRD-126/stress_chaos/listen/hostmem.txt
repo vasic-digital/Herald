@@ -1,0 +1,10 @@
+surface=listen scenario=host_mem_headroom probe=darwin(vm_stat+sysctl hw.memsize)
+captured_at=2026-05-27T08:53:35Z
+total_bytes=19327352832
+available_bytes=5001347072
+used_bytes=14326005760
+used_fraction=0.7412
+section_12_6_ceiling=0.60
+crosses_60pct_ceiling=true(NOTE: ambient host load, NOT test-induced — suite allocs only a few KiB of LoadResult structs + N<=50 goroutines)
+test_induced_allocation=bounded (RunLoad allocates workers*iter LoadResult structs; N<=50 goroutines; no GB-alloc/fork-bomb)
+host_mem_probe_available=1

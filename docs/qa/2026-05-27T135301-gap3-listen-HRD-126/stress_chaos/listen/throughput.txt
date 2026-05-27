@@ -1,0 +1,8 @@
+surface=listen scenario=stress_concurrent_dispatch unit=inbound.Dispatcher.Handle
+workers=16 iterations_per_worker=50 total_events=800
+handle_errors=0 reply_total=800 (==total_events: exactly-once reply)
+goroutines_before=2 goroutines_after=2 leaked=0 slack=8 (no_goroutine_leak=1)
+throughput_per_sec=24960.6 elapsed_ms=32.0
+p50_ms=0.4050 p95_ms=1.6410 p99_ms=2.2140 max_ms=3.1180 min_ms=0.0740 count=800
+exactly_once_reply=1
+race_detector=clean

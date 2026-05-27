@@ -1,0 +1,7 @@
+surface=listen scenario=chaos_handle_malformed_raw unit=REAL inbound.Dispatcher.Handle
+workers=8 malformed_cases=8 total_dispatches=64
+panics=0 (recover-guard) handle_errors=0
+reply_total=64 (==total: each malformed event replied)
+degraded_reply_to="" (empty — no bogus quote id)
+panic_free=1
+p99_ms=0.6580 max_ms=0.6580 count=64

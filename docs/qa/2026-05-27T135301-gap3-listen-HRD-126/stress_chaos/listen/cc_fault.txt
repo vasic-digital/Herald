@@ -1,0 +1,9 @@
+surface=listen scenario=chaos_cc_fault unit=REAL inbound.Dispatcher.Handle
+contract: CC error / truncated / marker-less stdout → tagged error, NO reply emitted
+case=subprocess_killed          surfaced_err="inbound: CC dispatch: claude_code: signal: killed (subprocess died mid-reply)" replies=0
+case=truncated_marker_no_json   surfaced_err="inbound: parse reply: unexpected EOF" replies=0
+case=marker_present_no_object   surfaced_err="inbound: parse reply: inbound: <<<HERALD-REPLY>>> marker present but no JSON object follows" replies=0
+case=no_marker_at_all           surfaced_err="inbound: parse reply: inbound: no <<<HERALD-REPLY>>> marker in CC stdout" replies=0
+case=empty_stdout               surfaced_err="inbound: parse reply: inbound: no <<<HERALD-REPLY>>> marker in CC stdout" replies=0
+case=unknown_action             surfaced_err="inbound: unknown action \"self.destruct\"" replies=0
+cc_fault_surfaced_no_reply_leak=1

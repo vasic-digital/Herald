@@ -1,0 +1,15 @@
+surface=listen scenario=chaos_extract_reply_to_message_id
+contract: malformed message_id → (0, error); valid numeric → (id, nil); NEVER panic
+case=nil_map              id=0 err=true
+case=missing_message_id   id=0 err=true
+case=nil_value            id=0 err=true
+case=string_value         id=0 err=true
+case=bool_value           id=0 err=true
+case=slice_value          id=0 err=true
+case=map_value            id=0 err=true
+case=valid_int            id=42 err=false
+case=valid_int64          id=99 err=false
+case=valid_int32          id=7 err=false
+case=valid_float64        id=123 err=false
+case=valid_float32        id=8 err=false
+all_malformed_degraded_no_panic=1

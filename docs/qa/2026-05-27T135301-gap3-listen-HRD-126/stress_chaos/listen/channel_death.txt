@@ -1,0 +1,5 @@
+surface=listen scenario=chaos_channel_death_fail_loud unit=REAL runListen
+injected_error="getUpdates: 401 Unauthorized (bot token revoked mid-poll)"
+runListen_returned_error="pherald listen: channel \"tgram\" subscribe: getUpdates: 401 Unauthorized (bot token revoked mid-poll)"
+fail_loud_not_hang=1 (returned tagged error within 3s, did not idle dark)
+channel_death_surfaced=1

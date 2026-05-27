@@ -1,0 +1,13 @@
+surface=listen scenario=chaos_once_only_side_effect unit=REAL inbound.Dispatcher.Handle
+model=process-death+restart redelivery (in-process analogue of pherald listen crash loop)
+workers=50 iterations_per_worker=20 redeliveries=1000
+sink_attempts=1000 (==redeliveries: every delivery reached the sink)
+durable_rows=1 want=1 (ONCE-ONLY side effect: PASS)
+once_only_side_effect=1
+p99_ms=10.4590 max_ms=15.3360 count=1000
+NOTE: dedup is enforced at the SINK (docs/Issues.md HRD allocator ON CONFLICT
+  analogue), NOT at the Handle layer — every redelivery reaches the sink (attempts==1000)
+  but only ONE durable row survives. This is the same once-only contract HRD-125
+  proved at the Runner events_processed layer, applied at the inbound issue.open sink.
+  The real-binary SIGKILL+restart variant is SKIP-with-reason (needs live PG + built
+  pherald) — see TestInbound_Chaos_ProcessDeathRestartLive.
