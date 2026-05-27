@@ -1,0 +1,7 @@
+surface=bindings scenario=stress_concurrent_status_sweeps rule=§11.4.45 mode=enforce severity=low
+workers=8 iters_per_worker=150 total=1200
+fails=1200 non_fail=0 errors=0
+bus_published_policy_violation=1200 audit_rows=1200
+no_lost_events_under_load=1
+p50_ms=0.1540 p95_ms=0.3990 p99_ms=1.2060 max_ms=1.8410 tput_per_sec=39243.6
+race_detector=clean no_real_status_read_cron_digest=true

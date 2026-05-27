@@ -439,37 +439,59 @@ bindings Pipeline).</td>
 <tr>
 <td>HRD-023</td>
 <td>task</td>
-<td>open</td>
+<td>in_progress</td>
 <td>middle</td>
 <td><code>pherald</code> project bindings (§2 commit+push, §3 submodule
-propagation, §11.4.11/.15/.21/.22/.34/.37/.42/.55/.66/.71/.74)</td>
+propagation, §11.4.11/.15/.21/.22/.34/.37/.42/.55/.66/.71/.74) — Batch
+B: <code>pherald/internal/bindings/</code> Pipeline + §42.3-owned rule
+set + 5 bespoke PURE detectors (commit-push-discipline /
+submodule-propagation-order / pre-push-fetch-guard / fetch-before-edit)
+wired through the commons_constitution Evaluator+audit foundation; -race
+-count=3 green, e2e E94. Live op-interception deferred to §43
+HRD-029/030/043/044/049/053.</td>
 <td>2026-05-20</td>
-<td>2026-05-20</td>
-<td>spec V3 §42.3 pherald rows + §42.5 step 6; Catalogue-Check: TBD</td>
+<td>2026-05-28</td>
+<td>spec V3 §42.3 pherald rows + §42.5 step 6; evidence
+<code>docs/qa/HRD-023-20260527T210354Z/</code>; Catalogue-Check: reuse
+commons_constitution (Batch-A)</td>
 </tr>
 <tr>
 <td>HRD-024</td>
 <td>task</td>
-<td>open</td>
+<td>in_progress</td>
 <td>middle</td>
 <td><code>iherald</code> constitution-rule escalation bindings
 (§11.4.10/.10.A credential-leak page-out, §11.4.21 + §11.4.66
-operator-blocked escalation)</td>
+operator-blocked escalation) — Batch B:
+<code>iherald/internal/bindings/</code> Pipeline routing
+<code>.credential.leak</code> (forced-critical) +
+<code>.policy.violation</code> + 5 bespoke detectors wired through
+commons_constitution Evaluator+audit; -race -count=3 green, e2e E95,
+no-real-secret attestation. Live paging deferred to §43 /
+HRD-024-paging.</td>
 <td>2026-05-20</td>
-<td>2026-05-20</td>
-<td>spec V3 §42.3 iherald rows + §42.5 step 7; Catalogue-Check: TBD</td>
+<td>2026-05-28</td>
+<td>spec V3 §42.3 iherald rows + §42.5 step 7; evidence
+<code>docs/qa/HRD-024-20260527T210714Z/</code>; Catalogue-Check: reuse
+commons_constitution (Batch-A)</td>
 </tr>
 <tr>
 <td>HRD-025</td>
 <td>task</td>
-<td>open</td>
+<td>in_progress</td>
 <td>low</td>
 <td><code>scherald</code> scheduled-audit bindings (§11.4.45 periodic
-Status.md sweep + daily/weekly/monthly compliance digest)</td>
+Status.md sweep + daily/weekly/monthly compliance digest) — Batch B:
+<code>scherald/internal/bindings/</code> Pipeline routing
+<code>.policy.violation</code> + 3 bespoke detectors (status-sweep /
+digest-cadence / stale-item) wired through commons_constitution
+Evaluator+audit; -race -count=3 green, e2e E96. Live cron/scheduler
+deferred to §43 HRD-047.</td>
 <td>2026-05-20</td>
-<td>2026-05-20</td>
-<td>spec V3 §42.3 scherald rows + §42.5 step 8; Catalogue-Check:
-TBD</td>
+<td>2026-05-28</td>
+<td>spec V3 §42.3 scherald rows + §42.5 step 8; evidence
+<code>docs/qa/HRD-025-20260528-hrd025-batchb-u7/</code>;
+Catalogue-Check: reuse commons_constitution (Batch-A)</td>
 </tr>
 <tr>
 <td>HRD-029</td>

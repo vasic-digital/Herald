@@ -1,0 +1,30 @@
+=== RUN   TestBindings_Stress_ConcurrentRepoBreaches
+--- PASS: TestBindings_Stress_ConcurrentRepoBreaches (0.02s)
+=== RUN   TestBindings_Chaos_EmitFaultSurfaces
+--- PASS: TestBindings_Chaos_EmitFaultSurfaces (0.00s)
+=== RUN   TestRuleCatalogue_CoversPheraldOwnedRules
+--- PASS: TestRuleCatalogue_CoversPheraldOwnedRules (0.00s)
+=== RUN   TestPipeline_RegistersEveryRule
+--- PASS: TestPipeline_RegistersEveryRule (0.00s)
+=== RUN   TestPipeline_RepoSafetyBreachRoundTrip
+--- PASS: TestPipeline_RepoSafetyBreachRoundTrip (0.01s)
+=== RUN   TestPipeline_RepoSafetyRecoveredOnPass
+--- PASS: TestPipeline_RepoSafetyRecoveredOnPass (0.01s)
+=== RUN   TestPipeline_ReopensPolicyViolation
+--- PASS: TestPipeline_ReopensPolicyViolation (0.01s)
+=== RUN   TestPipeline_LadderGatesEmit
+--- PASS: TestPipeline_LadderGatesEmit (0.00s)
+=== RUN   TestPipeline_UnknownRule
+--- PASS: TestPipeline_UnknownRule (0.00s)
+=== RUN   TestDetector_CommitPushDiscipline
+--- PASS: TestDetector_CommitPushDiscipline (0.00s)
+=== RUN   TestDetector_SubmodulePropagationOrder
+--- PASS: TestDetector_SubmodulePropagationOrder (0.00s)
+=== RUN   TestDetector_PrePushFetchGuard
+--- PASS: TestDetector_PrePushFetchGuard (0.00s)
+=== RUN   TestDetector_FetchBeforeEdit
+--- PASS: TestDetector_FetchBeforeEdit (0.00s)
+=== RUN   TestPipeline_MalformedSubjectDoesNotPass
+--- PASS: TestPipeline_MalformedSubjectDoesNotPass (0.00s)
+PASS
+ok  	github.com/vasic-digital/herald/pherald/internal/bindings	0.740s

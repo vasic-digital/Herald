@@ -1,0 +1,36 @@
+=== RUN   TestBindings_Stress_ConcurrentCredentialLeaks
+    bindings_stress_chaos_test.go:184: iherald bindings stress[concurrent-leaks]: 1200 evals, 0 errors, 1200 page-outs, 1200 audit rows, p99=0.786ms (persistent=true dir=/Users/milosvasic/Projects/Herald/docs/qa/HRD-024-20260527T210714Z/stress_chaos/HRD-024-20260527T210714Z/stress_chaos)
+--- PASS: TestBindings_Stress_ConcurrentCredentialLeaks (0.08s)
+=== RUN   TestBindings_Chaos_PageOutFaultSurfaces
+    bindings_stress_chaos_test.go:259: iherald bindings chaos[page-out-fault]: 800 evals → 800 surfaced fault, 0 swallowed
+--- PASS: TestBindings_Chaos_PageOutFaultSurfaces (0.01s)
+=== RUN   TestRuleCatalogue_CoversIheraldOwnedRules
+--- PASS: TestRuleCatalogue_CoversIheraldOwnedRules (0.00s)
+=== RUN   TestPipeline_RegistersEveryRule
+--- PASS: TestPipeline_RegistersEveryRule (0.00s)
+=== RUN   TestPipeline_CredentialLeakRoundTrip
+--- PASS: TestPipeline_CredentialLeakRoundTrip (0.01s)
+=== RUN   TestPipeline_OperatorBlockedRoundTrip
+--- PASS: TestPipeline_OperatorBlockedRoundTrip (0.01s)
+=== RUN   TestPipeline_CredentialLeakRecoveredOnPass
+--- PASS: TestPipeline_CredentialLeakRecoveredOnPass (0.01s)
+=== RUN   TestPipeline_LadderGatesEmit
+--- PASS: TestPipeline_LadderGatesEmit (0.00s)
+=== RUN   TestPipeline_UnknownRule
+--- PASS: TestPipeline_UnknownRule (0.00s)
+=== RUN   TestDetector_CredentialLeakClassification
+--- PASS: TestDetector_CredentialLeakClassification (0.00s)
+=== RUN   TestDetector_PreStoreAudit
+--- PASS: TestDetector_PreStoreAudit (0.00s)
+=== RUN   TestDetector_OperatorBlocked
+--- PASS: TestDetector_OperatorBlocked (0.00s)
+=== RUN   TestDetector_BlockerClarification
+--- PASS: TestDetector_BlockerClarification (0.00s)
+=== RUN   TestDetector_IncidentSeverityRouting
+--- PASS: TestDetector_IncidentSeverityRouting (0.00s)
+=== RUN   TestPipeline_MalformedSubjectDoesNotPass
+--- PASS: TestPipeline_MalformedSubjectDoesNotPass (0.00s)
+=== RUN   TestNoRealSecretsInFixtures
+--- PASS: TestNoRealSecretsInFixtures (0.00s)
+PASS
+ok  	github.com/vasic-digital/herald/iherald/internal/bindings	1.367s

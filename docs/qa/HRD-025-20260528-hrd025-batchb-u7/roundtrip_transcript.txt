@@ -1,0 +1,22 @@
+=== RUN   TestRuleCatalogue_CoversScheraldOwnedRules
+--- PASS: TestRuleCatalogue_CoversScheraldOwnedRules (0.00s)
+=== RUN   TestPipeline_RegistersEveryRule
+--- PASS: TestPipeline_RegistersEveryRule (0.00s)
+=== RUN   TestPipeline_StatusSweepPolicyViolationRoundTrip
+--- PASS: TestPipeline_StatusSweepPolicyViolationRoundTrip (0.01s)
+=== RUN   TestPipeline_PolicyClearedOnRecovery
+--- PASS: TestPipeline_PolicyClearedOnRecovery (0.00s)
+=== RUN   TestPipeline_LadderGatesEmit
+--- PASS: TestPipeline_LadderGatesEmit (0.00s)
+=== RUN   TestPipeline_UnknownRule
+--- PASS: TestPipeline_UnknownRule (0.00s)
+=== RUN   TestDetector_StatusSweep
+--- PASS: TestDetector_StatusSweep (0.00s)
+=== RUN   TestDetector_DigestCadence
+--- PASS: TestDetector_DigestCadence (0.00s)
+=== RUN   TestDetector_StaleItem
+--- PASS: TestDetector_StaleItem (0.00s)
+=== RUN   TestPipeline_MalformedSubjectDoesNotPass
+--- PASS: TestPipeline_MalformedSubjectDoesNotPass (0.00s)
+PASS
+ok  	github.com/vasic-digital/herald/scherald/internal/bindings	1.345s

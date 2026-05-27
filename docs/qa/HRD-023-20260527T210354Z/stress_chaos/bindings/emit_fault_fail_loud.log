@@ -1,0 +1,5 @@
+surface=bindings scenario=chaos_emit_fault emitter=faultEmitter(RepoSafetyBreach→err)
+contract: enforce repo-breach + bus drop → EvaluateSubject errors, NEVER silent success
+workers=8 iters=100 total=800 surfaced=800 swallowed=0
+fail_loud_no_swallow=1
+p99_ms=0.1300 count=800

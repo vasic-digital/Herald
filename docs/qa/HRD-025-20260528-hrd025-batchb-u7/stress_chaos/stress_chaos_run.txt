@@ -1,0 +1,8 @@
+=== RUN   TestBindings_Stress_ConcurrentStatusSweeps
+    bindings_stress_chaos_test.go:192: scherald bindings stress[concurrent]: 1200 evals, 0 errors, 1200 emits, 1200 audit rows, p99=1.206ms (persistent=true dir=/Users/milosvasic/Projects/Herald/docs/qa/HRD-025-20260528-hrd025-batchb-u7/stress_chaos/hrd025-stress/stress_chaos)
+--- PASS: TestBindings_Stress_ConcurrentStatusSweeps (0.06s)
+=== RUN   TestBindings_Chaos_EmitFaultSurfaces
+    bindings_stress_chaos_test.go:266: scherald bindings chaos[emit-fault]: 800 evals → 800 surfaced fault, 0 swallowed
+--- PASS: TestBindings_Chaos_EmitFaultSurfaces (0.00s)
+PASS
+ok  	github.com/vasic-digital/herald/scherald/internal/bindings	1.386s

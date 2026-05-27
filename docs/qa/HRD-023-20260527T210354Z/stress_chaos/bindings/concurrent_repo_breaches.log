@@ -1,0 +1,7 @@
+surface=bindings scenario=stress_concurrent_repo_breaches rule=§2 mode=enforce severity=critical
+workers=8 iters_per_worker=150 total=1200
+fails=1200 non_fail=0 errors=0
+bus_published_repo_safety_breach=1200 audit_rows=1200
+no_lost_events_under_load=1
+p50_ms=0.1570 p95_ms=0.4360 p99_ms=0.9050 max_ms=1.5490 tput_per_sec=39209.8
+race_detector=clean no_real_commit_push_git=true
