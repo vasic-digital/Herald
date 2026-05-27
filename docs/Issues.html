@@ -787,6 +787,48 @@ extend
 (failure-terminal surface — composes with HRD-085 GetByID + HRD-018
 cherald event emission).</td>
 </tr>
+<tr>
+<td>HRD-131</td>
+<td>task</td>
+<td>open</td>
+<td>middle</td>
+<td>Migrate text HRD trackers to versioned SQLite single-source-of-truth
+(§11.4.93 / Herald §108.h, 6-phase) — DB committed as authoritative SSoT
+per operator mandate 2026-05-27. Phase 1 (this item): file the
+scope-locked tracking HRD. Phase 2: scaffold/adopt the migration Go
+binary that already lives in the constitution submodule
+(<code>constitution/scripts/workable-items/</code>) — Herald references
+it per §11.4.74 catalogue-first and never reimplements it. Phase 3: sync
+md→db (load <code>docs/Issues.md</code> / <code>docs/Fixed.md</code> /
+<code>*_Summary.md</code> / <code>docs/Status.md</code> /
+<code>docs/CONTINUATION.md</code> §3 into
+<code>docs/.workable_items.db</code>). Phase 4: sync db→md
+byte-identical (round-trip regeneration so MD↔︎DB drift is mechanically
+impossible). Phase 5: generator shims (the <code>*_Summary.md</code>
+variants + Status/CONTINUATION become derived from the DB). Phase 6:
+prohibit text-direct edits (release-gate guard that the DB is the only
+authoring surface). Operator divergence from the parent §11.4.93
+gitignored-with-regeneration default: for Herald the DB IS the
+authoritative artefact — <code>docs/.workable_items.db</code> is
+version-controlled (committed), NOT regenerated-on-clone; only the
+transient WAL/SHM sidecars (<code>docs/.workable_items.db-wal</code> /
+<code>-shm</code>) stay gitignored ("We should not git ignore our
+workable items database since it is our single source of truth regarding
+items we have to do on the project!"). <strong>Scope-lock: this HRD
+covers Phase 1 (this row) + Phase 2 adoption ONLY.</strong> Phases 3-6
+(md→db sync, db→md byte-identical regeneration, generator shims,
+text-direct-edit prohibition) are follow-on work-items to be opened as
+Phase 2 completes, so the §106 spec-change / §107.x evidence invariants
+are never broken mid-migration.</td>
+<td>2026-05-27</td>
+<td>2026-05-27</td>
+<td>Universal §11.4.93 + Herald §108.h
+<code>docs/guides/HERALD_CONSTITUTION.md</code>; migration binary
+<code>constitution/scripts/workable-items/</code> (§11.4.74 reference,
+never reimplement); operator mandate 2026-05-27 (version-controlled DB);
+Catalogue-Check: reuse <code>constitution/scripts/workable-items/</code>
+(constitution-submodule tool, 2026-05-27).</td>
+</tr>
 </tbody>
 </table>
 <h2 id="in-progress">In progress</h2>

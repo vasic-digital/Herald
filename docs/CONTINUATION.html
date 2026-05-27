@@ -112,7 +112,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>9</td>
+<td>10</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -128,47 +128,58 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>2026-05-27 checkpoint (HEAD <code>f833b0b</code>, all 4
-mirrors synced). MAJOR FINDING: the 2nd-bot qaherald-auto automation is
-structurally impossible — Telegram never relays bot-to-bot messages in
-groups (proven; full forensic record
-<code>docs/research/telegram-bot-to-bot-constraint.md</code>, commit
-<code>5267f14</code>). Real-channel inbound automation requires MTProto
-(a real user account via gotd/td) — OPERATOR DECISION PENDING (needs
-my.telegram.org app_id+app_hash + 1-time phone login).</strong> This
-session: (1) pulled HelixConstitution to <code>3a085b9</code> (gained
-§11.4.85 stress+chaos / §11.4.86 / §11.4.87 endless-loop-autonomous /
-§11.4.88 background-push); (2) propagated §11.4.85/87/88 into Herald
-CLAUDE/AGENTS/QWEN + new HERALD_CONSTITUTION §108 (merge
-<code>4888081</code>); (3) built qaherald-auto framework COMPLETE —
-<code>qaherald lifecycle</code> Cobra cmd + MessengerClient interface
-(Telegram impl) + 15 scenarios + orchestrator + report + preflight (10
-gates) + shell adapter, all hermetic tests PASS (T1-T8); (4) fixed
-preflight G1 false-negative (real <code>getChatMember</code> membership
-proof, <code>b45e45d</code>); (5) Wave 7 STARTED — T1 channels.Channel
-interface (<code>688819a</code>) + T2 registry+init
-(<code>22ba96f</code>) + T3 per-channel inbox (<code>0080339</code>) +
-T4 generalized self-filter (<code>f833b0b</code>) → HRD-110/111/112/113
-closed. Prior: v0.4.0 (Wave 6 closed-loop, HRD-100 real human round-trip
-msg 25→26) + v0.5.0 (Wave 6.5 lifecycle, premature S1+S2-only tag) both
-pushed. Anti-bluff gates green; pre-existing carry-over: Postgres-SASL
-e2e FAILs (E7-E12/E14-E16/E37-E42 — local PG SASL, unrelated).</td>
+<td>**2026-05-27 checkpoint (HEAD <code>a422c53</code>, all 4 mirrors
+synced; constitution at <code>3c9c4e9</code>). This session was a
+constitution-compliance + SSoT-hygiene sweep: (1) pulled
+HelixConstitution <code>3a085b9</code>→<code>3c9c4e9</code> (gained
+§11.4.89 background-test / §11.4.90 Obsolete-status / §11.4.91
+summary-clarity / §11.4.92 multi-pass-eval / §11.4.93 SQLite-SSoT /
+§11.4.94 zero-idle-parallel); (2) propagated §11.4.89-94 into CLAUDE.md
+r12 / AGENTS.md r8 / HERALD_CONSTITUTION.md r6 §108.d-i (commit
+<code>83b5e2f</code>) — inheritance gate 15 PASS / 0 FAIL; (3) built
+<code>scripts/mutation_residue_audit.sh</code> §107.y pre-push residue
+scanner (<code>e23933c</code>) + back-filled §107.y quiescence +
+<code>.git/MUTATION_IN_PROGRESS</code> lockfile into wave2/3/4 gates
+(<code>c19a092</code>); (4) re-verified ALL mutation gates green
+one-at-a-time — wave2 5/0, wave3 6/0, wave4 5/0, wave4b 5/0, wave6.5 6/0
+(wave6 already 4/4), each with Quiescence assertion PASS; (5) §11.4.91
+summary-clarity — 7 one-liners fixed (<code>d24e829</code>); (6)
+operator correction — <code>docs/.workable_items.db</code> is
+VERSION-CONTROLLED, NOT gitignored (Herald divergence from parent
+§11.4.93, <code>30f9c6d</code>); (7) GAP-3 §11.4.85 stress+chaos PLAN
+committed (<code>a422c53</code>, HRD-122..130); (8) read-only audits
+committed (<code>9c09496</code> constitution-compliance,
+<code>ee63ce6</code> HRD-obsolescence + qa-coverage); (9) HRD-131 filed
+(SQLite SSoT Phase 1) in Issues.md. RESOLVED debts: Wave 6.5
+mutation-gate M3 stale anchor
+(<code>opts.ReplyTo</code>→<code>textOpts.ReplyTo</code>) FIXED;
+Postgres-SASL e2e carry-over RESOLVED (e2e now 60 PASS / 0 FAIL / 24
+SKIP); HRD-101 now filed as a real Fixed.md row. Prior session: v0.4.0
+(Wave 6 closed-loop) + v0.5.0 (Wave 6.5 lifecycle) tagged; Wave 7 T1-T5
+closed (HRD-110..114). PENDING-OPERATOR: MTProto real-channel automation
+(Telegram never relays bot-to-bot in groups —
+<code>docs/research/telegram-bot-to-bot-constraint.md</code>,
+<code>5267f14</code>; needs my.telegram.org app_id+app_hash +
+<code>/revoke @pherald_qa_bot</code>).</td>
 </tr>
 <tr>
 <td>Issues</td>
 <td>HRD-008, HRD-015, HRD-018 (in_progress), HRD-019..HRD-027,
-HRD-029..HRD-056, HRD-081, HRD-085..HRD-090, HRD-114..HRD-121 (Wave 7
-T5-T12 pending)</td>
+HRD-029..HRD-056, HRD-081, HRD-085..HRD-090, HRD-115..HRD-121 (Wave 7
+T6-T12 pending), HRD-122..HRD-130 (GAP-3 §11.4.85 stress+chaos plan),
+HRD-131 (SQLite SSoT Phase 1)</td>
 </tr>
 <tr>
 <td>Issues summary</td>
-<td>see <code>Issues.md</code>. Wave 7 closed HRD-110/111/112/113 this
-session; HRD-114..121 are the remaining Wave 7 tasks T5-T12.</td>
+<td>see <code>Issues.md</code>. Wave 7 closed HRD-110/111/112/113/114;
+HRD-115..121 are the remaining Wave 7 tasks T6-T12. HRD-122..130 are the
+planned §11.4.85 stress+chaos suite (GAP-3). HRD-131 is §11.4.93 SQLite
+workable-items SSoT migration Phase 1.</td>
 </tr>
 <tr>
 <td>Fixed</td>
 <td>HRD-001..HRD-017 (less open), HRD-028, HRD-080, HRD-092..HRD-101,
-HRD-110, HRD-111, HRD-112, HRD-113</td>
+HRD-110, HRD-111, HRD-112, HRD-113, HRD-114</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
@@ -178,10 +189,10 @@ HRD-110, HRD-111, HRD-112, HRD-113</td>
 <td>Continuation</td>
 <td><strong>Resume at Wave 7 T6</strong>
 (<code>docs/superpowers/plans/2026-05-27-wave7-generic-messenger.md</code>
-line 980; HEAD <code>42448a2</code>). Wave 7 done: T1
-<code>channels.Channel</code> interface (reply method
-<code>SendReplyGeneric</code>) + T2 registry/init + T3 per-channel inbox
-+ T4 <code>channels.IsSelfEcho</code>/<code>StampSender</code> + T5
+line 980). Wave 7 done: T1 <code>channels.Channel</code> interface
+(reply method <code>SendReplyGeneric</code>) + T2 registry/init + T3
+per-channel inbox + T4
+<code>channels.IsSelfEcho</code>/<code>StampSender</code> + T5
 multi-channel <code>pherald listen</code> (HRD-110..114 closed;
 <code>inbound.TgramReplier</code>→<code>Replier</code> generic-sig
 rename done via a <code>channelReplier</code> shim — tgram's native int
@@ -200,23 +211,29 @@ blank-import comment in listen.go —
 ErrUnknownChannel until T6 registers slack, by design)</strong> · T7
 qaherald Slack MessengerClient · T8 spec §11.0/§32.2/§43 · T9 e2e
 E81-E88 · T10 paired mutation gate · T11 §11.4.85 stress+chaos · T12
-docs/Issues→Fixed/v0.6.0/4-mirror push. <strong>THREE GATED/DEBT
+docs/Issues→Fixed/v0.6.0/4-mirror push. <strong>STILL-OPEN GATED/DEBT
 ITEMS:</strong> (a) MTProto real-channel automation — OPERATOR must
 provide my.telegram.org app_id+app_hash (folds into a qaherald
 MessengerClient MTProto impl reusing the entire scenario engine);
 operator should also <code>/revoke</code> the leaked
-<code>@pherald_qa_bot</code> token. (b) Wave 6.5 mutation-gate M3 STALE
-— <code>tests/test_wave6.5_mutation_meta.sh</code> M3 regex targets
-<code>opts.ReplyTo</code> but Wave 6.5 T6 renamed to
-<code>textOpts.ReplyTo</code> in send.go → M3 errors "anchor not found",
-non-functional gate (§107 bluff surface, FIX needed). (c) docs/Issues.md
-+ docs/Fixed.md PDF/HTML/DOCX siblings stale after HRD-110..113
-migrations — regen
-<code>bash scripts/export_docs.sh docs/Issues.md docs/Fixed.md</code> at
-Wave 7 close. Then: 39 remaining §42/§43 HRDs (018..027, 029..056, 081,
-085..090, 008, 015) for v1.0.0; docs-audit #147. §11.4.87 endless-loop:
-continue until Issues.md zero-active + CONTINUATION §3 empty + no
-subagent in flight. NO BLUFF. Push 4 mirrors every 2-3 commits.</td>
+<code>@pherald_qa_bot</code> token. (b) GAP-3 execution — the §11.4.85
+stress+chaos suite (HRD-122..130) is PLANNED
+(<code>docs/superpowers/plans/2026-05-27-stress-chaos-suite.md</code>)
+but NOT yet implemented. (c) §11.4.93 SQLite SSoT Phase 2+ — HRD-131
+(Phase 1, scope-lock) filed; migration of the markdown trackers to the
+version-controlled <code>docs/.workable_items.db</code> SQLite SSoT is
+multi-phase. (d) GAP-4 docs/qa back-fill — features lacking
+<code>docs/qa/&lt;run-id&gt;/</code> evidence per the
+<code>ee63ce6</code> qa-coverage audit. (e) §11.4.90 obsolescence — zero
+current Obsolete rows; convention is in place, periodic re-audit of
+open/Fixed HRDs pending. (RESOLVED this session: Wave 6.5 mutation-gate
+M3 stale anchor; Postgres-SASL e2e FAILs → e2e now 60 PASS / 0 FAIL / 24
+SKIP; HRD-101 filed as a real Fixed.md row; docs/Issues + Fixed sibling
+regen handled this session.) Then: 39 remaining §42/§43 HRDs (018..027,
+029..056, 081, 085..090, 008, 015) for v1.0.0; docs-audit #147. §11.4.87
+endless-loop: continue until Issues.md zero-active + CONTINUATION §3
+empty + no subagent in flight. NO BLUFF. Push 4 mirrors every 2-3
+commits.</td>
 </tr>
 </tbody>
 </table>
@@ -272,8 +289,10 @@ for §26.5 quickstart.</li>
 canonical build info;
 <code>serve</code>/<code>send</code>/<code>doctor</code>/<code>migrate</code>/<code>subscriber</code>/<code>deadletter</code>
 stubbed with HRD-NNN pointers.</li>
-<li><strong>Inheritance gate:</strong> 12 PASS / 0 FAIL. Meta-test
+<li><strong>Inheritance gate:</strong> 15 PASS / 0 FAIL. Meta-test
 ✓.</li>
+<li><strong>e2e_bluff_hunt:</strong> 60 PASS / 0 FAIL / 24 SKIP
+(Postgres-SASL carry-over RESOLVED this session).</li>
 <li><strong>Phase:</strong> implementation r1.</li>
 </ul>
 <h2 id="2-last-commit-landed">§2. Last commit landed</h2>
@@ -584,10 +603,12 @@ use the cached session (~5-15s typical).</li>
 <code>qaherald lifecycle</code> while ANOTHER pherald listen is also
 processing in the same checkout, Issues.md may receive double-writes.
 Single-pherald-listen invocation is the safe default.</li>
-<li><strong>Pre-existing carry-over</strong>: 15 e2e_bluff_hunt FAILs on
-Postgres-SASL invariants (E7-E12 + E14-E16 + E37-E42). Root cause is
-local-PG container's SASL handshake; not related to Wave 6/6.5; can be
-addressed in a separate HRD post-v1.0.0.</li>
+<li><strong>Postgres-SASL carry-over (RESOLVED 2026-05-27)</strong>: the
+e2e_bluff_hunt FAILs on Postgres-SASL invariants (E7-E12 + E14-E16 +
+E37-E42) are FIXED — <code>9b166c4</code> (auth env + PG password
+self-heal + Redis/tenant wiring + honest SKIP-with-reason) +
+<code>bdbe9f1</code> (Runner nil-Redis graceful PG-only fallback).
+e2e_bluff_hunt now reports 60 PASS / 0 FAIL / 24 SKIP.</li>
 </ul>
 <h3
 id="safe-shutdown-checklist-now--end-of-2026-05-23-session">Safe-shutdown

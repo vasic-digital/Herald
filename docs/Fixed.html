@@ -447,6 +447,46 @@ Catalogue-Check: reuse (extends existing <code>commons.Channel</code>
 §11.0 contract, 2026-05-27)</td>
 </tr>
 <tr>
+<td>HRD-101</td>
+<td>task</td>
+<td>high</td>
+<td>Wave 6.5 ticket-lifecycle layer — §32.6 deterministic classifier
+(<code>Bug:</code>/<code>Issue:</code>/<code>Task:</code>/<code>Implementation:</code>/<code>Investigation:</code>/<code>Query:</code>/<code>Question:</code>/<code>Help:</code>/<code>Status:</code>/<code>Continue:</code>/<code>Done:</code>/<code>Resolve:</code>/<code>Reopen:</code>/<code>Override:</code>
+prefix routing with
+<code>Type</code>+<code>Criticality</code>+<code>Confidence</code>
+scores; natural-language no-prefix → <code>query</code> fallback) +
+DocsIssueOpener (§32.9 — real <code>docs/Issues.md</code> HRD-NNN
+allocator, concurrent-safe via lockfile) + RunnerEventEmitter (§33.7 —
+direct <code>runner.Run</code> → CloudEvent dispatch, no HTTP loopback)
++ <code>Help:</code>/<code>Status:</code>/<code>Continue:</code>
+fast-path handlers (bypass Claude Code, sub-second latency — S2 proved
+0.74s, no CC bootstrap overhead) +
+<code>Done:</code>/<code>Reopen:</code> atomic Issues↔︎Fixed migration
+(rollback-via-sha256 test) + <code>tgram.SendReply</code> outbound
+attachment fan-out (multipart dispatch) + wiring all of these into
+<code>pherald listen</code>. §107.x live evidence
+(<code>docs/qa/HRD-101-lifecycle-2026-05-23T03-16-17-w6.5live/</code>):
+S1 natural-language query — real Opus CC dispatch ~31s incl. bootstrap,
+threaded reply (wire-byte proof inbound <code>message_id=30</code> →
+reply <code>sent_message_id=31</code> with
+<code>reply_to_message_id=30</code>); S2 <code>Help:</code> fast-path —
+classifier <code>Type:help_command Confidence:1</code>, CC dispatch
+ABSENT (event absence + 0.74s latency prove no CC call), BuiltinHelp
+catalogue text returned (<code>reply_to_message_id=32</code> →
+<code>sent_message_id=33</code>); transcript.jsonl captures both
+directions of all four messages (S1 query, Help:, Status: also exercised
+live). Reproducible test harness
+<code>tests/test_wave6.5_lifecycle.sh</code> covers 15 scenarios
+(Bug:/Task:/Query: + attachments + Done:/Reopen: + classifier edge
+cases). Spec V3 r13: §32.6/§32.9/§33.6/§33.7 subsections landed. Tag
+<code>v0.5.0</code>.</td>
+<td>2026-05-23</td>
+<td><code>17fc394</code></td>
+<td>spec V3 §32.6 + §32.9 + §33.6 + §33.7 + Herald §107.x; live evidence
+<code>docs/qa/HRD-101-lifecycle-2026-05-23T03-16-17-w6.5live/</code>
+(S1+S2 transcript.jsonl + README)</td>
+</tr>
+<tr>
 <td>HRD-100</td>
 <td>task</td>
 <td>high</td>
