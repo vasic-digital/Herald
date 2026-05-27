@@ -47,7 +47,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>14</td>
+<td>15</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -55,7 +55,7 @@
 </tr>
 <tr>
 <td>Last modified</td>
-<td>2026-05-22</td>
+<td>2026-05-27</td>
 </tr>
 <tr>
 <td>Status</td>
@@ -63,16 +63,37 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>r14 captures Wave 6 (pherald inbound runtime + Claude Code
-headless bridge — code-doc closure). HRD-100 closed atomically with 12
-Wave-6 commit SHAs + 8 new e2e invariants E63-E70 (currently
-SKIP-with-documented-reason — converting to PASS once operator runs the
-live closed-loop at T10b and commits <code>docs/qa/HRD-100/</code>). Tag
-v0.4.0 DEFERRED to T13b (operator-supplied live evidence per §107.x —
-code-doc closure ships in this commit; runtime evidence lands
-separately).</strong> Wave 6 surfaces: new Cobra subcommand
-<code>pherald listen</code> (Telegram <code>getUpdates</code> long-poll
-+
+<td><strong>r15 atomically migrates (§11.4.19) the completed GAP-3
+§11.4.85 stress+chaos suite — HRD-122..HRD-130 (Task→Completed) — and
+the HRD-132 Runner idempotency-window fix (Bug→Fixed): 10 rows
+Issues→Fixed.</strong> GAP-3 commits
+<code>02d272d</code>→<code>d2a60d3</code> (HRD-122
+<code>commons/stresschaos/</code> scaffold, HRD-123 Gin
+<code>/v1/events</code>, HRD-124
+<code>/v1/compliance</code>+<code>/v1/safety_state</code>, HRD-125
+Runner — surfaced HRD-132, HRD-126 <code>pherald listen</code> inbound,
+HRD-127 claude_code dispatch, HRD-128 container/resource §12.6-safe,
+HRD-129 e2e E81-E88, HRD-130 paired §1.1 mutation gate); HRD-132 fix
+<code>354b883</code> (claim-before-dispatch at Runner Stage 2 —
+<code>INSERT events_processed … ON CONFLICT DO NOTHING</code> is the
+authoritative exactly-once dispatch gate; latent
+<code>runner.go:132</code> <code>CachedRcpt.WasReplay</code> race
+closed; HRD-125 assertion upgraded to <code>sends==1</code>) +
+wave3-M4-retire <code>4f45f26</code>. Full
+<code>scripts/e2e_bluff_hunt.sh</code> 78 PASS / 0 FAIL; HRD-130 gate 6
+PASS / 0 FAIL (5 load-bearing mutations); HRD-132 evidence
+<code>docs/qa/HRD-125-stress-chaos-2026-05-27T131251-gap3/</code>
+(<code>dispatch_exactly_once=1</code>). HRD-131 (SQLite SSoT migration
+Phase 1) remains OPEN. Prior r14 captured Wave 6 (pherald inbound
+runtime + Claude Code headless bridge — code-doc closure). HRD-100
+closed atomically with 12 Wave-6 commit SHAs + 8 new e2e invariants
+E63-E70 (currently SKIP-with-documented-reason — converting to PASS once
+operator runs the live closed-loop at T10b and commits
+<code>docs/qa/HRD-100/</code>). Tag v0.4.0 DEFERRED to T13b
+(operator-supplied live evidence per §107.x — code-doc closure ships in
+this commit; runtime evidence lands separately).** Wave 6 surfaces: new
+Cobra subcommand <code>pherald listen</code> (Telegram
+<code>getUpdates</code> long-poll +
 <code>OnText</code>/<code>OnPhoto</code>/<code>OnDocument</code>/<code>OnVoice</code>
 + bot self-filter + sha256 content-addressed attachment download); Opus
 model pin in spawned <code>claude</code> argv
@@ -97,13 +118,14 @@ closed HRD-016 (Wave 3b pherald Runner live). r10 closed HRD-011
 </tr>
 <tr>
 <td>Issues</td>
-<td>see <code>Issues.md</code> — r15 captures HRD-100 Issues→Fixed
-atomic migration.</td>
+<td>see <code>Issues.md</code> — r16 (Issues.md) captures the
+HRD-122..HRD-130 + HRD-132 Issues→Fixed atomic migration recorded in
+this r15.</td>
 </tr>
 <tr>
 <td>Issues summary</td>
 <td>HRD-008/-015/-018 (in_progress) + HRD-019..HRD-027 +
-HRD-029..HRD-056 + HRD-081 + HRD-085..HRD-090 still open (47
+HRD-029..HRD-056 + HRD-081 + HRD-085..HRD-090 + HRD-131 still open (40
 items).</td>
 </tr>
 <tr>
@@ -111,20 +133,23 @@ items).</td>
 <td>HRD-001..HRD-007, HRD-009, HRD-009b, HRD-010, HRD-011, HRD-012,
 HRD-013, HRD-014, HRD-016, HRD-017, HRD-028, HRD-080, HRD-092, HRD-093,
 HRD-094, HRD-095, HRD-096, HRD-097, HRD-098, HRD-099, HRD-100, HRD-110,
-HRD-111, HRD-112, HRD-113, HRD-114 (and HRD-018 partial — M1 + M2
-components landed)</td>
+HRD-111, HRD-112, HRD-113, HRD-114, HRD-122, HRD-123, HRD-124, HRD-125,
+HRD-126, HRD-127, HRD-128, HRD-129, HRD-130, HRD-132 (and HRD-018
+partial — M1 + M2 components landed)</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
-<td>spec V1→V3 r9; Go module foundation + Foundation M1/M2/M3; HRD-010
-commons_storage live wiring; HRD-011 Telegram live (live
-<code>message_id=5</code> evidence 2026-05-22); HRD-012 Claude Code
-dispatcher live; HRD-016 pherald <code>/v1/events</code> Runner wiring
-(Wave 3b live — 7-stage pipeline + e2e E37-E42); universal §11.4.73 +
-§11.4.74 mandates propagated; I6 gate refined; Wave 2 flavor scaffolds
-(HRD-092..097) closed atomically; Wave 3a substrate (HRD-099
-commons_auth JWT verifier) + 2 live REST routes (HRD-028, HRD-098)
-closed atomically.</td>
+<td>GAP-3 §11.4.85 stress+chaos suite (HRD-122..HRD-130 Completed) +
+HRD-132 Runner idempotency-window fix (claim-before-dispatch,
+exactly-once dispatch <code>sends==1</code>); spec V1→V3 r9; Go module
+foundation + Foundation M1/M2/M3; HRD-010 commons_storage live wiring;
+HRD-011 Telegram live (live <code>message_id=5</code> evidence
+2026-05-22); HRD-012 Claude Code dispatcher live; HRD-016 pherald
+<code>/v1/events</code> Runner wiring (Wave 3b live — 7-stage pipeline +
+e2e E37-E42); universal §11.4.73 + §11.4.74 mandates propagated; I6 gate
+refined; Wave 2 flavor scaffolds (HRD-092..097) closed atomically; Wave
+3a substrate (HRD-099 commons_auth JWT verifier) + 2 live REST routes
+(HRD-028, HRD-098) closed atomically.</td>
 </tr>
 <tr>
 <td>Continuation</td>
@@ -150,6 +175,368 @@ closed atomically.</td>
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>HRD-132</td>
+<td>bug</td>
+<td>high</td>
+<td>§11.4.85/§32.1 Runner idempotency-window FIX — concurrent same-key
+replay no longer duplicate-dispatches a notification (FINDING from
+HRD-125 stress/chaos). Root cause: <code>idempotency.go:64-72</code>
+treated a Redis-SETNX-miss-with-no-PG-row as FRESH (the §32.1
+"Redis-lies-PG-truths" design) while the <code>events_processed</code>
+archive row was only written at Stage 7
+(<code>OutcomeRecorder.Process</code>) — so concurrent same-key requests
+arriving in the Stage-2→Stage-7 window ALL dispatched (observed 2–4 of a
+1000× flood; archival exactly-once via PG UNIQUE +
+<code>ON CONFLICT DO NOTHING</code>, but channel dispatch only bounded =
+duplicate-alert delivery under load). Fix: claim the idempotency slot
+atomically BEFORE dispatch —
+<code>INSERT events_processed … ON CONFLICT DO NOTHING</code> moved to
+Stage 2 (the PG row, serialized by PRIMARY KEY(tenant_id,
+idempotency_key), is now the AUTHORITATIVE exactly-once dispatch gate;
+0-rows-affected = duplicate → no dispatch), preserving the nil-Redis
+PG-only degrade. ALSO closed the latent <code>runner.go:132</code>
+<code>CachedRcpt.WasReplay</code> data race (mutated a possibly-shared
+<code>*Receipt</code>). The §11.4.85 HRD-125 stress test was upgraded to
+assert <code>sends==1</code> under the same 1000× shared-key flood — the
+stronger assertion HRD-125 deliberately could NOT make pre-fix (§11.4.4
+test-interrupt-on-discovery). §11.4.92 multi-pass: Pass-1 independent
+<code>-race -count=3</code> runner + http + storage green; Pass-5
+<code>sends==1</code> is code-true (RED proved before fix). wave3
+mutation-gate M4 retired (<code>4f45f26</code>) — Stage-7 Insert now
+redundant, M4's blast-radius moved into the Stage-2 claim.</td>
+<td>2026-05-27</td>
+<td><code>354b883</code> (+ wave3-M4-retire <code>4f45f26</code>)</td>
+<td>spec V3 §32.1; root files
+<code>pherald/internal/runner/idempotency.go</code> +
+<code>runner.go:132</code>; FINDING from HRD-125; §11.4.85 evidence
+<code>docs/qa/HRD-125-stress-chaos-2026-05-27T131251-gap3/stress_chaos/runner/</code>
+(<code>dispatch_exactly_once=1</code>,
+<code>shared_key_sends=1 want=1</code>,
+<code>archival_exactly_once=1</code>); full
+<code>scripts/e2e_bluff_hunt.sh</code> 78 PASS / 0 FAIL; HRD-130 gate
+6/0</td>
+</tr>
+<tr>
+<td>HRD-130</td>
+<td>task</td>
+<td>high</td>
+<td>§11.4.85 / §1.1 paired mutation gate for the GAP-3 stress+chaos
+suite — <code>tests/test_stress_chaos_mutation_meta.sh</code> (GAP-3
+plan §5 / §6 T9). Proves each hermetic stress/chaos detector is
+genuinely LOAD-BEARING via the canonical
+<code>tests/test_wave6.5_mutation_meta.sh</code> idiom:
+<code>.git/MUTATION_IN_PROGRESS</code> lockfile, dirty-tree +
+pre-existing-residue refusal pre-flights, <code>run_paired</code> (apply
+perl mutation → assert marker landed → run detector EXPECT-FAIL →
+<code>git checkout</code> restore → byte-for-byte
+<code>assert_restored</code> vs HEAD → re-run EXPECT-PASS), and a final
+<code>check_quiescence</code> scan asserting no
+<code>MUTATED SC-M*</code> markers leaked (§107.y). FIVE paired
+mutations, each against a hermetic detector: SC-M1 drop ctx from
+claude_code <code>dispatch.go</code>
+<code>exec.CommandContext</code>→<code>exec.Command</code> →
+timeout-cancel test no longer cancels the 30s sleep → watchdog FAIL;
+SC-M2 swallow the claude_code <code>parseReply</code> decode error →
+truncated-reply test returns nil → FAIL; SC-M3 make inbound
+<code>extractReplyToMessageID</code> <code>default:</code>
+<code>panic</code> instead of <code>return …err</code> → degrade test
+panics → FAIL; SC-M4 mismap events <code>mapErrorToStatus</code>
+<code>event_parser:</code> 400→500 → input-corruption test sees 5xx →
+FAIL; SC-M5 swallow the commons_storage <code>applyMigration</code>
+disk-full write error → ENOSPC reports success → silent-swallow guard
+FAIL. Runs ONE-AT-A-TIME, FOREGROUND (§107.y + the 2026-05-27
+concurrent-gate-residue memo). Conductor-executed result: 6 PASS / 0
+FAIL (5 mutations load-bearing).</td>
+<td>2026-05-27</td>
+<td><code>d2a60d3</code></td>
+<td>GAP-3 plan
+<code>docs/superpowers/plans/2026-05-27-stress-chaos-suite.md</code> §5
++ §6 T9; Universal §11.4.85 + §1.1 (inherited per §11.4.35) + Herald
+§107.y + §108.a; canonical template
+<code>tests/test_wave6.5_mutation_meta.sh</code>; evidence: gate 6 PASS
+/ 0 FAIL (conductor run 2026-05-27)</td>
+</tr>
+<tr>
+<td>HRD-129</td>
+<td>task</td>
+<td>high</td>
+<td>§11.4.85 stress+chaos suite wired into the canonical anti-bluff
+harness <code>scripts/e2e_bluff_hunt.sh</code> as new invariants E81-E88
+(GAP-3 plan §4 / §6 T8) — ADDITIVE-ONLY append after E80 (E1-E80 logic
+untouched). Each invariant RUNS a REAL hermetic Go stress/chaos test via
+the existing <code>check</code> helper AND cites the captured-evidence
+artefact under <code>docs/qa/&lt;run-id&gt;/stress_chaos/</code> as its
+§11.4.2/§11.4.5 positive-evidence anchor through a new
+<code>sc_anchor</code> helper that greps a SPECIFIC load-bearing value
+(present-but-empty artefact FAILs as a §11.4 PASS-bluff; absent evidence
+dir SKIPs-with-reason). Mapping: E81 runner exactly-once-archive +
+bounded dispatch (HRD-125); E82 <code>/v1/events</code> input-corruption
++ duplicate-key + auth-storm (HRD-123, anchor
+<code>events/categorised_errors.txt</code>
+<code>all_malformed_rejected_no_5xx</code>); E83
+<code>/v1/compliance</code> fail-loud (HRD-124); E84
+<code>/v1/safety_state</code> concurrent-mutation (HRD-124); E85
+<code>pherald listen</code> inbound malformed-Raw panic-free +
+extract-degrade (HRD-126); E86 claude_code process-death +
+timeout-cancel + truncated-reply (HRD-127); E87 disk-full tagged-error
+ENOSPC (HRD-128); E88 §12.6 host-mem headroom (HRD-128). All eight
+hermetic; live container-pause / real-disk-fill / container-OOM variants
+are SKIP-with-reason inside the Go tests (HERALD_STRESS_LIVE_*=1 gated).
+Verified <code>bash -n</code> clean; E81-E88 block 18/18 PASS
+deterministic; header bumped E1..E80→E1..E88. Full
+<code>scripts/e2e_bluff_hunt.sh</code> reports 78 PASS / 0 FAIL (was 60;
++18).</td>
+<td>2026-05-27</td>
+<td><code>2e6574d</code></td>
+<td>GAP-3 plan
+<code>docs/superpowers/plans/2026-05-27-stress-chaos-suite.md</code> §4
++ §6 T8; Universal §11.4.85 (inherited per §11.4.35) + Herald §108.a /
+§107.x; depends on HRD-123..HRD-128; evidence: e2e_bluff_hunt 78 PASS /
+0 FAIL</td>
+</tr>
+<tr>
+<td>HRD-128</td>
+<td>task</td>
+<td>high</td>
+<td>§11.4.85 container-orchestrated / resource-exhaustion stress+chaos
+tests (GAP-3 plan §1 row 6 / §6 T7 + §7 host-safety) —
+<code>commons_storage/resource_stress_chaos_test.go</code> (hermetic
+core) + <code>tests/test_resource_stress_chaos.sh</code> (LIVE container
+harness). HERMETIC PASS (×2 deterministic): (1) disk-full error
+propagation — a fake <code>database.Database</code>/<code>Tx</code>
+injects <code>syscall.ENOSPC</code> on the migration-UP exec, driving
+the REAL <code>RunMigrations → applyMigration</code> write path; asserts
+real write path exercised, error NOT swallowed, error tagged
+<code>commons_storage: apply</code> + <code>exec up</code>,
+<code>errors.Is(err, syscall.ENOSPC)</code> true, 0 migrations reported
+applied. (2) §12.6 host-mem headroom — <code>HostMemHeadroom()</code>
+pre/post a 25× workload shows <code>used_fraction_delta</code> ≈0 (host
+needle did not move) = §12.6 compliance evidence. OPT-IN (deterministic
+SKIP without env): real bounded-scratch disk fill HARD-capped 64 MiB,
+gated <code>HERALD_STRESS_LIVE_DISK=1</code>. LIVE container scenarios
+SKIP-with-reason (§11.4.3, host-safety-gated): container OOM-confinement
++ connection-churn against a <code>--memory</code>-bounded PG, gated
+<code>HERALD_STRESS_LIVE_OOM=1</code> + a §12.6 pre-flight host-headroom
+gate that REFUSES to add pressure when host used-fraction ≥ 60% (host
+was ~74% this run → honest SKIP). §12/§12.6 honoured: NO host-OOM, NO
+real-host-disk fill, NO host process killed.
+<code>go test -race -count=3</code> green (PASS×3/PASS×3/SKIP×3);
+<code>go vet</code> clean.</td>
+<td>2026-05-27</td>
+<td><code>398f584</code></td>
+<td>GAP-3 plan §1 row 6 + §6 T7 + §7; Universal §11.4.85 (inherited per
+§11.4.35) + Herald §108.a / §107.x; §12/§12.6 host-session-safety;
+cross-refs HRD-081 + HRD-056; evidence
+<code>docs/qa/HRD-128-resource-2026-05-27T091641/stress_chaos/resource/</code>
+(disk_full_tagged_error.txt, host_memory_headroom.txt)</td>
+</tr>
+<tr>
+<td>HRD-127</td>
+<td>task</td>
+<td>high</td>
+<td>§11.4.85 claude_code dispatch stress+chaos tests (GAP-3 plan §1 row
+5 / §6 T6) —
+<code>commons_messaging/dispatch/claude_code/dispatch_stress_chaos_test.go</code>
+(in-package, exercises unexported
+<code>buildCmd</code>/<code>bootstrapSession</code>/<code>parseReply</code>)
++ 5 committed hermetic shims <code>testdata/fake-claude-*.sh</code>. Per
+§11.4.27 only the EXTERNAL <code>claude</code> CLI is faked via the
+existing <code>New(binaryPath,…)</code> seam; NO production source
+edited, NO new dep, NO real <code>claude</code> invoked. STRESS: (1)
+N=24×25=600 concurrent <code>Dispatch</code> (<code>--resume</code>
+path) — 0 errors, every reply really parsed, every call resumed the SAME
+pre-seeded UUID, anchor never drifted, p50=62.9ms/p95=96.4ms; (2) N=16
+concurrent COLD-START bootstrap — all succeed, exactly one anchor UUID
+persists, <code>-race</code> clean. CHAOS: (a) process-death
+<code>exit 137</code> + self-<code>kill -KILL $$</code> → tagged error,
+no hang (watchdog), partial stdout NOT accepted; (b) timeout — 30s-sleep
+shim vs 800ms ctx → cancellation fires, Dispatch returns ~803ms not 30s;
+(c) truncated <code>&lt;&lt;&lt;HERALD-REPLY&gt;&gt;&gt;</code> →
+explicit <code>decode reply JSON</code> error, never silent
+partial-accept. FINDING-1: cold-start concurrent bootstrap is
+last-writer-wins by design (honest bound asserted, not
+<code>bootstrap_count==1</code> bluff). FINDING-2: timeout-cancellation
+latency depends on <code>claude</code> being a single process (hardening
+direction = process-group kill, flagged for dispatcher owner).
+<code>go test -race -count=3</code> deterministically green ×3.</td>
+<td>2026-05-27</td>
+<td><code>5c1987b</code></td>
+<td>GAP-3 plan §1 row 5 + §6 T6; Universal §11.4.85 (inherited per
+§11.4.35) + Herald §108.a / §107.x; cross-refs HRD-126 + HRD-156;
+evidence
+<code>docs/qa/HRD-127-stress-chaos-2026-05-27T090518/stress_chaos/claude_code/</code>
+(subprocess_kill.log, timeout_cancel.log, truncated_reply.txt)</td>
+</tr>
+<tr>
+<td>HRD-126</td>
+<td>task</td>
+<td>high</td>
+<td>§11.4.85 <code>pherald listen</code> inbound-path stress+chaos tests
+(GAP-3 plan §1 row 4 / §6 T5) —
+<code>pherald/internal/inbound/stress_chaos_test.go</code> (in-package,
+exercises unexported <code>extractReplyToMessageID</code>) +
+<code>pherald/cmd/pherald/listen_stress_chaos_test.go</code> (drives the
+REAL <code>runListen</code> loop). Per §11.4.27 only the channel
+Subscriber + CC <code>CodeDispatcher</code> boundaries are faked; the
+Dispatcher action-routing switch + <code>runListen</code> fan-in +
+clean-shutdown run unmodified. STRESS: (1) N=16×50=800 concurrent
+<code>Dispatcher.Handle</code> — 0 errors, exactly-once reply per event
+(800/800), 0 goroutine leak, p50=0.41ms ~25k dispatch/s; (2) 400-event
+burst through <code>runListen</code> — nothing dropped, clean shutdown
+on cancel (&lt;3s), no leak. CHAOS: (a) corrupt <code>Raw</code>
+payloads (nil map, missing/nil/string/bool/slice/map message_id) →
+<code>extractReplyToMessageID</code> degrades to (0,err); valid
+int/int64/int32/float64/float32 decode; 64-dispatch corrupt-Raw flood
+panic-free (recover-guard), degraded <code>replyTo=""</code>; (b) CC
+subprocess fault (killed/truncated/marker-less/empty/unknown-action) →
+stage-tagged <code>inbound:</code> error, no reply leak, no hang; (c)
+once-only side-effect — 1000 redeliveries of the same
+<code>issue.open</code> collapse to exactly-ONE durable sink row.
+<code>go test -race -count=3</code> deterministically green ×3 on both
+packages. NO production source edited, NO new dep.</td>
+<td>2026-05-27</td>
+<td><code>60abe87</code></td>
+<td>GAP-3 plan §1 row 4 + §6 T5; Universal §11.4.85 (inherited per
+§11.4.35) + Herald §108.a / §107.x; cross-refs HRD-125 (once-only) +
+HRD-132; evidence
+<code>docs/qa/2026-05-27T135301-gap3-listen-HRD-126/stress_chaos/listen/</code>
+(handle_malformed_raw.txt, malformed_payloads.txt,
+once_only_side_effect.txt)</td>
+</tr>
+<tr>
+<td>HRD-125</td>
+<td>task</td>
+<td>high</td>
+<td>§11.4.85 Runner 7-stage pipeline stress+chaos tests (GAP-3 plan §1
+row 3 / §6 T4) —
+<code>pherald/internal/runner/stress_chaos_test.go</code> exercising the
+REAL <code>runner.Run</code> (only the external boundary — PG
+events_processed store, channel sink, Redis SETNX seam — faked per
+§11.4.27; orchestrator + 7 stages run unmodified). STRESS: N=16
+goroutines × 40 iters concurrent same-key replay + fresh keys,
+<code>-race</code> clean. CHAOS: (a) 1000× duplicate flood @ 50 parallel
+under live atomic Redis SETNX; (a') same under the nil-Redis PG-fallback
+degrade; (b) hermetic PG-deadlock (SQLSTATE 40P01) injection on the
+events_processed Insert. SURFACED HRD-132: dispatch exactly-once was NOT
+guaranteed under concurrent replay (events_processed archived at Stage
+7; observed 2–4 duplicate dispatches of a 1000× flood); tests asserted
+the honest code-true contract (archival exactly-once + bounded dispatch)
+pre-fix, then upgraded to <code>sends==1</code> once HRD-132 landed the
+Stage-2 claim. <code>go test -race -count=1</code> green.</td>
+<td>2026-05-27</td>
+<td><code>02d272d</code> (+ <code>sends==1</code> upgrade in HRD-132
+<code>354b883</code>)</td>
+<td>GAP-3 plan §1 row 3 + §6 T4; Universal §11.4.85 (inherited per
+§11.4.35) + Herald §108.a / §107.x; FINDING tracked + fixed as HRD-132;
+evidence
+<code>docs/qa/HRD-125-stress-chaos-2026-05-27T131251-gap3/stress_chaos/runner/</code>
+(exactly_once.txt <code>dispatch_exactly_once=1</code>,
+deadlock_recovery.log, nil_redis_degrade.txt)</td>
+</tr>
+<tr>
+<td>HRD-124</td>
+<td>task</td>
+<td>high</td>
+<td>§11.4.85 Gin <code>/v1/compliance</code> (cherald) +
+<code>/v1/safety_state</code> (sherald) GET stress+chaos tests (GAP-3
+plan §1 row 2 / §6 T3) —
+<code>cherald/internal/compliance/compliance_stress_chaos_test.go</code>
++ <code>sherald/internal/safety/safety_stress_chaos_test.go</code>, each
+driving the REAL flavor handler over a REAL in-process
+<code>httptest</code> server dialed by <code>net/http.Client</code>
+through the production Gin chain (<code>cli.TOONMiddleware</code> → auth
+→ handler). Only the external boundary faked per §11.4.27; NO production
+source edited, NO new dep. STRESS (each flavor): N=10×200=2000 GETs,
+<code>-race</code> clean — 0 errors, 0 5xx, all 200 (compliance ~8.4k
+req/s, safety_state ~16k req/s). Content-negotiation correctness under
+concurrency — every request alternates
+<code>Accept: application/toon</code> vs <code>application/json</code> →
+100% Content-Type match to its OWN Accept header (0 codec-bleed), every
+toon body real TOON wire bytes. CHAOS: (a) compliance PG-drop
+(<code>errStore</code>) → 2000/2000 fail-loud 500 each naming the failed
+dependency, 0 fabricated 2xx (a swallowed-error 200
+<code>{results:[]}</code> would falsely tell an operator "no violations"
+— the §107 mode this gate forbids); safety_state has no hot-path DB by
+design so the code-true analogue (concurrent state-mutation under load,
+<code>-race</code>-clean RWMutex) is exercised instead; (b) auth storm —
+1000 random tokens through the REAL
+<code>commons_auth.GinMiddleware</code>+HMAC(HS256) → 1000×401, 0
+bypass. Verified <code>go test -race -count=3</code> green ×3.</td>
+<td>2026-05-27</td>
+<td><code>6b990a7</code></td>
+<td>GAP-3 plan §1 row 2 + §6 T3; Universal §11.4.85 (inherited per
+§11.4.35) + Herald §108.a / §107.x; cross-refs HRD-123 (same pattern) +
+HRD-125; evidence
+<code>docs/qa/HRD-124-20260527T134316/stress_chaos/{compliance,safety_state}/</code>
+(pg_drop_fail_loud.log, concurrent_mutation.log, auth_storm.log)</td>
+</tr>
+<tr>
+<td>HRD-123</td>
+<td>task</td>
+<td>high</td>
+<td>§11.4.85 Gin <code>/v1/events</code> stress+chaos tests (GAP-3 plan
+§1 row 1 / §6 T2) —
+<code>pherald/internal/http/events_stress_chaos_test.go</code> driving
+the REAL POST <code>/v1/events</code> handler
+(<code>EventsHandler</code> → <code>runner.Run</code>, all 7 stages)
+over a REAL in-process <code>httptest</code> server dialed by
+<code>net/http.Client</code> through the production Gin chain
+(<code>cli.TOONMiddleware</code> + auth gate). Only the external
+boundary (PG/Redis/channel via <code>runner.NewFakeRunner</code>) faked
+per §11.4.27. STRESS: N=12×200=2400 CloudEvent POSTs, <code>-race</code>
+clean — 0 errors, 0 5xx, all 202; p50=0.706ms ~13,322 req/s. CHAOS: (b)
+duplicate-key-under-load (1200 POSTs, per-worker keys) → graceful
+degrade, 0 5xx, 0 hang; (c) input-corruption (8 MiB random, truncated
+JSON, non-UTF8, JSON array, missing-id, garbage, empty) × 5 → every body
+a tagged <code>event_parser:</code> 4xx, 0 panic, 0 5xx; (d) auth storm
+— 1000 random tokens through the REAL
+<code>commons_auth.GinMiddleware</code>+HMAC(HS256) → 1000×401, 0
+bypass; (a) live PG-drop → SKIP-with-reason (proven hermetically at
+HRD-125). FINDING (→ HRD-132 at HTTP layer): a SHARED-key cross-worker
+concurrent replay flood triggers the REAL <code>runner.go:132</code>
+<code>CachedRcpt.WasReplay</code> data race (fixed by HRD-132). E82
+anchor re-captured as <code>all_malformed_rejected_no_5xx</code> (the
+§11.4.50 transport-rejection-of-8-MiB-body is valid).</td>
+<td>2026-05-27</td>
+<td><code>490ec41</code> (+ E82 anchor fix <code>2e6574d</code>)</td>
+<td>GAP-3 plan §1 row 1 + §6 T2; Universal §11.4.85 (inherited per
+§11.4.35) + Herald §108.a / §107.x; cross-refs HRD-125 + HRD-132;
+evidence
+<code>docs/qa/HRD-123-stress-chaos-2026-05-27T132755/stress_chaos/events/</code>
+(categorised_errors.txt, auth_storm.log, latency.json)</td>
+</tr>
+<tr>
+<td>HRD-122</td>
+<td>task</td>
+<td>middle</td>
+<td>§11.4.85 stress+chaos shared scaffold — Go-native
+<code>commons/stresschaos</code> test-helper package (GAP-3 plan §2 / §6
+T1). Provides: a bounded concurrent load-runner (<code>RunLoad</code> —
+N workers × M iterations of a closure via stdlib
+<code>sync.WaitGroup</code>, no new dependency); nearest-rank percentile
+math (<code>Percentiles</code> →
+<code>{p50,p95,p99,max,min,count}</code>) emitted as
+<code>latency.json</code> + <code>latency_histogram.csv</code>; an
+evidence-dir writer creating
+<code>docs/qa/&lt;run-id&gt;/stress_chaos/&lt;surface&gt;/</code>; and a
+best-effort host-memory headroom probe (<code>HostMemHeadroom</code> —
+<code>vm_stat</code>+<code>sysctl hw.memsize</code> on darwin,
+<code>/proc/meminfo</code> on linux) for the §12.6 60%-ceiling proof
+(degrades to <code>probe-unavailable</code>, never a hard failure).
+Self-tested: 8 unit tests (percentile correctness on a known 1..100ms
+dataset, evidence-dir creation, bounded-goroutine proof, host-mem
+best-effort, §12.6 ceiling predicate) PASS under
+<code>go test -race -count=1</code>. Lowest sensible layer per CLAUDE.md
+layering (commons L0, importable by every flavor).</td>
+<td>2026-05-27</td>
+<td><code>02d272d</code></td>
+<td>GAP-3 plan
+<code>docs/superpowers/plans/2026-05-27-stress-chaos-suite.md</code> §2
++ §6 T1; Universal §11.4.85 (inherited per §11.4.35) + Herald §108.a;
+§12.6 host-safety; Catalogue-Check: no-match — Go stdlib only
+(2026-05-27); evidence: 8/8 unit tests PASS <code>-race</code></td>
+</tr>
 <tr>
 <td>HRD-114</td>
 <td>task</td>

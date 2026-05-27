@@ -112,7 +112,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>11</td>
+<td>12</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -128,9 +128,27 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td>**2026-05-27 GAP-3 checkpoint (HEAD <code>d2a60d3</code>, all 4
-mirrors synced; constitution at <code>3c9c4e9</code>). GAP-3 §11.4.85
-stress+chaos suite is COMPLETE (commits
+<td>**2026-05-27 GAP-3 + HRD-132 close-out checkpoint (HEAD
+<code>4f45f26</code>; constitution at <code>3c9c4e9</code>). GAP-3
+§11.4.85 stress+chaos suite (HRD-122..HRD-130) AND the HRD-132 Runner
+idempotency-window fix are COMPLETE and now atomically migrated
+Issues→Fixed (Issues.md r16 / Fixed.md r15, §11.4.19): HRD-122..HRD-130
+Task→Completed, HRD-132 Bug→Fixed. HRD-132 fix <code>354b883</code>
+lands claim-before-dispatch at Runner Stage 2 —
+<code>INSERT events_processed … ON CONFLICT DO NOTHING</code> is the
+AUTHORITATIVE exactly-once dispatch gate (the Stage-2→Stage-7
+duplicate-dispatch window HRD-125 surfaced is closed); latent
+<code>runner.go:132</code> <code>CachedRcpt.WasReplay</code> race fixed;
+HRD-125 assertion upgraded to <code>sends==1</code>
+(<code>docs/qa/HRD-125-stress-chaos-2026-05-27T131251-gap3/</code> shows
+<code>dispatch_exactly_once=1</code>,
+<code>shared_key_sends=1 want=1</code>); wave3 mutation-gate M4 retired
+(<code>4f45f26</code>) — Stage-7 Insert now redundant. Full
+<code>scripts/e2e_bluff_hunt.sh</code> 78 PASS / 0 FAIL; HRD-130 gate 6
+PASS / 0 FAIL (5 load-bearing mutations). HRD-131 (SQLite SSoT migration
+Phase 1) remains OPEN; Phases 2-6 follow-on. Prior GAP-3 checkpoint
+(HEAD <code>d2a60d3</code>, all 4 mirrors synced): GAP-3 §11.4.85
+stress+chaos suite COMPLETE (commits
 <code>02d272d</code>→<code>d2a60d3</code>, HRD-122..130): HRD-122
 scaffold <code>commons/stresschaos/</code>, HRD-123 Gin
 <code>/v1/events</code>, HRD-124
@@ -145,26 +163,30 @@ FAIL</strong> (was 60; +18 = E81-E88 + anchor sub-checks); HRD-130 gate
 <strong>6 PASS / 0 FAIL</strong> (5 mutations load-bearing). Evidence
 committed under <code>docs/qa/HRD-12{3,4,5,7,8}-*</code> +
 <code>docs/qa/2026-05-27T135301-gap3-listen-HRD-126/</code>.
-<strong>NOTE — HRD-122..130 remain <code>in_progress</code> in
-Issues.md</strong> (suite landed + e2e green, but not yet atomically
-migrated to Fixed.md). Two anti-bluff issues caught + fixed mid-session
-by the conductor: HRD-123 flaky oversized-body assertion (§11.4.50 —
-transport-rejection of an 8 MiB body is valid, not a failure) and E82
-stale-anchor (re-captured committed evidence with
-<code>HERALD_STRESS_QA_DIR</code>; assertion
+<strong>NOTE — HRD-122..130 are now MIGRATED to Fixed.md
+(Completed)</strong> (suite landed + e2e green + atomic Issues→Fixed
+migration done in Issues.md r16 / Fixed.md r15). Two anti-bluff issues
+caught + fixed mid-session by the conductor: HRD-123 flaky
+oversized-body assertion (§11.4.50 — transport-rejection of an 8 MiB
+body is valid, not a failure) and E82 stale-anchor (re-captured
+committed evidence with <code>HERALD_STRESS_QA_DIR</code>; assertion
 <code>all_4xx_no_panic</code>→<code>all_malformed_rejected_no_5xx</code>).
-<strong>NEW FINDING — HRD-132 (open, bug):</strong> Runner idempotency
-window — concurrent same-key replay duplicate-dispatches (2-4 of a 1000×
-flood) because <code>events_processed</code> is archived at Stage 7
-while <code>idempotency.go:64-72</code> treats SETNX-miss+no-PG-row as
-fresh (documented §32.1 "Redis-lies-PG-truths"); archival is
-exactly-once but dispatch is only bounded; fix direction =
-claim-before-dispatch (INSERT ON CONFLICT at Stage 2) + fix latent
-<code>runner.go:132</code> <code>CachedRcpt.WasReplay</code> data race +
-upgrade HRD-125 assertion to <code>sends==1</code>. Prior r10 (still
-valid history) — a constitution-compliance + SSoT-hygiene sweep: (1)
-pulled HelixConstitution <code>3a085b9</code>→<code>3c9c4e9</code>
-(gained §11.4.89 background-test / §11.4.90 Obsolete-status / §11.4.91
+<strong>HRD-132 (FIXED <code>354b883</code>, now in Fixed.md):</strong>
+Runner idempotency window — concurrent same-key replay
+duplicate-dispatched (2-4 of a 1000× flood) because
+<code>events_processed</code> was archived at Stage 7 while
+<code>idempotency.go:64-72</code> treated SETNX-miss+no-PG-row as fresh
+(documented §32.1 "Redis-lies-PG-truths"). FIX landed
+claim-before-dispatch
+(<code>INSERT events_processed … ON CONFLICT DO NOTHING</code> at Stage
+2 = authoritative exactly-once dispatch gate) + closed the latent
+<code>runner.go:132</code> <code>CachedRcpt.WasReplay</code> race +
+upgraded the HRD-125 assertion to <code>sends==1</code> (evidence
+<code>dispatch_exactly_once=1</code>); wave3 M4 retired
+(<code>4f45f26</code>). Prior r10 (still valid history) — a
+constitution-compliance + SSoT-hygiene sweep: (1) pulled
+HelixConstitution <code>3a085b9</code>→<code>3c9c4e9</code> (gained
+§11.4.89 background-test / §11.4.90 Obsolete-status / §11.4.91
 summary-clarity / §11.4.92 multi-pass-eval / §11.4.93 SQLite-SSoT /
 §11.4.94 zero-idle-parallel); (2) propagated §11.4.89-94 into CLAUDE.md
 r12 / AGENTS.md r8 / HERALD_CONSTITUTION.md r6 §108.d-i (commit
@@ -198,26 +220,22 @@ closed (HRD-110..114). PENDING-OPERATOR: MTProto real-channel automation
 <td>Issues</td>
 <td>HRD-008, HRD-015, HRD-018 (in_progress), HRD-019..HRD-027,
 HRD-029..HRD-056, HRD-081, HRD-085..HRD-090, HRD-115..HRD-121 (Wave 7
-T6-T12 pending), HRD-122..HRD-130 (GAP-3 §11.4.85 stress+chaos — all
-<code>in_progress</code>: suite landed + e2e green, atomic→Fixed
-migration pending), HRD-131 (SQLite SSoT Phase 1, open), HRD-132 (Runner
-idempotency-window bug, open)</td>
+T6-T12 pending), HRD-131 (SQLite SSoT Phase 1, open)</td>
 </tr>
 <tr>
 <td>Issues summary</td>
 <td>see <code>Issues.md</code>. Wave 7 closed HRD-110/111/112/113/114;
-HRD-115..121 are the remaining Wave 7 tasks T6-T12. HRD-122..130 are the
-§11.4.85 stress+chaos suite (GAP-3) — IMPLEMENTED + e2e-green this
-session but still <code>in_progress</code> in Issues.md (not yet
-migrated to Fixed.md). HRD-131 is §11.4.93 SQLite workable-items SSoT
-migration Phase 1 (open). HRD-132 is the newly-filed Runner
-idempotency-window bug (open) found while running HRD-125's stress
-flood.</td>
+HRD-115..121 are the remaining Wave 7 tasks T6-T12. HRD-122..HRD-130
+(§11.4.85 stress+chaos suite, GAP-3) + HRD-132 (Runner
+idempotency-window bug) are now MIGRATED to Fixed.md (Completed / Fixed)
+— Issues.md r16 / Fixed.md r15 atomic §11.4.19 migration. HRD-131 is
+§11.4.93 SQLite workable-items SSoT migration Phase 1 (open) — Phases
+2-6 follow-on.</td>
 </tr>
 <tr>
 <td>Fixed</td>
 <td>HRD-001..HRD-017 (less open), HRD-028, HRD-080, HRD-092..HRD-101,
-HRD-110, HRD-111, HRD-112, HRD-113, HRD-114</td>
+HRD-110..HRD-114, HRD-122..HRD-130, HRD-132</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
@@ -226,18 +244,14 @@ HRD-110, HRD-111, HRD-112, HRD-113, HRD-114</td>
 <tr>
 <td>Continuation</td>
 <td><strong>Resume — remaining "do everything" workstreams in priority
-order:</strong> <strong>(1) HRD-132 idempotency-window fix</strong>
-(open bug, HIGH): claim-before-dispatch (INSERT ON CONFLICT at Runner
-Stage 2) + fix latent <code>runner.go:132</code>
-<code>CachedRcpt.WasReplay</code> data race + upgrade HRD-125 assertion
-to <code>sends==1</code>; ship paired §1.1 mutation coverage + e2e
-evidence. <strong>(2) §11.4.93 SQLite SSoT migration Phase 2+</strong>
-(HRD-131, open): Phase 2 adopt the constitution's migration binary
+order (GAP-3 + HRD-132 DONE):</strong> <strong>(1) §11.4.93 SQLite SSoT
+migration Phase 2+</strong> (HRD-131, open): Phase 2 adopt the
+constitution's migration binary
 (<code>constitution/scripts/workable-items/</code>, §11.4.74 reference —
 never reimplement), then Phases 3-6 (md→db sync, db→md byte-identical
 regen, generator shims, text-direct-edit prohibition) opened as
 follow-on HRDs so §106/§107.x invariants never break mid-migration.
-<strong>(3) v1.0.0 readiness — 39 open §42/§43 HRDs</strong>
+<strong>(2) v1.0.0 readiness — 39 open §42/§43 HRDs</strong>
 (HRD-018..027, 029..056, 081, 085..090, 008, 015) <strong>+ Wave 7
 T6-T12</strong> (Slack adapter via vendored slack-go submodule — verify
 I6 gate after .gitmodules entry, confirm slack-go v0.16.0 field names
@@ -248,7 +262,7 @@ gate, Issues→Fixed/v0.6.0/4-mirror push; T5 pre-staged
 <code>HERALD_CHANNELS=tgram,slack</code> currently errors
 <code>ErrUnknownChannel</code> until T6 registers slack, by design; plan
 <code>docs/superpowers/plans/2026-05-27-wave7-generic-messenger.md</code>
-line 980). <strong>(4) GAP-4 docs/qa back-fill + docs-audit
+line 980). <strong>(3) GAP-4 docs/qa back-fill + docs-audit
 #147</strong> — features lacking <code>docs/qa/&lt;run-id&gt;/</code>
 evidence per the <code>ee63ce6</code> qa-coverage audit + comprehensive
 documentation audit. <strong>STILL-OPEN GATED ITEMS:</strong> MTProto
@@ -260,13 +274,16 @@ groups — see
 should also <code>/revoke @pherald_qa_bot</code> (leaked plaintext
 token). §11.4.90 obsolescence — zero current Obsolete rows; convention
 in place, periodic re-audit pending. (RESOLVED this session: GAP-3
-§11.4.85 stress+chaos suite IMPLEMENTED — e2e 78 PASS / 0 FAIL; HRD-123
-flaky oversized-body assertion + E82 stale-anchor anti-bluff issues
-fixed. Prior r10 RESOLVED: Wave 6.5 mutation-gate M3 stale anchor;
-Postgres-SASL e2e FAILs; HRD-101 filed as a real Fixed.md row.) §11.4.87
-endless-loop: continue until Issues.md zero-active + CONTINUATION §3
-empty + no subagent in flight. NO BLUFF. Push 4 mirrors every 2-3
-commits.</td>
+§11.4.85 stress+chaos suite IMPLEMENTED — e2e 78 PASS / 0 FAIL — AND
+atomically migrated Issues→Fixed (HRD-122..130 Completed); HRD-132
+Runner idempotency-window bug FIXED <code>354b883</code>
+(claim-before-dispatch, exactly-once <code>sends==1</code>) + migrated
+to Fixed.md; HRD-123 flaky oversized-body assertion + E82 stale-anchor
+anti-bluff issues fixed. Prior r10 RESOLVED: Wave 6.5 mutation-gate M3
+stale anchor; Postgres-SASL e2e FAILs; HRD-101 filed as a real Fixed.md
+row.) §11.4.87 endless-loop: continue until Issues.md zero-active +
+CONTINUATION §3 empty + no subagent in flight. NO BLUFF. Push 4 mirrors
+every 2-3 commits.</td>
 </tr>
 </tbody>
 </table>
@@ -400,23 +417,24 @@ submodule-catalogue-first mandates into the parent constitution.</td>
 </tr>
 <tr>
 <td>HRD-122..130</td>
-<td>in_progress</td>
+<td>Completed</td>
 <td>GAP-3 §11.4.85 stress+chaos suite — IMPLEMENTED + e2e-green
-(<code>d2a60d3</code>); awaiting atomic Issues→Fixed migration.</td>
+(<code>d2a60d3</code>); MIGRATED Issues→Fixed (Fixed.md r15). DONE.</td>
 </tr>
 <tr>
 <td>HRD-131</td>
 <td>open</td>
 <td>§11.4.93 SQLite workable-items SSoT migration Phase 1 (scope-lock
-filed); Phase 2+ pending.</td>
+filed); Phase 2+ pending. <strong>← the only remaining open item filed
+this GAP cycle.</strong></td>
 </tr>
 <tr>
 <td>HRD-132</td>
-<td>open</td>
-<td>Runner idempotency-window bug — concurrent same-key replay
-duplicate-dispatches (2-4 of 1000× flood); fix = claim-before-dispatch +
-<code>runner.go:132</code> <code>CachedRcpt.WasReplay</code> race +
-HRD-125 <code>sends==1</code>.</td>
+<td>Fixed</td>
+<td>Runner idempotency-window bug — FIXED <code>354b883</code>
+(claim-before-dispatch at Stage 2, exactly-once <code>sends==1</code>,
+<code>CachedRcpt.WasReplay</code> race closed); MIGRATED Issues→Fixed
+(Fixed.md r15). DONE.</td>
 </tr>
 </tbody>
 </table>
