@@ -205,15 +205,22 @@ echo "== M3: mutate pherald Runner PolicyGate → DecisionPass unconditional =="
 echo "SKIP  M3 (no deny-evaluator e2e invariant active in Wave 3b; mutation will fire when Wave 3c adds the deny-path check)"
 
 # ----------------------------------------------------------------------
-# M4: mutate pherald Runner OutcomeRecorder.Process to skip the
-# events_processed.Insert call. With this mutation the archive row is
-# never written, so:
-#   - E38 MUST FAIL (no row → 2nd send isn't deduped via PG fallback)
-#   - E42 MUST FAIL (no row → events_processed count stays 0)
+# M4: RETIRED 2026-05-27 (HRD-132 claim-before-dispatch). M4 previously
+# mutated OutcomeRecorder.Process to skip the Stage-7 events_processed.Insert
+# and asserted E38/E42 break. HRD-132 moved the AUTHORITATIVE archive write to
+# the Stage-2 PG Claim (INSERT ... ON CONFLICT DO NOTHING); the Stage-7 Insert
+# is now a redundant idempotent no-op backstop, so skipping it no longer breaks
+# E38/E42 (the row is already written at Stage 2). The archive write is now
+# defense-in-depth (two independent writers) — a positive robustness property —
+# so NO single-point archive mutation breaks the e2e invariants. Coverage
+# post-HRD-132: dedup-VERDICT → M2 (Duplicate=false breaks E38); exactly-once-
+# DISPATCH → HRD-125 concurrent stress (sends==1, proven load-bearing by its TDD
+# RED: pre-fix shared_key_sends=3 FAILED) + the HRD-130 stress-chaos gate.
+# Forcing M4 to PASS would be the §11.4 bluff the gate just caught; the dead
+# branch below is preserved for history (never executes — guard is `false`).
 # ----------------------------------------------------------------------
 OUTCOME="${REPO_ROOT}/pherald/internal/runner/outcome.go"
-echo "== M4: mutate OutcomeRecorder.Process → skip events_processed.Insert =="
-if nc -z 127.0.0.1 24100 2>/dev/null; then
+if false; then  # M4 RETIRED 2026-05-27 (HRD-132) — always take the SKIP branch
     file_backup "${OUTCOME}"
     # Comment out the Insert call in the happy path (line ~89). We only
     # want to mutate the happy-path call (Process), not the RecordDenied
@@ -238,7 +245,7 @@ if nc -z 127.0.0.1 24100 2>/dev/null; then
     fi
     restore "${OUTCOME}"
 else
-    echo "SKIP  M4 (E38/E42 themselves SKIP-with-reason — PG :24100 unreachable; mutation has no observable invariant)"
+    echo "SKIP  M4 (RETIRED post-HRD-132: Stage-7 events_processed.Insert is now a redundant no-op backstop — the Stage-2 PG Claim is the authoritative archive writer. Dedup-verdict covered by M2; exactly-once-dispatch by HRD-125 stress sends==1 + its TDD RED)"
 fi
 
 # ----------------------------------------------------------------------
