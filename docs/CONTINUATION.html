@@ -112,7 +112,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>10</td>
+<td>11</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -128,11 +128,43 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td>**2026-05-27 checkpoint (HEAD <code>a422c53</code>, all 4 mirrors
-synced; constitution at <code>3c9c4e9</code>). This session was a
-constitution-compliance + SSoT-hygiene sweep: (1) pulled
-HelixConstitution <code>3a085b9</code>→<code>3c9c4e9</code> (gained
-§11.4.89 background-test / §11.4.90 Obsolete-status / §11.4.91
+<td>**2026-05-27 GAP-3 checkpoint (HEAD <code>d2a60d3</code>, all 4
+mirrors synced; constitution at <code>3c9c4e9</code>). GAP-3 §11.4.85
+stress+chaos suite is COMPLETE (commits
+<code>02d272d</code>→<code>d2a60d3</code>, HRD-122..130): HRD-122
+scaffold <code>commons/stresschaos/</code>, HRD-123 Gin
+<code>/v1/events</code>, HRD-124
+<code>/v1/compliance</code>+<code>/v1/safety_state</code>, HRD-125
+Runner, HRD-126 <code>pherald listen</code>, HRD-127 claude_code
+(testdata fake-claude shims), HRD-128 container/resource-exhaustion
+(§12.6-safe, live OOM SKIP-with-reason), HRD-129 e2e E81-E88, HRD-130
+paired §1.1 mutation gate
+<code>tests/test_stress_chaos_mutation_meta.sh</code>. Full
+<code>scripts/e2e_bluff_hunt.sh</code> now reports <strong>78 PASS / 0
+FAIL</strong> (was 60; +18 = E81-E88 + anchor sub-checks); HRD-130 gate
+<strong>6 PASS / 0 FAIL</strong> (5 mutations load-bearing). Evidence
+committed under <code>docs/qa/HRD-12{3,4,5,7,8}-*</code> +
+<code>docs/qa/2026-05-27T135301-gap3-listen-HRD-126/</code>.
+<strong>NOTE — HRD-122..130 remain <code>in_progress</code> in
+Issues.md</strong> (suite landed + e2e green, but not yet atomically
+migrated to Fixed.md). Two anti-bluff issues caught + fixed mid-session
+by the conductor: HRD-123 flaky oversized-body assertion (§11.4.50 —
+transport-rejection of an 8 MiB body is valid, not a failure) and E82
+stale-anchor (re-captured committed evidence with
+<code>HERALD_STRESS_QA_DIR</code>; assertion
+<code>all_4xx_no_panic</code>→<code>all_malformed_rejected_no_5xx</code>).
+<strong>NEW FINDING — HRD-132 (open, bug):</strong> Runner idempotency
+window — concurrent same-key replay duplicate-dispatches (2-4 of a 1000×
+flood) because <code>events_processed</code> is archived at Stage 7
+while <code>idempotency.go:64-72</code> treats SETNX-miss+no-PG-row as
+fresh (documented §32.1 "Redis-lies-PG-truths"); archival is
+exactly-once but dispatch is only bounded; fix direction =
+claim-before-dispatch (INSERT ON CONFLICT at Stage 2) + fix latent
+<code>runner.go:132</code> <code>CachedRcpt.WasReplay</code> data race +
+upgrade HRD-125 assertion to <code>sends==1</code>. Prior r10 (still
+valid history) — a constitution-compliance + SSoT-hygiene sweep: (1)
+pulled HelixConstitution <code>3a085b9</code>→<code>3c9c4e9</code>
+(gained §11.4.89 background-test / §11.4.90 Obsolete-status / §11.4.91
 summary-clarity / §11.4.92 multi-pass-eval / §11.4.93 SQLite-SSoT /
 §11.4.94 zero-idle-parallel); (2) propagated §11.4.89-94 into CLAUDE.md
 r12 / AGENTS.md r8 / HERALD_CONSTITUTION.md r6 §108.d-i (commit
@@ -166,15 +198,21 @@ closed (HRD-110..114). PENDING-OPERATOR: MTProto real-channel automation
 <td>Issues</td>
 <td>HRD-008, HRD-015, HRD-018 (in_progress), HRD-019..HRD-027,
 HRD-029..HRD-056, HRD-081, HRD-085..HRD-090, HRD-115..HRD-121 (Wave 7
-T6-T12 pending), HRD-122..HRD-130 (GAP-3 §11.4.85 stress+chaos plan),
-HRD-131 (SQLite SSoT Phase 1)</td>
+T6-T12 pending), HRD-122..HRD-130 (GAP-3 §11.4.85 stress+chaos — all
+<code>in_progress</code>: suite landed + e2e green, atomic→Fixed
+migration pending), HRD-131 (SQLite SSoT Phase 1, open), HRD-132 (Runner
+idempotency-window bug, open)</td>
 </tr>
 <tr>
 <td>Issues summary</td>
 <td>see <code>Issues.md</code>. Wave 7 closed HRD-110/111/112/113/114;
 HRD-115..121 are the remaining Wave 7 tasks T6-T12. HRD-122..130 are the
-planned §11.4.85 stress+chaos suite (GAP-3). HRD-131 is §11.4.93 SQLite
-workable-items SSoT migration Phase 1.</td>
+§11.4.85 stress+chaos suite (GAP-3) — IMPLEMENTED + e2e-green this
+session but still <code>in_progress</code> in Issues.md (not yet
+migrated to Fixed.md). HRD-131 is §11.4.93 SQLite workable-items SSoT
+migration Phase 1 (open). HRD-132 is the newly-filed Runner
+idempotency-window bug (open) found while running HRD-125's stress
+flood.</td>
 </tr>
 <tr>
 <td>Fixed</td>
@@ -187,50 +225,45 @@ HRD-110, HRD-111, HRD-112, HRD-113, HRD-114</td>
 </tr>
 <tr>
 <td>Continuation</td>
-<td><strong>Resume at Wave 7 T6</strong>
-(<code>docs/superpowers/plans/2026-05-27-wave7-generic-messenger.md</code>
-line 980). Wave 7 done: T1 <code>channels.Channel</code> interface
-(reply method <code>SendReplyGeneric</code>) + T2 registry/init + T3
-per-channel inbox + T4
-<code>channels.IsSelfEcho</code>/<code>StampSender</code> + T5
-multi-channel <code>pherald listen</code> (HRD-110..114 closed;
-<code>inbound.TgramReplier</code>→<code>Replier</code> generic-sig
-rename done via a <code>channelReplier</code> shim — tgram's native int
-<code>SendReply</code> untouched,
-<code>channels.Channel.SendReplyGeneric</code> bridged; multi-channel
-fan-in via sync.WaitGroup, NOT errgroup, go.mod unchanged;
-<code>HERALD_CHANNELS=tgram,slack</code> parsed, default
-<code>tgram</code>). Remaining: <strong>T6 Slack adapter (Socket Mode —
-VENDORS slack-go as a new submodule: verify
-<code>tests/test_constitution_inheritance.sh</code> I6 gate still passes
-after the .gitmodules entry; confirm slack-go v0.16.0 field names
-<code>inner.Files</code>/<code>socketmode.EventTypeEventsAPI</code>/<code>UploadFileV2Parameters</code>
-before coding; T5 pre-staged <code>perChannelConfig("slack")</code> +
-blank-import comment in listen.go —
+<td><strong>Resume — remaining "do everything" workstreams in priority
+order:</strong> <strong>(1) HRD-132 idempotency-window fix</strong>
+(open bug, HIGH): claim-before-dispatch (INSERT ON CONFLICT at Runner
+Stage 2) + fix latent <code>runner.go:132</code>
+<code>CachedRcpt.WasReplay</code> data race + upgrade HRD-125 assertion
+to <code>sends==1</code>; ship paired §1.1 mutation coverage + e2e
+evidence. <strong>(2) §11.4.93 SQLite SSoT migration Phase 2+</strong>
+(HRD-131, open): Phase 2 adopt the constitution's migration binary
+(<code>constitution/scripts/workable-items/</code>, §11.4.74 reference —
+never reimplement), then Phases 3-6 (md→db sync, db→md byte-identical
+regen, generator shims, text-direct-edit prohibition) opened as
+follow-on HRDs so §106/§107.x invariants never break mid-migration.
+<strong>(3) v1.0.0 readiness — 39 open §42/§43 HRDs</strong>
+(HRD-018..027, 029..056, 081, 085..090, 008, 015) <strong>+ Wave 7
+T6-T12</strong> (Slack adapter via vendored slack-go submodule — verify
+I6 gate after .gitmodules entry, confirm slack-go v0.16.0 field names
+<code>inner.Files</code>/<code>socketmode.EventTypeEventsAPI</code>/<code>UploadFileV2Parameters</code>;
+then qaherald Slack MessengerClient, spec §11.0/§32.2/§43, e2e, mutation
+gate, Issues→Fixed/v0.6.0/4-mirror push; T5 pre-staged
+<code>perChannelConfig("slack")</code> + blank-import in listen.go —
 <code>HERALD_CHANNELS=tgram,slack</code> currently errors
-ErrUnknownChannel until T6 registers slack, by design)</strong> · T7
-qaherald Slack MessengerClient · T8 spec §11.0/§32.2/§43 · T9 e2e
-E81-E88 · T10 paired mutation gate · T11 §11.4.85 stress+chaos · T12
-docs/Issues→Fixed/v0.6.0/4-mirror push. <strong>STILL-OPEN GATED/DEBT
-ITEMS:</strong> (a) MTProto real-channel automation — OPERATOR must
-provide my.telegram.org app_id+app_hash (folds into a qaherald
-MessengerClient MTProto impl reusing the entire scenario engine);
-operator should also <code>/revoke</code> the leaked
-<code>@pherald_qa_bot</code> token. (b) GAP-3 execution — the §11.4.85
-stress+chaos suite (HRD-122..130) is PLANNED
-(<code>docs/superpowers/plans/2026-05-27-stress-chaos-suite.md</code>)
-but NOT yet implemented. (c) §11.4.93 SQLite SSoT Phase 2+ — HRD-131
-(Phase 1, scope-lock) filed; migration of the markdown trackers to the
-version-controlled <code>docs/.workable_items.db</code> SQLite SSoT is
-multi-phase. (d) GAP-4 docs/qa back-fill — features lacking
-<code>docs/qa/&lt;run-id&gt;/</code> evidence per the
-<code>ee63ce6</code> qa-coverage audit. (e) §11.4.90 obsolescence — zero
-current Obsolete rows; convention is in place, periodic re-audit of
-open/Fixed HRDs pending. (RESOLVED this session: Wave 6.5 mutation-gate
-M3 stale anchor; Postgres-SASL e2e FAILs → e2e now 60 PASS / 0 FAIL / 24
-SKIP; HRD-101 filed as a real Fixed.md row; docs/Issues + Fixed sibling
-regen handled this session.) Then: 39 remaining §42/§43 HRDs (018..027,
-029..056, 081, 085..090, 008, 015) for v1.0.0; docs-audit #147. §11.4.87
+<code>ErrUnknownChannel</code> until T6 registers slack, by design; plan
+<code>docs/superpowers/plans/2026-05-27-wave7-generic-messenger.md</code>
+line 980). <strong>(4) GAP-4 docs/qa back-fill + docs-audit
+#147</strong> — features lacking <code>docs/qa/&lt;run-id&gt;/</code>
+evidence per the <code>ee63ce6</code> qa-coverage audit + comprehensive
+documentation audit. <strong>STILL-OPEN GATED ITEMS:</strong> MTProto
+real-channel automation — OPERATOR-DECISION: provide my.telegram.org
+app_id+app_hash (folds into a qaherald MessengerClient MTProto impl
+reusing the entire scenario engine; Telegram never relays bot-to-bot in
+groups — see
+<code>docs/research/telegram-bot-to-bot-constraint.md</code>); operator
+should also <code>/revoke @pherald_qa_bot</code> (leaked plaintext
+token). §11.4.90 obsolescence — zero current Obsolete rows; convention
+in place, periodic re-audit pending. (RESOLVED this session: GAP-3
+§11.4.85 stress+chaos suite IMPLEMENTED — e2e 78 PASS / 0 FAIL; HRD-123
+flaky oversized-body assertion + E82 stale-anchor anti-bluff issues
+fixed. Prior r10 RESOLVED: Wave 6.5 mutation-gate M3 stale anchor;
+Postgres-SASL e2e FAILs; HRD-101 filed as a real Fixed.md row.) §11.4.87
 endless-loop: continue until Issues.md zero-active + CONTINUATION §3
 empty + no subagent in flight. NO BLUFF. Push 4 mirrors every 2-3
 commits.</td>
@@ -291,8 +324,13 @@ canonical build info;
 stubbed with HRD-NNN pointers.</li>
 <li><strong>Inheritance gate:</strong> 15 PASS / 0 FAIL. Meta-test
 ✓.</li>
-<li><strong>e2e_bluff_hunt:</strong> 60 PASS / 0 FAIL / 24 SKIP
-(Postgres-SASL carry-over RESOLVED this session).</li>
+<li><strong>e2e_bluff_hunt:</strong> 78 PASS / 0 FAIL (was 60; +18 =
+GAP-3 E81-E88 §11.4.85 stress+chaos + anchor sub-checks). Plus
+SKIP-with-reason for hardware/credential-absent invariants (live OOM,
+MTProto).</li>
+<li><strong>Stress+chaos mutation gate:</strong>
+<code>tests/test_stress_chaos_mutation_meta.sh</code> (HRD-130) 6 PASS /
+0 FAIL (5 load-bearing mutations).</li>
 <li><strong>Phase:</strong> implementation r1.</li>
 </ul>
 <h2 id="2-last-commit-landed">§2. Last commit landed</h2>
@@ -359,6 +397,26 @@ commons/types.go + null adapter test passes).</td>
 <td>open</td>
 <td>Propagate Universal §11.4.6X spec-versioning +
 submodule-catalogue-first mandates into the parent constitution.</td>
+</tr>
+<tr>
+<td>HRD-122..130</td>
+<td>in_progress</td>
+<td>GAP-3 §11.4.85 stress+chaos suite — IMPLEMENTED + e2e-green
+(<code>d2a60d3</code>); awaiting atomic Issues→Fixed migration.</td>
+</tr>
+<tr>
+<td>HRD-131</td>
+<td>open</td>
+<td>§11.4.93 SQLite workable-items SSoT migration Phase 1 (scope-lock
+filed); Phase 2+ pending.</td>
+</tr>
+<tr>
+<td>HRD-132</td>
+<td>open</td>
+<td>Runner idempotency-window bug — concurrent same-key replay
+duplicate-dispatches (2-4 of 1000× flood); fix = claim-before-dispatch +
+<code>runner.go:132</code> <code>CachedRcpt.WasReplay</code> race +
+HRD-125 <code>sends==1</code>.</td>
 </tr>
 </tbody>
 </table>
@@ -607,12 +665,15 @@ Single-pherald-listen invocation is the safe default.</li>
 e2e_bluff_hunt FAILs on Postgres-SASL invariants (E7-E12 + E14-E16 +
 E37-E42) are FIXED — <code>9b166c4</code> (auth env + PG password
 self-heal + Redis/tenant wiring + honest SKIP-with-reason) +
-<code>bdbe9f1</code> (Runner nil-Redis graceful PG-only fallback).
-e2e_bluff_hunt now reports 60 PASS / 0 FAIL / 24 SKIP.</li>
+<code>bdbe9f1</code> (Runner nil-Redis graceful PG-only fallback). At
+resolution e2e_bluff_hunt reported 60 PASS / 0 FAIL / 24 SKIP; the later
+GAP-3 session (<code>d2a60d3</code>) raised it to <strong>78 PASS / 0
+FAIL</strong> with E81-E88 wired in.</li>
 </ul>
 <h3
-id="safe-shutdown-checklist-now--end-of-2026-05-23-session">Safe-shutdown
-checklist (NOW — end of 2026-05-23 session)</h3>
+id="safe-shutdown-checklist-historical--end-of-2026-05-23-session-superseded--current-head-is-d2a60d3">Safe-shutdown
+checklist (HISTORICAL — end of 2026-05-23 session; superseded — current
+HEAD is <code>d2a60d3</code>)</h3>
 <table>
 <thead>
 <tr>
