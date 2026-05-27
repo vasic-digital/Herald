@@ -1988,6 +1988,7 @@ SC_RES_DIR="$(sc_newest 'HRD-128-*')"
 SC_CONST_DIR="$(sc_newest 'HRD-018-*')"
 SC_BIND_DIR="$(sc_newest 'HRD-019-*')"
 SC_SAFE_DIR="$(sc_newest 'HRD-020-*')"
+SC_CI_DIR="$(sc_newest 'HRD-021-*')"
 
 # sc_anchor <invariant-label> <evidence-file> <literal-anchor-string>
 # Asserts the captured-evidence file contains the load-bearing anchor value.
@@ -2068,6 +2069,11 @@ sc_anchor "E90" "${SC_BIND_DIR:+${SC_BIND_DIR}/rest/binding_roundtrip_transcript
 check "E91 sherald safety bindings — destructive-op/force-push/mem-budget detect→emit→audit (-race)" \
     "go test -race -count=1 ./sherald/internal/bindings/..."
 sc_anchor "E91" "${SC_SAFE_DIR:+${SC_SAFE_DIR}/safety_roundtrip_evidence.txt}" "digital.vasic.herald.constitution.repo.safety.breach"
+
+# ---- E92: bherald CI/test gate-result bindings detect→emit→persist (HRD-021) ----
+check "E92 bherald CI/test bindings — gate-result + anti-bluff-PASS detect→emit→audit (-race)" \
+    "go test -race -count=1 ./bherald/internal/bindings/..."
+sc_anchor "E92" "${SC_CI_DIR:+${SC_CI_DIR}/gate_result_roundtrip_transcript.txt}" "class=.gate.failed"
 
 # ----------------------------------------------------------------------
 echo ""
