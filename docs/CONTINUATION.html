@@ -112,7 +112,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>15</td>
+<td>16</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -670,17 +670,37 @@ responses, but the body carries live
 <code>Content-Encoding:br</code> policy check.</td>
 </tr>
 <tr>
+<td>§43 stragglers (HRD-034/047)</td>
+<td>in_progress (IMPLEMENTED 2026-05-28, <code>ba27a0e</code>)</td>
+<td><strong>§43 catalogue NOW COMPLETE</strong> —
+<code>sherald backup-snapshot</code> (§9.3 os.Link hardlinks →
+<code>.gate.recovered</code>, E121) +
+<code>scherald status-digest</code> (§11.4.45 Status.md sweep +
+<code>--apply</code> Status_Summary regen, E122). All 30 §43 commands
+(HRD-029..056) across pherald/sherald/cherald/rherald/bherald/scherald
+implemented + e2e-proven (E97-E122).</td>
+</tr>
+<tr>
 <td>RESUME-AT (next units)</td>
 <td>next</td>
-<td>(1) finish §43: <strong>HRD-034</strong> sherald backup-snapshot +
-<strong>HRD-047</strong> scherald status-digest. (2) <strong>Batch
-D</strong> commons_infra HRD-081 + HRD-085..090 (TaskRepository
-surfaces). (3) <strong>Batch E</strong> Wave 7 T6-T12 Slack HRD-115..121
-(slack-go submodule + I6 gate; renumber e2e off E121+). (4)
-operator-live close-out flips HRD-019..025 + §43 rows →Fixed. (5)
-§11.4.93 SQLite (HRD-131, deferred). Plan
+<td>(1) <strong>Batch D</strong> commons_infra
+<code>pgxTaskRepository</code>
+(<code>commons_infra/task_repository.go</code>) — 17 methods currently
+<code>ErrUnsupported</code>: HRD-085 GetByID/Update/Delete, HRD-086
+UpdateStatus/UpdateProgress/UpdateHeartbeat/SaveCheckpoint, HRD-087
+GetByStatus/GetPendingTasks/CountByStatus/GetTaskHistory, HRD-088
+GetStaleTasks/GetByWorkerID, HRD-089
+SaveResourceSnapshot/GetResourceSnapshots (+new
+<code>task_resource_snapshots</code> migration). <strong>Needs live PG
+:24100</strong> (boot via containers submodule + podman socket) for §107
+anti-bluff integration evidence — NOT hermetic. HRD-081 is a
+containers-submodule podman/docker detect (already worked around in
+boot.go). (2) <strong>Batch E</strong> Wave 7 T6-T12 Slack HRD-115..121
+(slack-go submodule + I6 gate; e2e off E123+). (3) operator-live
+close-out flips HRD-019..025 + §43 rows →Fixed. (4) §11.4.93 SQLite
+(HRD-131, deferred). Plan
 <code>docs/superpowers/plans/2026-05-27-v1.0.0-execution.md</code>.
-HEAD=<code>aef0207</code>.</td>
+HEAD=<code>ba27a0e</code>.</td>
 </tr>
 </tbody>
 </table>

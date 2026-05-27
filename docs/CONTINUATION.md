@@ -8,7 +8,7 @@
 
 | Field | Value |
 |---|---|
-| Revision | 15 |
+| Revision | 16 |
 | Created | 2026-05-20 |
 | Last modified | 2026-05-28 |
 | Status | active |
@@ -80,7 +80,8 @@ ok  	github.com/vasic-digital/herald/commons_storage	1.630s
 | commons/gitops promotion | Fixed (`4a6b0ec`) | Promoted `pherald/internal/gitops` → shared `commons/gitops` (L0, pure-stdlib: Runner/RepoRoot/FindScript/ParseUpstreams + TagExists/RemoteHasTag/LogSubjects) so all flavor modules reuse the git primitives (§11.4.74). No go.work/go.mod change (every flavor already requires commons). |
 | §107 lazy-verifier fix (sherald+cherald) | Fixed (`ed6c675`,`aef0207`) | sherald + cherald `main.go` built the JWT verifier eagerly + `os.Exit(1)` before `root.Execute()` → EVERY subcommand (even `version`) died without `HERALD_AUTH_MODE`. The §43 CLI commands are for bare CI/cron invocation. Fixed by building the verifier LAZILY inside a flavor-local `newServeCmd` (cli.BindServeFlags+RunServe), mirroring pherald. serve still refuses anonymous. Binary-verified. See memory `feedback_verify_subagent_cli_on_binary`. |
 | E53 Brotli flake | Fixed (`dfca0be`) | e2e E53 byte-compared two SEPARATE `/v1/safety_state` responses, but the body carries live `current_mem_percent`/`last_mem_sample_at`/`uptime_seconds` → false FAIL. Replaced cross-call diff with a codec-agnostic `grep uptime_seconds` on the (decoded) body; kept the `Content-Encoding:br` policy check. |
-| RESUME-AT (next units) | next | (1) finish §43: **HRD-034** sherald backup-snapshot + **HRD-047** scherald status-digest. (2) **Batch D** commons_infra HRD-081 + HRD-085..090 (TaskRepository surfaces). (3) **Batch E** Wave 7 T6-T12 Slack HRD-115..121 (slack-go submodule + I6 gate; renumber e2e off E121+). (4) operator-live close-out flips HRD-019..025 + §43 rows →Fixed. (5) §11.4.93 SQLite (HRD-131, deferred). Plan `docs/superpowers/plans/2026-05-27-v1.0.0-execution.md`. HEAD=`aef0207`. |
+| §43 stragglers (HRD-034/047) | in_progress (IMPLEMENTED 2026-05-28, `ba27a0e`) | **§43 catalogue NOW COMPLETE** — `sherald backup-snapshot` (§9.3 os.Link hardlinks → `.gate.recovered`, E121) + `scherald status-digest` (§11.4.45 Status.md sweep + `--apply` Status_Summary regen, E122). All 30 §43 commands (HRD-029..056) across pherald/sherald/cherald/rherald/bherald/scherald implemented + e2e-proven (E97-E122). |
+| RESUME-AT (next units) | next | (1) **Batch D** commons_infra `pgxTaskRepository` (`commons_infra/task_repository.go`) — 17 methods currently `ErrUnsupported`: HRD-085 GetByID/Update/Delete, HRD-086 UpdateStatus/UpdateProgress/UpdateHeartbeat/SaveCheckpoint, HRD-087 GetByStatus/GetPendingTasks/CountByStatus/GetTaskHistory, HRD-088 GetStaleTasks/GetByWorkerID, HRD-089 SaveResourceSnapshot/GetResourceSnapshots (+new `task_resource_snapshots` migration). **Needs live PG :24100** (boot via containers submodule + podman socket) for §107 anti-bluff integration evidence — NOT hermetic. HRD-081 is a containers-submodule podman/docker detect (already worked around in boot.go). (2) **Batch E** Wave 7 T6-T12 Slack HRD-115..121 (slack-go submodule + I6 gate; e2e off E123+). (3) operator-live close-out flips HRD-019..025 + §43 rows →Fixed. (4) §11.4.93 SQLite (HRD-131, deferred). Plan `docs/superpowers/plans/2026-05-27-v1.0.0-execution.md`. HEAD=`ba27a0e`. |
 
 ## §4. Next concrete steps
 
