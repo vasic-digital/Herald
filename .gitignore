@@ -35,3 +35,11 @@ go.work.sum
 .DS_Store
 .build/
 .herald/
+
+# §11.4.89 background-test + §11.4.88 background-push transient logs
+qa-results/
+
+# §11.4.93 SQLite workable-items single-source-of-truth (regenerated via the
+# constitution submodule's `workable-items sync` Go binary; never hand-committed)
+docs/.workable_items.db
+docs/.workable_items.db-*
