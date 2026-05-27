@@ -863,6 +863,60 @@ layering (commons L0, importable by every flavor).</td>
 load/stats tool added (2026-05-27).</td>
 </tr>
 <tr>
+<td>HRD-123</td>
+<td>task</td>
+<td>in_progress</td>
+<td>high</td>
+<td>§11.4.85 Gin <code>/v1/events</code> stress+chaos tests (GAP-3 plan
+§1 row 1 / §6 T2) — new
+<code>pherald/internal/http/events_stress_chaos_test.go</code> driving
+the REAL POST <code>/v1/events</code> handler
+(<code>EventsHandler</code> → <code>runner.Run</code>, all 7 stages)
+over a REAL in-process <code>httptest</code> server dialed by
+<code>net/http.Client</code>, through the production Gin middleware
+chain (<code>cli.TOONMiddleware</code> + auth gate). Only the external
+boundary (PG/Redis/channel via <code>runner.NewFakeRunner</code>) is
+faked per §11.4.27; the handler, body read+transcode, error→status
+mapping, and orchestration run unmodified. STRESS: N=12 workers × M=200
+= 2400 CloudEvent POSTs, <code>-race</code> clean — 0 errors, 0 5xx, all
+202; p50=0.706ms/p95=1.755ms/p99=2.665ms/max=5.722ms, ~13,322 req/s.
+CHAOS: (b) duplicate-key-under-load (1200 POSTs, per-worker keys) →
+12×202 + 1188×200, 0 5xx, 0 hang — graceful degrade; (c)
+input-corruption (7 bodies: 8 MiB random, truncated JSON, non-UTF8, JSON
+array, missing-id, garbage, empty) × 5 reps → every body a tagged
+<code>event_parser:</code> 400, 0 panic, 0 5xx; (d) auth storm — 1000
+random 32-byte bearer tokens through the REAL
+<code>commons_auth.GinMiddleware</code>+HMAC(HS256)
+<code>Verifier</code> → 1000×401, 0 bypass (no token minted → no new
+<code>go.mod</code> dep); (a) live PG-drop (container pause) →
+SKIP-with-reason (no runtime; fail-loud-on-PG-error proven hermetically
+at runner layer HRD-125). Captured evidence under
+<code>docs/qa/HRD-123-stress-chaos-2026-05-27T132755/stress_chaos/events/</code>
+(latency.json, latency_histogram.csv, throughput.csv,
+redis_down_fallback.log, categorised_errors.txt, auth_storm.log,
+recovery_trace.log, host_memory_headroom.txt, summary.md).
+<strong>FINDING (→ HRD-132 confirmed at HTTP layer): a SHARED-key
+cross-worker concurrent replay flood triggers the REAL
+<code>runner.go:132</code> <code>CachedRcpt.WasReplay</code> data
+race</strong> — the <code>NewFakeRunner</code> events_processed store
+caches+shares the <code>*Receipt</code>, so concurrent replays mutate it
+(this IS the "activates with Wave 4+ Receipt caching" case HRD-125
+predicted). Test uses per-worker keys (production-faithful: real PG does
+NOT cache the Receipt today) so the HTTP-surface degrade contract is
+proven <code>-race</code>-clean without asserting a property the code
+cannot honour (= §107 PASS-bluff); the race is OWNED by HRD-132.
+Host-mem headroom recorded; HRD-123 is in-process (not a
+resource-exhaustion surface) so the §12.6 ceiling gate does not gate
+it.</td>
+<td>2026-05-27</td>
+<td>2026-05-27</td>
+<td>GAP-3 plan §1 row 1 + §6 T2; Universal §11.4.85 (inherited per
+§11.4.35) + Herald §108.a / §107.x; depends on HRD-122; cross-refs
+HRD-125 + HRD-132; Catalogue-Check: no-match — Go
+<code>testing</code>+<code>httptest</code>+<code>-race</code>, no load
+tool, no new dep (2026-05-27).</td>
+</tr>
+<tr>
 <td>HRD-125</td>
 <td>task</td>
 <td>in_progress</td>

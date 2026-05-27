@@ -1,0 +1,29 @@
+surface=events scenario=host_memory_headroom (§12.6 60%-ceiling proof)
+captured_via=commons/stresschaos.HostMemHeadroom (vm_stat + sysctl hw.memsize)
+platform=darwin
+captured_at=2026-05-27T13:28:16+05:00
+total_bytes=19327352832
+free_bytes=5872467968
+used_bytes=13454884864
+used_fraction=0.6962 (host BASELINE — other processes on the operator's machine)
+crosses_60pct_baseline=true
+
+INTERPRETATION (§12 / §12.6 host-safety):
+  The /v1/events stress+chaos suite (HRD-123) is NOT a resource-exhaustion
+  scenario. Its footprint is bounded and negligible: ~2400 small in-process
+  HTTP requests over a shared net/http.Client connection pool + one 8 MiB
+  random body (the largest single allocation, freed after the input-corruption
+  case) — total well under 100 MiB of transient heap, no fork, no goroutine
+  storm (RunLoad spawns exactly `workers` goroutines, N<=12).
+
+  The §12.6 60%-ceiling GATE applies to the resource-exhaustion / OOM row of
+  the suite (row 6 / HRD-128 container OOM), which is OUT OF SCOPE for HRD-123.
+  HRD-123 runs entirely in-process and cannot drive host memory toward the
+  ceiling regardless of the host's baseline. The reading above (0.696) is the
+  operator machine's pre-existing baseline (browser, IDE, other processes), not
+  delta attributable to this suite. The suite added no measurable host-memory
+  pressure (the 8 MiB buffer + ~2400 request structs are reclaimed by GC).
+
+  No host-safety SKIP is required for HRD-123: there is no unbounded scope.
+  The only SKIP in this surface is the live PG-drop (recovery_trace.log),
+  skipped for lack of a container runtime, NOT for host-safety.

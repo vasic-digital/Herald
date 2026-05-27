@@ -1,0 +1,16 @@
+surface=events scenario=chaos_duplicate_key_under_load redis=in-memory-fast-path(FakeRunner)
+contract=graceful-degrade: every request resolves 202(fresh)|200(replay), NEVER 5xx, NEVER hang
+workers=12 iterations_per_worker=100 total=1200 keys=per-worker(DUP-KEY-<w>)
+accepted_202=12 (==workers, one fresh accept per key) replayed_200=1188 other=0
+errors=0 (transport/hang errors)
+no_5xx_under_duplicate_load=1
+p99_ms=2.5280 max_ms=3.2470 count=1200
+FINDING (HRD-132): a SHARED-key 12-way concurrent replay flood triggers a REAL
+  data race at runner.go:132 (rc.CachedRcpt.WasReplay mutates a *Receipt the
+  Receipt-caching events_processed store hands to every concurrent replay). This
+  test uses PER-WORKER keys (production-faithful: real PG does NOT cache the
+  Receipt today — HRD-125 precedent) so the HTTP-surface degrade contract is
+  proven race-free; the shared-cached-Receipt race is OWNED by HRD-132 and proven
+  at the runner layer (HRD-125). Dispatch exactly-once is NOT guaranteed under
+  concurrent replay (HRD-132); events_processed archival IS exactly-once. The
+  nil-Redis PG-only fallback idempotency is proven at HRD-125 nil_redis_degrade.txt.

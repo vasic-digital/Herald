@@ -1,0 +1,7 @@
+surface=events scenario=chaos_auth_storm verifier=REAL commons_auth HMAC(HS256)
+workers=10 iterations_per_worker=100 total_requests=1000
+random_token_bytes=32 token_encoding=base64url
+status_401=1000 non_401=0 (AUTH BYPASS count — MUST be 0)
+status_2xx=0 status_3xx=0 status_5xx=0
+all_401_no_bypass=1
+p99_ms=2.1730 max_ms=4.4630 count=1000 errors=0

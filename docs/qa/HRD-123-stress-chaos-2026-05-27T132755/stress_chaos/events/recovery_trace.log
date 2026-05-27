@@ -1,0 +1,3 @@
+surface=events scenario=chaos_pg_drop_mid_request
+verdict=SKIP-with-reason
+SKIP host-safety/no-runtime: live PG-drop (container pause mid-request) requires a booted herald-postgres + container runtime (set HERALD_STRESS_LIVE_PG=1 with DOCKER_HOST). The fail-loud-on-PG-error property is proven hermetically at the runner layer (HRD-125 TestRunner_Chaos_PGDeadlockSurfacedNotSwallowed).
