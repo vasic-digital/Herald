@@ -75,7 +75,8 @@ func TestM1Smoke_EndToEnd(t *testing.T) {
 	reg := constitution.NewRegistry()
 	st := state.NewMemory()
 	la := ladder.NewMemory()
-	runner, err := constitution.NewRunner(reg, la, st, em)
+	au := state.NewMemoryAudit()
+	runner, err := constitution.NewRunner(reg, la, st, em, au)
 	if err != nil {
 		t.Fatalf("NewRunner: %v", err)
 	}
@@ -218,7 +219,8 @@ func TestM1Smoke_PanicIsolation(t *testing.T) {
 	reg := constitution.NewRegistry()
 	st := state.NewMemory()
 	la := ladder.NewMemory()
-	runner, _ := constitution.NewRunner(reg, la, st, em)
+	au := state.NewMemoryAudit()
+	runner, _ := constitution.NewRunner(reg, la, st, em, au)
 
 	panicky := &evalForTest{id: "§panicky", panicNow: true}
 	reg.Register(panicky)
@@ -244,7 +246,8 @@ func TestM1Smoke_ErrorReturnedByEvaluator(t *testing.T) {
 	reg := constitution.NewRegistry()
 	st := state.NewMemory()
 	la := ladder.NewMemory()
-	runner, _ := constitution.NewRunner(reg, la, st, em)
+	au := state.NewMemoryAudit()
+	runner, _ := constitution.NewRunner(reg, la, st, em, au)
 
 	erry := &evalForTest{id: "§erry", errNow: true}
 	reg.Register(erry)

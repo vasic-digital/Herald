@@ -1,0 +1,6 @@
+=== RUN   TestPostgresAudit_RecordAndList
+--- PASS: TestPostgresAudit_RecordAndList (0.04s)
+=== RUN   TestPostgresRunner_EndToEndAuditPersist
+--- PASS: TestPostgresRunner_EndToEndAuditPersist (0.04s)
+PASS
+ok  	github.com/vasic-digital/herald/commons_constitution	1.680s

@@ -1,0 +1,2 @@
+workers=24 iters=40 total_flips=960 final_mode=allow
+NO TORN STATE under concurrent flips: PASS

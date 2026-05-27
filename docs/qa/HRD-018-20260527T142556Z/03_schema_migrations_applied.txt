@@ -1,0 +1,67 @@
+ version 
+---------
+       1
+       2
+       3
+       4
+       5
+       6
+       7
+       8
+       9
+      10
+      11
+      12
+(12 rows)
+
+                       Table "public.constitution_audit"
+      Column      |           Type           | Collation | Nullable | Default  
+------------------+--------------------------+-----------+----------+----------
+ id               | uuid                     |           | not null | uuidv7()
+ tenant_id        | uuid                     |           | not null | 
+ rule_id          | text                     |           | not null | 
+ subject          | text                     |           | not null | 
+ old_decision     | smallint                 |           |          | 
+ new_decision     | smallint                 |           | not null | 
+ old_digest_sha   | bytea                    |           |          | 
+ new_digest_sha   | bytea                    |           | not null | 
+ bundle_hash      | bytea                    |           | not null | 
+ evidence_uri     | text                     |           | not null | ''::text
+ emitted_event_id | uuid                     |           |          | 
+ mode_at_emission | smallint                 |           | not null | 
+ audited_at       | timestamp with time zone |           | not null | now()
+Indexes:
+    "constitution_audit_pkey" PRIMARY KEY, btree (id)
+    "constitution_audit_event_idx" btree (emitted_event_id) WHERE emitted_event_id IS NOT NULL
+    "constitution_audit_lookup_idx" btree (tenant_id, rule_id, audited_at DESC)
+Check constraints:
+    "constitution_audit_bundle_hash_check" CHECK (octet_length(bundle_hash) = 32)
+    "constitution_audit_mode_at_emission_check" CHECK (mode_at_emission >= 0 AND mode_at_emission <= 2)
+    "constitution_audit_new_decision_check" CHECK (new_decision >= 0 AND new_decision <= 4)
+    "constitution_audit_new_digest_sha_check" CHECK (octet_length(new_digest_sha) = 32)
+    "constitution_audit_old_decision_check" CHECK (old_decision IS NULL OR old_decision >= 0 AND old_decision <= 4)
+    "constitution_audit_old_digest_sha_check" CHECK (old_digest_sha IS NULL OR octet_length(old_digest_sha) = 32)
+Foreign-key constraints:
+    "constitution_audit_tenant_id_fkey" FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+Policies (forced row security enabled):
+    POLICY "tenant_audit_no_delete" FOR DELETE
+      USING (false)
+    POLICY "tenant_audit_no_update" FOR UPDATE
+      USING (false)
+    POLICY "tenant_isolation"
+      USING ((tenant_id = (current_setting('app.tenant_id'::text))::uuid))
+
+ total_audit_rows | enforce_rows_with_event_id | warn_or_null_rows 
+------------------+----------------------------+-------------------
+                9 |                          6 |                 3
+(1 row)
+
+ rule_id  |   subject   | new_decision | mode_at_emission |                         bundle_hash_hex                          | has_event_id 
+----------+-------------+--------------+------------------+------------------------------------------------------------------+--------------
+ §e2e     | /e2e/secret |            2 |                2 | 3abb697f82a0b77e37bccdf094b62181df8c228b9014c17a4546ca65f7ccef1f | t
+ §warn    | subj-warn   |            2 |                1 | f428b7ce05dd92c8c043be2720c02d1520d6e3c59527398cff845b0c92bd5ec2 | f
+ §11.4.10 | subj-aud    |            2 |                2 | f428b7ce05dd92c8c043be2720c02d1520d6e3c59527398cff845b0c92bd5ec2 | t
+ §e2e     | /e2e/secret |            2 |                2 | 3abb697f82a0b77e37bccdf094b62181df8c228b9014c17a4546ca65f7ccef1f | t
+ §warn    | subj-warn   |            2 |                1 | f428b7ce05dd92c8c043be2720c02d1520d6e3c59527398cff845b0c92bd5ec2 | f
+(5 rows)
+

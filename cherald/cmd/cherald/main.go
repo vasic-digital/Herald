@@ -28,6 +28,7 @@ import (
 	"github.com/vasic-digital/herald/commons/cli"
 	"github.com/vasic-digital/herald/commons_auth"
 	constitution "github.com/vasic-digital/herald/commons_constitution"
+	"github.com/vasic-digital/herald/commons_constitution/ladder"
 	"github.com/vasic-digital/herald/commons_constitution/state"
 	storage "github.com/vasic-digital/herald/commons_storage"
 )
@@ -48,11 +49,11 @@ func main() {
 
 	branding := commons.DefaultBranding("c", version)
 
-	// Build the ConstitutionStore. Postgres if HERALD_PG_DSN is present
-	// (production path), Memory otherwise (dev/CI quickstart path).
-	// Both back-ends implement constitution.ConstitutionStore identically;
-	// the cherald/internal/compliance.Handler doesn't care which is wired.
-	store, err := buildStore(context.Background())
+	// Build the ConstitutionStore + ModeLadder. Postgres if HERALD_PG_DSN is
+	// present (production path), Memory otherwise (dev/CI quickstart path).
+	// Both back-ends implement their interfaces identically; the compliance +
+	// modes handlers don't care which is wired. A single pool backs both.
+	store, modeLadder, err := buildStoreAndLadder(context.Background())
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "cherald:", err)
 		os.Exit(1)
@@ -77,7 +78,7 @@ func main() {
 	root.AddCommand(cli.VersionCmd(branding))
 	root.AddCommand(cli.ServeCmd(cli.ServeOpts{
 		Branding:   branding,
-		Routes:     flavhttp.Routes(store),
+		Routes:     flavhttp.Routes(store, modeLadder),
 		Middleware: []gin.HandlerFunc{commons_auth.GinMiddleware(verifier)},
 	}))
 	stubs.Register(root)
@@ -88,27 +89,30 @@ func main() {
 	}
 }
 
-// buildStore returns the ConstitutionStore selected by env. Postgres wins
-// when HERALD_PG_DSN is present (the value is parsed via
-// storage.ParseDSN — same path used by `pherald migrate`); otherwise the
-// in-memory backend is used so dev/CI runs without a database.
+// buildStoreAndLadder returns the ConstitutionStore + ModeLadder selected by
+// env, both backed by ONE shared pool. Postgres wins when HERALD_PG_DSN is
+// present (the value is parsed via storage.ParseDSN — same path used by
+// `pherald migrate`); otherwise the in-memory backends are used so dev/CI
+// runs without a database.
 //
-// commons_storage.Open already returns a digital.vasic.database.Database,
-// which is what state.NewPostgres expects — so no adapter shim is needed.
-func buildStore(ctx context.Context) (constitution.ConstitutionStore, error) {
+// commons_storage.Open returns a digital.vasic.database.Database, which is
+// what both state.NewPostgres + ladder.NewPostgres expect — so no adapter
+// shim is needed and the single pool serves /v1/compliance (state) and
+// /v1/compliance/modes (ladder) alike.
+func buildStoreAndLadder(ctx context.Context) (constitution.ConstitutionStore, constitution.ModeLadder, error) {
 	dsn := os.Getenv("HERALD_PG_DSN")
 	if dsn == "" {
-		return state.NewMemory(), nil
+		return state.NewMemory(), ladder.NewMemory(), nil
 	}
 	cfg, err := storage.ParseDSN(dsn)
 	if err != nil {
-		return nil, fmt.Errorf("parse HERALD_PG_DSN: %w", err)
+		return nil, nil, fmt.Errorf("parse HERALD_PG_DSN: %w", err)
 	}
 	database, err := storage.Open(ctx, cfg)
 	if err != nil {
-		return nil, fmt.Errorf("open pg pool: %w", err)
+		return nil, nil, fmt.Errorf("open pg pool: %w", err)
 	}
-	return state.NewPostgres(database), nil
+	return state.NewPostgres(database), ladder.NewPostgres(database), nil
 }
 
 // buildRedis returns a Redis client when HERALD_REDIS_URL is set, or

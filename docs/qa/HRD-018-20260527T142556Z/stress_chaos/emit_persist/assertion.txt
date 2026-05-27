@@ -1,0 +1,2 @@
+workers=32 iters=16 calls=512 errors=0 audit_rows=512 (want 512) throughput=163339.1/s p99=1.42ms
+NO LOST WRITES: PASS

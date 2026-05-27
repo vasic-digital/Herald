@@ -139,6 +139,16 @@ type EventEmitter interface {
 	CatalogueMiss(ctx context.Context, e CatalogueEvent) error
 }
 
+// IDEmitter is the optional capability that lets the Runner capture the
+// generated event ID of a policy emit for the constitution_audit
+// emitted_event_id column. busEmitter satisfies it; Runner.Run
+// type-asserts for it and falls back to a plain emit (Nil event ID in the
+// audit row) if a custom EventEmitter does not implement it.
+type IDEmitter interface {
+	PolicyViolationID(ctx context.Context, e PolicyEvent) (uuid.UUID, error)
+	PolicyClearedID(ctx context.Context, e PolicyEvent) (uuid.UUID, error)
+}
+
 // busEmitter wraps an EventBus + a Source identifier and synthesises
 // canonical Events for the 12 classes.
 type busEmitter struct {
@@ -176,57 +186,85 @@ func NewEmitter(bus EventBus, cfg EmitterConfig) (EventEmitter, error) {
 // --- typed emit methods ----------------------------------------------------
 
 func (b *busEmitter) GateFailed(ctx context.Context, e GateEvent) error {
-	return b.emit(ctx, ClassGateFailed, e.TenantID, e.RuleID, e.Severity, e.Bundle, e.Transition, e.TraceParent, e.EvidenceURI, "gate:"+e.GateName, e)
+	_, err := b.emit(ctx, ClassGateFailed, e.TenantID, e.RuleID, e.Severity, e.Bundle, e.Transition, e.TraceParent, e.EvidenceURI, "gate:"+e.GateName, e)
+	return err
 }
 
 func (b *busEmitter) GateRecovered(ctx context.Context, e GateEvent) error {
-	return b.emit(ctx, ClassGateRecovered, e.TenantID, e.RuleID, e.Severity, e.Bundle, e.Transition, e.TraceParent, e.EvidenceURI, "gate:"+e.GateName, e)
+	_, err := b.emit(ctx, ClassGateRecovered, e.TenantID, e.RuleID, e.Severity, e.Bundle, e.Transition, e.TraceParent, e.EvidenceURI, "gate:"+e.GateName, e)
+	return err
 }
 
 func (b *busEmitter) PolicyViolation(ctx context.Context, e PolicyEvent) error {
-	return b.emit(ctx, ClassPolicyViolation, e.TenantID, e.RuleID, e.Severity, e.Bundle, e.Transition, e.TraceParent, e.EvidenceURI, e.Subject.String(), e)
+	_, err := b.PolicyViolationID(ctx, e)
+	return err
 }
 
 func (b *busEmitter) PolicyCleared(ctx context.Context, e PolicyEvent) error {
+	_, err := b.PolicyClearedID(ctx, e)
+	return err
+}
+
+// PolicyViolationID / PolicyClearedID are the ID-returning variants used by
+// Runner.Run so the constitution_audit row can record the EXACT event ID
+// that fanned out to channels (the load-bearing emitted_event_id audit
+// column). They satisfy the optional IDEmitter interface; busEmitter is the
+// only EventEmitter implementation, so the Runner's type-assertion always
+// succeeds — but keeping the public EventEmitter surface unchanged avoids
+// rippling the signature into every (current + future) caller.
+func (b *busEmitter) PolicyViolationID(ctx context.Context, e PolicyEvent) (uuid.UUID, error) {
+	return b.emit(ctx, ClassPolicyViolation, e.TenantID, e.RuleID, e.Severity, e.Bundle, e.Transition, e.TraceParent, e.EvidenceURI, e.Subject.String(), e)
+}
+
+func (b *busEmitter) PolicyClearedID(ctx context.Context, e PolicyEvent) (uuid.UUID, error) {
 	return b.emit(ctx, ClassPolicyCleared, e.TenantID, e.RuleID, e.Severity, e.Bundle, e.Transition, e.TraceParent, e.EvidenceURI, e.Subject.String(), e)
 }
 
 func (b *busEmitter) HostSafetyBreach(ctx context.Context, e SafetyEvent) error {
-	return b.emit(ctx, ClassHostSafetyBreach, e.TenantID, e.RuleID, e.Severity, e.Bundle, e.Transition, e.TraceParent, e.EvidenceURI, e.Subject.String(), e)
+	_, err := b.emit(ctx, ClassHostSafetyBreach, e.TenantID, e.RuleID, e.Severity, e.Bundle, e.Transition, e.TraceParent, e.EvidenceURI, e.Subject.String(), e)
+	return err
 }
 
 func (b *busEmitter) RepoSafetyBreach(ctx context.Context, e SafetyEvent) error {
-	return b.emit(ctx, ClassRepoSafetyBreach, e.TenantID, e.RuleID, e.Severity, e.Bundle, e.Transition, e.TraceParent, e.EvidenceURI, e.Subject.String(), e)
+	_, err := b.emit(ctx, ClassRepoSafetyBreach, e.TenantID, e.RuleID, e.Severity, e.Bundle, e.Transition, e.TraceParent, e.EvidenceURI, e.Subject.String(), e)
+	return err
 }
 
 func (b *busEmitter) CredentialLeak(ctx context.Context, e CredentialEvent) error {
 	// Credential leak is always critical regardless of severity-on-evaluator.
-	return b.emit(ctx, ClassCredentialLeak, e.TenantID, e.RuleID, SeverityCritical, e.Bundle, e.Transition, e.TraceParent, e.EvidenceURI, e.Subject.String(), e)
+	_, err := b.emit(ctx, ClassCredentialLeak, e.TenantID, e.RuleID, SeverityCritical, e.Bundle, e.Transition, e.TraceParent, e.EvidenceURI, e.Subject.String(), e)
+	return err
 }
 
 func (b *busEmitter) BundleUpdated(ctx context.Context, e BundleEvent) error {
-	return b.emit(ctx, ClassBundleUpdated, e.TenantID, "bundle", SeverityMiddle, e.NewBundle, e.Transition, e.TraceParent, "", "bundle:rotation", e)
+	_, err := b.emit(ctx, ClassBundleUpdated, e.TenantID, "bundle", SeverityMiddle, e.NewBundle, e.Transition, e.TraceParent, "", "bundle:rotation", e)
+	return err
 }
 
 func (b *busEmitter) BundleUpdateFailed(ctx context.Context, e BundleEvent) error {
-	return b.emit(ctx, ClassBundleUpdateFailed, e.TenantID, "bundle", SeverityHigh, e.NewBundle, e.Transition, e.TraceParent, "", "bundle:rotation", e)
+	_, err := b.emit(ctx, ClassBundleUpdateFailed, e.TenantID, "bundle", SeverityHigh, e.NewBundle, e.Transition, e.TraceParent, "", "bundle:rotation", e)
+	return err
 }
 
 func (b *busEmitter) ReleaseGateBlocked(ctx context.Context, e ReleaseEvent) error {
-	return b.emit(ctx, ClassReleaseGateBlocked, e.TenantID, e.RuleID, e.Severity, e.Bundle, e.Transition, e.TraceParent, e.EvidenceURI, "release:"+e.ReleaseRef, e)
+	_, err := b.emit(ctx, ClassReleaseGateBlocked, e.TenantID, e.RuleID, e.Severity, e.Bundle, e.Transition, e.TraceParent, e.EvidenceURI, "release:"+e.ReleaseRef, e)
+	return err
 }
 
 func (b *busEmitter) SpecRevisionDrift(ctx context.Context, e DriftEvent) error {
-	return b.emit(ctx, ClassSpecRevisionDrift, e.TenantID, e.RuleID, SeverityMiddle, e.Bundle, e.Transition, e.TraceParent, e.EvidenceURI, "spec:"+e.SpecPath, e)
+	_, err := b.emit(ctx, ClassSpecRevisionDrift, e.TenantID, e.RuleID, SeverityMiddle, e.Bundle, e.Transition, e.TraceParent, e.EvidenceURI, "spec:"+e.SpecPath, e)
+	return err
 }
 
 func (b *busEmitter) CatalogueMiss(ctx context.Context, e CatalogueEvent) error {
-	return b.emit(ctx, ClassCatalogueMiss, e.TenantID, e.RuleID, e.Severity, e.Bundle, Transition{}, e.TraceParent, "", "catalogue:"+e.MissingRef, e)
+	_, err := b.emit(ctx, ClassCatalogueMiss, e.TenantID, e.RuleID, e.Severity, e.Bundle, Transition{}, e.TraceParent, "", "catalogue:"+e.MissingRef, e)
+	return err
 }
 
 // emit is the single Event-composition path. JSON-encodes the per-class
 // payload as the Event.Data so subscribers can deserialise according to
-// the ce-type.
+// the ce-type. Returns the generated event ID so callers (Runner.Run) can
+// record it in the constitution_audit emitted_event_id column.
 func (b *busEmitter) emit(
 	ctx context.Context,
 	class string,
@@ -237,7 +275,7 @@ func (b *busEmitter) emit(
 	trans Transition,
 	traceParent, evidence, subject string,
 	payload any,
-) error {
+) (uuid.UUID, error) {
 	env := envelope{
 		RuleID:           ruleID,
 		SeverityCategory: sev.String(),
@@ -257,10 +295,11 @@ func (b *busEmitter) emit(
 	}{Envelope: env, Payload: payload}
 	data, err := json.Marshal(body)
 	if err != nil {
-		return fmt.Errorf("constitution: emit %s: marshal: %w", class, err)
+		return uuid.Nil, fmt.Errorf("constitution: emit %s: marshal: %w", class, err)
 	}
+	eventID := b.newID()
 	ev := Event{
-		ID:      b.newID(),
+		ID:      eventID,
 		Type:    EventNamespace + "." + class,
 		Source:  b.source,
 		Time:    b.now(),
@@ -275,7 +314,18 @@ func (b *busEmitter) emit(
 		},
 		Data: data,
 	}
-	return b.bus.Publish(ctx, ev)
+	if err := b.bus.Publish(ctx, ev); err != nil {
+		return uuid.Nil, err
+	}
+	// Parse the string event ID back to a UUID for the audit trail. The
+	// default NewID is uuid.NewString so this always succeeds; a custom
+	// non-UUID NewID degrades gracefully to uuid.Nil (publish already
+	// succeeded — the wire event is unaffected).
+	id, perr := uuid.Parse(eventID)
+	if perr != nil {
+		return uuid.Nil, nil
+	}
+	return id, nil
 }
 
 func boolStr(b bool) string {

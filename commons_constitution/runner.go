@@ -23,10 +23,16 @@ type Runner struct {
 	ladder   ModeLadder
 	store    ConstitutionStore
 	emitter  EventEmitter
+	audit    AuditStore
 }
 
 // NewRunner returns a configured Runner. All dependencies are required.
-func NewRunner(reg *Registry, ladder ModeLadder, store ConstitutionStore, emitter EventEmitter) (*Runner, error) {
+//
+// The AuditStore is load-bearing per HRD-018: every CHANGED transition in
+// ModeWarn or ModeEnforce writes a durable constitution_audit row. Prior to
+// HRD-018 RunOutcome.Audited was set true but nothing was persisted — a §107
+// PASS-bluff at the audit layer. Passing a nil AuditStore is a hard error.
+func NewRunner(reg *Registry, ladder ModeLadder, store ConstitutionStore, emitter EventEmitter, audit AuditStore) (*Runner, error) {
 	if reg == nil {
 		return nil, fmt.Errorf("constitution: NewRunner: nil Registry")
 	}
@@ -39,7 +45,10 @@ func NewRunner(reg *Registry, ladder ModeLadder, store ConstitutionStore, emitte
 	if emitter == nil {
 		return nil, fmt.Errorf("constitution: NewRunner: nil EventEmitter")
 	}
-	return &Runner{registry: reg, ladder: ladder, store: store, emitter: emitter}, nil
+	if audit == nil {
+		return nil, fmt.Errorf("constitution: NewRunner: nil AuditStore")
+	}
+	return &Runner{registry: reg, ladder: ladder, store: store, emitter: emitter, audit: audit}, nil
 }
 
 // RunOutcome reports what Runner.Run did for a single (evaluator, subject)
@@ -126,7 +135,10 @@ func (r *Runner) Run(
 		return out, nil
 	case ModeWarn:
 		out.Audited = true
-		// no emit on the wire — but tests can observe transition via Store.
+		// Audit-only: durable row written, but no channel emit (no event ID).
+		if err := r.writeAudit(ctx, tenantID, e.RuleID(), subject.ID, result, bundle, trans, ModeWarn, uuid.Nil); err != nil {
+			return out, fmt.Errorf("constitution: Run: audit(warn): %w", err)
+		}
 		return out, nil
 	case ModeEnforce:
 		out.Audited = true
@@ -140,21 +152,72 @@ func (r *Runner) Run(
 			Transition:  trans,
 			EvidenceURI: result.Evidence,
 		}
-		// Choose emit class based on Decision direction.
-		var emitErr error
+		// Emit + capture the event ID so the audit row records the EXACT
+		// emitted_event_id (load-bearing for replay correlation, §42.1.3).
+		var (
+			emittedID uuid.UUID
+			emitErr   error
+		)
+		ide, hasID := r.emitter.(IDEmitter)
 		switch result.Decision {
 		case DecisionPass, DecisionWarn:
-			emitErr = r.emitter.PolicyCleared(ctx, policyEvent)
+			if hasID {
+				emittedID, emitErr = ide.PolicyClearedID(ctx, policyEvent)
+			} else {
+				emitErr = r.emitter.PolicyCleared(ctx, policyEvent)
+			}
 		default:
-			emitErr = r.emitter.PolicyViolation(ctx, policyEvent)
+			if hasID {
+				emittedID, emitErr = ide.PolicyViolationID(ctx, policyEvent)
+			} else {
+				emitErr = r.emitter.PolicyViolation(ctx, policyEvent)
+			}
 		}
 		if emitErr != nil {
 			return out, fmt.Errorf("constitution: Run: emit: %w", emitErr)
+		}
+		// Write the audit row AFTER a successful emit so emitted_event_id is
+		// only recorded for events that actually reached the bus.
+		if err := r.writeAudit(ctx, tenantID, e.RuleID(), subject.ID, result, bundle, trans, ModeEnforce, emittedID); err != nil {
+			return out, fmt.Errorf("constitution: Run: audit(enforce): %w", err)
 		}
 		return out, nil
 	default:
 		return out, fmt.Errorf("constitution: Run: unknown mode %v", mode)
 	}
+}
+
+// writeAudit composes + appends one constitution_audit row for a CHANGED
+// transition. OldDecision/OldDigest are nil on FirstSeen (no prior verdict).
+func (r *Runner) writeAudit(
+	ctx context.Context,
+	tenantID uuid.UUID,
+	ruleID, subject string,
+	result Result,
+	bundle BundleHash,
+	trans Transition,
+	mode Mode,
+	emittedID uuid.UUID,
+) error {
+	row := AuditRow{
+		TenantID:       tenantID,
+		RuleID:         ruleID,
+		Subject:        subject,
+		NewDecision:    result.Decision,
+		NewDigest:      result.DigestSHA,
+		BundleHash:     bundle,
+		EvidenceURI:    result.Evidence,
+		EmittedEventID: emittedID,
+		ModeAtEmission: mode,
+	}
+	if !trans.FirstSeen {
+		od := trans.OldDecision
+		row.OldDecision = &od
+		odg := trans.OldDigest
+		row.OldDigest = &odg
+	}
+	_, err := r.audit.RecordAudit(ctx, row)
+	return err
 }
 
 // safeEvaluate runs e.Evaluate inside a recover() wrapper. If the

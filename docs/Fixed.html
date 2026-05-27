@@ -176,6 +176,104 @@ refined; Wave 2 flavor scaffolds (HRD-092..097) closed atomically; Wave
 </thead>
 <tbody>
 <tr>
+<td>HRD-018</td>
+<td>task</td>
+<td>high</td>
+<td><code>commons_constitution</code> Go package: Evaluator interface +
+12 event-class emit helpers +
+<code>constitution_state</code>/<code>constitution_bindings</code>
+migrations + bundle-hash captureer + mode-ladder runtime config +
+<strong>constitution_audit write-through (the closing gap)</strong>. The
+Evaluator framework, emit helpers, bundle-hash, mode-ladder,
+<code>state.Memory</code>/<code>state.Postgres</code>,
+<code>ladder.Memory</code>/<code>ladder.Postgres</code>, and migrations
+000006/000007/000008 were all coded in r1. v1.0.0 Batch A closed the
+remaining §107 PASS-bluff: migration 000006 defined
+<code>constitution_audit</code> but NO code ever wrote a row —
+<code>Runner.Run</code> set <code>RunOutcome.Audited=true</code> with
+nothing persisted. Added an <code>AuditStore</code> interface
+(<code>audit.go</code>) + <code>state.MemoryAudit</code> (append-only
+slice) + <code>state.PostgresAudit</code> (RLS-guarded INSERT-only into
+<code>constitution_audit</code>; append-only is enforced by the
+migration's no-update/no-delete RLS policies). <code>Runner.Run</code>
+now writes a durable audit row for every CHANGED transition in
+ModeWarn/ModeEnforce, recording old/new decision, old/new digest, bundle
+hash, mode-at-emission, and — for ModeEnforce — the EXACT emitted event
+ID (new <code>IDEmitter</code> optional interface +
+<code>PolicyViolationID</code>/<code>PolicyClearedID</code>; emit
+returns the generated event ID). NewRunner gained a required AuditStore
+arg (nil = hard error). §11.4.92 multi-pass: Pass-1 TDD RED
+(compile-fail before backends) → GREEN, <code>-race -count=3</code>
+deterministic; Pass-5 real DB-level <code>SELECT</code> shows enforce
+rows carry emitted_event_id, warn rows NULL.</td>
+<td>2026-05-27</td>
+<td>(v1.0.0 Batch A — conductor commit)</td>
+<td>spec V3 §42.1 / §42.2 / §42.5 step 1 + Foundation design
+<code>docs/superpowers/specs/2026-05-20-foundation-design.md</code>;
+Catalogue-Check: extend
+<code>docs/catalogue-checks/HRD-018-foundation.md</code>; evidence
+<code>docs/qa/HRD-018-20260527T142556Z/</code> (emit→persist real-PG +
+admin-flip + §11.4.85 stress/chaos); files
+<code>commons_constitution/audit.go</code>,
+<code>state/audit_memory.go</code>,
+<code>state/audit_postgres.go</code>, <code>runner.go</code>,
+<code>emit.go</code></td>
+</tr>
+<tr>
+<td>HRD-026</td>
+<td>task</td>
+<td>middle</td>
+<td>Constitution-bundle hash captureer — computes SHA-256 of rendered
+Constitution.md at evaluation time; persists on every emitted event for
+replayability. The captureer (<code>bundle.go</code>
+<code>Capture</code>/<code>CaptureBytes</code>/<code>Captureer</code>)
+was coded in r1 and the hash already rode the emitted-event metadata
+(<code>bundle_hash</code> hex). v1.0.0 Batch A completed the persistence
+half: the 32-byte <code>bundle_hash</code> is now stored on every
+<code>constitution_state</code> row AND every
+<code>constitution_audit</code> row (verified by the DB-level
+<code>SELECT … encode(bundle_hash,'hex')</code> in the evidence dir
+showing a 64-hex SHA-256 on every audit row), closing the §42.1.3
+replay-correlation requirement.</td>
+<td>2026-05-27</td>
+<td>(v1.0.0 Batch A — conductor commit)</td>
+<td>spec V3 §42.1.3; evidence
+<code>docs/qa/HRD-018-20260527T142556Z/03_schema_migrations_applied.txt</code>
+(<code>bundle_hash_hex</code> column); files
+<code>commons_constitution/bundle.go</code>,
+<code>state/audit_postgres.go</code></td>
+</tr>
+<tr>
+<td>HRD-027</td>
+<td>task</td>
+<td>middle</td>
+<td>Mode-ladder runtime config (<code>constitution_bindings</code> table
++ admin REST endpoints to flip allow/warn/enforce per binding per tenant
+without redeploy). The <code>ModeLadder</code> interface +
+<code>ladder.Memory</code>/<code>ladder.Postgres</code> (reading
+<code>constitution_bindings</code> at evaluation time) were coded in r1.
+v1.0.0 Batch A added the admin REST surface:
+<code>cherald/internal/modes</code> —
+<code>GET /v1/compliance/modes</code> (list bindings + unbound-default),
+<code>GET /v1/compliance/modes/:rule_id</code> (one binding's effective
+mode, enforce default), <code>PUT /v1/compliance/modes/:rule_id</code>
+(flip allow/warn/enforce; records the operator <code>sub</code> claim in
+<code>mutated_by</code>). JWT-gated via the existing
+<code>commons_auth.GinMiddleware</code> chain; mounted in
+<code>cherald</code> serve (a single shared PG pool backs both
+compliance + modes). §107 anti-bluff: 401 no-auth / 401 bad-tenant / 400
+bad-mode (loud, never a silent default). Load-bearing proof: a PUT flip
+to warn is reflected by a subsequent GET AND by <code>ladder.Get</code>
+on the evaluation hot path — runtime config, no redeploy.</td>
+<td>2026-05-27</td>
+<td>(v1.0.0 Batch A — conductor commit)</td>
+<td>spec V3 §42.1.4; evidence
+<code>docs/qa/HRD-018-20260527T142556Z/02_admin_rest_flip.txt</code>;
+files <code>cherald/internal/modes/handler.go</code>,
+<code>cherald/internal/http/routes.go</code>,
+<code>cherald/cmd/cherald/main.go</code></td>
+</tr>
+<tr>
 <td>HRD-132</td>
 <td>bug</td>
 <td>high</td>

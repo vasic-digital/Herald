@@ -183,6 +183,208 @@ func TestPostgresStore_RLSTenantIsolation(t *testing.T) {
 	}
 }
 
+func TestPostgresAudit_RecordAndList(t *testing.T) {
+	// Load-bearing HRD-018 proof against REAL Postgres: the constitution_audit
+	// row written by the audit write-through must be durable + RLS-scoped, and
+	// emitted_event_id must round-trip for ModeEnforce + be NULL for ModeWarn.
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+	pgDB, err := storage.Open(ctx, pgConfig())
+	if err != nil {
+		t.Skipf("Postgres unreachable: %v", err)
+	}
+	defer pgDB.Close()
+	if _, err := storage.RunMigrations(ctx, pgDB); err != nil {
+		t.Fatalf("RunMigrations: %v", err)
+	}
+
+	tenantID := uuid.New()
+	if _, err := pgDB.Exec(ctx,
+		`INSERT INTO tenants (id, name, environment) VALUES ($1, $2, $3)
+		 ON CONFLICT (id) DO NOTHING`,
+		tenantID, "aud-"+tenantID.String()[:8], "quickstart",
+	); err != nil {
+		t.Fatalf("seed tenant: %v", err)
+	}
+
+	au := cstate.NewPostgresAudit(pgDB)
+	bundle := constitution.CaptureBytes([]byte("aud-rev"))
+	emittedID := uuid.New()
+
+	// Enforce row carrying an emitted event ID + a prior decision.
+	old := constitution.DecisionPass
+	var oldDigest [32]byte = sha256.Sum256([]byte("prev"))
+	enforceID, err := au.RecordAudit(ctx, constitution.AuditRow{
+		TenantID:       tenantID,
+		RuleID:         "§11.4.10",
+		Subject:        "subj-aud",
+		OldDecision:    &old,
+		NewDecision:    constitution.DecisionFail,
+		OldDigest:      &oldDigest,
+		NewDigest:      sha256.Sum256([]byte("now")),
+		BundleHash:     bundle,
+		EvidenceURI:    "evidence://aud",
+		EmittedEventID: emittedID,
+		ModeAtEmission: constitution.ModeEnforce,
+	})
+	if err != nil {
+		t.Fatalf("RecordAudit enforce: %v", err)
+	}
+	if enforceID == uuid.Nil {
+		t.Fatalf("RecordAudit returned Nil id (uuidv7 default did not fire)")
+	}
+
+	// Warn row: audit-only, NULL emitted_event_id.
+	if _, err := au.RecordAudit(ctx, constitution.AuditRow{
+		TenantID:       tenantID,
+		RuleID:         "§warn",
+		Subject:        "subj-warn",
+		NewDecision:    constitution.DecisionFail,
+		NewDigest:      sha256.Sum256([]byte("w")),
+		BundleHash:     bundle,
+		ModeAtEmission: constitution.ModeWarn,
+	}); err != nil {
+		t.Fatalf("RecordAudit warn: %v", err)
+	}
+
+	rows, err := au.ListAudit(ctx, tenantID, constitution.AuditQuery{})
+	if err != nil {
+		t.Fatalf("ListAudit: %v", err)
+	}
+	if len(rows) != 2 {
+		t.Fatalf("expected 2 audit rows, got %d", len(rows))
+	}
+
+	// Verify the enforce row round-tripped with its emitted ID + old decision.
+	var enforceRow *constitution.AuditRow
+	for i := range rows {
+		if rows[i].RuleID == "§11.4.10" {
+			enforceRow = &rows[i]
+		}
+	}
+	if enforceRow == nil {
+		t.Fatalf("enforce row not found in ListAudit result")
+	}
+	if enforceRow.EmittedEventID != emittedID {
+		t.Errorf("enforce EmittedEventID = %v; want %v", enforceRow.EmittedEventID, emittedID)
+	}
+	if enforceRow.OldDecision == nil || *enforceRow.OldDecision != constitution.DecisionPass {
+		t.Errorf("enforce OldDecision round-trip mismatch: %v", enforceRow.OldDecision)
+	}
+	if enforceRow.BundleHash != bundle {
+		t.Errorf("enforce BundleHash round-trip mismatch")
+	}
+
+	// Verify the warn row has NULL emitted_event_id (uuid.Nil after scan).
+	var warnRow *constitution.AuditRow
+	for i := range rows {
+		if rows[i].RuleID == "§warn" {
+			warnRow = &rows[i]
+		}
+	}
+	if warnRow == nil {
+		t.Fatalf("warn row not found")
+	}
+	if warnRow.EmittedEventID != uuid.Nil {
+		t.Errorf("warn EmittedEventID = %v; want Nil (NULL in DB)", warnRow.EmittedEventID)
+	}
+	if warnRow.OldDecision != nil {
+		t.Errorf("warn row OldDecision should be nil (FirstSeen); got %v", *warnRow.OldDecision)
+	}
+
+	// RLS: a different tenant must see zero rows.
+	other := uuid.New()
+	if _, err := pgDB.Exec(ctx,
+		`INSERT INTO tenants (id, name, environment) VALUES ($1,$2,$3) ON CONFLICT DO NOTHING`,
+		other, "oth-"+other.String()[:8], "quickstart"); err != nil {
+		t.Fatalf("seed other tenant: %v", err)
+	}
+	otherRows, err := au.ListAudit(ctx, other, constitution.AuditQuery{})
+	if err != nil {
+		t.Fatalf("ListAudit other: %v", err)
+	}
+	if len(otherRows) != 0 {
+		t.Errorf("RLS LEAK: other tenant saw %d audit rows; want 0", len(otherRows))
+	}
+}
+
+// TestPostgresRunner_EndToEndAuditPersist is the full emit→persist round-trip
+// against real Postgres: Runner.Run with Postgres-backed state + ladder +
+// audit must (a) UPSERT constitution_state, (b) INSERT constitution_audit,
+// (c) the audit row must carry the bundle hash for replay (§42.1.3).
+func TestPostgresRunner_EndToEndAuditPersist(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+	pgDB, err := storage.Open(ctx, pgConfig())
+	if err != nil {
+		t.Skipf("Postgres unreachable: %v", err)
+	}
+	defer pgDB.Close()
+	if _, err := storage.RunMigrations(ctx, pgDB); err != nil {
+		t.Fatalf("RunMigrations: %v", err)
+	}
+
+	tenantID := uuid.New()
+	if _, err := pgDB.Exec(ctx,
+		`INSERT INTO tenants (id, name, environment) VALUES ($1,$2,$3) ON CONFLICT DO NOTHING`,
+		tenantID, "e2e-"+tenantID.String()[:8], "quickstart"); err != nil {
+		t.Fatalf("seed tenant: %v", err)
+	}
+
+	bus := constitution.NewMemoryBus(constitution.MemoryBusConfig{BufferSize: 16})
+	defer bus.Close()
+	em, err := constitution.NewEmitter(bus, constitution.EmitterConfig{Source: "e2e"})
+	if err != nil {
+		t.Fatalf("NewEmitter: %v", err)
+	}
+	reg := constitution.NewRegistry()
+	st := cstate.NewPostgres(pgDB)
+	la := cladder.NewPostgres(pgDB)
+	au := cstate.NewPostgresAudit(pgDB)
+	runner, err := constitution.NewRunner(reg, la, st, em, au)
+	if err != nil {
+		t.Fatalf("NewRunner: %v", err)
+	}
+
+	bundle := constitution.CaptureBytes([]byte("e2e-bundle"))
+	subject := constitution.Subject{Kind: "file", ID: "/e2e/secret"}
+	ev := &evalForTest{id: "§e2e", sev: constitution.SeverityHigh,
+		result: makeResult(constitution.DecisionFail, "e2e-violation")}
+	reg.Register(ev)
+
+	out, err := runner.Run(ctx, ev, tenantID, subject, bundle)
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+	if !out.Audited || !out.Emitted {
+		t.Fatalf("default-enforce + transition must audit+emit; out=%+v", out)
+	}
+
+	// (a) state row persisted.
+	row, ok, err := st.Get(ctx, tenantID, "§e2e", subject.ID)
+	if err != nil || !ok {
+		t.Fatalf("state.Get: ok=%v err=%v", ok, err)
+	}
+	if row.Decision != constitution.DecisionFail {
+		t.Errorf("persisted state decision = %v; want fail", row.Decision)
+	}
+
+	// (b)+(c) audit row persisted with bundle hash for replay.
+	auditRows, err := au.ListAudit(ctx, tenantID, constitution.AuditQuery{RuleID: "§e2e"})
+	if err != nil {
+		t.Fatalf("ListAudit: %v", err)
+	}
+	if len(auditRows) != 1 {
+		t.Fatalf("expected 1 e2e audit row, got %d", len(auditRows))
+	}
+	if auditRows[0].BundleHash != bundle {
+		t.Errorf("audit bundle hash != evaluated bundle (replay correlation broken)")
+	}
+	if auditRows[0].EmittedEventID == uuid.Nil {
+		t.Errorf("enforce audit row must carry the emitted event ID; got Nil")
+	}
+}
+
 func TestPostgresLadder_GetDefaultsToEnforce(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()

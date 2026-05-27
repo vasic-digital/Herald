@@ -1,0 +1,12 @@
+=== RUN   TestModes_FlipReflectsImmediately
+--- PASS: TestModes_FlipReflectsImmediately (0.00s)
+=== RUN   TestModes_List
+--- PASS: TestModes_List (0.00s)
+=== RUN   TestModes_RejectsBadMode
+--- PASS: TestModes_RejectsBadMode (0.00s)
+=== RUN   TestModes_RejectsNoAuth
+--- PASS: TestModes_RejectsNoAuth (0.00s)
+=== RUN   TestModes_RejectsBadTenant
+--- PASS: TestModes_RejectsBadTenant (0.00s)
+PASS
+ok  	github.com/vasic-digital/herald/cherald/internal/modes	1.457s
