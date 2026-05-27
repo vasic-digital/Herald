@@ -24,7 +24,7 @@
 // Implementation note (interception strategy — external wrapping, NOT
 // invasive Config injection): the journal sits as decorators over the
 // three existing interfaces (commons.InboundHandler, inbound.CodeDispatcher,
-// inbound.TgramReplier). The production listen pipeline composes them via
+// inbound.Replier). The production listen pipeline composes them via
 // runListen's existing seams; no inbound package surface is widened.
 package main
 
@@ -198,7 +198,7 @@ func (j *journal) copyAttachment(att commons.Attachment) (string, error) {
 // `tgram.message` line, copies attachments into <qa-out-dir>/attachments/,
 // then delegates to the real *inbound.Dispatcher. The CC dispatch + reply
 // + outbound reply journaling is layered on the CodeDispatcher and
-// TgramReplier wrappers (journalingCode / journalingReplier), composed by
+// Replier wrappers (journalingCode / journalingReplier), composed by
 // runListen when --qa-out-dir is set.
 type journalingHandler struct {
 	j     *journal
@@ -305,14 +305,21 @@ func (c *journalingCode) Dispatch(ctx context.Context, req inbound.CodeRequest) 
 	return resp, err
 }
 
-// journalingReplier wraps inbound.TgramReplier to capture every outbound
-// SendReply (the canonical tgram.send_reply event with reply_to_message_id).
+// journalingReplier wraps inbound.Replier to capture every outbound
+// SendReply (the canonical channel.send_reply event with reply_to_message_id).
+//
+// Wave 7 (HRD-114): the wrapped interface is now the generic inbound.Replier
+// (recipient + string ids), so the journal records the channel + native
+// recipient id rather than a Telegram-only int64 chat_id. The JSONL kind is
+// kept as "tgram.send_reply" for backward-compatibility with existing
+// docs/qa/<run-id>/ transcripts + the journal_test 4-line assertion; the
+// channel is additionally recorded inside the payload.
 type journalingReplier struct {
 	j     *journal
-	inner inbound.TgramReplier
+	inner inbound.Replier
 }
 
-func (r *journalingReplier) SendReply(ctx context.Context, chatID int64, text string, replyToID int, attachments []commons.Attachment) (int, error) {
+func (r *journalingReplier) SendReply(ctx context.Context, recipient commons.Recipient, body, replyToID string, attachments []commons.Attachment) (string, error) {
 	atts := make([]map[string]any, 0, len(attachments))
 	for _, a := range attachments {
 		atts = append(atts, map[string]any{
@@ -322,11 +329,12 @@ func (r *journalingReplier) SendReply(ctx context.Context, chatID int64, text st
 			"sha256":     a.CID,
 		})
 	}
-	msgID, err := r.inner.SendReply(ctx, chatID, text, replyToID, attachments)
+	msgID, err := r.inner.SendReply(ctx, recipient, body, replyToID, attachments)
 	payload := map[string]any{
-		"chat_id":             chatID,
+		"channel":             recipient.Channel,
+		"chat_id":             recipient.ChannelUserID,
 		"reply_to_message_id": replyToID,
-		"text":                text,
+		"text":                body,
 		"attachments":         atts,
 		"sent_message_id":     msgID,
 	}

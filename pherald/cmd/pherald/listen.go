@@ -19,36 +19,38 @@
 //
 // Env-only configuration (no flags wired Wave 6; flag-or-env can land in
 // HRD-NNN-W6c when an operator requests it):
-//   HERALD_TGRAM_BOT_TOKEN — required: Telegram bot token (validated by
-//                            tgram.Subscribe via telebot.NewBot getMe).
-//   HERALD_TGRAM_CHAT_ID   — required: numeric chat ID this binary serves
-//                            (tgram:// URL component; Adapter routing
-//                            ignores it for inbound, but the URL parser
-//                            requires it).
-//   HERALD_PROJECT_NAME    — optional: pinned via commons.ProjectName().
-//   HERALD_CLAUDE_BIN      — optional: path to `claude` binary (default
-//                            "claude" via $PATH per claude_code.New).
-//   HERALD_INBOUND_CC_FAKE — listen_test seam: if "1", the runListen
-//                            helper substitutes a no-op CodeDispatcher
-//                            that returns a canned reply, so the test
-//                            never spawns the real claude CLI. Production
-//                            callers do NOT set this.
-//   HERALD_OPERATOR_IDS    — Wave 6.5 T7: comma-separated channel_user_id
-//                            allowlist for the §32.6 Done:/Reopen:
-//                            commands. Empty / unset → both commands are
-//                            rejected with ErrNotOperator. Whitespace
-//                            tolerant; empty segments skipped. Stub for
-//                            V3 §32.10 subscriber-role mapping (Wave 7).
+//
+//	HERALD_TGRAM_BOT_TOKEN — required: Telegram bot token (validated by
+//	                         tgram.Subscribe via telebot.NewBot getMe).
+//	HERALD_TGRAM_CHAT_ID   — required: numeric chat ID this binary serves
+//	                         (tgram:// URL component; Adapter routing
+//	                         ignores it for inbound, but the URL parser
+//	                         requires it).
+//	HERALD_PROJECT_NAME    — optional: pinned via commons.ProjectName().
+//	HERALD_CLAUDE_BIN      — optional: path to `claude` binary (default
+//	                         "claude" via $PATH per claude_code.New).
+//	HERALD_INBOUND_CC_FAKE — listen_test seam: if "1", the runListen
+//	                         helper substitutes a no-op CodeDispatcher
+//	                         that returns a canned reply, so the test
+//	                         never spawns the real claude CLI. Production
+//	                         callers do NOT set this.
+//	HERALD_OPERATOR_IDS    — Wave 6.5 T7: comma-separated channel_user_id
+//	                         allowlist for the §32.6 Done:/Reopen:
+//	                         commands. Empty / unset → both commands are
+//	                         rejected with ErrNotOperator. Whitespace
+//	                         tolerant; empty segments skipped. Stub for
+//	                         V3 §32.10 subscriber-role mapping (Wave 7).
 //
 // Flags:
-//   --docs-dir <path>      — Wave 6.5 T7: docs root containing Issues.md,
-//                            Fixed.md, Status.md, CONTINUATION.md, Help.md.
-//                            Default "docs" (relative to cwd). docs/Issues.md
-//                            MUST exist; the command refuses to boot
-//                            otherwise (§107 fail-loud — silent degradation
-//                            to "everything goes to CC" would mask a real
-//                            misconfiguration).
-//   --qa-out-dir <path>    — Wave 6 T10a: JSONL journal directory.
+//
+//	--docs-dir <path>      — Wave 6.5 T7: docs root containing Issues.md,
+//	                         Fixed.md, Status.md, CONTINUATION.md, Help.md.
+//	                         Default "docs" (relative to cwd). docs/Issues.md
+//	                         MUST exist; the command refuses to boot
+//	                         otherwise (§107 fail-loud — silent degradation
+//	                         to "everything goes to CC" would mask a real
+//	                         misconfiguration).
+//	--qa-out-dir <path>    — Wave 6 T10a: JSONL journal directory.
 package main
 
 import (
@@ -57,13 +59,20 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"sort"
 	"strings"
+	"sync"
 	"syscall"
 
 	"github.com/spf13/cobra"
 
 	"github.com/vasic-digital/herald/commons"
-	"github.com/vasic-digital/herald/commons_messaging/channels/tgram"
+	"github.com/vasic-digital/herald/commons_messaging/channels"
+	// tgram is blank-imported for its init() registration with the
+	// channels registry (Wave 7 T2) — pherald listen resolves "tgram" by
+	// name via channels.New. The Slack adapter (Wave 7 T6) will be added
+	// here the same way once it lands.
+	_ "github.com/vasic-digital/herald/commons_messaging/channels/tgram"
 	"github.com/vasic-digital/herald/commons_messaging/dispatch/claude_code"
 	"github.com/vasic-digital/herald/pherald/internal/inbound"
 )
@@ -176,16 +185,22 @@ type listenConfig struct {
 	// an explicit "no EventEmitter configured" error for event.emit
 	// replies when this is nil (§107 fail-loud).
 	EventEmitter inbound.EventEmitter
-	// Subscriber is the long-poll entry point. Production: a closure over
-	// tgram.Adapter.Subscribe. Test: a closure that publishes one synthetic
-	// InboundEvent and waits for ctx.Done.
-	Subscriber func(ctx context.Context, h commons.InboundHandler) error
+	// Subscribers maps each enabled channel name → its long-poll entry point
+	// (Wave 7 HRD-114). runListen launches one goroutine per entry and
+	// fans them ALL into the SAME inbound.Dispatcher. Production:
+	// Subscribers["tgram"] = tgramAdapter.Subscribe (and "slack" etc. once
+	// the adapter lands). Test: stub closures that publish one synthetic
+	// InboundEvent and wait for ctx.Done. Default (HERALD_CHANNELS unset) is
+	// a single "tgram" entry, preserving Wave 6 single-channel behaviour.
+	Subscribers map[string]func(ctx context.Context, h commons.InboundHandler) error
 	// Code is the CC dispatcher. Production: inbound.NewCCAdapter(*claude_code.Dispatcher).
 	// Test: a stubCode returning a canned <<<HERALD-REPLY>>> blob.
 	Code inbound.CodeDispatcher
-	// Replier is the tgram SendReply binding. Production: the live
-	// *tgram.Adapter. Test: a recordingReplier.
-	Replier inbound.TgramReplier
+	// Replier is the outbound reply binding (Wave 7 generic inbound.Replier).
+	// Production: a channelRouter that dispatches each reply to the adapter
+	// for the recipient's channel (so a tgram event replies via tgram, a
+	// slack event via slack). Test: a recordingReplier.
+	Replier inbound.Replier
 }
 
 // loadListenConfigFromEnv resolves env into listenConfig + constructs the
@@ -195,23 +210,49 @@ type listenConfig struct {
 // path (anonymous serve plane is a §107 PASS-bluff per main.go's
 // buildVerifier doc-comment).
 func loadListenConfigFromEnv() (listenConfig, error) {
-	token := os.Getenv("HERALD_TGRAM_BOT_TOKEN")
-	if token == "" {
-		return listenConfig{}, fmt.Errorf("pherald listen: HERALD_TGRAM_BOT_TOKEN required")
-	}
-	chatID := os.Getenv("HERALD_TGRAM_CHAT_ID")
-	if chatID == "" {
-		return listenConfig{}, fmt.Errorf("pherald listen: HERALD_TGRAM_CHAT_ID required")
-	}
 	projectName := commons.ProjectName()
 	claudeBin := os.Getenv("HERALD_CLAUDE_BIN")
 
-	// Build the production tgram adapter. The Wave 6 tgram package
-	// constructor takes a tgram://<token>/<chat_id> URL (no NewAdapter
-	// helper yet; see commons_messaging/channels/tgram/tgram.go:New).
-	tgramAdapter, err := tgram.New("tgram://" + token + "/" + chatID)
-	if err != nil {
-		return listenConfig{}, fmt.Errorf("pherald listen: build tgram adapter: %w", err)
+	// Wave 7 (HRD-114): resolve the enabled channel set from HERALD_CHANNELS
+	// (comma-split; default ["tgram"] when unset/empty). Each enabled
+	// channel is constructed via the channels.New registry (Wave 7 T2) with
+	// its namespaced env (perChannelConfig). The Subscribers map fans them
+	// all into one Dispatcher; a channelRouter routes each reply back to the
+	// adapter for the recipient's channel.
+	enabled := loadEnabledChannels()
+	subscribers := map[string]func(ctx context.Context, h commons.InboundHandler) error{}
+	repliers := map[string]inbound.Replier{}
+
+	// BotToken / ChatID are surfaced on the config for observability + the
+	// existing single-channel fields; we capture the tgram values when tgram
+	// is enabled so the doctor/version surfaces keep working.
+	var botToken, chatID string
+
+	for _, name := range enabled {
+		ccfg, err := perChannelConfig(name)
+		if err != nil {
+			return listenConfig{}, err
+		}
+		ch, err := channels.New(name, ccfg)
+		if err != nil {
+			return listenConfig{}, fmt.Errorf("pherald listen: build %q channel: %w", name, err)
+		}
+		subscribers[name] = ch.Subscribe
+		// Each channels.Channel exposes SendReplyGeneric (the generic reply
+		// shape). Wrap it as an inbound.Replier so the dispatcher (which
+		// names the method SendReply) can call it without knowing the
+		// concrete channel type.
+		repliers[name] = &channelReplier{ch: ch}
+		if name == string(commons.ChannelTelegram) {
+			botToken = ccfg.Token
+			chatID = ccfg.Target
+		}
+	}
+	if len(subscribers) == 0 {
+		// loadEnabledChannels guarantees ≥1, but fail loud if a future
+		// refactor breaks that invariant (silent no-channel boot is a §107
+		// PASS-bluff — the process would idle forever, appearing healthy).
+		return listenConfig{}, fmt.Errorf("pherald listen: no channels enabled (HERALD_CHANNELS resolved empty)")
 	}
 
 	// Build the production Claude Code dispatcher.
@@ -222,12 +263,12 @@ func loadListenConfigFromEnv() (listenConfig, error) {
 
 	cfg := listenConfig{
 		ProjectName: projectName,
-		BotToken:    token,
+		BotToken:    botToken,
 		ChatID:      chatID,
 		ClaudeBin:   claudeBin,
-		Subscriber:  tgramAdapter.Subscribe,
+		Subscribers: subscribers,
 		Code:        inbound.NewCCAdapter(ccDispatcher),
-		Replier:     tgramAdapter,
+		Replier:     &channelRouter{repliers: repliers},
 	}
 
 	// HERALD_INBOUND_CC_FAKE is the listen_test seam — see package doc.
@@ -240,14 +281,121 @@ func loadListenConfigFromEnv() (listenConfig, error) {
 	return cfg, nil
 }
 
-// runListen wires the inbound.Dispatcher to the configured Subscriber and
-// blocks until ctx is cancelled. Extracted from RunE so listen_test can
-// drive it hermetically without binary spawn.
+// loadEnabledChannels reads HERALD_CHANNELS (comma-separated channel names)
+// and returns the trimmed, non-empty, de-duplicated set in declaration
+// order. Unset / empty → ["tgram"] (Wave 6 single-channel behaviour
+// preserved). Whitespace around each name is trimmed; empty segments
+// (leading/trailing/double commas) are skipped.
+func loadEnabledChannels() []string {
+	raw := os.Getenv("HERALD_CHANNELS")
+	out := []string{}
+	seen := map[string]bool{}
+	for _, p := range strings.Split(raw, ",") {
+		p = strings.TrimSpace(p)
+		if p == "" || seen[p] {
+			continue
+		}
+		seen[p] = true
+		out = append(out, p)
+	}
+	if len(out) == 0 {
+		return []string{string(commons.ChannelTelegram)}
+	}
+	return out
+}
+
+// perChannelConfig reads the namespaced env for the named channel and
+// returns the channels.Config the registry constructor consumes. Required
+// credentials missing → explicit error (§107 fail-loud: a channel that
+// boots with empty creds is a PASS-bluff — getUpdates/auth.test would fail
+// silently at first poll). Unknown channel names are NOT rejected here —
+// channels.New surfaces ErrUnknownChannel with the registered set.
+func perChannelConfig(name string) (channels.Config, error) {
+	switch name {
+	case string(commons.ChannelTelegram):
+		token := os.Getenv("HERALD_TGRAM_BOT_TOKEN")
+		if token == "" {
+			return channels.Config{}, fmt.Errorf("pherald listen: HERALD_TGRAM_BOT_TOKEN required (channel tgram enabled)")
+		}
+		chatID := os.Getenv("HERALD_TGRAM_CHAT_ID")
+		if chatID == "" {
+			return channels.Config{}, fmt.Errorf("pherald listen: HERALD_TGRAM_CHAT_ID required (channel tgram enabled)")
+		}
+		return channels.Config{Token: token, Target: chatID}, nil
+	case "slack":
+		token := os.Getenv("HERALD_SLACK_BOT_TOKEN")
+		if token == "" {
+			return channels.Config{}, fmt.Errorf("pherald listen: HERALD_SLACK_BOT_TOKEN required (channel slack enabled)")
+		}
+		return channels.Config{
+			Token:    token,
+			AppToken: os.Getenv("HERALD_SLACK_APP_TOKEN"),
+			Target:   os.Getenv("HERALD_SLACK_CHANNEL_ID"),
+		}, nil
+	default:
+		// Generic fallback: pass the single-token namespaced env if present.
+		// channels.New rejects truly-unknown names with ErrUnknownChannel.
+		return channels.Config{
+			Token:  os.Getenv("HERALD_" + strings.ToUpper(name) + "_BOT_TOKEN"),
+			Target: os.Getenv("HERALD_" + strings.ToUpper(name) + "_CHANNEL_ID"),
+		}, nil
+	}
+}
+
+// channelReplier adapts a channels.Channel (whose reply method is named
+// SendReplyGeneric to keep *tgram.Adapter satisfying channels.Channel
+// without shadowing its native int64 SendReply — see channels/channel.go's
+// package doc) to the inbound.Replier interface (whose method is named
+// SendReply). This thin shim is the bridge between the two intentionally-
+// differently-named generic methods.
+type channelReplier struct{ ch channels.Channel }
+
+func (r *channelReplier) SendReply(ctx context.Context, recipient commons.Recipient, body, replyToID string, atts []commons.Attachment) (string, error) {
+	return r.ch.SendReplyGeneric(ctx, recipient, body, replyToID, atts)
+}
+
+// channelRouter implements inbound.Replier by routing each reply to the
+// adapter registered for recipient.Channel. A reply for an unregistered
+// channel is a §107 fail-loud error (never silently dropped — a dropped
+// reply is the canonical "everything went green but the user got nothing"
+// bluff).
+type channelRouter struct{ repliers map[string]inbound.Replier }
+
+func (r *channelRouter) SendReply(ctx context.Context, recipient commons.Recipient, body, replyToID string, atts []commons.Attachment) (string, error) {
+	rep, ok := r.repliers[recipient.Channel]
+	if !ok {
+		return "", fmt.Errorf("pherald listen: no replier for channel %q (registered: %v)", recipient.Channel, channelRouterKeys(r.repliers))
+	}
+	return rep.SendReply(ctx, recipient, body, replyToID, atts)
+}
+
+// channelRouterKeys returns the routed channel names for the fail-loud
+// error message above (sorted for deterministic test output).
+func channelRouterKeys(m map[string]inbound.Replier) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
+}
+
+// runListen wires the inbound.Dispatcher to every configured Subscriber and
+// blocks until ctx is cancelled (or a subscriber dies). Extracted from RunE
+// so listen_test can drive it hermetically without binary spawn.
+//
+// Wave 7 (HRD-114): fan-in. cfg.Subscribers maps each enabled channel name →
+// its long-poll entry point; runListen launches one goroutine per entry, all
+// feeding the SAME dispatcher (one CC session, one reply router). If ANY
+// subscriber returns a non-cancel error, runListen cancels the siblings and
+// surfaces that error (T11 chaos fail-loud — a channel that silently dies
+// must take the process down, not idle the other channels while one is dark).
 //
 // §107 anchor: the loop is NOT "boots + exits" — runListen returns the
-// error from cfg.Subscriber (which is itself the long-poll loop that
-// invokes Handle on every message). Test asserts Handle was invoked and
-// the returned err is one of (nil, context.Canceled, context.DeadlineExceeded).
+// error from the subscribers (each is itself the long-poll loop that invokes
+// Handle on every message). The multi-channel test asserts BOTH channels'
+// synthetic events reach the dispatcher AND both replies are recorded — not
+// merely "both goroutines started".
 func runListen(ctx context.Context, cfg listenConfig) error {
 	code := cfg.Code
 	replier := cfg.Replier
@@ -265,7 +413,7 @@ func runListen(ctx context.Context, cfg listenConfig) error {
 	dispatcher, err := inbound.NewDispatcher(inbound.Config{
 		ProjectName: cfg.ProjectName,
 		Code:        code,
-		TgramReply:  replier,
+		Reply:       replier,
 		Issues:      cfg.IssueOpener,
 		Events:      cfg.EventEmitter,
 		Commands:    cfg.Commands,
@@ -277,13 +425,38 @@ func runListen(ctx context.Context, cfg listenConfig) error {
 	if jrn != nil {
 		handler = &journalingHandler{j: jrn, inner: handler}
 	}
-	if err := cfg.Subscriber(ctx, handler); err != nil {
-		// Subscriber returns ctx.Err() on clean cancellation; bubble
-		// that up so the caller (signal.NotifyContext) can exit 0.
-		if ctxErr := ctx.Err(); ctxErr != nil {
-			return nil
-		}
-		return fmt.Errorf("pherald listen: subscribe: %w", err)
+
+	if len(cfg.Subscribers) == 0 {
+		return fmt.Errorf("pherald listen: no subscribers configured")
+	}
+
+	// Fan-in: one goroutine per channel subscriber, all sharing handler.
+	// A child context lets the first failing subscriber cancel its siblings.
+	gctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	var wg sync.WaitGroup
+	errCh := make(chan error, len(cfg.Subscribers))
+	for name, sub := range cfg.Subscribers {
+		name, sub := name, sub
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			if err := sub(gctx, handler); err != nil {
+				// A subscriber returns ctx.Err() on clean cancellation —
+				// that is NOT a failure. Any other error is a channel death:
+				// cancel the siblings + surface the error (fail-loud).
+				if gctx.Err() != nil {
+					return
+				}
+				cancel()
+				errCh <- fmt.Errorf("pherald listen: channel %q subscribe: %w", name, err)
+			}
+		}()
+	}
+	wg.Wait()
+	close(errCh)
+	if err := <-errCh; err != nil {
+		return err
 	}
 	return nil
 }

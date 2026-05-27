@@ -4,13 +4,13 @@
 // pherald binary, call runListen(ctx, cfg) directly with stub Subscriber
 // + stub CodeDispatcher + recording Replier. The test asserts:
 //
-//   (a) ≥1 handler invocation arrives within 8s when the stub Subscriber
-//       publishes one synthetic InboundEvent.
-//   (b) Context cancel (simulating SIGTERM) causes runListen to return
-//       cleanly (nil — the helper masks ctx.Err() per its doc-comment).
-//   (c) The action routing pipeline reached the SendReply sink (the
-//       Dispatcher dispatched action=reply because the stub Code emitted
-//       a canned <<<HERALD-REPLY>>> blob — Wave 6 T7 routing).
+//	(a) ≥1 handler invocation arrives within 8s when the stub Subscriber
+//	    publishes one synthetic InboundEvent.
+//	(b) Context cancel (simulating SIGTERM) causes runListen to return
+//	    cleanly (nil — the helper masks ctx.Err() per its doc-comment).
+//	(c) The action routing pipeline reached the SendReply sink (the
+//	    Dispatcher dispatched action=reply because the stub Code emitted
+//	    a canned <<<HERALD-REPLY>>> blob — Wave 6 T7 routing).
 //
 // §107 anchor — every PASS is a positive runtime observation: the
 // recordingReplier MUST have its called flag set within 8s. A test that
@@ -75,19 +75,25 @@ func (stubCode) Dispatch(_ context.Context, _ inbound.CodeRequest) (inbound.Code
 }
 
 // recordingReplier records SendReply calls so the test can assert the
-// action=reply routing reached this sink.
+// action=reply routing reached this sink. Wave 7 (HRD-114): generic
+// inbound.Replier signature + an optional onReply hook so the multi-channel
+// fan-in test can count replies-per-text (one ack per channel).
 type recordingReplier struct {
 	mu      sync.Mutex
 	called  int
 	lastTxt string
+	onReply func(string)
 }
 
-func (r *recordingReplier) SendReply(_ context.Context, _ int64, text string, _ int, _ []commons.Attachment) (int, error) {
+func (r *recordingReplier) SendReply(_ context.Context, _ commons.Recipient, body, _ string, _ []commons.Attachment) (string, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.called++
-	r.lastTxt = text
-	return 1, nil
+	r.lastTxt = body
+	if r.onReply != nil {
+		r.onReply(body)
+	}
+	return "1", nil
 }
 
 func (r *recordingReplier) Called() int {
@@ -117,9 +123,11 @@ func TestListenWiresHandlerAndExitsOnCancel(t *testing.T) {
 		ProjectName: "TestProj",
 		BotToken:    "fake-token",
 		ChatID:      "12345",
-		Subscriber:  stubSubscriber(&handlerCount),
-		Code:        stubCode{},
-		Replier:     replier,
+		Subscribers: map[string]func(context.Context, commons.InboundHandler) error{
+			"tgram": stubSubscriber(&handlerCount),
+		},
+		Code:    stubCode{},
+		Replier: replier,
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -175,6 +183,57 @@ func TestListenWiresHandlerAndExitsOnCancel(t *testing.T) {
 	}
 }
 
+// TestRunListenMultiChannelFanIn — Wave 7 (HRD-114) §107 anchor for the
+// multi-channel fan-in. Two stub subscribers (simulating tgram + slack) each
+// publish ONE synthetic InboundEvent; the test asserts BOTH events reach the
+// shared dispatcher AND both replies are recorded (seen["ack (fake)"] >= 2).
+//
+// §107 anti-bluff: the assertion is NOT "both goroutines started" — it is
+// "both messages were dispatched AND both replies were sent". A fan-in that
+// drops one channel's events (e.g. a map-iteration bug that only wires the
+// last subscriber, or a shared-handler race that loses one Handle) makes
+// seen < 2 → FAIL.
+func TestRunListenMultiChannelFanIn(t *testing.T) {
+	if testing.Short() {
+		t.Skip("listen integration test skipped in -short mode")
+	}
+	var mu sync.Mutex
+	seen := map[string]int{}
+	mkSub := func(channel string) func(context.Context, commons.InboundHandler) error {
+		return func(ctx context.Context, h commons.InboundHandler) error {
+			_ = h.Handle(ctx, commons.InboundEvent{
+				EventID: channel + "-evt",
+				Sender:  commons.Recipient{Channel: channel, ChannelUserID: "100"},
+				Body:    commons.Body{Plain: "ping from " + channel},
+				Raw:     map[string]any{"message_id": 7},
+			})
+			<-ctx.Done()
+			return ctx.Err()
+		}
+	}
+	rec := &recordingReplier{onReply: func(text string) { mu.Lock(); seen[text]++; mu.Unlock() }}
+	cfg := listenConfig{
+		ProjectName: "Herald",
+		Code:        fakeCodeDispatcher{},
+		Replier:     rec,
+		Subscribers: map[string]func(context.Context, commons.InboundHandler) error{
+			"tgram": mkSub("tgram"),
+			"slack": mkSub("slack"),
+		},
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	go func() { time.Sleep(500 * time.Millisecond); cancel() }()
+	if err := runListen(ctx, cfg); err != nil {
+		t.Fatalf("runListen: %v", err)
+	}
+	mu.Lock()
+	defer mu.Unlock()
+	if seen["ack (fake)"] < 2 {
+		t.Fatalf("expected >=2 replies (one per channel), got %v", seen)
+	}
+}
+
 // TestRunListenRejectsBadConfig asserts NewDispatcher's validation
 // surfaces through runListen (cfg.Code == nil → error). This is the
 // negative-path assertion that prevents an empty-config "boots silently"
@@ -182,7 +241,9 @@ func TestListenWiresHandlerAndExitsOnCancel(t *testing.T) {
 func TestRunListenRejectsBadConfig(t *testing.T) {
 	cfg := listenConfig{
 		ProjectName: "TestProj",
-		Subscriber:  func(ctx context.Context, _ commons.InboundHandler) error { <-ctx.Done(); return ctx.Err() },
+		Subscribers: map[string]func(context.Context, commons.InboundHandler) error{
+			"tgram": func(ctx context.Context, _ commons.InboundHandler) error { <-ctx.Done(); return ctx.Err() },
+		},
 		// Code and Replier left nil — NewDispatcher MUST reject.
 	}
 	err := runListen(context.Background(), cfg)

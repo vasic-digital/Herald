@@ -6,7 +6,7 @@
 //  2. Call CodeDispatcher.Dispatch.
 //  3. ParseReply on the returned stdout for an action declaration.
 //  4. Route the action exclusively to one sink:
-//     - "reply"      → TgramReplier.SendReply (default action; operator-locked)
+//     - "reply"      → Replier.SendReply (default action; operator-locked)
 //     - "issue.open" → IssueOpener.OpenIssue
 //     - "event.emit" → EventEmitter.Emit
 //     - unknown      → explicit error (no silent fallback)
@@ -61,11 +61,23 @@ type Classification struct {
 	Confidence  float64
 }
 
-// TgramReplier sends a reply that quotes the original message via Telegram's
-// reply_to_message_id semantics. T8 (Wave 6) lands the production
-// implementation on tgram.Adapter.
-type TgramReplier interface {
-	SendReply(ctx context.Context, chatID int64, text string, replyToID int, attachments []commons.Attachment) (int, error)
+// Replier sends a reply that quotes the original message. Wave 7 (HRD-114)
+// generic signature: recipient + string ids let any channel (Telegram,
+// Slack, …) satisfy it without the dispatcher knowing the channel-native
+// id types. The production wiring in pherald/cmd/pherald/listen.go binds a
+// channelRouter that dispatches each reply to the adapter for
+// recipient.Channel (each adapter's *tgram.Adapter.SendReplyGeneric /
+// *slack.Adapter.SendReplyGeneric matches this exact shape via a thin
+// per-channel wrapper).
+//
+// Wave 6 history: this interface was named TgramReplier with a Telegram-
+// native int64 chatID / int replyToID signature; T5 widened it to the
+// generic recipient/string form so the dispatcher is channel-agnostic.
+// The method keeps the name SendReply (the inbound package's own name,
+// independent of channels.Channel.SendReplyGeneric) — see the Wave 7 plan
+// Step 4 method-name resolution.
+type Replier interface {
+	SendReply(ctx context.Context, recipient commons.Recipient, body string, replyToID string, attachments []commons.Attachment) (string, error)
 }
 
 // IssueOpener creates a workable-item (HRD-NNN per V3 §8.3) from the
@@ -94,7 +106,7 @@ type EventEmitter interface {
 type Config struct {
 	ProjectName string
 	Code        CodeDispatcher
-	TgramReply  TgramReplier
+	Reply       Replier
 	Issues      IssueOpener
 	Events      EventEmitter
 	Commands    *CommandsConfig
@@ -105,14 +117,14 @@ type Config struct {
 type Dispatcher struct {
 	projectName string
 	code        CodeDispatcher
-	reply       TgramReplier
+	reply       Replier
 	opener      IssueOpener
 	emit        EventEmitter
 	commands    *CommandsConfig
 }
 
 // NewDispatcher validates cfg and returns a ready Dispatcher. cfg.Code and
-// cfg.TgramReply MUST be non-nil — cfg.Issues / cfg.Events may be nil iff
+// cfg.Reply MUST be non-nil — cfg.Issues / cfg.Events may be nil iff
 // the corresponding action triggers are never emitted by the LLM (the
 // switch returns an explicit error in that case rather than silently
 // dropping the trigger). cfg.Commands may be nil — when nil, every
@@ -122,13 +134,13 @@ func NewDispatcher(cfg Config) (*Dispatcher, error) {
 	if cfg.Code == nil {
 		return nil, errors.New("inbound.NewDispatcher: cfg.Code is required")
 	}
-	if cfg.TgramReply == nil {
-		return nil, errors.New("inbound.NewDispatcher: cfg.TgramReply is required")
+	if cfg.Reply == nil {
+		return nil, errors.New("inbound.NewDispatcher: cfg.Reply is required")
 	}
 	return &Dispatcher{
 		projectName: cfg.ProjectName,
 		code:        cfg.Code,
-		reply:       cfg.TgramReply,
+		reply:       cfg.Reply,
 		opener:      cfg.Issues,
 		emit:        cfg.Events,
 		commands:    cfg.Commands,
@@ -184,12 +196,16 @@ func (d *Dispatcher) Handle(ctx context.Context, ev commons.InboundEvent) error 
 
 	switch reply.Action {
 	case "reply":
-		chatID, _ := strconv.ParseInt(ev.Sender.ChannelUserID, 10, 64)
 		replyToID, _ := extractReplyToMessageID(ev.Raw)
-		if _, err := d.reply.SendReply(ctx, chatID, reply.Text, replyToID, nil); err != nil {
+		rt := ""
+		if replyToID > 0 {
+			rt = strconv.Itoa(replyToID)
+		}
+		rcpt := commons.Recipient{Channel: ev.Sender.Channel, ChannelUserID: ev.Sender.ChannelUserID}
+		if _, err := d.reply.SendReply(ctx, rcpt, reply.Text, rt, nil); err != nil {
 			return fmt.Errorf("inbound: send reply: %w", err)
 		}
-		log.Printf("inbound dispatched: reply (event=%s chatID=%d replyTo=%d)", ev.EventID, chatID, replyToID)
+		log.Printf("inbound dispatched: reply (event=%s channel=%s user=%s replyTo=%s)", ev.EventID, ev.Sender.Channel, ev.Sender.ChannelUserID, rt)
 		return nil
 
 	case "issue.open":
@@ -265,26 +281,28 @@ func (d *Dispatcher) fastPath(ctx context.Context, ev commons.InboundEvent, c Cl
 	default:
 		return false, nil
 	}
+	rcpt := commons.Recipient{Channel: ev.Sender.Channel, ChannelUserID: ev.Sender.ChannelUserID}
+	replyToID, _ := extractReplyToMessageID(ev.Raw)
+	rt := ""
+	if replyToID > 0 {
+		rt = strconv.Itoa(replyToID)
+	}
 	if err != nil {
 		// Fast-path handler errored (e.g. non-operator rejection on
 		// Done:/Reopen:). Surface the message to the operator via the
 		// same reply channel so they see WHY the command failed —
 		// silent failure here would be a §107 PASS-bluff.
-		chatID, _ := strconv.ParseInt(ev.Sender.ChannelUserID, 10, 64)
-		replyToID, _ := extractReplyToMessageID(ev.Raw)
 		errText := fmt.Sprintf("%s: %s", label, err.Error())
-		if _, sendErr := d.reply.SendReply(ctx, chatID, errText, replyToID, nil); sendErr != nil {
+		if _, sendErr := d.reply.SendReply(ctx, rcpt, errText, rt, nil); sendErr != nil {
 			return true, fmt.Errorf("inbound: fast-path %s send err-reply: %w (original: %v)", label, sendErr, err)
 		}
 		log.Printf("inbound dispatched: %s (event=%s err=%v)", label, ev.EventID, err)
 		return true, nil
 	}
-	chatID, _ := strconv.ParseInt(ev.Sender.ChannelUserID, 10, 64)
-	replyToID, _ := extractReplyToMessageID(ev.Raw)
-	if _, err := d.reply.SendReply(ctx, chatID, replyText, replyToID, atts); err != nil {
+	if _, err := d.reply.SendReply(ctx, rcpt, replyText, rt, atts); err != nil {
 		return true, fmt.Errorf("inbound: fast-path %s send reply: %w", label, err)
 	}
-	log.Printf("inbound dispatched: %s (event=%s chatID=%d replyTo=%d)", label, ev.EventID, chatID, replyToID)
+	log.Printf("inbound dispatched: %s (event=%s channel=%s user=%s replyTo=%s)", label, ev.EventID, ev.Sender.Channel, ev.Sender.ChannelUserID, rt)
 	return true, nil
 }
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -14,6 +15,12 @@ import (
 
 // recordingReplier captures the SendReply call so the test can assert
 // the action was routed here (and the reply_to_message_id arrived intact).
+//
+// Wave 7 (HRD-114): the generic inbound.Replier signature carries a
+// commons.Recipient + string replyToID. lastChatID / lastReplyTo are the
+// decoded numeric forms (the dispatcher converts the Telegram chat_id /
+// message_id to/from strings) so the existing numeric assertions stay
+// meaningful.
 type recordingReplier struct {
 	called      bool
 	lastChatID  int64
@@ -21,12 +28,20 @@ type recordingReplier struct {
 	lastText    string
 }
 
-func (r *recordingReplier) SendReply(_ context.Context, chatID int64, text string, replyToID int, _ []commons.Attachment) (int, error) {
+func (r *recordingReplier) SendReply(_ context.Context, recipient commons.Recipient, body, replyToID string, _ []commons.Attachment) (string, error) {
 	r.called = true
-	r.lastChatID = chatID
-	r.lastReplyTo = replyToID
-	r.lastText = text
-	return 1, nil
+	if recipient.ChannelUserID != "" {
+		chatID, _ := strconv.ParseInt(recipient.ChannelUserID, 10, 64)
+		r.lastChatID = chatID
+	}
+	if replyToID != "" {
+		rt, _ := strconv.Atoi(replyToID)
+		r.lastReplyTo = rt
+	} else {
+		r.lastReplyTo = 0
+	}
+	r.lastText = body
+	return "1", nil
 }
 
 type recordingOpener struct {
@@ -118,7 +133,7 @@ func TestDispatcherActionRouting(t *testing.T) {
 			d, err := inbound.NewDispatcher(inbound.Config{
 				ProjectName: "T",
 				Code:        stubCode{stdout: tc.stdout},
-				TgramReply:  rr,
+				Reply:       rr,
 				Issues:      ro,
 				Events:      re,
 			})
@@ -170,7 +185,7 @@ func TestDispatcherReplyPassesMessageID(t *testing.T) {
 	d, err := inbound.NewDispatcher(inbound.Config{
 		ProjectName: "T",
 		Code:        stubCode{stdout: `<<<HERALD-REPLY>>> {"action":"reply","text":"pong"}`},
-		TgramReply:  rr,
+		Reply:       rr,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -206,7 +221,7 @@ func TestDispatcherReplyAcceptsFloat64MessageID(t *testing.T) {
 	d, _ := inbound.NewDispatcher(inbound.Config{
 		ProjectName: "T",
 		Code:        stubCode{stdout: `<<<HERALD-REPLY>>> {"action":"reply","text":"ok"}`},
-		TgramReply:  rr,
+		Reply:       rr,
 	})
 	ev := commons.InboundEvent{
 		Sender: commons.Recipient{Channel: "tgram", ChannelUserID: "1"},
@@ -225,7 +240,7 @@ func TestDispatcherUnknownActionReturnsError(t *testing.T) {
 	d, _ := inbound.NewDispatcher(inbound.Config{
 		ProjectName: "T",
 		Code:        stubCode{stdout: `<<<HERALD-REPLY>>> {"action":"weird.thing"}`},
-		TgramReply:  rr,
+		Reply:       rr,
 	})
 	err := d.Handle(context.Background(), commons.InboundEvent{
 		Sender: commons.Recipient{Channel: "tgram", ChannelUserID: "1"},
@@ -247,7 +262,7 @@ func TestDispatcherParseErrorSurfaces(t *testing.T) {
 	d, _ := inbound.NewDispatcher(inbound.Config{
 		ProjectName: "T",
 		Code:        stubCode{stdout: `no marker here at all`},
-		TgramReply:  rr,
+		Reply:       rr,
 	})
 	err := d.Handle(context.Background(), commons.InboundEvent{
 		Sender: commons.Recipient{Channel: "tgram", ChannelUserID: "1"},
@@ -266,7 +281,7 @@ func TestDispatcherIssueOpenMissingOpenerErrors(t *testing.T) {
 	d, _ := inbound.NewDispatcher(inbound.Config{
 		ProjectName: "T",
 		Code:        stubCode{stdout: `<<<HERALD-REPLY>>> {"action":"issue.open","issue":{"title":"X"}}`},
-		TgramReply:  rr,
+		Reply:       rr,
 		// Issues: nil intentionally
 	})
 	err := d.Handle(context.Background(), commons.InboundEvent{
@@ -280,12 +295,12 @@ func TestDispatcherIssueOpenMissingOpenerErrors(t *testing.T) {
 
 func TestNewDispatcherValidatesRequiredFields(t *testing.T) {
 	if _, err := inbound.NewDispatcher(inbound.Config{}); err == nil {
-		t.Fatal("want error for missing Code+TgramReply")
+		t.Fatal("want error for missing Code+Reply")
 	}
 	if _, err := inbound.NewDispatcher(inbound.Config{Code: stubCode{}}); err == nil {
-		t.Fatal("want error for missing TgramReply")
+		t.Fatal("want error for missing Reply")
 	}
-	if _, err := inbound.NewDispatcher(inbound.Config{TgramReply: &recordingReplier{}}); err == nil {
+	if _, err := inbound.NewDispatcher(inbound.Config{Reply: &recordingReplier{}}); err == nil {
 		t.Fatal("want error for missing Code")
 	}
 }
@@ -310,7 +325,7 @@ func TestDispatcherFastPathHelpBypassesCC(t *testing.T) {
 	d, err := inbound.NewDispatcher(inbound.Config{
 		ProjectName: "T",
 		Code:        cc,
-		TgramReply:  rr,
+		Reply:       rr,
 		Commands:    cmds,
 	})
 	if err != nil {
@@ -350,7 +365,7 @@ func TestDispatcherCCPathTakenForPlainQuery(t *testing.T) {
 	d, err := inbound.NewDispatcher(inbound.Config{
 		ProjectName: "T",
 		Code:        cc,
-		TgramReply:  rr,
+		Reply:       rr,
 		Commands:    cmds,
 	})
 	if err != nil {
@@ -398,7 +413,7 @@ func TestDispatcherFastPathStatusReadsFixture(t *testing.T) {
 	d, err := inbound.NewDispatcher(inbound.Config{
 		ProjectName: "T",
 		Code:        cc,
-		TgramReply:  rr,
+		Reply:       rr,
 		Commands:    cmds,
 	})
 	if err != nil {
@@ -437,7 +452,7 @@ func TestDispatcherFastPathDoneNonOperatorReplies(t *testing.T) {
 	d, _ := inbound.NewDispatcher(inbound.Config{
 		ProjectName: "T",
 		Code:        cc,
-		TgramReply:  rr,
+		Reply:       rr,
 		Commands:    cmds,
 	})
 	ev := commons.InboundEvent{
@@ -472,7 +487,7 @@ func TestDispatcherNilCommandsFallsThrough(t *testing.T) {
 	d, _ := inbound.NewDispatcher(inbound.Config{
 		ProjectName: "T",
 		Code:        cc,
-		TgramReply:  rr,
+		Reply:       rr,
 		Commands:    nil, // no T7 wiring
 	})
 	ev := commons.InboundEvent{

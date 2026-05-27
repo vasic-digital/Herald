@@ -30,17 +30,18 @@ import (
 	"github.com/vasic-digital/herald/pherald/internal/inbound"
 )
 
-// stubReplierJournal records the SendReply call.
+// stubReplierJournal records the SendReply call. Wave 7 (HRD-114): the
+// generic inbound.Replier signature (recipient + string ids).
 type stubReplierJournal struct {
 	mu     sync.Mutex
 	called int
 }
 
-func (s *stubReplierJournal) SendReply(_ context.Context, _ int64, _ string, _ int, _ []commons.Attachment) (int, error) {
+func (s *stubReplierJournal) SendReply(_ context.Context, _ commons.Recipient, _, _ string, _ []commons.Attachment) (string, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.called++
-	return 1001, nil
+	return "1001", nil
 }
 
 // stubCodeJournal returns a canned <<<HERALD-REPLY>>> blob so the inner
@@ -79,8 +80,8 @@ func TestJournalFullChainEmitsFourLines(t *testing.T) {
 	// Build the inner Dispatcher with stub code + stub replier.
 	replier := &stubReplierJournal{}
 	innerDisp, err := inbound.NewDispatcher(inbound.Config{
-		Code:       stubCodeJournal{},
-		TgramReply: replier,
+		Code:  stubCodeJournal{},
+		Reply: replier,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -97,8 +98,8 @@ func TestJournalFullChainEmitsFourLines(t *testing.T) {
 	// Rebuild the inbound.Dispatcher with the journaling Code + Replier
 	// so cc.dispatch / cc.reply / tgram.send_reply get journaled.
 	chainedDisp, err := inbound.NewDispatcher(inbound.Config{
-		Code:       jrnCode,
-		TgramReply: jrnReplier,
+		Code:  jrnCode,
+		Reply: jrnReplier,
 	})
 	if err != nil {
 		t.Fatal(err)
