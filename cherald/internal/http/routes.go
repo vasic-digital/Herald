@@ -10,6 +10,7 @@ package http
 import (
 	"github.com/gin-gonic/gin"
 
+	"github.com/vasic-digital/herald/cherald/internal/bindings"
 	"github.com/vasic-digital/herald/cherald/internal/compliance"
 	"github.com/vasic-digital/herald/cherald/internal/modes"
 	"github.com/vasic-digital/herald/commons/cli"
@@ -19,8 +20,14 @@ import (
 // Routes returns cherald-specific HTTP routes. /v1/compliance is LIVE
 // (Wave 3a). The /v1/compliance/modes admin surface is LIVE (HRD-027) —
 // operators flip a rule's enforcement mode per tenant without redeploy.
-func Routes(store constitution.ConstitutionStore, ladder constitution.ModeLadder) []cli.Route {
-	return []cli.Route{
+//
+// pipeline is the HRD-019 bindings pipeline driving the constitution
+// rule-evaluation surface. When non-nil, POST /v1/compliance/evaluate is
+// mounted (the detect→emit→persist write side). It is nil only in the
+// Memory-fallback dev path where the emitter/audit backends aren't wired —
+// the read surfaces stay live regardless.
+func Routes(store constitution.ConstitutionStore, ladder constitution.ModeLadder, pipeline *bindings.Pipeline) []cli.Route {
+	routes := []cli.Route{
 		{
 			Method:      "GET",
 			Path:        "/v1/compliance",
@@ -46,6 +53,15 @@ func Routes(store constitution.ConstitutionStore, ladder constitution.ModeLadder
 			Description: "Flip a rule's enforcement mode allow|warn|enforce without redeploy (HRD-027)",
 		},
 	}
+	if pipeline != nil {
+		routes = append(routes, cli.Route{
+			Method:      "POST",
+			Path:        "/v1/compliance/evaluate",
+			Handler:     compliance.EvaluateHandler(pipeline),
+			Description: "Evaluate a constitution rule against a subject; emit+persist on violation (V3 §42.3 / HRD-019)",
+		})
+	}
+	return routes
 }
 
 // _ = gin.HandlerFunc(nil) // import-guard for the gin package to stay

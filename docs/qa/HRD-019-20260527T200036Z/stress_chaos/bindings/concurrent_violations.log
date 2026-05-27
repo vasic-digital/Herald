@@ -1,0 +1,7 @@
+surface=bindings scenario=stress_concurrent_violations rule=§11.4.29 mode=enforce
+workers=8 iters_per_worker=150 total=1200
+fails=1200 non_fail=0 errors=0
+bus_published_policy_violation=1200 audit_rows=1200
+no_lost_events_under_load=1
+p50_ms=0.1540 p95_ms=0.5020 p99_ms=0.9170 max_ms=1.3020 tput_per_sec=39178.9
+race_detector=clean

@@ -239,15 +239,31 @@ commons/types.go + null adapter test passes)</td>
 <tr>
 <td>HRD-019</td>
 <td>task</td>
-<td>open</td>
+<td>in_progress</td>
 <td>high</td>
-<td><code>cherald</code> constitution bindings — bulk implementation:
-~30 <code>.policy.violation</code> rules +
-<code>.gate.failed</code>/<code>.gate.recovered</code>/<code>.credential.leak</code>/<code>.spec.revision_drift</code>/<code>.catalogue.miss</code>
-handlers; <code>/v1/compliance</code> pull surface</td>
+<td><code>cherald</code> constitution bindings —
+<code>cherald/internal/bindings</code> Pipeline registers the 32
+cherald-owned §42.3 rules as concrete
+<code>commons_constitution.Evaluator</code> impls routed through 5 event
+classes
+(<code>.policy.violation</code>/<code>.gate.failed</code>/<code>.gate.recovered</code>/<code>.credential.leak</code>/<code>.spec.revision_drift</code>/<code>.catalogue.miss</code>)
+over the Batch-A emit+persist+audit foundation;
+<code>POST /v1/compliance/evaluate</code> write surface drives
+detect→emit→persist→audit, visible on the existing
+<code>GET /v1/compliance</code> pull surface. Vertical-slice bespoke
+detectors landed (§11.4.29 naming, §11.4.10/.10.A credentials, §11.4.44
+doc-revision-header, §11.4.18 script-docs, §11.4.73 spec-drift, §11.4.74
+catalogue-miss); remaining 25 rules use the shared marker-check
+mechanism (verdict decided upstream by the §43 catalogue command /
+sweep) with the full emit-routing framework in place — deepening each
+remaining bespoke detector is per-rule follow-up.</td>
 <td>2026-05-20</td>
-<td>2026-05-20</td>
-<td>spec V3 §42.3 cherald rows + §42.5 step 2; Catalogue-Check: TBD</td>
+<td>2026-05-27</td>
+<td>spec V3 §42.3 cherald rows + §42.5 step 2; Catalogue-Check: no-match
+(bindings are bespoke Helix-governance Evaluator impls;
+emit/persist/audit path is 100% Batch-A wiring per §11.4.74). Evidence:
+docs/qa/HRD-019-20260527T200036Z/ (REST round-trip transcript +
+stress_chaos/). e2e: E90 proposed.</td>
 </tr>
 <tr>
 <td>HRD-020</td>

@@ -22,6 +22,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 
+	"github.com/vasic-digital/herald/cherald/internal/bindings"
 	flavhttp "github.com/vasic-digital/herald/cherald/internal/http"
 	"github.com/vasic-digital/herald/cherald/internal/stubs"
 	"github.com/vasic-digital/herald/commons"
@@ -59,6 +60,20 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Build the HRD-019 bindings pipeline: it registers cherald's §42.3 rule
+	// catalogue and drives the detect→emit→persist→audit flow that backs
+	// POST /v1/compliance/evaluate. The emitter publishes onto an in-process
+	// EventBus (the M1 substrate; the M2 swap to digital.vasic.eventbus is a
+	// drop-in per the Foundation Catalogue-Check). Audit is shared with the
+	// store backend selection: PostgresAudit when HERALD_PG_DSN is set,
+	// MemoryAudit otherwise. A bundle-hash is captured from the discovered
+	// Constitution.md when present (replayability per §42.1.3).
+	pipeline, err := buildPipeline(modeLadder, store)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "cherald:", err)
+		os.Exit(1)
+	}
+
 	// Build the auth verifier. Redis is optional — JWKS-mode caches keys
 	// in Redis when available; HMAC mode ignores rdb entirely.
 	rdb, err := buildRedis()
@@ -78,7 +93,7 @@ func main() {
 	root.AddCommand(cli.VersionCmd(branding))
 	root.AddCommand(cli.ServeCmd(cli.ServeOpts{
 		Branding:   branding,
-		Routes:     flavhttp.Routes(store, modeLadder),
+		Routes:     flavhttp.Routes(store, modeLadder, pipeline),
 		Middleware: []gin.HandlerFunc{commons_auth.GinMiddleware(verifier)},
 	}))
 	stubs.Register(root)
@@ -113,6 +128,61 @@ func buildStoreAndLadder(ctx context.Context) (constitution.ConstitutionStore, c
 		return nil, nil, fmt.Errorf("open pg pool: %w", err)
 	}
 	return state.NewPostgres(database), ladder.NewPostgres(database), nil
+}
+
+// buildPipeline assembles the HRD-019 bindings.Pipeline. The emitter publishes
+// onto a fresh in-process MemoryBus (M1 substrate). The AuditStore mirrors the
+// store backend: PostgresAudit over the HERALD_PG_DSN pool when set, MemoryAudit
+// otherwise. The bundle hash is captured from the discovered Constitution.md
+// (HELIX_CONSTITUTION_PATH or the conventional sibling path) when readable; a
+// missing bundle degrades to the zero hash (a valid "no bundle" sentinel) so
+// dev runs without a constitution checkout still serve the surface.
+func buildPipeline(ladderImpl constitution.ModeLadder, store constitution.ConstitutionStore) (*bindings.Pipeline, error) {
+	bus := constitution.NewMemoryBus(constitution.MemoryBusConfig{})
+	emitter, err := constitution.NewEmitter(bus, constitution.EmitterConfig{
+		Source: "digital.vasic.herald/cherald",
+	})
+	if err != nil {
+		return nil, fmt.Errorf("build emitter: %w", err)
+	}
+
+	audit, err := buildAudit(context.Background())
+	if err != nil {
+		return nil, fmt.Errorf("build audit: %w", err)
+	}
+
+	var bundle constitution.BundleHash
+	if path := os.Getenv("HELIX_CONSTITUTION_PATH"); path != "" {
+		if h, cerr := constitution.Capture(path); cerr == nil {
+			bundle = h
+		}
+	}
+
+	return bindings.NewPipeline(bindings.Config{
+		Ladder:  ladderImpl,
+		Store:   store,
+		Emitter: emitter,
+		Audit:   audit,
+		Bundle:  bundle,
+	})
+}
+
+// buildAudit returns the AuditStore matching the store backend selection:
+// PostgresAudit over the HERALD_PG_DSN pool when set, MemoryAudit otherwise.
+func buildAudit(ctx context.Context) (constitution.AuditStore, error) {
+	dsn := os.Getenv("HERALD_PG_DSN")
+	if dsn == "" {
+		return state.NewMemoryAudit(), nil
+	}
+	cfg, err := storage.ParseDSN(dsn)
+	if err != nil {
+		return nil, fmt.Errorf("parse HERALD_PG_DSN: %w", err)
+	}
+	database, err := storage.Open(ctx, cfg)
+	if err != nil {
+		return nil, fmt.Errorf("open pg pool (audit): %w", err)
+	}
+	return state.NewPostgresAudit(database), nil
 }
 
 // buildRedis returns a Redis client when HERALD_REDIS_URL is set, or
