@@ -47,7 +47,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>17</td>
+<td>18</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -55,7 +55,7 @@
 </tr>
 <tr>
 <td>Last modified</td>
-<td>2026-05-27</td>
+<td>2026-05-28</td>
 </tr>
 <tr>
 <td>Status</td>
@@ -63,8 +63,28 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>r17 (v1.0.0 Batch A) atomically migrates HRD-018 + HRD-026 +
-HRD-027 Issues→Fixed per §11.4.19.</strong> commons_constitution
+<td><strong>r18 (v1.0.0 Batch C cluster C1) marks
+HRD-029/030/043/044/049/053 (pherald §43 gitops command catalogue)
+Open→in_progress.</strong> The six commands landed (commit
+<code>502ebf6</code>) as
+<code>pherald/internal/gitops/{gitops.go,upstreams.go}</code> +
+<code>pherald/cmd/pherald/gitops_cmds.go</code>:
+<code>commit-push</code> (single locked entrypoint + multi-mirror push),
+<code>submodule propagate</code> (owned-submodule walk in propagation
+order), <code>install-upstreams</code> (§11.4.74
+<code>FindScript</code>-resolved constitution-submodule script,
+git-binary fallback), <code>fetch-guard</code> (§11.4.37 pre-edit fetch
++ rebase enforcement), <code>reopen</code> (§11.4.55 Fixed→Issues
+reversal + <code>docs/Reopens/</code> history, reusing the Wave 6.5
+inbound migration), <code>pre-push</code> (§11.4.71 fetch + investigate
++ integrate hook) — each <code>--emit</code> feeds the HRD-023 pherald
+binding, all hermetic temp-repo + <code>file://</code> fake-remote
+tested <code>-race -count=3</code> green. e2e invariants
+<strong>E97-E100</strong> wired (commit-push / reopen /
+install-upstreams / fetch-guard), each anchored to its
+<code>docs/qa/HRD-NNN-20260527T213201Z/transcript.txt</code>.
+<strong>Prior r17 (v1.0.0 Batch A) atomically migrated HRD-018 + HRD-026
++ HRD-027 Issues→Fixed per §11.4.19.</strong> commons_constitution
 persistence layer completed: the Evaluator framework, 12 emit helpers,
 bundle-hash captureer, mode-ladder, and
 <code>constitution_state</code>/<code>constitution_bindings</code>
@@ -496,25 +516,31 @@ Catalogue-Check: reuse commons_constitution (Batch-A)</td>
 <tr>
 <td>HRD-029</td>
 <td>task</td>
-<td>open</td>
+<td>in_progress</td>
 <td>middle</td>
 <td>§2 <code>pherald commit-push</code> — single-entrypoint locked
-commit + multi-mirror push</td>
+commit + multi-mirror push — Batch C: implemented as gitops command
+(§11.4.74 wrap of git binary); --emit feeds HRD-023 binding; hermetic
+temp-repo tests -race green</td>
 <td>2026-05-20</td>
-<td>2026-05-20</td>
+<td>2026-05-28</td>
 <td>spec §43.2 / §2; Catalogue-Check: TBD (likely existing as
-constitution-submodule script)</td>
+constitution-submodule script); evidence
+<code>docs/qa/HRD-029-20260527T213201Z/</code></td>
 </tr>
 <tr>
 <td>HRD-030</td>
 <td>task</td>
-<td>open</td>
+<td>in_progress</td>
 <td>middle</td>
 <td>§3 <code>pherald submodule propagate</code> — owned-submodule walk
-in propagation order</td>
+in propagation order — Batch C: implemented as gitops command (§11.4.74
+wrap of git binary); --emit feeds HRD-023 binding; hermetic temp-repo
+tests -race green</td>
 <td>2026-05-20</td>
-<td>2026-05-20</td>
-<td>spec §43.2 / §3; Catalogue-Check: TBD</td>
+<td>2026-05-28</td>
+<td>spec §43.2 / §3; Catalogue-Check: TBD; evidence
+<code>docs/qa/HRD-030-20260527T213201Z/</code></td>
 </tr>
 <tr>
 <td>HRD-031</td>
@@ -654,25 +680,31 @@ Submodule-Dependency-Manifest gate</td>
 <tr>
 <td>HRD-043</td>
 <td>task</td>
-<td>open</td>
+<td>in_progress</td>
 <td>high</td>
 <td>§11.4.36 <code>pherald install-upstreams</code> — install_upstreams
-wrapper</td>
+wrapper — Batch C: implemented as gitops command (§11.4.74
+FindScript-resolved constitution script); --emit feeds HRD-023 binding;
+hermetic temp-repo tests -race green</td>
 <td>2026-05-20</td>
-<td>2026-05-20</td>
+<td>2026-05-28</td>
 <td>spec §43.2 / §11.4.36; Catalogue-Check: extend constitution
-submodule's install_upstreams.sh</td>
+submodule's install_upstreams.sh; evidence
+<code>docs/qa/HRD-043-20260527T213201Z/</code></td>
 </tr>
 <tr>
 <td>HRD-044</td>
 <td>task</td>
-<td>open</td>
+<td>in_progress</td>
 <td>middle</td>
 <td>§11.4.37 <code>pherald fetch-guard</code> — pre-edit fetch + rebase
-enforcement</td>
+enforcement — Batch C: implemented as gitops command (§11.4.74 wrap of
+git binary); --emit feeds HRD-023 binding; hermetic temp-repo tests
+-race green</td>
 <td>2026-05-20</td>
-<td>2026-05-20</td>
-<td>spec §43.2 / §11.4.37; Catalogue-Check: TBD</td>
+<td>2026-05-28</td>
+<td>spec §43.2 / §11.4.37; Catalogue-Check: TBD; evidence
+<code>docs/qa/HRD-044-20260527T213201Z/</code></td>
 </tr>
 <tr>
 <td>HRD-045</td>
@@ -722,14 +754,16 @@ script)</td>
 <tr>
 <td>HRD-049</td>
 <td>task</td>
-<td>open</td>
+<td>in_progress</td>
 <td>middle</td>
 <td>§11.4.55 <code>pherald reopen &lt;HRD-NNN&gt;</code> — Issues→Fixed
-reversal + Reopens history</td>
+reversal + Reopens history — Batch C: implemented as gitops command (the
+Wave 6.5 inbound Fixed→Issues migration); --emit feeds HRD-023 binding;
+hermetic temp-repo tests -race green</td>
 <td>2026-05-20</td>
-<td>2026-05-20</td>
+<td>2026-05-28</td>
 <td>spec §43.2 / §11.4.55; Catalogue-Check: no-match (Herald-specific
-HRD flow)</td>
+HRD flow); evidence <code>docs/qa/HRD-049-20260527T213201Z/</code></td>
 </tr>
 <tr>
 <td>HRD-050</td>
@@ -768,13 +802,16 @@ Pandoc + WeasyPrint)</td>
 <tr>
 <td>HRD-053</td>
 <td>task</td>
-<td>open</td>
+<td>in_progress</td>
 <td>high</td>
 <td>§11.4.71 <code>pherald pre-push</code> — fetch + investigate +
-integrate hook</td>
+integrate hook — Batch C: implemented as gitops command (§11.4.74 wrap
+of git binary); --emit feeds HRD-023 binding; hermetic temp-repo tests
+-race green</td>
 <td>2026-05-20</td>
-<td>2026-05-20</td>
-<td>spec §43.2 / §11.4.71; Catalogue-Check: TBD</td>
+<td>2026-05-28</td>
+<td>spec §43.2 / §11.4.71; Catalogue-Check: TBD; evidence
+<code>docs/qa/HRD-053-20260527T213201Z/</code></td>
 </tr>
 <tr>
 <td>HRD-054</td>

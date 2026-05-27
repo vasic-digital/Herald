@@ -1993,6 +1993,11 @@ SC_REL_DIR="$(sc_newest 'HRD-022-*')"
 SC_PROJ_DIR="$(sc_newest 'HRD-023-*')"
 SC_INC_DIR="$(sc_newest 'HRD-024-*')"
 SC_SCHED_DIR="$(sc_newest 'HRD-025-*')"
+# v1.0.0 Batch C — pherald §43 gitops command transcripts (HRD-029/049/043/044).
+SC_GITOPS_CP_DIR="$(sc_newest 'HRD-029-*')"
+SC_GITOPS_REOPEN_DIR="$(sc_newest 'HRD-049-*')"
+SC_GITOPS_INSTUP_DIR="$(sc_newest 'HRD-043-*')"
+SC_GITOPS_FETCHGUARD_DIR="$(sc_newest 'HRD-044-*')"
 
 # sc_anchor <invariant-label> <evidence-file> <literal-anchor-string>
 # Asserts the captured-evidence file contains the load-bearing anchor value.
@@ -2098,6 +2103,26 @@ sc_anchor "E95" "${SC_INC_DIR:+${SC_INC_DIR}/escalation_roundtrip_verbose.log}" 
 check "E96 scherald scheduled-audit bindings — status-sweep/digest/stale-item detect→emit→audit (-race)" \
     "go test -race -count=1 ./scherald/internal/bindings/..."
 sc_anchor "E96" "${SC_SCHED_DIR:+${SC_SCHED_DIR}/roundtrip_transcript.txt}" "PASS: TestPipeline_StatusSweepPolicyViolationRoundTrip"
+
+# ---- E97: §2 pherald commit-push gitops command (HRD-029) ----
+check "E97 §2 pherald commit-push — locked-entrypoint commit + push to fake file:// remote (hermetic, -race)" \
+    "go test -race -count=1 -run 'TestCommitPush_CommitsAndPushesToFakeRemote' ./pherald/cmd/pherald/..."
+sc_anchor "E97" "${SC_GITOPS_CP_DIR:+${SC_GITOPS_CP_DIR}/transcript.txt}" "went through the single locked entrypoint with the lock held"
+
+# ---- E98: §11.4.55 pherald reopen gitops command (HRD-049) ----
+check "E98 §11.4.55 pherald reopen — Fixed.md→Issues.md migration + Reopens history (hermetic, -race)" \
+    "go test -race -count=1 -run 'TestReopen_MigratesRowAndWritesReopensRecord' ./pherald/cmd/pherald/..."
+sc_anchor "E98" "${SC_GITOPS_REOPEN_DIR:+${SC_GITOPS_REOPEN_DIR}/transcript.txt}" "reopen of HRD-049 carries its docs/Reopens/HRD-049.md history record"
+
+# ---- E99: §11.4.36 pherald install-upstreams gitops command (HRD-043) ----
+check "E99 §11.4.36 pherald install-upstreams — configures all declared mirror remotes (hermetic, -race)" \
+    "go test -race -count=1 -run 'TestInstallUpstreams_ApplyConfiguresRemotes' ./pherald/cmd/pherald/..."
+sc_anchor "E99" "${SC_GITOPS_INSTUP_DIR:+${SC_GITOPS_INSTUP_DIR}/transcript.txt}" "install-upstreams configured all 2 declared mirror remotes"
+
+# ---- E100: §11.4.37/§11.4.71 pherald fetch-guard + pre-push gitops command (HRD-044/053) ----
+check "E100 §11.4.37/§11.4.71 pherald fetch-guard — pre-edit fetch + rebase enforcement (hermetic, -race)" \
+    "go test -race -count=1 -run 'TestFetchGuard_Rebased_PASS' ./pherald/cmd/pherald/..."
+sc_anchor "E100" "${SC_GITOPS_FETCHGUARD_DIR:+${SC_GITOPS_FETCHGUARD_DIR}/transcript.txt}" "edit on main was made on a tree rebased on origin"
 
 # ----------------------------------------------------------------------
 echo ""
