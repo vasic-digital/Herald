@@ -69,8 +69,37 @@ cleanup_all() {
     for port in 24793; do
         lsof -ti:${port} 2>/dev/null | xargs -r kill -9 2>/dev/null || true
     done
+    # §107.y: release the lockfile (whatever the exit cause).
+    rm -f "${REPO_ROOT}/.git/MUTATION_IN_PROGRESS" 2>/dev/null || true
 }
-trap cleanup_all EXIT
+trap cleanup_all EXIT INT TERM
+
+# §107.y working-tree quiescence guard (copied from
+# tests/test_wave4b_mutation_meta.sh; gate-specific token = MUTATED W4-,
+# plus the actual `MUTATED M<n>` tokens this gate injects). Returns 0 if
+# NO marker remains in the four known mutation target files; non-zero
+# (with a name list) if a marker leaked past restore. Scoped to the target
+# files — a broader grep would match legitimate prose documenting the gate.
+check_quiescence() {
+    local label="$1"
+    local leaks=0
+    for f in "${SERVE_GO}" "${H3_GO}" "${HANDLER_GO}" "${AGG_GO}"; do
+        if grep -qE 'MUTATED W4-M[0-9]+|MUTATED M[0-9]+|// always pass' "${f}" 2>/dev/null; then
+            echo "ABORT  ${label}: MUTATED marker LEAKED in $(basename "${f}") — restore failed!"
+            leaks=$((leaks+1))
+        fi
+    done
+    return ${leaks}
+}
+
+# §107.y lockfile serialisation: refuse to start if another mutation gate
+# is already in flight (lesson from the 2026-05-27 concurrent-mutation
+# incident). Removed in the trap-on-exit above.
+if [ -f "${REPO_ROOT}/.git/MUTATION_IN_PROGRESS" ]; then
+    echo "FAIL: another mutation gate already in flight (.git/MUTATION_IN_PROGRESS present) — abort per §107.y"
+    exit 1
+fi
+touch "${REPO_ROOT}/.git/MUTATION_IN_PROGRESS"
 
 # Pre-flight: kill any orphan listener on the W4a target port.
 for port in 24793; do
@@ -244,6 +273,20 @@ else
     fi
 fi
 restore "${H3_GO}"
+
+# ----------------------------------------------------------------------
+# §107.y working-tree quiescence — assert no MUTATED markers leaked past
+# restore (copied from tests/test_wave4b_mutation_meta.sh).
+# ----------------------------------------------------------------------
+echo ""
+echo "== Quiescence: working tree free of MUTATED markers =="
+if check_quiescence "post-restore quiescence"; then
+    echo "PASS  Quiescence: no MUTATED markers leaked into tracked source"
+    pass=$((pass+1))
+else
+    echo "FAIL  Quiescence: at least one MUTATED marker survived restore — DO NOT COMMIT"
+    fail=$((fail+1))
+fi
 
 # ----------------------------------------------------------------------
 # Post-flight: the full e2e battery must still be green after every

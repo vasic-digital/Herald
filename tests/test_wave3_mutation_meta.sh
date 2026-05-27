@@ -48,6 +48,43 @@ restore() {
     fi
 }
 
+# Wave 3 mutation target files (the only files this gate ever mutates).
+# Scoped here so the §107.y quiescence check greps exactly these.
+W3_MIDDLEWARE="${REPO_ROOT}/commons_auth/middleware.go"
+W3_AGG="${REPO_ROOT}/sherald/internal/safety/aggregator.go"
+W3_HANDLER="${REPO_ROOT}/cherald/internal/compliance/handler.go"
+W3_IDEM="${REPO_ROOT}/pherald/internal/runner/idempotency.go"
+W3_POLICY="${REPO_ROOT}/pherald/internal/runner/policy.go"
+W3_OUTCOME="${REPO_ROOT}/pherald/internal/runner/outcome.go"
+
+# §107.y working-tree quiescence guard (copied from
+# tests/test_wave4b_mutation_meta.sh; gate-specific token = MUTATED W3-,
+# plus the canonical paired markers this gate actually injects — M1 emits
+# `MUTATED for paired`, M4 emits `MUTATED M4`). Returns 0 if NO marker
+# remains in the six known mutation target files; non-zero (with a name
+# list) if a marker leaked past restore. Scoped to the target files — a
+# broader grep would match legitimate prose documenting this gate.
+check_quiescence() {
+    local label="$1"
+    local leaks=0
+    for f in "${W3_MIDDLEWARE}" "${W3_AGG}" "${W3_HANDLER}" "${W3_IDEM}" "${W3_POLICY}" "${W3_OUTCOME}"; do
+        if grep -qE 'MUTATED W3-M[0-9]+|MUTATED for paired|MUTATED M[0-9]+|// always pass' "${f}" 2>/dev/null; then
+            echo "ABORT  ${label}: MUTATED marker LEAKED in $(basename "${f}") — restore failed!"
+            leaks=$((leaks+1))
+        fi
+    done
+    return ${leaks}
+}
+
+# §107.y lockfile serialisation: refuse to start if another mutation gate
+# is already in flight (lesson from the 2026-05-27 concurrent-mutation
+# incident). Written below; removed in the trap-on-exit.
+if [ -f "${REPO_ROOT}/.git/MUTATION_IN_PROGRESS" ]; then
+    echo "FAIL: another mutation gate already in flight (.git/MUTATION_IN_PROGRESS present) — abort per §107.y"
+    exit 1
+fi
+touch "${REPO_ROOT}/.git/MUTATION_IN_PROGRESS"
+
 # Safety net — if the test trips, restore every backup we know about and
 # kill any orphan flavor processes left binding the test ports (24791..24994).
 # Orphans accumulate if a previous e2e was SIGKILL'd; they'd carry the
@@ -63,8 +100,10 @@ cleanup_all() {
     for port in 24791 24992 24993 24994; do
         lsof -ti:${port} 2>/dev/null | xargs -r kill -9 2>/dev/null || true
     done
+    # §107.y: release the lockfile (whatever the exit cause).
+    rm -f "${REPO_ROOT}/.git/MUTATION_IN_PROGRESS" 2>/dev/null || true
 }
-trap cleanup_all EXIT
+trap cleanup_all EXIT INT TERM
 
 # Pre-flight: kill any orphan flavor processes from a previous interrupted run.
 for port in 24791 24992 24993 24994; do
@@ -235,6 +274,20 @@ restore "${AGG}"
 # ----------------------------------------------------------------------
 echo "== M6: cherald compliance cross-binary mutation =="
 echo "SKIP  M6 (cross-binary integration — runs in Wave 3b alongside pherald Runner)"
+
+# ----------------------------------------------------------------------
+# §107.y working-tree quiescence — assert no MUTATED markers leaked past
+# restore (copied from tests/test_wave4b_mutation_meta.sh).
+# ----------------------------------------------------------------------
+echo ""
+echo "== Quiescence: working tree free of MUTATED markers =="
+if check_quiescence "post-restore quiescence"; then
+    echo "PASS  Quiescence: no MUTATED markers leaked into tracked source"
+    pass=$((pass+1))
+else
+    echo "FAIL  Quiescence: at least one MUTATED marker survived restore — DO NOT COMMIT"
+    fail=$((fail+1))
+fi
 
 # ----------------------------------------------------------------------
 # Post-flight: the full e2e battery must still be green after every

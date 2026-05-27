@@ -52,6 +52,33 @@ BRANDING_GO="${REPO_ROOT}/commons/branding.go"
 pass_count=0
 fail_count=0
 
+# §107.y working-tree quiescence guard (copied from
+# tests/test_wave4b_mutation_meta.sh; gate-specific token = MUTATED W2-).
+# Returns 0 if NO MUTATED W2- markers remain in the three known mutation
+# target files; non-zero (with a name list) if a marker leaked past restore.
+# Scoped to the target files — a broader grep would match legitimate prose
+# (e.g. "MUTATED" in the comments documenting this gate).
+check_quiescence() {
+    local label="$1"
+    local leaks=0
+    for f in "${STUBS_GO}" "${VERSION_GO}" "${BRANDING_GO}"; do
+        if grep -qE 'MUTATED W2-M[0-9]+' "${f}" 2>/dev/null; then
+            echo "ABORT  ${label}: MUTATED marker LEAKED in $(basename "${f}") — restore failed!"
+            leaks=$((leaks+1))
+        fi
+    done
+    return ${leaks}
+}
+
+# §107.y lockfile serialisation: refuse to start if another mutation gate
+# is already in flight (lesson from the 2026-05-27 concurrent-mutation
+# incident). The lockfile is written below and removed in the trap-on-exit.
+if [ -f "${REPO_ROOT}/.git/MUTATION_IN_PROGRESS" ]; then
+    echo "FAIL: another mutation gate already in flight (.git/MUTATION_IN_PROGRESS present) — abort per §107.y"
+    exit 1
+fi
+touch "${REPO_ROOT}/.git/MUTATION_IN_PROGRESS"
+
 # ----------------------------------------------------------------------
 # Helpers (hardlink backup → restore pattern, same as test_i8 meta).
 # ----------------------------------------------------------------------
@@ -73,13 +100,21 @@ restore_from_backup() {
     fi
 }
 
-# Kill any leftover serve processes from a previous run.
+# Kill any leftover serve processes from a previous run. Also restores any
+# orphaned mutation backups and clears the §107.y lockfile so an interrupted
+# run can never leave residue or a stuck lock behind.
 cleanup_serve() {
     pkill -f "cherald-w2meta" 2>/dev/null || true
     pkill -f "sherald-w2meta" 2>/dev/null || true
     rm -f /tmp/*-w2meta-$$ 2>/dev/null || true
+    # §107.y: restore any mutation backup still on disk (interrupted run).
+    restore_from_backup "${STUBS_GO}"
+    restore_from_backup "${VERSION_GO}"
+    restore_from_backup "${BRANDING_GO}"
+    # §107.y: release the lockfile (whatever the exit cause).
+    rm -f "${REPO_ROOT}/.git/MUTATION_IN_PROGRESS" 2>/dev/null || true
 }
-trap cleanup_serve EXIT
+trap cleanup_serve EXIT INT TERM
 
 # ----------------------------------------------------------------------
 # M1: Strip HRD pointer from cli.StubCmd error format.
@@ -249,6 +284,20 @@ else
 fi
 
 restore_from_backup "${BRANDING_GO}"
+
+# ----------------------------------------------------------------------
+# §107.y working-tree quiescence — assert no MUTATED W2- markers leaked
+# past restore (copied from tests/test_wave4b_mutation_meta.sh).
+# ----------------------------------------------------------------------
+echo ""
+echo "== Quiescence: working tree free of MUTATED W2- markers =="
+if check_quiescence "post-restore quiescence"; then
+    echo "PASS  Quiescence: no MUTATED W2-M* markers leaked into tracked source"
+    pass_count=$((pass_count + 1))
+else
+    echo "FAIL  Quiescence: at least one MUTATED W2-M* marker survived restore — DO NOT COMMIT"
+    fail_count=$((fail_count + 1))
+fi
 
 # ----------------------------------------------------------------------
 # Post-flight: verify all source files compile cleanly after restores.
