@@ -1,0 +1,10 @@
+surface=safety_state scenario=stress_healthy_path transport=httptest+net/http.Client
+workers=10 iterations_per_worker=200 total_requests=2000
+errors=0 non_200=0
+status_2xx=2000 status_4xx=0 status_5xx=0
+content_negotiation: toon_requests=1000 toon_ct_ok=1000 toon_body_real=1000 json_requests=1000 json_ct_ok=1000
+content_negotiation_correct_under_load=1
+throughput_per_sec=16063.9 elapsed_ms=124.5
+p50_ms=0.4900 p95_ms=1.4280 p99_ms=1.9030 max_ms=3.0470 min_ms=0.1610 count=2000
+zero_5xx_healthy=1
+race_detector=clean

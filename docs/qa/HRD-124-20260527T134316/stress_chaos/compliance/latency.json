@@ -1,0 +1,13 @@
+{
+  "count": 2000,
+  "elapsed_ms": 238.728,
+  "errors": 0,
+  "iterations_each": 200,
+  "max_ms": 3.546,
+  "min_ms": 0.275,
+  "p50_ms": 1.16,
+  "p95_ms": 1.996,
+  "p99_ms": 2.587,
+  "throughput_per_sec": 8377.704624126427,
+  "workers": 10
+}

@@ -1,0 +1,7 @@
+surface=compliance scenario=chaos_pg_drop_fail_loud store=errStore(List→conn-error)
+contract: store down → EVERY request 500 naming the dependency, NEVER a fabricated 2xx
+workers=10 iterations_per_worker=200 total=2000
+status_5xx=2000 fabricated_2xx=0 other=0 5xx_named_dependency=2000
+errors=0 (transport/hang)
+fail_loud_no_fabricated_200=1
+p99_ms=2.0080 max_ms=2.7750 count=2000

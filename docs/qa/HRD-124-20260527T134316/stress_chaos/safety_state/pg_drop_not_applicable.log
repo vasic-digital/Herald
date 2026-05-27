@@ -1,0 +1,3 @@
+surface=safety_state scenario=chaos_pg_drop
+verdict=SKIP-not-applicable
+SKIP-not-applicable: /v1/safety_state is process-local in-memory (Wave 3 design §3) — the handler reads an Aggregator snapshot and does NO PG read on the hot path, so there is no database dependency to drop. The fail-loud-on-store-error property is proven on the surface that DOES have one: cherald /v1/compliance (TestComplianceHTTP_Chaos_PGDropFailsLoud). The relevant fault-injection for this in-memory surface (concurrent state mutation under load) is proven by TestSafetyHTTP_Chaos_ConcurrentMutationUnderLoad.

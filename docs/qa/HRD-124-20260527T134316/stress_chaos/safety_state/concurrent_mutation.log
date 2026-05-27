@@ -1,0 +1,7 @@
+surface=safety_state scenario=chaos_concurrent_mutation_under_load fault=writer-storm(4 goroutines UpdateMemPercent+RecordDestructiveOp)
+contract: snapshot stays consistent under concurrent read+write; every GET 200 + well-formed; NO 5xx, NO torn read, NO data race
+workers=10 iterations_per_worker=200 total=2000 background_writers=4
+status_2xx=2000 status_5xx=0 torn_reads=0 errors=0
+consistent_under_concurrent_mutation=1
+race_detector=clean (the -race run is the RWMutex correctness proof)
+p99_ms=2.1340 max_ms=3.4990 count=2000

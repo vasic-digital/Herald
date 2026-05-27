@@ -917,6 +917,73 @@ HRD-125 + HRD-132; Catalogue-Check: no-match — Go
 tool, no new dep (2026-05-27).</td>
 </tr>
 <tr>
+<td>HRD-124</td>
+<td>task</td>
+<td>in_progress</td>
+<td>high</td>
+<td>§11.4.85 Gin <code>/v1/compliance</code> (cherald) +
+<code>/v1/safety_state</code> (sherald) GET stress+chaos tests (GAP-3
+plan §1 row 2 / §6 T3) — two new test files,
+<code>cherald/internal/compliance/compliance_stress_chaos_test.go</code>
++ <code>sherald/internal/safety/safety_stress_chaos_test.go</code>, each
+driving the REAL flavor handler (<code>compliance.Handler</code> /
+<code>safety.Handler</code>) over a REAL in-process
+<code>httptest</code> server dialed by <code>net/http.Client</code>,
+through the production Gin chain (<code>cli.TOONMiddleware</code> → auth
+→ handler). Only the external boundary is faked per §11.4.27:
+<code>state.NewMemory()</code> (healthy) or
+<code>errStore{List→conn-error}</code> (PG-drop) for compliance; the
+auth claims-injector for both; NO production source edited, NO new
+<code>go.mod</code> dep (toon resolves via the existing
+<code>commons/cli</code> replace chain; the auth storm fires random
+bytes so no token is minted). STRESS (each flavor): N=10 workers × M=200
+= 2000 GETs, <code>-race</code> clean — 0 errors, 0 5xx, all 200.
+Compliance p50=1.16ms/p95=2.00ms/p99=2.59ms ~8.4k req/s; safety_state
+p50=0.49ms/p95=1.43ms/p99=1.90ms ~16k req/s. <strong>Content-negotiation
+correctness under concurrency</strong> — every request alternates
+<code>Accept: application/toon</code> vs <code>application/json</code>;
+1000 toon + 1000 json each flavor → 100% Content-Type match to the
+request's OWN Accept header (0 codec-bleed) AND every toon body is real
+TOON wire bytes (byte-0 ≠ <code>{</code>/<code>[</code>). CHAOS: (a)
+compliance PG-drop (<code>errStore</code> → store-down) → 2000/2000
+fail-loud 500, EACH 5xx body naming the failed dependency
+(<code>store list failed</code>), 0 fabricated 2xx (a swallowed-error
+200 <code>{results:[]}</code> would falsely tell an operator "no
+violations" while PG is down — the §107 mode this gate forbids); live
+container-pause variant SKIP-with-reason (no runtime; proven
+hermetically). (a-safety) safety_state has NO DB dependency on the hot
+path by design (Wave 3 §3 — in-memory <code>Aggregator</code> snapshot),
+so the PG-drop-as-5xx variant is honestly SKIP-not-applicable (asserting
+a non-existent dependency would be a reverse-§107 bluff); the code-true
+fault analogue — concurrent state-mutation under load (4 background
+goroutines hammering
+<code>UpdateMemPercent</code>+<code>RecordDestructiveOp</code> during
+2000 reads) → all 200, 0 torn read, 0 5xx, <code>-race</code>-clean
+RWMutex proof — IS exercised instead. (b) auth storm (both flavors):
+1000 random 32-byte bearer tokens through the REAL
+<code>commons_auth.GinMiddleware</code>+HMAC(HS256)
+<code>Verifier</code> → 1000×401, 0 bypass. Verified
+<code>go test -race -count=3</code> deterministically green across ALL 3
+runs (no timing-sensitive assertion — the empty-Accept-defaults-to-TOON
+gotcha that made an early shape-check flaky was fixed by pinning
+<code>Accept: application/json</code> on the byte-inspection paths, per
+the HRD-123 flaky-oversized-body lesson). Captured evidence under
+<code>docs/qa/HRD-124-20260527T134316/stress_chaos/{compliance,safety_state}/</code>
+(latency.json, latency_histogram.csv, throughput.csv,
+pg_drop_fail_loud.log / concurrent_mutation.log, auth_storm.log,
+pg_drop_live.log / pg_drop_not_applicable.log, summary.md with §12.6
+host-mem headroom probe). Bounded load only (§12/§12.6): small GETs,
+N≤10 workers, 4 bounded background goroutines, no
+fork/GB-alloc/host-net-change.</td>
+<td>2026-05-27</td>
+<td>2026-05-27</td>
+<td>GAP-3 plan §1 row 2 + §6 T3; Universal §11.4.85 (inherited per
+§11.4.35) + Herald §108.a / §107.x; depends on HRD-122; cross-refs
+HRD-123 (same pattern) + HRD-125; Catalogue-Check: no-match — Go
+<code>testing</code>+<code>httptest</code>+<code>-race</code>, no load
+tool, no new dep (2026-05-27).</td>
+</tr>
+<tr>
 <td>HRD-125</td>
 <td>task</td>
 <td>in_progress</td>
