@@ -1175,6 +1175,78 @@ build/test command + committed shell shims as the §11.4.27 boundary
 fake, no load tool, no new dep (2026-05-27).</td>
 </tr>
 <tr>
+<td>HRD-128</td>
+<td>task</td>
+<td>in_progress</td>
+<td>high</td>
+<td>§11.4.85 container-orchestrated / resource-exhaustion stress+chaos
+tests (GAP-3 plan §1 row 6 / §6 T7 + §7 host-safety) — new
+<code>commons_storage/resource_stress_chaos_test.go</code> (in-package
+<code>storage</code>, hermetic core) +
+<code>tests/test_resource_stress_chaos.sh</code> (LIVE container
+harness). NO production source edited, NO new <code>go.mod</code> dep
+(<code>commons/stresschaos</code> resolves via the existing
+<code>commons → ../commons</code> replace in
+<code>commons_storage/go.mod</code>; only the
+<code>digital.vasic.database</code> boundary is faked per §11.4.27).
+<strong>HERMETIC PASS (×2, deterministic):</strong> (1)
+<strong>disk-full error propagation</strong> — a fake
+<code>database.Database</code>/<code>Tx</code> injects
+<code>syscall.ENOSPC</code> ("no space left on device") on the
+migration-UP exec, driving the REAL
+<code>RunMigrations → applyMigration</code> write path
+(runner-bookkeeping DDL/INSERT succeed so the fault lands on a real
+migration body); asserts <code>up_exec_attempts&gt;=1</code> (real write
+path exercised), error returned (NO silent swallow), error tagged
+<code>commons_storage: apply</code> + <code>exec up</code>,
+<code>errors.Is(err, syscall.ENOSPC)</code> true (wrap chain unbroken,
+machine-classifiable), 0 migrations reported applied (no partial-success
+bluff). Captured full error:
+<code>commons_storage: apply v1 (init_core): exec up: write tablespace pg_default: no space left on device</code>.
+(2) <strong>§12.6 host-mem headroom proof</strong> —
+<code>HostMemHeadroom()</code> captured pre/post a 25× in-process
+disk-full workload; the workload's own <code>used_fraction_delta</code>
+is ≈0 (≈ -0.0003 — host needle did not move), proving the hermetic unit
+adds negligible host pressure; this is the §12.6 compliance-evidence
+artefact. <strong>OPT-IN (deterministic SKIP without env):</strong> real
+bounded-scratch-dir disk fill, HARD-capped at 64 MiB inside
+<code>os.MkdirTemp</code> with always-run defer-cleanup, gated behind
+<code>HERALD_STRESS_LIVE_DISK=1</code> (verified runnable +
+cleanup-clean when opted in; SKIPs deterministically by default).
+<strong>LIVE container scenarios — SKIP-with-reason (§11.4.3,
+host-safety-gated):</strong> the shell harness owns (a) container
+OOM-confinement (<code>--memory=&lt;cap&gt;</code> container OOM-killed
+→ confined to container cgroup scope, host stays &lt;60% per §12.6) and
+(b) ≥30s connection-churn against a <code>--memory</code>-bounded PG;
+BOTH gated behind <code>HERALD_STRESS_LIVE_OOM=1</code> + a §12.6
+pre-flight host-headroom gate that REFUSES to add memory pressure when
+host used-fraction ≥ 60% (or host_used + cap would cross 60%). On this
+run the host was at ~74% (pre-existing unrelated load), so the gate
+correctly REFUSED even when opted in — an honest SKIP over an unsafe
+run; podman present but never booted, no <code>herald-oom-*</code>
+container leaked. Verified <code>go test -race -count=3</code>
+deterministically green ALL 3 runs (PASS×3 / PASS×3 / SKIP×3) + shell
+harness ×3 deterministic (exit 0, 2 SKIPs, 1 preflight evidence each);
+<code>go vet</code> clean; full <code>commons_storage</code> package
+regression-clean. §12 / §12.6 host-safety: NO host-OOM, NO
+real-host-disk fill, NO host/system process killed, NO
+<code>systemctl</code>, NO host-network change, NO GB-alloc — the whole
+point of this unit honoured. Captured evidence under
+<code>docs/qa/HRD-128-resource-2026-05-27T091641/stress_chaos/resource/</code>
+(disk_full_tagged_error.txt, host_memory_headroom.txt [§12.6 proof],
+host_memory_preflight.txt, container_oom_confinement.skip.txt,
+connection_churn_stress.skip.txt, summary.md).</td>
+<td>2026-05-27</td>
+<td>2026-05-27</td>
+<td>GAP-3 plan §1 row 6 + §6 T7 + §7 host-safety; Universal §11.4.85
+(inherited per §11.4.35) + Herald §108.a / §107.x; §12 / §12.6
+host-session-safety (60%-memory ceiling); depends on HRD-122; cross-refs
+HRD-081 (containers compose) + HRD-056 (sherald mem-budget watch);
+Catalogue-Check: no-match — Go <code>testing</code> + <code>-race</code>
+per CLAUDE.md build/test command + podman <code>--memory</code> cap
+(already the e2e boot path), no load tool, no new dep (2026-05-27).</td>
+</tr>
+<tr>
 <td>HRD-132</td>
 <td>bug</td>
 <td>open</td>

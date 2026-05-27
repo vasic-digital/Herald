@@ -1,0 +1,5 @@
+surface=resource scenario=connection_churn_stress
+result=SKIP-with-reason (§11.4.3)
+reason=HERALD_STRESS_LIVE_OOM != 1 — live connection-churn is opt-in only. WOULD assert: >=30s sustained connect/disconnect churn against a --memory-bounded PG container completes with 0 host-mem ceiling breach + bounded latency.
+host_safe=true (no resource-exhaustion attempted — honest SKIP over unsafe run)
+captured_at=2026-05-27T09:16:43Z

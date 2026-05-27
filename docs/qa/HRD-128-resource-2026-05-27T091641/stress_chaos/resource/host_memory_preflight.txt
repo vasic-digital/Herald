@@ -1,0 +1,9 @@
+surface=resource scenario=section_12_6_preflight_host_headroom (shell harness)
+platform=Darwin
+ceiling=0.60 (§12.6 60% host-memory ceiling)
+probe_available=true
+host_total_mib=18432
+host_used_mib=13680
+host_used_fraction=0.7422
+host_crosses_ceiling=true (host ALREADY at/over §12.6 ceiling — live resource-exhaustion REFUSED)
+captured_at=2026-05-27T09:16:43Z

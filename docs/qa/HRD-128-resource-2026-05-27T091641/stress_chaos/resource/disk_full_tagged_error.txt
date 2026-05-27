@@ -1,0 +1,10 @@
+surface=resource scenario=chaos_disk_full_tagged_error path=commons_storage.RunMigrations->applyMigration
+fault=syscall.ENOSPC (no space left on device) injected on migration-UP exec
+up_exec_attempts=1 (>=1: real write path exercised, not a metadata no-op)
+error_returned=true (disk-full NOT silently swallowed)
+error_tagged_commons_storage_apply=true
+error_tagged_exec_up=true
+errors_Is_ENOSPC=true (wrap chain unbroken; machine-classifiable)
+migrations_applied=0 (0: no partial-success bluff)
+tagged_error=1
+full_error="commons_storage: apply v1 (init_core): exec up: write tablespace pg_default: no space left on device"

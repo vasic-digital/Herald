@@ -1,0 +1,5 @@
+surface=resource scenario=container_oom_confinement
+result=SKIP-with-reason (§11.4.3)
+reason=HERALD_STRESS_LIVE_OOM != 1 — live container-OOM is opt-in only (host-safety default). WOULD assert: a --memory=<cap> PG/Redis container driven to OOM has its kill confined to the container cgroup scope (host stays <60% per §12.6); host headroom captured pre/start/peak/post in oom_scope_confinement.log.
+host_safe=true (no resource-exhaustion attempted — honest SKIP over unsafe run)
+captured_at=2026-05-27T09:16:43Z

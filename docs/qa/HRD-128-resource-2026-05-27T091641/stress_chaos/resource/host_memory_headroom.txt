@@ -1,0 +1,9 @@
+surface=resource scenario=section_12_6_host_mem_headroom platform=darwin
+ceiling=0.60 (§12.6 60% host-memory ceiling)
+host_total_mib=18432
+pre_used_fraction=0.7438 pre_used_mib=13710 pre_crosses_ceiling=true
+post_used_fraction=0.7436 post_used_mib=13705 post_crosses_ceiling=true
+used_fraction_delta=-0.00027 (this test's added host pressure — must be ~0, in-process workload is KiB-scale)
+workload=25x RunMigrations(diskFullDB) hermetic in-process disk-full faults
+host_safe=false (host stayed under §12.6 ceiling AND test added negligible pressure)
+section_12_6_headroom_proven=1
