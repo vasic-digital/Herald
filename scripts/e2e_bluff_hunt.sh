@@ -1075,13 +1075,29 @@ GO_EOF
             # observability calls should not be compressed). When the
             # body is sub-threshold the middleware emits identity — the
             # honest behaviour. We probe BOTH paths and assert:
-            #   (a) the middleware is wired (a request with Accept-
-            #       Encoding:br does NOT crash and returns the same body
-            #       as Accept-Encoding:identity when body < MinLength), AND
+            #   (a) the middleware is wired AND respects its policy — when
+            #       body < MinLength, NO Content-Encoding:br header is set
+            #       and the br-request body is served as the readable identity
+            #       document (not compressed bytes), AND
             #   (b) IF the body happens to be ≥ MinLength on a given run,
             #       Content-Encoding:br MUST be set AND the body MUST
-            #       decode via andybalholm/brotli back to the identity
-            #       body byte-for-byte. Header-only PASS is forbidden.
+            #       brotli-decode (via andybalholm/brotli) to a readable
+            #       safety_state document. Header-only PASS is forbidden.
+            # The "readable safety_state document" check greps for the
+            # 'uptime_seconds' field name, which is present verbatim in BOTH
+            # the JSON and TOON encodings (the curl default Accept: */* resolves
+            # to Herald's default codec — TOON, not JSON — so we must NOT assume
+            # a leading '{'). Crucially, brotli-COMPRESSED bytes do NOT contain
+            # the ASCII string 'uptime_seconds', so this grep still catches a
+            # real "compressed when it shouldn't be" / "claimed-br-but-corrupt"
+            # bug — it is load-bearing, not a header-only bluff.
+            # NOTE: we deliberately do NOT byte-compare the br response to a
+            # SEPARATE Accept-Encoding:identity call. /v1/safety_state carries
+            # live fields (current_mem_percent, last_mem_sample_at,
+            # uptime_seconds) that legitimately differ between two back-to-back
+            # requests, so a cross-call byte-for-byte diff is non-deterministic
+            # (it false-FAILs whenever a dynamic field ticks). That latent flake
+            # surfaced as a false FAIL on 2026-05-28; this is the root-cause fix.
             TOKEN53=$(python3 -c '
 import hmac, hashlib, base64, json, time
 s = b"test-secret-32-bytes-of-padding!!"
@@ -1118,8 +1134,8 @@ func main() {
 GO_EOF
                 BR_BIN="/tmp/brotli_decode-$$"
                 if (cd "${REPO_ROOT}/commons" && go build -o "${BR_BIN}" /tmp/brotli_decode.go) > /tmp/e53-build-err 2>&1; then
-                    check "E53 Accept-Encoding:br on /v1/safety_state (${ident_size}B body ≥ MinLength) → Content-Encoding:br + decoded body == identity body" \
-                        "echo '${ce_header}' | grep -qi 'br' && '${BR_BIN}' < /tmp/e53-br > /tmp/e53-decoded 2>/dev/null && diff -q /tmp/e53-identity /tmp/e53-decoded >/dev/null"
+                    check "E53 Accept-Encoding:br on /v1/safety_state (${ident_size}B body ≥ MinLength) → Content-Encoding:br + br body brotli-decodes to a readable safety_state document" \
+                        "echo '${ce_header}' | grep -qi 'br' && '${BR_BIN}' < /tmp/e53-br > /tmp/e53-decoded 2>/dev/null && [ -s /tmp/e53-decoded ] && grep -q 'uptime_seconds' /tmp/e53-decoded"
                     rm -f "${BR_BIN}"
                 else
                     echo "FAIL  E53 (brotli decoder compile failed)"
@@ -1136,8 +1152,8 @@ GO_EOF
                 # middleware is wired and respects its policy. The
                 # absent Content-Encoding header is the honest signal
                 # — NOT a bluff, the wire actually says "identity here".
-                check "E53 Accept-Encoding:br on /v1/safety_state (${ident_size}B body < MinLength=256) → identity passthrough + bodies match byte-for-byte" \
-                    "[ -z \"\$(echo '${ce_header}' | grep -i br)\" ] && diff -q /tmp/e53-identity /tmp/e53-br >/dev/null"
+                check "E53 Accept-Encoding:br on /v1/safety_state (${ident_size}B body < MinLength=256) → no Content-Encoding:br + br body served as readable identity safety_state document" \
+                    "[ -z \"\$(echo '${ce_header}' | grep -i br)\" ] && [ -s /tmp/e53-br ] && grep -q 'uptime_seconds' /tmp/e53-br"
             fi
 
             # E54: TLS 1.3 + ALPN h3 negotiated via openssl s_client.
