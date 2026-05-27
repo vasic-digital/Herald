@@ -112,7 +112,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>14</td>
+<td>15</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -468,15 +468,17 @@ stubbed with HRD-NNN pointers.</li>
 <li><strong>Inheritance gate:</strong> 15 PASS / 0 FAIL. Meta-test
 ✓.</li>
 <li><strong>e2e_bluff_hunt:</strong> invariants now run through
-<strong>E96</strong> (E89 Batch-A audit write-through + mode-flip;
-E90-E96 = Batch B flavor-bindings round-trips HRD-019..025; prior
-E81-E88 = GAP-3 §11.4.85 stress+chaos). Full e2e CONFIRMED this session
-= <strong>79 PASS / 0 FAIL</strong> (E1-E96 all green; E94/E95/E96 PASS
-verified post-commit <code>74649bb</code>; E3 -race green after the
-eventbus race fix <code>f5d1367</code>; E17 SKIP-with-reason on absent
-live-PG). Plus SKIP-with-reason for hardware/credential-absent
-invariants (live OOM, MTProto). Next free invariant id is
-<strong>E97+</strong>.</li>
+<strong>E120</strong> (E89 Batch-A; E90-E96 Batch-B bindings;
+<strong>E97-E120 = Batch C §43 command catalogue</strong> — E97-E100
+pherald, E101-E104 sherald, E105-E107 rherald, E108-E109 bherald,
+E110-E120 cherald; prior E81-E88 GAP-3 stress+chaos). Full e2e CONFIRMED
+2026-05-28 = <strong>128 PASS / 0 FAIL</strong> (E3 -race spans 12
+packages incl <code>commons/gitops</code>; E17 SKIP-with-reason on
+absent live-PG; E53 flake root-caused + fixed — was a cross-call
+byte-diff on the dynamic <code>/v1/safety_state</code> body). Plus
+SKIP-with-reason for hardware/credential-absent invariants (live OOM,
+MTProto, Wave-6 live-loop). Next free invariant id is
+<strong>E121+</strong>.</li>
 <li><strong>Stress+chaos mutation gate:</strong>
 <code>tests/test_stress_chaos_mutation_meta.sh</code> (HRD-130) 6 PASS /
 0 FAIL (5 load-bearing mutations).</li>
@@ -618,16 +620,67 @@ absent).</td>
 </tr>
 <tr>
 <td>Batch C (HRD-029..056)</td>
+<td>in_progress (C1-C5 IMPLEMENTED 2026-05-28)</td>
+<td><strong>§43 command catalogue — all 5 flavor clusters
+landed</strong>, each a live CLI command feeding its Batch-B binding
+(DETECT+classify+exit-non-zero): C1 pherald
+<code>commit-push</code>/<code>submodule-propagate</code>/<code>install-upstreams</code>/<code>fetch-guard</code>/<code>reopen</code>/<code>pre-push</code>
+(<code>502ebf6</code>,<code>65c8362</code>, E97-E100); C2 sherald
+<code>destructive-guard</code>/<code>constitution-pull</code>/<code>force-push-gate</code>/<code>mem-budget-watch</code>
+(<code>ed6c675</code>, E31+E101-E104); C4 rherald
+<code>tag-mirror</code>/<code>changelog-generate</code>/<code>gate-retest</code>
++ C5 bherald <code>test-tier-verify</code>/<code>evidence-capture</code>
+(<code>130ec19</code>, E105-E109); C3 cherald 11 docs/compliance cmds
+(<code>aef0207</code>, E110-E120). Remaining §43:
+<strong>HRD-034</strong> (sherald backup-snapshot §9.3) +
+<strong>HRD-047</strong> (scherald status-digest §11.4.45/.56) — not yet
+implemented. Rows are in_progress (hermetic+e2e proven; flip →Fixed at
+an operator-live close-out pass, together with HRD-019..025).</td>
+</tr>
+<tr>
+<td>commons/gitops promotion</td>
+<td>Fixed (<code>4a6b0ec</code>)</td>
+<td>Promoted <code>pherald/internal/gitops</code> → shared
+<code>commons/gitops</code> (L0, pure-stdlib:
+Runner/RepoRoot/FindScript/ParseUpstreams +
+TagExists/RemoteHasTag/LogSubjects) so all flavor modules reuse the git
+primitives (§11.4.74). No go.work/go.mod change (every flavor already
+requires commons).</td>
+</tr>
+<tr>
+<td>§107 lazy-verifier fix (sherald+cherald)</td>
+<td>Fixed (<code>ed6c675</code>,<code>aef0207</code>)</td>
+<td>sherald + cherald <code>main.go</code> built the JWT verifier
+eagerly + <code>os.Exit(1)</code> before <code>root.Execute()</code> →
+EVERY subcommand (even <code>version</code>) died without
+<code>HERALD_AUTH_MODE</code>. The §43 CLI commands are for bare CI/cron
+invocation. Fixed by building the verifier LAZILY inside a flavor-local
+<code>newServeCmd</code> (cli.BindServeFlags+RunServe), mirroring
+pherald. serve still refuses anonymous. Binary-verified. See memory
+<code>feedback_verify_subagent_cli_on_binary</code>.</td>
+</tr>
+<tr>
+<td>E53 Brotli flake</td>
+<td>Fixed (<code>dfca0be</code>)</td>
+<td>e2e E53 byte-compared two SEPARATE <code>/v1/safety_state</code>
+responses, but the body carries live
+<code>current_mem_percent</code>/<code>last_mem_sample_at</code>/<code>uptime_seconds</code>
+→ false FAIL. Replaced cross-call diff with a codec-agnostic
+<code>grep uptime_seconds</code> on the (decoded) body; kept the
+<code>Content-Encoding:br</code> policy check.</td>
+</tr>
+<tr>
+<td>RESUME-AT (next units)</td>
 <td>next</td>
-<td><strong>§43 command catalogue — IMMEDIATE NEXT UNIT.</strong> Live
-CLI command bodies that PRODUCE the Subjects the Batch-B detectors
-classify (pherald commit-push, sherald destructive-guard, cherald
-creds-scan, rherald tag-mirror, bherald evidence-capture, …), grouped
-into 5 flavor clusters. Closing Batch C flips HRD-019..025 →Fixed. Next
-free e2e invariant id is <strong>E97+</strong>. Then Batch D
-(commons_infra HRD-081/085..090), Batch E (Wave 7 T6-T12 Slack
-HRD-115..121), then §11.4.93 SQLite (deferred). Plan
-<code>docs/superpowers/plans/2026-05-27-v1.0.0-execution.md</code>.</td>
+<td>(1) finish §43: <strong>HRD-034</strong> sherald backup-snapshot +
+<strong>HRD-047</strong> scherald status-digest. (2) <strong>Batch
+D</strong> commons_infra HRD-081 + HRD-085..090 (TaskRepository
+surfaces). (3) <strong>Batch E</strong> Wave 7 T6-T12 Slack HRD-115..121
+(slack-go submodule + I6 gate; renumber e2e off E121+). (4)
+operator-live close-out flips HRD-019..025 + §43 rows →Fixed. (5)
+§11.4.93 SQLite (HRD-131, deferred). Plan
+<code>docs/superpowers/plans/2026-05-27-v1.0.0-execution.md</code>.
+HEAD=<code>aef0207</code>.</td>
 </tr>
 </tbody>
 </table>
