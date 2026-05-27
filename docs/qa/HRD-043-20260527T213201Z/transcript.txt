@@ -1,0 +1,13 @@
+### HRD-043 pherald install-upstreams — REAL remote configuration from upstreams/*.sh
+$ pherald install-upstreams --repo $R43 --apply --emit
+configured remote github -> file:///tmp/qa-fake-github
+configured remote gitlab -> file:///tmp/qa-fake-gitlab
+install-upstreams: 2/2 declared mirrors configured
+[PASS] §11.4.36: §11.4.36: install-upstreams configured all 2 declared mirror remotes
+[emit] §11.4.36 drove a constitution event for subject mirrors|configured=2|declared=2
+
+### REAL side-effect — git remotes actually configured:
+github	file:///tmp/qa-fake-github (fetch)
+github	file:///tmp/qa-fake-github (push)
+gitlab	file:///tmp/qa-fake-gitlab (fetch)
+gitlab	file:///tmp/qa-fake-gitlab (push)

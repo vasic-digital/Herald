@@ -63,7 +63,7 @@ func main() {
 	root.AddCommand(newMigrateCmd())       // real impl (HRD-010) — unchanged
 	root.AddCommand(newWizardCmd())        // real impl (HRD-011/012 setup) — unchanged
 	root.AddCommand(newListenCmd())        // Wave 6 T6: inbound getUpdates long-poll + CC dispatch
-	registerStubs(root)                    // §43 GitOps stubs via cli.StubCmd
+	registerGitOps(root)                   // v1.0.0 Batch C: §43 project-lifecycle command bodies (HRD-029/030/043/044/049/053)
 
 	if err := root.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, "pherald:", err)

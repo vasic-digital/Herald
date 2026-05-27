@@ -1,0 +1,10 @@
+### HRD-029 pherald commit-push — REAL round-trip (hermetic file:// remote)
+$ pherald commit-push --repo $R -m 'feat: add feature.txt' --push --emit
+committed 221c749 through the locked entrypoint
+pushed main to github
+[PASS] §2: §2: commit 221c749 went through the single locked entrypoint with the lock held
+[emit] §2 drove a constitution event for subject 221c749|entrypoint=true|lock_held=true
+
+### REAL side-effect — commit landed in the file:// fake remote:
+221c749 feat: add feature.txt
+ecbbe03 seed

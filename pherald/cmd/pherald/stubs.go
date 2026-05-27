@@ -47,16 +47,14 @@ import (
 	"github.com/vasic-digital/herald/pherald/internal/runner"
 )
 
-// registerStubs adds every §43 GitOps command targeted at pherald as a
-// 501-stub. HRD pointers track implementation status.
-func registerStubs(root *cobra.Command) {
-	root.AddCommand(cli.StubCmd("commit-push", "HRD-029", "Single-entrypoint locked commit + multi-mirror push (§2)"))
-	root.AddCommand(cli.StubCmd("submodule-propagate", "HRD-030", "Owned-submodule walk in propagation order (§3)"))
-	root.AddCommand(cli.StubCmd("install-upstreams", "HRD-043", "install_upstreams wrapper (§11.4.36)"))
-	root.AddCommand(cli.StubCmd("fetch-guard", "HRD-044", "Pre-edit fetch + rebase enforcement (§11.4.37)"))
-	root.AddCommand(cli.StubCmd("reopen", "HRD-049", "Issues→Fixed reversal + Reopens history (§11.4.55)"))
-	root.AddCommand(cli.StubCmd("pre-push", "HRD-053", "Fetch + investigate + integrate hook (§11.4.71)"))
-}
+// NOTE (v1.0.0 Batch C, cluster C1): the six §43 project-lifecycle commands
+// pherald owns per spec §42.3 (commit-push HRD-029 / submodule-propagate
+// HRD-030 / install-upstreams HRD-043 / fetch-guard HRD-044 / reopen HRD-049 /
+// pre-push HRD-053) are NO LONGER cli.StubCmd registrations — their real
+// command bodies live in gitops_cmds.go and are registered via registerGitOps
+// in main.go. They produce the Subjects the HRD-023 pherald constitution
+// bindings classify. The previous registerStubs function (and its six
+// 501-stub registrations) is removed here.
 
 // newServeCmd returns pherald's `serve` subcommand. Wave 3b Task 10:
 // builds the §32 7-stage Runner + JWT verifier INSIDE RunE so the

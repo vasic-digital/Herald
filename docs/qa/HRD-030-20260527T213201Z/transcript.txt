@@ -1,0 +1,5 @@
+### HRD-030 pherald submodule-propagate — REAL submodule-status inspection
+$ pherald submodule-propagate --repo $R43 --emit
+submodule-propagate: no .gitmodules — nothing to propagate (vacuously inner-first)
+[PASS] §3: §3: submodule propagation committed inner submodules first then the parent (pushed)
+[emit] §3 drove a constitution event for subject propagate|order=inner-first|inner_pushed=true

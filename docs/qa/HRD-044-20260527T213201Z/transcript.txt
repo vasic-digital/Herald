@@ -1,0 +1,5 @@
+### HRD-044 pherald fetch-guard — REAL fetch + rebase check (rebased PASS)
+$ pherald fetch-guard --repo $R --remote github --fetch --emit
+fetch-guard: main is 0 commit(s) behind github/main
+[PASS] §11.4.37: §11.4.37: edit on main was made on a tree rebased on origin
+[emit] §11.4.37 drove a constitution event for subject main|rebased=true

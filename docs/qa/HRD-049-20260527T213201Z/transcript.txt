@@ -1,0 +1,36 @@
+### HRD-049 pherald reopen — REAL Fixed.md -> Issues.md migration (TEMP docs tree)
+BEFORE — Fixed.md:
+# Fixed
+
+| ID | Title | Status | Date |
+|---|---|---|---|
+| HRD-049 | reopen target | Closed | 2026-05-20 |
+
+$ pherald reopen HRD-049 --docs-dir $DOCS --reason 'regression found in QA' --emit
+reopen: migrated HRD-049 Fixed.md → Issues.md
+reopen: wrote docs/Reopens/HRD-049.md
+[PASS] §11.4.55: §11.4.55: reopen of HRD-049 carries its docs/Reopens/HRD-049.md history record
+[emit] §11.4.55 drove a constitution event for subject HRD-049|recorded=true
+
+### REAL side-effect — AFTER: row moved into Issues.md:
+# Issues
+
+| ID | Title | Status | Date |
+|---|---|---|---|
+| HRD-049 | reopen target | Reopened (Wave 6.5) — 2026-05-27 | 2026-05-20 |
+| HRD-200 | open one | open | 2026-05-20 |
+
+### REAL side-effect — AFTER: HRD-049 removed from Fixed.md:
+# Fixed
+
+| ID | Title | Status | Date |
+|---|---|---|---|
+
+### REAL side-effect — docs/Reopens/HRD-049.md written:
+# Reopens history — HRD-049
+
+Per Universal §11.4.55.
+
+## Reopened 2026-05-27T21:32:04Z
+
+- Reason: regression found in QA
