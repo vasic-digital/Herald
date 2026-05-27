@@ -1985,6 +1985,7 @@ SC_CS_DIR="$(sc_newest 'HRD-124-*')"
 SC_LISTEN_DIR="$(sc_newest '*HRD-126*')"
 SC_CC_DIR="$(sc_newest 'HRD-127-*')"
 SC_RES_DIR="$(sc_newest 'HRD-128-*')"
+SC_CONST_DIR="$(sc_newest 'HRD-018-*')"
 
 # sc_anchor <invariant-label> <evidence-file> <literal-anchor-string>
 # Asserts the captured-evidence file contains the load-bearing anchor value.
@@ -2049,6 +2050,12 @@ sc_anchor "E87" "${SC_RES_DIR:+${SC_RES_DIR}/stress_chaos/resource/disk_full_tag
 check "E88 §12.6 host-mem headroom — suite adds negligible host pressure (resource-exhaustion is bounded)" \
     "go test -count=1 -run 'TestResource_HostMemHeadroom_Section126' ./commons_storage/..."
 sc_anchor "E88" "${SC_RES_DIR:+${SC_RES_DIR}/stress_chaos/resource/host_memory_headroom.txt}" "section_12_6_headroom_proven=1"
+
+# ---- E89: constitution audit write-through + mode-flip REST (HRD-018/026/027) ----
+check "E89 constitution audit write-through + mode-flip REST (emit→persist→audit + ladder hot-reflect, -race)" \
+    "go test -race -count=1 ./commons_constitution/... ./cherald/internal/modes/..."
+sc_anchor "E89"  "${SC_CONST_DIR:+${SC_CONST_DIR}/02_admin_rest_flip.txt}" "PASS: TestModes_FlipReflectsImmediately"
+sc_anchor "E89b" "${SC_CONST_DIR:+${SC_CONST_DIR}/01_emit_persist_realpg.txt}" "PASS: TestPostgresRunner_EndToEndAuditPersist"
 
 # ----------------------------------------------------------------------
 echo ""
