@@ -488,11 +488,11 @@ echo ""
 echo "== E17/E18/E34: HRD-011 Telegram + HRD-012 Claude Code live integration =="
 
 # E17: Telegram Send + outbound_delivery_evidence persistence.
-if [ -n "${HERALD_TGRAM_BOT_TOKEN:-}" ] && [ -n "${HERALD_TGRAM_CHAT_ID:-}" ] && (command -v docker >/dev/null 2>&1 || command -v podman >/dev/null 2>&1); then
+if [ -n "${HERALD_TGRAM_BOT_TOKEN:-}" ] && [ -n "${HERALD_TGRAM_CHAT_ID:-}" ] && (command -v docker >/dev/null 2>&1 || command -v podman >/dev/null 2>&1) && nc -z 127.0.0.1 24100 2>/dev/null; then
     check "E17 Telegram Send delivers + persists evidence (live Bot API + live PG)" \
         "go test ./commons_messaging/channels/tgram/ -tags=integration -run TestSend_PersistsDeliveryEvidence -count=1 -timeout=300s"
 else
-    echo "SKIP  E17 (HERALD_TGRAM_BOT_TOKEN+_CHAT_ID or container runtime absent — §11.4.3 explicit SKIP-with-reason)"
+    echo "SKIP  E17 (HERALD_TGRAM_BOT_TOKEN+_CHAT_ID, container runtime, OR live PG :24100 absent — the test persists outbound_delivery_evidence to PG, so PG-reachability is a hard prerequisite; §11.4.3 explicit SKIP-with-reason)"
 fi
 
 # E18: Claude Code Dispatch + session_state persistence.
@@ -1987,6 +1987,7 @@ SC_CC_DIR="$(sc_newest 'HRD-127-*')"
 SC_RES_DIR="$(sc_newest 'HRD-128-*')"
 SC_CONST_DIR="$(sc_newest 'HRD-018-*')"
 SC_BIND_DIR="$(sc_newest 'HRD-019-*')"
+SC_SAFE_DIR="$(sc_newest 'HRD-020-*')"
 
 # sc_anchor <invariant-label> <evidence-file> <literal-anchor-string>
 # Asserts the captured-evidence file contains the load-bearing anchor value.
@@ -2062,6 +2063,11 @@ sc_anchor "E89b" "${SC_CONST_DIR:+${SC_CONST_DIR}/01_emit_persist_realpg.txt}" "
 check "E90 cherald constitution bindings — violation detect→emit→audit→query round-trip (-race)" \
     "go test -race -count=1 ./cherald/internal/bindings/... ./cherald/internal/compliance/..."
 sc_anchor "E90" "${SC_BIND_DIR:+${SC_BIND_DIR}/rest/binding_roundtrip_transcript.md}" '"emitted": true'
+
+# ---- E91: sherald host/repo-safety bindings detect→emit→persist (HRD-020) ----
+check "E91 sherald safety bindings — destructive-op/force-push/mem-budget detect→emit→audit (-race)" \
+    "go test -race -count=1 ./sherald/internal/bindings/..."
+sc_anchor "E91" "${SC_SAFE_DIR:+${SC_SAFE_DIR}/safety_roundtrip_evidence.txt}" "digital.vasic.herald.constitution.repo.safety.breach"
 
 # ----------------------------------------------------------------------
 echo ""
