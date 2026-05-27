@@ -112,7 +112,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>7</td>
+<td>8</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -128,13 +128,19 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td>r7: propagated HelixConstitution §11.4.85 (stress + chaos test
-mandate) + §11.4.87 (endless-loop autonomous work + zero-idle agent
-dispatch + anti-bluff testing) + §11.4.88 (background-push) into the
-agent-rule covenant cluster as short-form restatements citing the
-literal section numbers, inherited per §11.4.35; required by the
-§11.4.87 <code>CM-COVENANT-114-87-PROPAGATION</code> pre-build gate
-(literal anchor <code>11.4.87</code> MUST be present in every
+<td>r8: propagated HelixConstitution §11.4.89–§11.4.94 (background-test
+execution, Obsolete status + obsolescence audit, summary-doc clarity,
+multi-pass change-evaluation, SQLite workable-items SSoT, zero-idle
+parallel-by-default) into the agent-rule covenant cluster as short-form
+restatements citing the literal anchors, inherited per §11.4.35;
+restated + cited, not redefined. Prior r7: propagated HelixConstitution
+§11.4.85 (stress + chaos test mandate) + §11.4.87 (endless-loop
+autonomous work + zero-idle agent dispatch + anti-bluff testing) +
+§11.4.88 (background-push) into the agent-rule covenant cluster as
+short-form restatements citing the literal section numbers, inherited
+per §11.4.35; required by the §11.4.87
+<code>CM-COVENANT-114-87-PROPAGATION</code> pre-build gate (literal
+anchor <code>11.4.87</code> MUST be present in every
 CLAUDE.md/AGENTS.md/QWEN.md; same expectation for §11.4.85/§11.4.88 per
 cascade pattern). Agents restate + cite, never redefine or weaken. Prior
 r5: added the End-user-usability covenant section restating the verbatim
@@ -155,7 +161,7 @@ inheritance-gate invariant I8b.</td>
 <td>Fixed</td>
 <td>R-14 (V2), V3-path-sync (V3 r3), Go-scaffold-status-update (V3 r4),
 §107 mandate restatement + I8b anchor (r5), Helix §11.4.85 + §11.4.87 +
-§11.4.88 propagation (r7)</td>
+§11.4.88 propagation (r7), Helix §11.4.89–§11.4.94 propagation (r8)</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
@@ -166,7 +172,15 @@ HelixConstitution mandates (§11.4.85 stress+chaos, §11.4.87 endless-loop
 autonomous work + zero-idle dispatch + anti-bluff testing, §11.4.88
 background-push) into this agent-rules file per the §11.4.87
 <code>CM-COVENANT-114-87-PROPAGATION</code> pre-build gate, inherited
-per §11.4.35; restated + cited, not redefined.</td>
+per §11.4.35; restated + cited, not redefined; r8 propagates the next
+six inherited HelixConstitution mandates (§11.4.89 background-test
+execution, §11.4.90 Obsolete status + obsolescence audit, §11.4.91
+summary-doc clarity, §11.4.92 multi-pass change-evaluation, §11.4.93
+SQLite workable-items SSoT, §11.4.94 zero-idle parallel-by-default) into
+the same agent-rule covenant cluster as short-form restatements citing
+the literal anchors
+<code>11.4.89</code>/<code>11.4.90</code>/<code>11.4.91</code>/<code>11.4.92</code>/<code>11.4.93</code>/<code>11.4.94</code>,
+inherited per §11.4.35; restated + cited, not redefined.</td>
 </tr>
 <tr>
 <td>Continuation</td>
@@ -189,8 +203,9 @@ rules</a>
 href="#end-user-usability-covenant-herald-107--helix-114--mandatory-anti-bluff">End-user-usability
 covenant (Herald §107 / Helix §11.4 — MANDATORY ANTI-BLUFF)</a></li>
 <li><a
-href="#inherited-covenant-restatements--helix-11485--11487--11488-inherited-per-11435">Inherited
-covenant restatements — Helix §11.4.85 / §11.4.87 / §11.4.88</a></li>
+href="#inherited-covenant-restatements--helix-11485--11487--11488--11489--11490--11491--11492--11493--11494">Inherited
+covenant restatements — Helix §11.4.85 / §11.4.87 / §11.4.88 / §11.4.89
+/ §11.4.90 / §11.4.91 / §11.4.92 / §11.4.93 / §11.4.94</a></li>
 <li><a
 href="#inheritance-gate-run-before-any-commit-that-touches-root-docs-or-constitution">Inheritance
 gate (run before any commit that touches root docs or
@@ -443,9 +458,10 @@ Herald authority: <code>docs/guides/HERALD_CONSTITUTION.md</code>
 critical defect regardless of how briefly it persisted — see
 <code>72e81ab</code> / <code>d5bd360</code> as proof.</p>
 <h3
-id="inherited-covenant-restatements--helix-11485--11487--11488">Inherited
-covenant restatements — Helix §11.4.85 / §11.4.87 / §11.4.88</h3>
-<p>These three mandates are <strong>inherited</strong> from the
+id="inherited-covenant-restatements--helix-11485--11487--11488--11489--11490--11491--11492--11493--11494">Inherited
+covenant restatements — Helix §11.4.85 / §11.4.87 / §11.4.88 / §11.4.89
+/ §11.4.90 / §11.4.91 / §11.4.92 / §11.4.93 / §11.4.94</h3>
+<p>These nine mandates are <strong>inherited</strong> from the
 HelixConstitution via parent-discovery (§11.4.35). Every agent — Claude
 Code, Codex, Cursor, Gemini, Aider, any CLI subagent — is bound by them;
 this file <strong>restates + cites</strong>, it does NOT redefine or
@@ -503,6 +519,91 @@ a §11.4 distribution-layer PASS-bluff). The ONLY synchronous-push escape
 is the explicit <code>--sync-push</code> flag for §11.4.41 force-push
 merge-first paths. Canonical authority: HelixConstitution
 Constitution.md §11.4.88 (inherited per §11.4.35).</p>
+<p><strong>§11.4.89 — Background test execution mandate (Helix,
+2026-05-27).</strong> Agent-binding rule: any Herald test cycle the
+agent expects to exceed ~30s — the
+<code>tests/test_wave*_mutation_meta.sh</code> gates,
+<code>scripts/e2e_bluff_hunt.sh</code>, future stress/chaos suites —
+MUST be launched detached
+(<code>nohup … &gt; qa-results/&lt;test_id&gt;_&lt;TS&gt;.log 2&gt;&amp;1 &amp;</code>
++ <code>disown</code>); the agent returns immediately to the §11.4.42
+priority queue and polls the log / exit-status rather than blocking.
+Composes with §107.y / §11.4.84: a backgrounded mutation gate still
+mutates the shared tree, so the agent runs ONLY ONE against the main
+checkout at a time (serialised by the
+<code>.git/MUTATION_IN_PROGRESS</code> lockfile +
+<code>scripts/mutation_residue_audit.sh</code> pre-push scanner);
+concurrent gates require separate <code>git worktree</code> checkouts.
+Foreground is permitted only for &lt;30s tests or on explicit operator
+request. Canonical authority: HelixConstitution Constitution.md §11.4.89
+(inherited per §11.4.35).</p>
+<p><strong>§11.4.90 — Obsolete status + per-item obsolescence audit
+(Helix, 2026-05-27).</strong> Agent-binding rule: Herald's HRD Status
+closed-set gains a 4th terminal value <code>Obsolete (→ Fixed.md)</code>
+for items no longer valid (Reason closed-set:
+superseded-by-design-change / superseded-by-later-mandate /
+feature-removed / duplicate-of / unsupported-topology). The agent MUST
+add an <code>**Obsolete-Details:**</code> line within 8 non-blank lines
+of every <code>Obsolete</code> HRD heading: Since (ISO date), Reason,
+Superseding-item (§/HRD ref), Triple-check evidence (git-log / grep /
+runtime path per §11.4.6 — bare assertion forbidden). At every
+release-gate sweep the agent re-evaluates every open + Fixed HRD for
+obsolescence; migrations are atomic per §11.4.19. Canonical authority:
+HelixConstitution Constitution.md §11.4.90 (inherited per §11.4.35).</p>
+<p><strong>§11.4.91 — Summary-doc clarity (Helix, 2026-05-27).</strong>
+Agent-binding rule: every one-liner the agent writes in
+<code>docs/Issues_Summary.md</code> / <code>docs/Fixed_Summary.md</code>
+/ <code>docs/Status_Summary.md</code> / README doc-link rows MUST be a
+self-contained clause (≥6 words OR ≥40 chars) naming the SUBJECT + the
+PROBLEM/GOAL — never a section-label fragment
+(<code>Composes with</code>, <code>Closure criteria</code>), bare
+metadata (<code>Critical</code>, <code>Bug</code>), a status
+restatement, or a bare HRD-id. Each is derived from the source long-form
+H1/H2 heading, never invented. Canonical authority: HelixConstitution
+Constitution.md §11.4.91 (inherited per §11.4.35).</p>
+<p><strong>§11.4.92 — Multi-pass change-evaluation discipline (Helix,
+2026-05-27).</strong> Agent-binding rule: every non-trivial Herald
+change MUST pass — and the agent MUST document — a 5-pass evaluation
+before commit-ready: Pass 1 main-task captured-evidence (§11.4.5, no
+"should work"); Pass 2 regression-blast-radius (every touched file +
+every importer/caller audited); Pass 3 cross-feature interaction (shared
+state / timing / env — e.g. a gate edit checks §107.y quiescence +
+§11.4.89 backgrounding); Pass 4 deep-research validation (§11.4.8 —
+external precedent or literal "NO external solution found"); Pass 5
+anti-bluff confirmation (no metadata-only / config-only / script-bug
+PASS). Evidence lands in the commit footer or <code>docs/qa/</code> /
+<code>qa-results/</code>. Trivial changes (typo, revision-bump,
+MD-export regen touching zero source) are exempt only with explicit
+commit-message citation. Canonical authority: HelixConstitution
+Constitution.md §11.4.92 (inherited per §11.4.35).</p>
+<p><strong>§11.4.93 — SQLite-backed single-source-of-truth for workable
+items (Helix, 2026-05-27).</strong> Agent-binding rule: Herald's
+text-based HRD trackers (<code>docs/Issues.md</code> /
+<code>Fixed.md</code> / <code>*_Summary.md</code> /
+<code>Status.md</code> / <code>CONTINUATION.md</code> §3) migrate to a
+SQLite single-source-of-truth (<code>docs/.workable_items.db</code>,
+gitignored with a regeneration mechanism per §11.4.30) with
+bidirectional MD↔︎DB regeneration so sync-drift is mechanically
+impossible. The Go binary lives in the constitution submodule
+(<code>constitution/scripts/workable-items/</code>) — the agent
+references it per §11.4.74 catalogue-first, never reimplements.
+Migration is 6-phase; the agent files the tracking HRD (Phase 1) and
+progresses incrementally. Canonical authority: HelixConstitution
+Constitution.md §11.4.93 (inherited per §11.4.35).</p>
+<p><strong>§11.4.94 — Zero-idle priority-first parallel-by-default
+operating mode (Helix, 2026-05-27).</strong> Agent-binding rule (binding
+always-on contract): Herald work is NEVER idle while a priority-queued
+item can progress. Before any wake / sleep / "waiting for X", the agent
+surveys the priority queue, identifies all non-contending items, and
+dispatches them in parallel (subagent-driven per §11.4.20 / §11.4.70
+when non-trivial; background per §11.4.89 when &gt;30s), picking
+highest-Severity/priority first. The conductor remains the integration +
+commit + push seam; parallel work MUST NOT compromise stability
+(composes with §107.y quiescence + §11.4.92 multi-pass + §12
+host-safety). Idle is permitted ONLY when every item is genuinely
+blocked on external dependency, the operator issued STOP, or §12
+host-session-safety demands it. Canonical authority: HelixConstitution
+Constitution.md §11.4.94 (inherited per §11.4.35).</p>
 <h3
 id="inheritance-gate-run-before-any-commit-that-touches-root-docs-or-constitution">Inheritance
 gate (run before any commit that touches root docs or

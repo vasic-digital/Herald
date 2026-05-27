@@ -8,15 +8,15 @@
 
 | Field | Value |
 |---|---|
-| Revision | 5 |
+| Revision | 6 |
 | Created | 2026-05-15 |
 | Last modified | 2026-05-27 |
 | Status | active |
-| Status summary | r5: added §108 (with §108.a/b/c) restating the three inherited HelixConstitution mandates — §11.4.85 stress + chaos test mandate, §11.4.87 endless-loop autonomous work + zero-idle agent dispatch + anti-bluff testing, §11.4.88 background-push — at Herald project-constitution level per §1.1 multi-file propagation discipline; inherited per §11.4.35, restated + cited, not redefined. Required by the §11.4.87 `CM-COVENANT-114-87-PROPAGATION` pre-build gate. Prior r4: added §107 End-user-usability covenant (verbatim operator mandate restated at Herald level per §1.1 propagation) + paired gate invariant I8a–c; corrected stale "Owned-submodule set: (none)" to reflect the 10 vendored modules (9 Helix-stack + containers). |
+| Status summary | r6: extended §108 with §108.d–§108.i restating the next six inherited HelixConstitution mandates — §11.4.89 background-test execution, §11.4.90 Obsolete status + obsolescence audit, §11.4.91 summary-doc clarity, §11.4.92 multi-pass change-evaluation, §11.4.93 SQLite workable-items SSoT, §11.4.94 zero-idle parallel-by-default — at Herald project-constitution level per §1.1 multi-file propagation discipline; inherited per §11.4.35, restated + cited, not redefined; literal anchors `11.4.89`–`11.4.94` now present. Prior r5: added §108 (with §108.a/b/c) restating the three inherited HelixConstitution mandates — §11.4.85 stress + chaos test mandate, §11.4.87 endless-loop autonomous work + zero-idle agent dispatch + anti-bluff testing, §11.4.88 background-push — at Herald project-constitution level per §1.1 multi-file propagation discipline; inherited per §11.4.35, restated + cited, not redefined. Required by the §11.4.87 `CM-COVENANT-114-87-PROPAGATION` pre-build gate. Prior r4: added §107 End-user-usability covenant (verbatim operator mandate restated at Herald level per §1.1 propagation) + paired gate invariant I8a–c; corrected stale "Owned-submodule set: (none)" to reflect the 10 vendored modules (9 Helix-stack + containers). |
 | Issues | none |
 | Issues summary | — |
-| Fixed | R-14 (V2), V3-path-sync (V3 r3), §107 mandate + I8 gate invariant + owned-submodule list (r4), §108 Helix §11.4.85 + §11.4.87 + §11.4.88 propagation (r5) |
-| Fixed summary | §106 spec-change rule retargeted to V3 path; gate-checked anchor 'comprehensive planning and implementation' unchanged so I7 stays green. r4 adds the end-user-usability covenant at Herald level (Helix §11.4 is the canonical authority; Herald restates per §1.1 multi-file propagation discipline) and the I8 gate invariant that asserts the mandate is present in CLAUDE.md + AGENTS.md + this file. r5 adds §108 (§108.a stress+chaos §11.4.85, §108.b endless-loop autonomous work §11.4.87, §108.c background-push §11.4.88) restating the three new inherited HelixConstitution mandates at Herald level per the §11.4.87 `CM-COVENANT-114-87-PROPAGATION` pre-build gate, inherited per §11.4.35; restated + cited, not redefined. |
+| Fixed | R-14 (V2), V3-path-sync (V3 r3), §107 mandate + I8 gate invariant + owned-submodule list (r4), §108 Helix §11.4.85 + §11.4.87 + §11.4.88 propagation (r5), §108.d–§108.i Helix §11.4.89–§11.4.94 propagation (r6) |
+| Fixed summary | §106 spec-change rule retargeted to V3 path; gate-checked anchor 'comprehensive planning and implementation' unchanged so I7 stays green. r4 adds the end-user-usability covenant at Herald level (Helix §11.4 is the canonical authority; Herald restates per §1.1 multi-file propagation discipline) and the I8 gate invariant that asserts the mandate is present in CLAUDE.md + AGENTS.md + this file. r5 adds §108 (§108.a stress+chaos §11.4.85, §108.b endless-loop autonomous work §11.4.87, §108.c background-push §11.4.88) restating the three new inherited HelixConstitution mandates at Herald level per the §11.4.87 `CM-COVENANT-114-87-PROPAGATION` pre-build gate, inherited per §11.4.35; restated + cited, not redefined. r6 extends §108 with §108.d–§108.i (§108.d background-test execution §11.4.89, §108.e Obsolete status + obsolescence audit §11.4.90, §108.f summary-doc clarity §11.4.91, §108.g multi-pass change-evaluation §11.4.92, §108.h SQLite workable-items SSoT §11.4.93, §108.i zero-idle parallel-by-default §11.4.94) restating the next six inherited HelixConstitution mandates at Herald level, inherited per §11.4.35; restated + cited, not redefined; literal anchors `11.4.89`/`11.4.90`/`11.4.91`/`11.4.92`/`11.4.93`/`11.4.94` now present in all three Herald root docs. |
 | Continuation | — |
 
 ## Table of contents
@@ -29,7 +29,7 @@
   - [§105. Inheritance gate (extends Universal §1.1)](#105-inheritance-gate-extends-universal-11)
   - [§106. Spec-change rule (extends Universal §11.4)](#106-spec-change-rule-extends-universal-114)
   - [§107. End-user-usability covenant (extends Universal §11.4 — MANDATORY ANTI-BLUFF)](#107-end-user-usability-covenant-extends-universal-114--mandatory-anti-bluff)
-  - [§108. Inherited covenant restatements (Helix §11.4.85 / §11.4.87 / §11.4.88)](#108-inherited-covenant-restatements-helix-11485--11487--11488)
+  - [§108. Inherited covenant restatements (Helix §11.4.85 / §11.4.87 / §11.4.88 / §11.4.89 / §11.4.90 / §11.4.91 / §11.4.92 / §11.4.93 / §11.4.94)](#108-inherited-covenant-restatements-helix-11485--11487--11488--11489--11490--11491--11492--11493--11494)
 - [Overrides of Universal Constitution](#overrides-of-universal-constitution)
 - [Owned-submodule set (per Universal §4)](#owned-submodule-set-per-universal-4)
 - [Project-specific remotes](#project-specific-remotes)
@@ -177,9 +177,9 @@ The Wave 4b test is the prototype; generalising the check across every paired-§
 
 **Non-compliance is a release blocker.** A mutation marker that lands in a tagged Herald commit is a critical defect regardless of how briefly it persisted — see commits `72e81ab` / `d5bd360` as forensic proof. No `--allow-residue`, `--skip-quiescence`, `--mutation-cleanup-later` flag exists.
 
-### §108. Inherited covenant restatements (Helix §11.4.85 / §11.4.87 / §11.4.88)
+### §108. Inherited covenant restatements (Helix §11.4.85 / §11.4.87 / §11.4.88 / §11.4.89 / §11.4.90 / §11.4.91 / §11.4.92 / §11.4.93 / §11.4.94)
 
-These three mandates are **inherited** from the Helix Universal Constitution via parent-discovery (§11.4.35). Herald **restates + cites** them at project-constitution level per the §1.1 multi-file propagation discipline — it does **NOT** redefine, narrow, or weaken them; the parent `constitution/Constitution.md` is the canonical authority for each. The literal anchors (`11.4.85`, `11.4.87`, `11.4.88`) are required across Herald's `CLAUDE.md` / `AGENTS.md` / `QWEN.md` by the §11.4.87 `CM-COVENANT-114-87-PROPAGATION` pre-build gate, which strips the literal in a paired §1.1 meta-test mutation and asserts the gate FAILs.
+These nine mandates are **inherited** from the Helix Universal Constitution via parent-discovery (§11.4.35). Herald **restates + cites** them at project-constitution level per the §1.1 multi-file propagation discipline — it does **NOT** redefine, narrow, or weaken them; the parent `constitution/Constitution.md` is the canonical authority for each. The literal anchors (`11.4.85`, `11.4.87`, `11.4.88`, `11.4.89`, `11.4.90`, `11.4.91`, `11.4.92`, `11.4.93`, `11.4.94`) are required across Herald's `CLAUDE.md` / `AGENTS.md` / `QWEN.md` by the §11.4.87 `CM-COVENANT-114-87-PROPAGATION` pre-build gate, which strips the literal in a paired §1.1 meta-test mutation and asserts the gate FAILs.
 
 #### §108.a. Stress + Chaos Test Mandate (extends Universal §11.4.85; Helix 2026-05-24)
 
@@ -214,6 +214,70 @@ These three mandates are **inherited** from the Helix Universal Constitution via
 **Propagation.** §108 (with §108.a/b/c) is restated (in summary form, citing this section as the canonical Herald source) in Herald's `CLAUDE.md`, `AGENTS.md`, `QWEN.md`. The universal mandates at Helix §11.4.85 / §11.4.87 / §11.4.88 are cascaded into the Helix-stack submodules per §1.1 multi-file propagation discipline. The §11.4.87 `CM-COVENANT-114-87-PROPAGATION` pre-build gate enforces the literal anchors `11.4.85` / `11.4.87` / `11.4.88` in all three Herald root docs.
 
 **Non-compliance is a release blocker.** Each sub-clause carries its inherited no-escape-hatch posture: no `--skip-stress` / `--no-chaos` (§108.a), no `--idle-OK` / `--skip-endless-loop` (§108.b), no synchronous push without `--sync-push` (§108.c).
+
+#### §108.d. Background test execution mandate (extends Universal §11.4.89; Helix 2026-05-27)
+
+**Forensic anchor — verbatim user mandate (2026-05-27, condensed):**
+
+> "long-running tests (the mutation gates, e2e bluff-hunt, stress and chaos suites) MUST run in background so the main work stream never blocks waiting on them — survey the results from the log when they finish, do not sit idle."
+
+**Canonical authority.** Helix Universal Constitution §11.4.89. Herald §108.d is the project-binding restatement.
+
+**Operative rule (Herald-binding).** Any Herald test cycle expected to exceed ~30s — the `tests/test_wave*_mutation_meta.sh` gates, `scripts/e2e_bluff_hunt.sh`, future stress/chaos suites — MUST run detached (`nohup … > qa-results/<test_id>_<TS>.log 2>&1 &` then `disown`); the main work stream returns immediately to the §11.4.42 priority queue and polls the log / exit-status rather than blocking. Composes with §107.y / §11.4.84: a backgrounded mutation gate still mutates the shared tree, so only ONE runs against the main checkout at a time (serialised by the `.git/MUTATION_IN_PROGRESS` lockfile + the planned `scripts/mutation_residue_audit.sh` pre-push scanner); concurrent gates require separate `git worktree` checkouts. Foreground is permitted only for <30s tests or on explicit operator request. No `--block-on-long-test` / `--skip-background` escape exists.
+
+#### §108.e. Obsolete status + per-item obsolescence audit (extends Universal §11.4.90; Helix 2026-05-27)
+
+**Forensic anchor — verbatim user mandate (2026-05-27, condensed):**
+
+> "some workable items are no longer valid — superseded by a later design or mandate, or the feature was removed. Add an Obsolete status and audit every item for obsolescence at each release, with triple-checked evidence for why it is obsolete — no bare assertions."
+
+**Canonical authority.** Helix Universal Constitution §11.4.90. Herald §108.e is the project-binding restatement.
+
+**Operative rule (Herald-binding).** Herald's HRD Status closed-set gains a 4th terminal value `Obsolete (→ Fixed.md)` for items no longer valid (Reason closed-set: superseded-by-design-change / superseded-by-later-mandate / feature-removed / duplicate-of / unsupported-topology). Every `Obsolete` HRD heading MUST carry an `**Obsolete-Details:**` line within 8 non-blank lines of the heading: Since (ISO date), Reason (closed-set value), Superseding-item (§ or HRD reference), and Triple-check evidence (git-log / grep / runtime path per §11.4.6 — a bare assertion is forbidden). At every release-gate sweep, Herald re-evaluates every open + Fixed HRD for obsolescence; Obsolete→Fixed.md migrations are atomic per §11.4.19 (the §107.x docs/qa evidence mandate still applies where the obsoleted item once shipped a feature). No `--obsolete-without-evidence` / `--skip-obsolescence-audit` escape exists.
+
+#### §108.f. Summary-doc clarity (extends Universal §11.4.91; Helix 2026-05-27)
+
+**Forensic anchor — verbatim user mandate (2026-05-27, condensed):**
+
+> "the one-line summaries in the Issues/Fixed/Status summary docs are useless when they are just a fragment or a status word — each MUST be a self-contained clause that says what the item is about and what the problem or goal is."
+
+**Canonical authority.** Helix Universal Constitution §11.4.91. Herald §108.f is the project-binding restatement.
+
+**Operative rule (Herald-binding).** Every one-liner in `docs/Issues_Summary.md` / `docs/Fixed_Summary.md` / `docs/Status_Summary.md` and every README doc-link row MUST be a self-contained clause (≥6 words OR ≥40 chars) naming the SUBJECT + the PROBLEM/GOAL — never a section-label fragment (`Composes with`, `Closure criteria`), bare metadata (`Critical`, `Bug`), a status restatement, or a bare HRD-id. Each is derived from the source long-form H1/H2 heading, never invented. The `*_Summary.md` variants remain derived (per the documentation-artefacts rule — do not hand-edit them out of sync with source). No `--terse-summary-OK` escape exists.
+
+#### §108.g. Multi-pass change-evaluation discipline (extends Universal §11.4.92; Helix 2026-05-27)
+
+**Forensic anchor — verbatim user mandate (2026-05-27, condensed):**
+
+> "before a change is ready to commit, evaluate it in multiple passes — the main task, the regression blast-radius, the cross-feature interactions, the deep research, and a final anti-bluff confirmation — and document each pass. A change that only proved its happy path is not done."
+
+**Canonical authority.** Helix Universal Constitution §11.4.92. Herald §108.g is the project-binding restatement.
+
+**Operative rule (Herald-binding).** Every non-trivial Herald change MUST pass — and document — a 5-pass evaluation before it is commit-ready: **Pass 1** main-task captured-evidence (§11.4.5 / §107 — no "should work"); **Pass 2** regression-blast-radius (every touched file + every importer/caller audited — e.g. a `commons` type change audits all flavor binaries); **Pass 3** cross-feature interaction (shared state / timing / env — e.g. a mutation-gate edit checks §107.y quiescence + §108.d / §11.4.89 backgrounding); **Pass 4** deep-research validation (§11.4.8 — external precedent located, or a literal "NO external solution found" recorded); **Pass 5** anti-bluff confirmation (no metadata-only / config-only / script-bug PASS). Evidence lands in the commit footer or under `docs/qa/` / `qa-results/`. Trivial changes (typo, revision-bump, MD-export regen touching zero source) are exempt only with an explicit commit-message citation. No `--single-pass-OK` / `--skip-blast-radius` escape exists.
+
+#### §108.h. SQLite-backed single-source-of-truth for workable items (extends Universal §11.4.93; Helix 2026-05-27)
+
+**Forensic anchor — verbatim user mandate (2026-05-27, condensed):**
+
+> "the Issues / Fixed / Status / Continuation tracking is in too many Markdown files that drift out of sync — back it with a single SQLite source of truth and regenerate the Markdown from it (and back) so drift is impossible. The tool already exists in the constitution — use it, do not reinvent it."
+
+**Canonical authority.** Helix Universal Constitution §11.4.93. Herald §108.h is the project-binding restatement.
+
+**Operative rule (Herald-binding).** Herald's text-based HRD trackers (`docs/Issues.md` / `docs/Fixed.md` / the `*_Summary.md` variants / `docs/Status.md` / `docs/CONTINUATION.md` §3) migrate to a SQLite single-source-of-truth (`docs/.workable_items.db`, gitignored with a committed regeneration mechanism per §11.4.30) with bidirectional MD↔DB regeneration so sync-drift is mechanically impossible. The migration Go binary lives in the constitution submodule (`constitution/scripts/workable-items/`) — Herald references it per §11.4.74 catalogue-first, and never reimplements it. The migration is 6-phase; Herald files the tracking HRD (Phase 1) and progresses incrementally without breaking the §106 spec-change / §107.x evidence invariants. No `--skip-ssot` / `--keep-md-only` escape exists once the migration HRD is filed.
+
+#### §108.i. Zero-idle priority-first parallel-by-default operating mode (extends Universal §11.4.94; Helix 2026-05-27)
+
+**Forensic anchor — verbatim user mandate (2026-05-27, condensed):**
+
+> "never sit idle while there is priority-queued work that could move — survey the queue, pick the highest-priority non-blocking items, and run them in parallel by default. Idle is only allowed when everything is genuinely blocked on something external."
+
+**Canonical authority.** Helix Universal Constitution §11.4.94. Herald §108.i is the project-binding restatement.
+
+**Operative rule (Herald-binding).** Binding always-on contract: Herald work is NEVER idle while a priority-queued item can progress. Before any wake / sleep / "waiting for X", survey the priority queue, identify all non-contending items, and dispatch them in parallel — subagent-driven per §11.4.20 / §11.4.70 when non-trivial, backgrounded per §108.d / §11.4.89 when >30s — picking the highest-Severity / priority item first. The conductor remains the integration + commit + push seam; parallel work MUST NOT compromise stability (composes with §107.y quiescence + §108.g / §11.4.92 multi-pass + §12 host-safety). This is the operating-mode generalisation of §108.b / §11.4.87 (endless-loop) and §108.c / §11.4.88 (background-push). Idle is permitted ONLY when every item is genuinely blocked on an external dependency, the operator issued `STOP`, or §12 host-session-safety demands it. No `--serialise-OK` / `--idle-permitted` escape exists.
+
+**Propagation (§108.d–§108.i).** These six restatements are summarised — citing this section as the canonical Herald source — in Herald's `CLAUDE.md` and `AGENTS.md` (and `QWEN.md` when present). The universal mandates at Helix §11.4.89 / §11.4.90 / §11.4.91 / §11.4.92 / §11.4.93 / §11.4.94 are cascaded into the Helix-stack submodules per §1.1 multi-file propagation discipline. The literal anchors `11.4.89` / `11.4.90` / `11.4.91` / `11.4.92` / `11.4.93` / `11.4.94` are present in all three Herald root docs.
+
+**Non-compliance is a release blocker (§108.d–§108.i).** Each sub-clause carries its inherited no-escape-hatch posture: no `--block-on-long-test` (§108.d), no `--obsolete-without-evidence` (§108.e), no `--terse-summary-OK` (§108.f), no `--single-pass-OK` (§108.g), no `--keep-md-only` once migration is filed (§108.h), no `--idle-permitted` (§108.i).
 
 ---
 
