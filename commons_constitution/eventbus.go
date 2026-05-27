@@ -124,13 +124,13 @@ func (b *MemoryBus) Publish(ctx context.Context, ev Event) error {
 		return ErrBusClosed
 	}
 	b.publishedTotal.Add(1)
-	if counter, ok := b.publishedByType.Load(ev.Type); ok {
-		counter.(*atomic.Int64).Add(1)
-	} else {
-		c := new(atomic.Int64)
-		c.Add(1)
-		b.publishedByType.Store(ev.Type, c)
-	}
+	// LoadOrStore atomically resolves the per-type counter: concurrent
+	// publishers of a NEW ev.Type would otherwise both Load-miss → both
+	// create+Store a fresh counter → one overwrites the other (lost
+	// increment + data race on the map entry). LoadOrStore guarantees
+	// exactly one counter instance per type with no lost Add.
+	counter, _ := b.publishedByType.LoadOrStore(ev.Type, new(atomic.Int64))
+	counter.(*atomic.Int64).Add(1)
 
 	b.mu.RLock()
 	matches := append([]*subEntry(nil), b.subs[ev.Type]...)
