@@ -1,0 +1,14 @@
+=== RUN   TestRunner_Stress_ConcurrentReplay_ExactlyOnce
+    stress_chaos_test.go:372: stress[live-redis] shared_sends=3 (bound<=16) archive_rows=641 p50=0.252ms p95=1.075ms p99=2.966ms max=3.228ms count=640 errors=0 (persistent=true dir=/Users/milosvasic/Projects/Herald/docs/qa/HRD-125-stress-chaos-2026-05-27T131251-gap3/stress_chaos/runner)
+--- PASS: TestRunner_Stress_ConcurrentReplay_ExactlyOnce (0.02s)
+=== RUN   TestRunner_Chaos_DuplicateFlood
+    stress_chaos_test.go:465: duplicate flood[live-redis]: 1000 events collapsed → 4 send(s) (bound<=50), 1 archive row(s), p99=2.266ms
+--- PASS: TestRunner_Chaos_DuplicateFlood (0.01s)
+=== RUN   TestRunner_Chaos_DuplicateFlood_NilRedisDegrade
+    stress_chaos_test.go:543: duplicate flood[nil-redis degrade]: 1000 events → 2 send(s) (race-window bounded by 50 workers), 1 archive row(s)
+--- PASS: TestRunner_Chaos_DuplicateFlood_NilRedisDegrade (0.01s)
+=== RUN   TestRunner_Chaos_PGDeadlockSurfacedNotSwallowed
+    stress_chaos_test.go:619: PG deadlock chaos: Run surfaced "outcome: archive events_processed: pgconn: deadlock detected (SQLSTATE 40P01)" (not swallowed)
+--- PASS: TestRunner_Chaos_PGDeadlockSurfacedNotSwallowed (0.00s)
+PASS
+ok  	github.com/vasic-digital/herald/pherald/internal/runner	1.509s

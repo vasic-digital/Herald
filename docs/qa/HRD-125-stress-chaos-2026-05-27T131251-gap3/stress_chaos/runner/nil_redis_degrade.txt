@@ -1,0 +1,11 @@
+surface=runner scenario=chaos_duplicate_flood_nil_redis_degrade redis=ABSENT(nil client)
+contract=Redis-lies-PG-truths (Wave 3 §4): PG fallback dedup, race-window double-send TOLERATED
+flood_total=1000 parallel_workers=50 key="FLOOD-KEY-DEGRADE"
+events_processed_rows=1 want=1 (archival exactly-once via ON CONFLICT DO NOTHING)
+channel_sends=2 (>=1, <=workers=50 — bounded by race window, NOT 1000)
+evidence_rows=2 (==sends)
+p99_ms=2.2100 max_ms=3.8710 count=1000
+NOTE: dispatch exactly-once is NOT guaranteed in EITHER posture (live Redis or
+  nil-Redis) — see HRD-132. The events_processed archival row IS exactly-once in
+  both. Live Redis (TestRunner_Chaos_DuplicateFlood) tightens the dispatch race
+  window but does not close it, because the archive row lands at Stage 7.

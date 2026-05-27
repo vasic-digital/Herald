@@ -1,0 +1,37 @@
+host_memory_headroom — §12 / §12.6 host-safety proof for HRD-125 runner stress/chaos
+captured_at=2026-05-27T08:13:05Z
+platform=darwin (probe: sysctl hw.memsize + vm_stat)
+host_total_bytes=19327352832 (18432 MiB)
+ceiling_fraction=0.60 (§12.6)
+
+--- vm_stat at capture ---
+Mach Virtual Memory Statistics: (page size of 16384 bytes)
+Pages free:                               17764.
+Pages active:                            288748.
+Pages inactive:                          277726.
+Pages speculative:                        10755.
+Pages throttled:                              0.
+Pages wired down:                        162947.
+Pages purgeable:                          18391.
+"Translation faults":                 326020976.
+Pages copy-on-write:                   34871072.
+Pages zero filled:                    124357340.
+Pages reactivated:                      5093739.
+Pages purged:                           2759086.
+File-backed pages:                       185624.
+Anonymous pages:                         391605.
+Pages stored in compressor:              909505.
+Pages occupied by compressor:            381097.
+Decompressions:                         3685530.
+Compressions:                           5734646.
+Pageins:                               13921454.
+Pageouts:                                 64505.
+Swapins:                                      0.
+Swapouts:                                     0.
+
+NOTE: HRD-125 is an in-process Go test (16-50 goroutines, sub-KiB CloudEvent
+  payloads, in-memory fakes). It allocates a few hundred KiB total and spawns at
+  most 50 goroutines. It poses ZERO §12.6 risk: no container, no fork, no GB
+  allocation, no host-level network/systemd change. The resource-exhaustion / OOM
+  scenarios that DO require the §7 host-safety guardrails are HRD-128 (row 6), a
+  later unit — NOT this one.

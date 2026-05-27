@@ -1,0 +1,14 @@
+surface=runner scenario=stress_concurrent_replay redis=live(atomic SETNX)
+workers=16 iterations_per_worker=40 total_runs=1280
+shared_key="SHARED-REPLAY-KEY" shared_key_sends=3 (bounded: >=1, <=workers=16)
+fresh_keys=640 fresh_key_errors=0
+events_processed_rows=641 want=641 (ARCHIVAL exactly-once: PASS)
+total_channel_sends=643 (shared 3 + fresh 640)
+evidence_rows=643 (==sends)
+archival_exactly_once=1
+race_detector=clean
+FINDING=HRD-132 dispatch-exactly-once NOT guaranteed under concurrent replay;
+  events_processed archive row is written at Stage 7 (end of pipeline), so the
+  SETNX-win .. archive-commit window admits concurrent duplicate dispatch.
+  Archival (events_processed) IS exactly-once. See report.
+p50_ms=0.2520 p95_ms=1.0750 p99_ms=2.9660 max_ms=3.2280 count=640 errors=0

@@ -1,0 +1,5 @@
+surface=runner scenario=chaos_pg_deadlock_injection
+injected_error="pgconn: deadlock detected (SQLSTATE 40P01)"
+run_returned_error="outcome: archive events_processed: pgconn: deadlock detected (SQLSTATE 40P01)"
+surfaced_not_swallowed=true
+stage_tagged=true

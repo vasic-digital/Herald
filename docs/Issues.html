@@ -829,6 +829,115 @@ never reimplement); operator mandate 2026-05-27 (version-controlled DB);
 Catalogue-Check: reuse <code>constitution/scripts/workable-items/</code>
 (constitution-submodule tool, 2026-05-27).</td>
 </tr>
+<tr>
+<td>HRD-122</td>
+<td>task</td>
+<td>in_progress</td>
+<td>middle</td>
+<td>§11.4.85 stress+chaos shared scaffold — Go-native
+<code>commons/stresschaos</code> test-helper package (GAP-3 plan §2 / §6
+T1). Provides: a bounded concurrent load-runner (<code>RunLoad</code> —
+N workers × M iterations of a closure via <code>sync.WaitGroup</code>,
+no new dependency: <code>golang.org/x/sync/errgroup</code> is NOT in
+go.mod so stdlib <code>sync</code> is used per the plan's "prefer NOT
+adding deps" tooling note); nearest-rank percentile math
+(<code>Percentiles</code> → <code>{p50,p95,p99,max,min,count}</code>)
+emitted as <code>latency.json</code> +
+<code>latency_histogram.csv</code>; an evidence-dir writer creating
+<code>docs/qa/&lt;run-id&gt;/stress_chaos/&lt;surface&gt;/</code>; and a
+best-effort host-memory headroom probe (<code>HostMemHeadroom</code> —
+<code>vm_stat</code>+<code>sysctl hw.memsize</code> on darwin,
+<code>/proc/meminfo</code> on linux) for the §12.6 60%-ceiling proof
+(degrades to <code>probe-unavailable</code>, never a hard failure).
+Self-tested: 8 unit tests (percentile correctness on a known 1..100ms
+dataset, evidence-dir creation, bounded-goroutine proof, host-mem
+best-effort, §12.6 ceiling predicate) PASS under
+<code>go test -race -count=1</code>. Lowest sensible layer per CLAUDE.md
+layering (commons L0, importable by every flavor).</td>
+<td>2026-05-27</td>
+<td>2026-05-27</td>
+<td>GAP-3 plan
+<code>docs/superpowers/plans/2026-05-27-stress-chaos-suite.md</code> §2
++ §6 T1; Universal §11.4.85 (inherited per §11.4.35) + Herald §108.a;
+§12.6 host-safety; Catalogue-Check: no-match — Go stdlib only, no
+load/stats tool added (2026-05-27).</td>
+</tr>
+<tr>
+<td>HRD-125</td>
+<td>task</td>
+<td>in_progress</td>
+<td>high</td>
+<td>§11.4.85 Runner 7-stage pipeline stress+chaos tests (GAP-3 plan §1
+row 3 / §6 T4) — new
+<code>pherald/internal/runner/stress_chaos_test.go</code> exercising the
+REAL <code>runner.Run</code> (only the external boundary — PG
+events_processed store, channel sink, Redis SETNX seam — is faked per
+§11.4.27; the orchestrator + 7 stages run unmodified). STRESS: N=16
+goroutines × 40 iters concurrent same-key replay + fresh keys,
+<code>-race</code> clean (PASS). CHAOS: (a) 1000× duplicate flood @ 50
+parallel under live atomic Redis SETNX; (a') same flood under the real
+nil-Redis PG-fallback degrade; (b) hermetic PG-deadlock (SQLSTATE 40P01)
+injection on the events_processed Insert. Captured evidence under
+<code>docs/qa/HRD-125-stress-chaos-2026-05-27T131251-gap3/stress_chaos/runner/</code>
+(latency.json p50=0.252ms/p95=1.075ms/p99=2.966ms, histogram CSV,
+race_clean.log, exactly_once.txt, duplicate_flood.txt,
+nil_redis_degrade.txt, deadlock_recovery.log, host_memory_headroom.txt,
+summary.md). <strong>FINDING (→ HRD-132): dispatch exactly-once is NOT
+guaranteed under concurrent replay</strong> — the events_processed
+archive row is written at Stage 7 (end of pipeline), so the
+Stage-2-fresh-verdict → Stage-7-archive-commit window admits a bounded
+handful of concurrent duplicate dispatches (observed 2–4 of a 1000×
+flood; never the full 1000). Archival (events_processed) IS exactly-once
+(PG UNIQUE + ON CONFLICT DO NOTHING). Tests assert the honest code-true
+contract (archival exactly-once + bounded dispatch), NOT an aspirational
+<code>sends==1</code> (that would be a §107 PASS-bluff). A latent
+<code>runner.go:132</code> <code>CachedRcpt.WasReplay</code> data race
+surfaces only when a store caches+shares a <code>*Receipt</code>
+(current production PG Lookup returns Receipt=nil → no race today; would
+activate with the planned Wave 4+ Receipt caching).</td>
+<td>2026-05-27</td>
+<td>2026-05-27</td>
+<td>GAP-3 plan §1 row 3 + §6 T4; Universal §11.4.85 + Herald §108.a /
+§107.x; depends on HRD-122; FINDING tracked as HRD-132; Catalogue-Check:
+no-match — Go <code>testing</code> + <code>-race</code> per CLAUDE.md
+build/test command (2026-05-27).</td>
+</tr>
+<tr>
+<td>HRD-132</td>
+<td>bug</td>
+<td>open</td>
+<td>high</td>
+<td>Tighten Runner idempotency window so concurrent same-key replay
+cannot duplicate-dispatch a notification (FINDING from HRD-125
+stress/chaos). <code>idempotency.go:64-72</code> treats a
+Redis-SETNX-miss-with-no-PG-row as FRESH (the documented §32.1
+"Redis-lies-PG-truths" design, to avoid ingest lockup), but the
+<code>events_processed</code> archive row is only written at Stage 7
+(<code>OutcomeRecorder.Process</code>) — so concurrent same-key requests
+arriving in the Stage-2→Stage-7 window ALL dispatch (observed 2–4 of a
+1000× flood; never the full 1000). Archival is exactly-once (PG UNIQUE +
+<code>ON CONFLICT DO NOTHING</code>); channel <em>dispatch</em> is only
+bounded → for a notification system this is duplicate-alert delivery
+under concurrent load. Fix direction: claim the idempotency slot
+atomically BEFORE dispatch
+(<code>INSERT events_processed … ON CONFLICT DO NOTHING</code> at Stage
+2, treat 0-rows-affected as duplicate, so the PG row — not Stage-7 — is
+the dispatch gate), preserving the nil-Redis PG-only degrade (HRD-179).
+ALSO fix the latent <code>runner.go:132</code>
+<code>CachedRcpt.WasReplay</code> data race (mutates a possibly-shared
+<code>*Receipt</code>; dormant today since PG Lookup returns
+Receipt=nil, activates with Wave 4+ Receipt caching). MUST ship with the
+§11.4.85 stress test upgraded to assert <code>sends==1</code> under the
+same 1000× flood (the stronger assertion HRD-125 deliberately could NOT
+make without this fix — §11.4.4 test-interrupt-on-discovery).</td>
+<td>2026-05-27</td>
+<td>2026-05-27</td>
+<td>FINDING from HRD-125 stress/chaos
+(<code>docs/qa/HRD-125-stress-chaos-2026-05-27T131251-gap3/</code>);
+root files <code>pherald/internal/runner/idempotency.go:64-72</code> +
+<code>runner.go:132</code>; spec V3 §32.1; Catalogue-Check: in-repo
+runner fix, no external tool (2026-05-27).</td>
+</tr>
 </tbody>
 </table>
 <h2 id="in-progress">In progress</h2>
