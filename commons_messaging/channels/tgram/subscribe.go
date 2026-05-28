@@ -101,10 +101,18 @@ func stampAndIsSelfEcho(ev commons.InboundEvent, msg *telebot.Message, self chan
 // HealthCheck/Send use the ensureBot-managed a.bot (no poller). Subscribe
 // therefore constructs its own *telebot.Bot here with the LongPoller wired.
 func (a *Adapter) Subscribe(ctx context.Context, h commons.InboundHandler) error {
-	bot, err := telebot.NewBot(telebot.Settings{
+	settings := telebot.Settings{
 		Token:  a.botToken,
 		Poller: &telebot.LongPoller{Timeout: 25 * time.Second},
-	})
+	}
+	// Thread the httptest-seam baseURL into telebot's API root if NewAdapterWithBaseURL
+	// was used (parallel to ensureBot in tgram.go). Without this, the poller hard-codes
+	// api.telegram.org and the HRD-137 chaos test cannot exercise it hermetically.
+	// In production a.baseURL is empty → telebot defaults to api.telegram.org.
+	if a.baseURL != "" {
+		settings.URL = a.baseURL
+	}
+	bot, err := telebot.NewBot(settings)
 	if err != nil {
 		return fmt.Errorf("tgram.Subscribe: connect with poller: %w", err)
 	}

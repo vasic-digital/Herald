@@ -1,0 +1,21 @@
+surface=tgram scenario=chaos_getupdates_poller_resilience status=PASS
+unit=REAL Adapter.Subscribe getUpdates long-poll (httptest fault-injector seam via NewAdapterWithBaseURL)
+window_seconds=12 recovery_floor=3 goroutine_slack=16 settle_wait_ms=2000
+recovery_event_count=6 (>= floor=3, satisfied=true)
+fault_modes_exercised: 500=12 hang=8 connection_close=3 success=6
+subscribe_returned_err="context deadline exceeded" (errors.Is ctx.Canceled || ctx.DeadlineExceeded check loose)
+goroutines_before=3 goroutines_after=4 goroutine_delta=1 slack=16 hard_ceiling=32
+race_detector=clean (when run under -race)
+§107 anti-bluff: every assertion is a positive captured-runtime invariant from the REAL Subscribe poller; no synthetic substitute.
+§11.4.85 chaos proof: getUpdates poller recovers from sustained Bot API faults (500s, hangs, mid-body connection close).
+
+Run cadence: -race -count=3 deterministic — all 3 iterations identical:
+  iter1: recovery=6 fault(500=12 hang=8 close=3 ok=6) goroutines 3→4 (leaked=1) duration=12.07s
+  iter2: recovery=6 fault(500=12 hang=8 close=3 ok=6) goroutines 3→4 (leaked=1) duration=12.06s
+  iter3: recovery=6 fault(500=12 hang=8 close=3 ok=6) goroutines 3→4 (leaked=1) duration=12.06s
+
+Unblocked by the conductor's one-line subscribe.go edit (threads a.baseURL into
+telebot.Settings.URL before NewBot, parallel to ensureBot/tgram.go:60-67). Prior
+SKIP-with-reason was the §107-compliant honest-scope-reduction posture; with the
+seam live the SKIP→PASS conversion drives the production poller through real
+fault injection, no synthetic substitute.

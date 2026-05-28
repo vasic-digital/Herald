@@ -1,0 +1,30 @@
+surface=tgram scenario=stress_multi_recipient_fan_out unit=REAL Adapter.SendReply (httptest seam)
+workers=20 iters_per_worker=20 total_calls=400 errors=0
+global_hits=400 (==total_calls: no_loss=1 no_double=1)
+throughput_per_sec=6033.7 (floor=100.0, satisfied=1)
+latency p50_ms=2.77 p95_ms=7.14 p99_ms=9.73 max_ms=12.92
+goroutines_before=3 goroutines_after=9 leaked=6 slack=16 (no_goroutine_leak=1)
+race_detector=clean (when run under -race)
+per_chat_distribution (each chat_id MUST receive exactly 20 hits):
+  chat_id=1000 hits=20
+  chat_id=1001 hits=20
+  chat_id=1002 hits=20
+  chat_id=1003 hits=20
+  chat_id=1004 hits=20
+  chat_id=1005 hits=20
+  chat_id=1006 hits=20
+  chat_id=1007 hits=20
+  chat_id=1008 hits=20
+  chat_id=1009 hits=20
+  chat_id=1010 hits=20
+  chat_id=1011 hits=20
+  chat_id=1012 hits=20
+  chat_id=1013 hits=20
+  chat_id=1014 hits=20
+  chat_id=1015 hits=20
+  chat_id=1016 hits=20
+  chat_id=1017 hits=20
+  chat_id=1018 hits=20
+  chat_id=1019 hits=20
+§107 anti-bluff: every assertion is a positive captured-runtime invariant.
+§11.4.85 stress proof: PASS
