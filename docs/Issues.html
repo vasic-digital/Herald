@@ -47,7 +47,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>22</td>
+<td>23</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -63,11 +63,35 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>r22 (v1.0.0 Batch C — §43 catalogue COMPLETE) marks the two
-stragglers HRD-034 (<code>sherald backup-snapshot</code>, §9.3
-hardlinked snapshot) + HRD-047 (<code>scherald status-digest</code>,
-§11.4.45 Status.md sweep) Open→in_progress.</strong> With C1-C5 + these
-two, the ENTIRE §43 command catalogue (HRD-029..056, 30 commands across
+<td><strong>r23 (v1.0.0 Batch D — commons_infra pgxTaskRepository) marks
+HRD-085/086/087/088/089 Open→in_progress, REAL-PG verified.</strong>
+Implemented 16 of 17 previously-<code>ErrUnsupported</code>
+<code>pgxTaskRepository</code> methods
+(<code>commons_infra/task_repository.go</code>): HRD-085
+GetByID/Update/Delete (soft-delete), HRD-086
+UpdateStatus/UpdateProgress/UpdateHeartbeat/SaveCheckpoint, HRD-087
+GetByStatus/GetPendingTasks/CountByStatus/GetTaskHistory, HRD-088
+GetStaleTasks/GetByWorkerID, HRD-089
+SaveResourceSnapshot/GetResourceSnapshots + new migration
+<code>000013_task_resource_snapshots</code>.
+(<code>MoveToDeadLetter</code> remains <code>ErrUnsupported</code> →
+HRD-090, by design.) <strong>§107 real-PG evidence:</strong> all 14
+integration round-trips persist+read-back against live herald-postgres
+:24100
+(<code>go test -tags=integration -run TestRepo ./commons_infra/...</code>
+→ 14 PASS / 0 FAIL); transcript
+<code>docs/qa/HRD-085-089-20260528T070000Z/integration_realpg.log</code>;
+e2e <strong>E123</strong> wired (PG-gated, SKIP-with-reason when :24100
+absent). The real-PG run caught + fixed a latent pre-Batch-D bug:
+<code>LogEvent</code> passed marshalled JSON as <code>[]byte</code>
+(encoded as bytea → PG rejects bytea→jsonb, SQLSTATE 22P02) — now
+<code>string(payload)</code>, matching <code>Create</code>'s cast
+pattern. <strong>Prior r22 (v1.0.0 Batch C — §43 catalogue COMPLETE)
+marked the two stragglers HRD-034 (<code>sherald backup-snapshot</code>,
+§9.3 hardlinked snapshot) + HRD-047
+(<code>scherald status-digest</code>, §11.4.45 Status.md sweep)
+Open→in_progress.</strong> With C1-C5 + these two, the ENTIRE §43
+command catalogue (HRD-029..056, 30 commands across
 pherald/sherald/cherald/rherald/bherald/scherald) is implemented +
 e2e-proven (E97-E122). backup-snapshot creates <code>os.Link</code>
 hardlinks (inode-verified) → <code>.gate.recovered</code>; status-digest
@@ -1049,7 +1073,7 @@ TCP-probe used for healthcheck).</td>
 <tr>
 <td>HRD-085</td>
 <td>task</td>
-<td>open</td>
+<td>in_progress</td>
 <td>middle</td>
 <td>Implement single-task admin operations on
 <code>commons_infra.pgxTaskRepository</code> — <code>GetByID</code>,
@@ -1070,7 +1094,7 @@ interface; these three rows finish the single-task surface).</td>
 <tr>
 <td>HRD-086</td>
 <td>task</td>
-<td>open</td>
+<td>in_progress</td>
 <td>middle</td>
 <td>Implement worker-side running-task state mutations on
 <code>commons_infra.pgxTaskRepository</code> —
@@ -1094,7 +1118,7 @@ reporting).</td>
 <tr>
 <td>HRD-087</td>
 <td>task</td>
-<td>open</td>
+<td>in_progress</td>
 <td>low</td>
 <td>Implement admin / stats / audit reads on
 <code>commons_infra.pgxTaskRepository</code> — <code>GetByStatus</code>,
@@ -1117,7 +1141,7 @@ extend
 <tr>
 <td>HRD-088</td>
 <td>task</td>
-<td>open</td>
+<td>in_progress</td>
 <td>middle</td>
 <td>Implement queue-recovery reads on
 <code>commons_infra.pgxTaskRepository</code> —
@@ -1138,7 +1162,7 @@ without operator intervention).</td>
 <tr>
 <td>HRD-089</td>
 <td>task</td>
-<td>open</td>
+<td>in_progress</td>
 <td>low</td>
 <td>Implement resource-monitor I/O on
 <code>commons_infra.pgxTaskRepository</code> —

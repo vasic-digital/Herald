@@ -1,0 +1,8 @@
+### go build ./commons_infra/... ./commons_storage/...
+build exit=0
+
+### go vet ./commons_infra/...
+vet exit=0
+
+### go vet -tags=integration ./commons_infra/...  (integration test compile-check; PG-PENDING)
+vet-integration exit=0

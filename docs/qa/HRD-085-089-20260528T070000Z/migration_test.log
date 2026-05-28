@@ -1,0 +1,4 @@
+=== RUN   TestMigrationsBundle
+--- PASS: TestMigrationsBundle (0.00s)
+PASS
+ok  	github.com/vasic-digital/herald/commons_storage	1.317s

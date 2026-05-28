@@ -1,0 +1,58 @@
+=== RUN   TestGetByID_NotFound_ReturnsNilNil
+--- PASS: TestGetByID_NotFound_ReturnsNilNil (0.00s)
+=== RUN   TestUpdate_NilTask_Errors
+--- PASS: TestUpdate_NilTask_Errors (0.00s)
+=== RUN   TestUpdate_SendsAllColumns_ForcesUpdatedAtNow
+--- PASS: TestUpdate_SendsAllColumns_ForcesUpdatedAtNow (0.00s)
+=== RUN   TestUpdate_NoRowsAffected_Errors
+--- PASS: TestUpdate_NoRowsAffected_Errors (0.00s)
+=== RUN   TestDelete_IsSoftDelete
+--- PASS: TestDelete_IsSoftDelete (0.00s)
+=== RUN   TestDelete_NoRowsAffected_Errors
+--- PASS: TestDelete_NoRowsAffected_Errors (0.00s)
+=== RUN   TestUpdateStatus_RejectsUnknownStatus
+--- PASS: TestUpdateStatus_RejectsUnknownStatus (0.00s)
+=== RUN   TestUpdateStatus_TerminalStampsCompletedAt
+--- PASS: TestUpdateStatus_TerminalStampsCompletedAt (0.00s)
+=== RUN   TestUpdateProgress_ClampsRange
+--- PASS: TestUpdateProgress_ClampsRange (0.00s)
+=== RUN   TestUpdateHeartbeat_SetsHeartbeatNow
+--- PASS: TestUpdateHeartbeat_SetsHeartbeatNow (0.00s)
+=== RUN   TestSaveCheckpoint_EmptyPassesNull
+--- PASS: TestSaveCheckpoint_EmptyPassesNull (0.00s)
+=== RUN   TestGetByStatus_RejectsBadInput
+--- PASS: TestGetByStatus_RejectsBadInput (0.00s)
+=== RUN   TestGetByStatus_PaginatesNewestFirst
+--- PASS: TestGetByStatus_PaginatesNewestFirst (0.00s)
+=== RUN   TestGetPendingTasks_UsesDequeueOrdering
+--- PASS: TestGetPendingTasks_UsesDequeueOrdering (0.00s)
+=== RUN   TestGetPendingTasks_RejectsBadLimit
+--- PASS: TestGetPendingTasks_RejectsBadLimit (0.00s)
+=== RUN   TestCountByStatus_GroupsByStatus
+--- PASS: TestCountByStatus_GroupsByStatus (0.00s)
+=== RUN   TestGetTaskHistory_RejectsBadLimit
+--- PASS: TestGetTaskHistory_RejectsBadLimit (0.00s)
+=== RUN   TestGetTaskHistory_ReadsEventsTableNewestFirst
+--- PASS: TestGetTaskHistory_ReadsEventsTableNewestFirst (0.00s)
+=== RUN   TestGetStaleTasks_RejectsNonPositiveThreshold
+--- PASS: TestGetStaleTasks_RejectsNonPositiveThreshold (0.00s)
+=== RUN   TestGetStaleTasks_FiltersActiveAndStaleHeartbeat
+--- PASS: TestGetStaleTasks_FiltersActiveAndStaleHeartbeat (0.00s)
+=== RUN   TestGetByWorkerID_RejectsEmptyWorker
+--- PASS: TestGetByWorkerID_RejectsEmptyWorker (0.00s)
+=== RUN   TestGetByWorkerID_FiltersByWorker
+--- PASS: TestGetByWorkerID_FiltersByWorker (0.00s)
+=== RUN   TestSaveResourceSnapshot_NilAndMissingTaskID
+--- PASS: TestSaveResourceSnapshot_NilAndMissingTaskID (0.00s)
+=== RUN   TestSaveResourceSnapshot_AutoFillsIDAndSampledAt
+--- PASS: TestSaveResourceSnapshot_AutoFillsIDAndSampledAt (0.00s)
+=== RUN   TestGetResourceSnapshots_RejectsBadLimit
+--- PASS: TestGetResourceSnapshots_RejectsBadLimit (0.00s)
+=== RUN   TestGetResourceSnapshots_ReverseChronological
+--- PASS: TestGetResourceSnapshots_ReverseChronological (0.00s)
+=== RUN   TestMoveToDeadLetter_StillUnsupported
+--- PASS: TestMoveToDeadLetter_StillUnsupported (0.00s)
+=== RUN   TestValidTaskStatus
+--- PASS: TestValidTaskStatus (0.00s)
+PASS
+ok  	github.com/vasic-digital/herald/commons_infra	1.373s

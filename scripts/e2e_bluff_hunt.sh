@@ -2312,6 +2312,25 @@ check "E122 §11.4.45 scherald status-digest — healthy-status ALLOW + missing-
     "go test -race -count=1 -run 'TestStatusDigest_HealthyStatus_Allows|TestStatusDigest_MissingStatus_Blocks' ./scherald/cmd/scherald/..."
 sc_anchor "E122" "${SC_SCHED_DIGEST_DIR:+${SC_SCHED_DIGEST_DIR}/transcript.txt}" "HRD-047-STATUS-DIGEST-E2E-EVIDENCE"
 
+# ---- E123: Batch D pgxTaskRepository real-PG integration (HRD-085..089) ----
+# The 14 TaskRepository round-trips persist + read back against REAL Postgres.
+# The suite SELF-BOOTS its own PG via QuickstartBoot (+ applies migration 000013
+# + assumes a pristine DB for its count assertions), which COLLIDES with this
+# e2e's shared :24100 PG lifecycle (the e2e's own M2/serve blocks boot + populate
+# 24100 first). So — exactly like E34 (HERALD_TGRAM_LIVE_INBOUND) and E70
+# (HERALD_W6_LIVE_LOOP) — the live re-run is gated behind HERALD_BATCHD_LIVE=1
+# against a DEDICATED clean PG; by default it SKIPs and the sc_anchor below
+# asserts the COMMITTED real-PG transcript (14 PASS / 0 FAIL) as the standing
+# §107 evidence. Run: `podman volume rm herald-e2e_herald-pg; HERALD_BATCHD_LIVE=1
+# DOCKER_HOST=… go test -tags=integration -run TestRepo ./commons_infra/...`.
+if [ "${HERALD_BATCHD_LIVE:-}" = "1" ] && nc -z 127.0.0.1 24100 2>/dev/null; then
+    check "E123 pgxTaskRepository (HRD-085..089) — 14 real-PG round-trips persist+readback (dedicated clean PG :24100)" \
+        "go test -tags=integration -count=1 -run 'TestRepo' ./commons_infra/... -timeout=480s"
+else
+    echo "SKIP  E123 (set HERALD_BATCHD_LIVE=1 + a DEDICATED clean PG :24100 to exercise — the self-booting suite collides with this e2e's shared PG; §11.4.3 explicit SKIP-with-reason; committed real-PG evidence: docs/qa/HRD-085-089-20260528T070000Z/integration_realpg.log = 14 PASS / 0 FAIL)"
+fi
+sc_anchor "E123" "docs/qa/HRD-085-089-20260528T070000Z/integration_realpg.log" "QA-ANCHOR: HRD-085-089-BATCHD-REALPG-INTEGRATION-20260528"
+
 # ----------------------------------------------------------------------
 echo ""
 echo "===================================================="

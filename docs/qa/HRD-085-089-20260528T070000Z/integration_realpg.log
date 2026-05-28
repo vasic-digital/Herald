@@ -1,0 +1,34 @@
+QA-ANCHOR: HRD-085-089-BATCHD-REALPG-INTEGRATION-20260528
+# Real-PG integration evidence — pgxTaskRepository (HRD-085..089) against herald-postgres:24100 (fresh herald_dev volume)
+# go test -tags=integration -v -run TestRepo ./commons_infra/...  (DOCKER_HOST=podman; QuickstartBoot self-boots PG + applies migration 000013)
+
+=== RUN   TestRepoGetByID_RoundTrip
+--- PASS: TestRepoGetByID_RoundTrip (2.14s)
+=== RUN   TestRepoUpdate_RoundTrip
+--- PASS: TestRepoUpdate_RoundTrip (1.61s)
+=== RUN   TestRepoDelete_SoftDelete_RoundTrip
+--- PASS: TestRepoDelete_SoftDelete_RoundTrip (2.14s)
+=== RUN   TestRepoUpdateStatus_RoundTrip
+--- PASS: TestRepoUpdateStatus_RoundTrip (1.64s)
+=== RUN   TestRepoUpdateProgress_RoundTrip
+--- PASS: TestRepoUpdateProgress_RoundTrip (2.18s)
+=== RUN   TestRepoUpdateHeartbeat_RoundTrip
+--- PASS: TestRepoUpdateHeartbeat_RoundTrip (2.25s)
+=== RUN   TestRepoSaveCheckpoint_RoundTrip
+--- PASS: TestRepoSaveCheckpoint_RoundTrip (1.63s)
+=== RUN   TestRepoGetByStatus_RoundTrip
+--- PASS: TestRepoGetByStatus_RoundTrip (1.50s)
+=== RUN   TestRepoGetPendingTasks_RoundTrip
+--- PASS: TestRepoGetPendingTasks_RoundTrip (2.03s)
+=== RUN   TestRepoCountByStatus_RoundTrip
+--- PASS: TestRepoCountByStatus_RoundTrip (2.09s)
+=== RUN   TestRepoGetTaskHistory_RoundTrip
+--- PASS: TestRepoGetTaskHistory_RoundTrip (1.68s)
+=== RUN   TestRepoGetStaleTasks_RoundTrip
+--- PASS: TestRepoGetStaleTasks_RoundTrip (2.11s)
+=== RUN   TestRepoGetByWorkerID_RoundTrip
+--- PASS: TestRepoGetByWorkerID_RoundTrip (2.17s)
+=== RUN   TestRepoResourceSnapshots_RoundTrip
+--- PASS: TestRepoResourceSnapshots_RoundTrip (2.39s)
+PASS
+ok  	github.com/vasic-digital/herald/commons_infra	28.126s
