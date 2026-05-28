@@ -47,7 +47,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>15</td>
+<td>17</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -55,7 +55,7 @@
 </tr>
 <tr>
 <td>Last modified</td>
-<td>2026-05-27</td>
+<td>2026-05-29</td>
 </tr>
 <tr>
 <td>Status</td>
@@ -63,10 +63,53 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>r15 atomically migrates (§11.4.19) the completed GAP-3
-§11.4.85 stress+chaos suite — HRD-122..HRD-130 (Task→Completed) — and
-the HRD-132 Runner idempotency-window fix (Bug→Fixed): 10 rows
-Issues→Fixed.</strong> GAP-3 commits
+<td><strong>r17 atomically lands (§11.4.19) the completed Wave 8 Track B
+(MTProto user-account harness for §11.4.98 full-automation testing) —
+HRD-139 (MTProto Client live wiring + qaherald mtproto CLI), HRD-140
+(Subscribe roundtrip), HRD-141 (Wave 6 closed loop), HRD-142 (Wave 6.5
+lifecycle) all New→Fixed (these HRDs were tracked directly in the
+TaskList rather than Issues.md and graduate directly into Fixed.md per
+§11.4.19 the moment closure landed).</strong> Wave 8 Track B closure
+proves §11.4.98 (full-automation anti-bluff mandate) end-to-end: 3
+MTProto-driven live tests (E135 Subscribe / E136 Wave 6 closed loop /
+E137 Wave 6.5 lifecycle) all PASSING LIVE under §11.4.98-pure
+interpretation, captured under
+<code>docs/qa/HRD-LIVE-MTPROTO-20260528T125321Z/</code>. Three legacy
+NON-COMPLIANT tests graduate to §11.4.90 Obsolete in Issues.md r36 with
+Obsolete-Details cite of §11.4.98 + §108.m superseding-mandate:
+<code>TestSubscribe_LiveBotAPI</code>,
+<code>tests/test_wave6_live_loop.sh</code>, lifecycle
+<code>--manual</code> mode. v0.6.0 tag (<code>844f340</code> annotated)
+was already cut on <code>d843ddf</code> covering Wave 8 Track B closure
++ the §11.4.98+§11.4.99 anchoring + 9-Helix-submodule §11.4.98+§11.4.99
+propagation. Prior r16 atomically migrates (§11.4.19) the completed
+Tgram-completeness wave — HRD-133/134/135/136/137/138 (all 6
+Tgram-completeness HRDs) Issues→Fixed.** Wave A: HRD-135 lifecycle
+handlers (<code>fe2a7c8</code> — OnEdited / OnMyChatMember /
+serviceHandler / ErrBotKicked sentinel) + HRD-136 webhook secret_token
+validator (<code>6d7d543</code> —
+<code>crypto/subtle.ConstantTimeCompare</code>, 401-no-leak posture) +
+HRD-138 operator deep-dive guide (<code>ff9b9c0</code> — 810-line
+<code>docs/guides/TELEGRAM.md</code>, 11 §-sections, 3 siblings). Wave
+B: HRD-133 token-redaction symmetry (<code>8162d14</code> —
+<code>sanitizeTgramError</code> wraps 6 error-return sites in
+Send/SendReply) + HRD-134 429 retry_after honored (<code>8162d14</code>
+combined — <code>withRetry429</code> wraps all 3 telebot
+<code>bot.Send</code> sites, telebot.FloodError typed extraction,
+ctx-aware sleep, 3-attempt 60s-clamp). Wave C: HRD-137 stress+chaos
+suite (this commit — <code>TestTgram_Stress_MultiRecipientFanOut</code>
+20×20=400 calls/20 chats deterministic +
+<code>TestTgram_Chaos_GetUpdatesPollerResilience</code> SKIP→PASS
+conversion via one-line <code>subscribe.go</code> baseURL seam fix;
+8-phase fault matrix deterministic across <code>-race -count=3</code> —
+every iteration IDENTICAL
+<code>recovery=6 fault(500=12 hang=8 close=3 ok=6) goroutines 3→4</code>).
+Full tgram suite <strong>26/26 PASS, 0 SKIP</strong> post-Wave-C. All 6
+HRDs carry <code>docs/qa/HRD-NNN-20260528T*Z/transcript.txt</code>
+evidence per §107.x. Prior r15 atomically migrated (§11.4.19) the
+completed GAP-3 §11.4.85 stress+chaos suite — HRD-122..HRD-130
+(Task→Completed) — and the HRD-132 Runner idempotency-window fix
+(Bug→Fixed): 10 rows Issues→Fixed.** GAP-3 commits
 <code>02d272d</code>→<code>d2a60d3</code> (HRD-122
 <code>commons/stresschaos/</code> scaffold, HRD-123 Gin
 <code>/v1/events</code>, HRD-124
@@ -118,38 +161,45 @@ closed HRD-016 (Wave 3b pherald Runner live). r10 closed HRD-011
 </tr>
 <tr>
 <td>Issues</td>
-<td>see <code>Issues.md</code> — r16 (Issues.md) captures the
-HRD-122..HRD-130 + HRD-132 Issues→Fixed atomic migration recorded in
-this r15.</td>
+<td>see <code>Issues.md</code> — r35 (Issues.md) captures the
+HRD-133/134/135/136/137/138 Issues→Fixed atomic migration recorded in
+this r16; prior r16 (Issues.md) captured the HRD-122..HRD-130 + HRD-132
+Issues→Fixed atomic migration recorded in the prior r15.</td>
 </tr>
 <tr>
 <td>Issues summary</td>
-<td>HRD-008/-015/-018 (in_progress) + HRD-019..HRD-027 +
-HRD-029..HRD-056 + HRD-081 + HRD-085..HRD-090 + HRD-131 still open (40
+<td>HRD-008/-015 + HRD-019..HRD-025 + HRD-029..HRD-056 + HRD-081 +
+HRD-085..HRD-090 + HRD-115..HRD-121 + HRD-131 still open (31
 items).</td>
 </tr>
 <tr>
 <td>Fixed</td>
 <td>HRD-001..HRD-007, HRD-009, HRD-009b, HRD-010, HRD-011, HRD-012,
-HRD-013, HRD-014, HRD-016, HRD-017, HRD-028, HRD-080, HRD-092, HRD-093,
-HRD-094, HRD-095, HRD-096, HRD-097, HRD-098, HRD-099, HRD-100, HRD-110,
-HRD-111, HRD-112, HRD-113, HRD-114, HRD-122, HRD-123, HRD-124, HRD-125,
-HRD-126, HRD-127, HRD-128, HRD-129, HRD-130, HRD-132 (and HRD-018
-partial — M1 + M2 components landed)</td>
+HRD-013, HRD-014, HRD-016, HRD-017, HRD-018, HRD-026, HRD-027, HRD-028,
+HRD-080, HRD-092, HRD-093, HRD-094, HRD-095, HRD-096, HRD-097, HRD-098,
+HRD-099, HRD-100, HRD-110, HRD-111, HRD-112, HRD-113, HRD-114, HRD-122,
+HRD-123, HRD-124, HRD-125, HRD-126, HRD-127, HRD-128, HRD-129, HRD-130,
+HRD-132, HRD-133, HRD-134, HRD-135, HRD-136, HRD-137, HRD-138, HRD-139,
+HRD-140, HRD-141, HRD-142</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
-<td>GAP-3 §11.4.85 stress+chaos suite (HRD-122..HRD-130 Completed) +
-HRD-132 Runner idempotency-window fix (claim-before-dispatch,
-exactly-once dispatch <code>sends==1</code>); spec V1→V3 r9; Go module
-foundation + Foundation M1/M2/M3; HRD-010 commons_storage live wiring;
-HRD-011 Telegram live (live <code>message_id=5</code> evidence
-2026-05-22); HRD-012 Claude Code dispatcher live; HRD-016 pherald
-<code>/v1/events</code> Runner wiring (Wave 3b live — 7-stage pipeline +
-e2e E37-E42); universal §11.4.73 + §11.4.74 mandates propagated; I6 gate
-refined; Wave 2 flavor scaffolds (HRD-092..097) closed atomically; Wave
-3a substrate (HRD-099 commons_auth JWT verifier) + 2 live REST routes
-(HRD-028, HRD-098) closed atomically.</td>
+<td>Wave 8 Track B (HRD-139/140/141/142 — MTProto user-account harness
+proves §11.4.98 full-automation end-to-end with 3 live MTProto-driven
+tests PASSING LIVE 2026-05-28; v0.6.0 tag covers the closure);
+Tgram-completeness wave (HRD-133/134/135/136/137/138 — 6 HRDs across 3
+sub-waves A/B/C, full tgram suite 26/26 PASS 0 SKIP); GAP-3 §11.4.85
+stress+chaos suite (HRD-122..HRD-130 Completed) + HRD-132 Runner
+idempotency-window fix (claim-before-dispatch, exactly-once dispatch
+<code>sends==1</code>); spec V1→V3 r9; Go module foundation + Foundation
+M1/M2/M3; HRD-010 commons_storage live wiring; HRD-011 Telegram live
+(live <code>message_id=5</code> evidence 2026-05-22); HRD-012 Claude
+Code dispatcher live; HRD-016 pherald <code>/v1/events</code> Runner
+wiring (Wave 3b live — 7-stage pipeline + e2e E37-E42); universal
+§11.4.73 + §11.4.74 mandates propagated; I6 gate refined; Wave 2 flavor
+scaffolds (HRD-092..097) closed atomically; Wave 3a substrate (HRD-099
+commons_auth JWT verifier) + 2 live REST routes (HRD-028, HRD-098)
+closed atomically.</td>
 </tr>
 <tr>
 <td>Continuation</td>
@@ -175,6 +225,364 @@ refined; Wave 2 flavor scaffolds (HRD-092..097) closed atomically; Wave
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>HRD-133</td>
+<td>task</td>
+<td>high</td>
+<td>Tgram-completeness Wave B — token-redaction symmetry
+(<code>commons_messaging/channels/tgram/errors.go</code> + send.go
+wraps). <code>sanitizeTgramError(msg, token) string</code> strips the
+bot token from every Send/SendReply error message + log line so it can
+NEVER appear in observable output — 6 error-return sites wrapped
+(ensureBot/ParseInt/withRetry429 paths in both Send + SendReply).
+<code>TestTgram_Send_ErrorDoesNotLeakToken</code> plants
+<code>123456:supersecret-must-not-leak-9999</code>, drives an httptest
+401 path, asserts the token substring is absent from the returned
+<code>err.Error()</code> (mirrors slack's
+<code>TestSlack_Send_ErrorDoesNotLeakToken</code>). Unit-level
+<code>TestTgram_SanitizeTgramError_Unit</code> (4 subtests) pins the
+helper. Tradeoff captured in the source: <code>%w</code> error-wrap
+replaced with <code>%s + sanitizeTgramError(err.Error(), token)</code>
+since <code>strings.ReplaceAll</code> operates on the string form — the
+error chain is sacrificed to guarantee the secret never leaks. Composes
+with HRD-134 (the 429 retry's log line + final error are themselves
+sanitized so 429 logging never leaks the token).</td>
+<td>2026-05-28</td>
+<td><code>8162d14</code> (combined with HRD-134)</td>
+<td>spec V3 §107 anti-bluff; operator no-sensitive-data-leak mandate;
+Universal §11.4.10 (credential-leak rule); evidence
+<code>docs/qa/HRD-133-20260528T140000Z/transcript.txt</code> (anchor
+<code>QA-ANCHOR: HRD-133-TGRAM-TOKEN-REDACTION-20260528</code>);
+Catalogue-Check: mirror slack adapter's <code>sanitizeError</code> (Wave
+7 T7); files <code>commons_messaging/channels/tgram/errors.go</code>,
+<code>send.go</code></td>
+</tr>
+<tr>
+<td>HRD-134</td>
+<td>task</td>
+<td>high</td>
+<td>Tgram-completeness Wave B — Bot API rate-limit 429 +
+<code>retry_after</code> honored
+(<code>commons_messaging/channels/tgram/send.go</code> +
+<code>tgram.go</code> <code>sleeper</code> field +
+<code>errors.go::extractRetryAfter</code>).
+<code>withRetry429(ctx, fn) error</code> wraps all 3 telebot
+<code>bot.Send</code> call sites (Send text body + SendReply text +
+SendReply per-attachment fan-out). On <code>429 + retry_after=N</code> →
+sleep N seconds (<code>ctx.Done()</code>-aware), retry up to <strong>3
+attempts</strong> total, clamp per-retry wait to <strong>60s</strong>
+(defense-in-depth against Bot API spec violations).
+<code>retry_after</code> extracted via
+<code>errors.As(err, &amp;telebot.FloodError{}).RetryAfter</code>
+(telebot's typed error — NOT body-parse). Logged retry line goes through
+<code>sanitizeTgramError</code> so the token stays out of logs (composes
+with HRD-133). Injectable <code>sleeper</code> field on
+<code>Adapter</code> for hermetic tests (real-time + fake-clock both
+supported via <code>SetSleeperForTest</code>). 4 hermetic httptest tests
+(HonorsRetryAfter / GivesUpAfter3Attempts / RespectsCtxCancel /
+ClampsRetryAfter_60s) + 1 unit test (ExtractRetryAfter_Unit) — 5 total,
+all <code>-race -count=1</code> green.</td>
+<td>2026-05-28</td>
+<td><code>8162d14</code> (combined with HRD-133)</td>
+<td>spec V3 §17 (rate-limit-aware capability); operator
+tgram-completeness Section-2 mandate (2026-05-28); evidence
+<code>docs/qa/HRD-134-20260528T140000Z/transcript.txt</code> (anchor
+<code>QA-ANCHOR: HRD-134-TGRAM-RATE-LIMIT-429-20260528</code>);
+Catalogue-Check: extend <code>gopkg.in/telebot.v3 FloodError</code>
+typed-error model (NO body-parse fallback needed — telebot already
+exposes the field); files
+<code>commons_messaging/channels/tgram/send.go</code>,
+<code>tgram.go</code>, <code>errors.go</code></td>
+</tr>
+<tr>
+<td>HRD-135</td>
+<td>task</td>
+<td>middle</td>
+<td>Tgram-completeness Wave A — edited-message + bot-kicked typed-error
++ service-message ignore-and-log handlers
+(<code>commons_messaging/channels/tgram/subscribe.go</code>).
+<code>bot.Handle(telebot.OnEdited, …)</code> builds the same
+<code>InboundEvent</code> shape <code>OnText</code> does +
+<code>Raw["edited"]=true</code>;
+<code>bot.Handle(telebot.OnMyChatMember, …)</code> →
+<code>botKickedFromUpdate</code> detects status transitions to
+kicked/left/restricted <strong>for this bot specifically</strong>
+(Alice-left + promotion-to-Admin false-positive guarded) and emits a
+grep-able
+<code>log.Printf "tgram: bot kicked from chat: chat_id=… new_status=… ErrBotKicked"</code>;
+<code>serviceHandler</code> registered against 15 telebot service
+<code>On…</code>-endpoints (UsersJoined / UserLeft / NewGroupTitle /
+etc.) emits NOTHING to InboundHandler + logs
+<code>tgram: ignored service message kind=… chat_id=…</code>. Sentinel
+<code>var ErrBotKicked = errors.New("tgram: bot kicked from chat")</code>
+package-level (callable via <code>errors.Is</code>). The OnMyChatMember
+closure returns nil deliberately so telebot's poller keeps running for
+OTHER chats. 17/17 PASS <code>-race -count=1</code> (3 new in
+<code>subscribe_lifecycle_test.go</code> + 14 existing, zero
+regression).</td>
+<td>2026-05-28</td>
+<td><code>fe2a7c8</code></td>
+<td>spec V3 §11.1; operator tgram-completeness Section-2 mandate
+(2026-05-28); evidence
+<code>docs/qa/HRD-135-20260528T130000Z/transcript.txt</code> (anchor
+<code>QA-ANCHOR: HRD-135-TGRAM-LIFECYCLE-HANDLERS-20260528</code>);
+Catalogue-Check: extend telebot.v3's <code>tele.OnEdited</code> /
+<code>tele.OnMyChatMember</code> / <code>tele.OnAddedToGroup</code>
+endpoints; files
+<code>commons_messaging/channels/tgram/subscribe.go</code>,
+<code>subscribe_lifecycle_test.go</code></td>
+</tr>
+<tr>
+<td>HRD-136</td>
+<td>task</td>
+<td>low</td>
+<td>Tgram-completeness Wave A — Bot API webhook
+<code>secret_token</code> validation skeleton
+(<code>commons_messaging/channels/tgram/webhook.go</code>).
+<code>WebhookHandler</code> http.Handler validates
+<code>X-Telegram-Bot-Api-Secret-Token</code> via
+<code>crypto/subtle.ConstantTimeCompare</code> (timing-attack-safe);
+refuses empty secret at construction time
+(<code>NewWebhookHandler("",…)</code> errors loud — §107 footgun guard);
+returns 401 with empty body on header mismatch / missing header (no
+token-existence-oracle leakage to probes); 400 on malformed JSON body;
+405 on wrong method (POST-only); 500 (no body) on InboundHandler error.
+Forwards a decoded <code>tele.Update</code> as the SAME
+<code>InboundEvent</code> shape
+<code>OnText</code>/<code>OnEdited</code> produce — unified downstream
+contract. <strong>Skeleton-only:</strong> wiring into
+<code>pherald listen --webhook</code> + the
+<code>setWebhook(secret_token=…)</code> registration + the
+public-endpoint TLS listener are deferred to V1.x; the
+cryptographic-validation layer is here + tested so the future flip is a
+one-flag affair. 7/7 hermetic httptest tests <code>-race -count=1</code>
+PASS: ValidSecret_Dispatches, InvalidSecret_Returns401_NoTokenLeak,
+MissingSecret_Returns401, GET_Returns405, MalformedJSON_Returns400,
+EmptySecretAtConstruction_ErrorsLoud, ConstantTimeCompare.</td>
+<td>2026-05-28</td>
+<td><code>6d7d543</code></td>
+<td>spec V3 §11.1 (webhook alternative to getUpdates); operator
+tgram-completeness Section-2 mandate; evidence
+<code>docs/qa/HRD-136-20260528T130000Z/transcript.txt</code> (anchor
+<code>QA-ANCHOR: HRD-136-TGRAM-WEBHOOK-VALIDATOR-20260528</code>);
+Catalogue-Check: reuse <code>crypto/subtle</code> + telebot.v3's
+<code>tele.Update</code>; files
+<code>commons_messaging/channels/tgram/webhook.go</code>,
+<code>webhook_test.go</code></td>
+</tr>
+<tr>
+<td>HRD-137</td>
+<td>task</td>
+<td>high</td>
+<td>Tgram-completeness Wave C — §11.4.85 stress + chaos suite
+(<code>commons_messaging/channels/tgram/stress_chaos_test.go</code>).
+<code>TestTgram_Stress_MultiRecipientFanOut</code> drives the REAL
+<code>Adapter.SendReply</code> via <code>NewAdapterWithBaseURL</code>
+httptest seam under 20 workers × 20 iterations = 400 total calls against
+20 UNIQUE chat_ids on the SAME <code>*tgram.Adapter</code>; asserts
+no-loss (every chat_id received exactly 20 hits), no-double (global hit
+counter == 400), no-confusion (uniform per-chat distribution, no
+cross-wire), -race-clean, throughput ≥100 ev/s (observed 5215-6422 ev/s,
+p99=9.73-15.20ms).
+<code>TestTgram_Chaos_GetUpdatesPollerResilience</code> converted from
+<code>t.Skipf</code> SKIP-with-reason to a real httptest-driven
+fault-injector PASS via a ONE-LINE <code>subscribe.go</code> seam fix:
+threads <code>a.baseURL</code> into <code>telebot.Settings.URL</code>
+before <code>NewBot</code> (parallel to the <code>ensureBot</code>
+pattern at <code>tgram.go:60-67</code>; production path unchanged when
+<code>a.baseURL == ""</code>). 8-phase fault matrix (3× 500 + 2× 1.5s
+hangs honoring ctx-cancel + 1× mid-body Hijacker connection-close + 2×
+success), bot-username-aware self-filter bypass (success messages come
+<code>from @someuser</code>, not <code>chaostestbot</code>).
+Deterministic across <code>-race -count=3</code> per §11.4.50 — all 3
+iterations IDENTICAL:
+<code>recovery_event_count=6 fault_modes(500=12 hang=8 close=3 ok=6) subscribe_err=context deadline exceeded goroutines 3→4 (leaked=1) duration=12.07s</code>.
+Full tgram suite <strong>26/26 PASS, 0 SKIP</strong> post-fix (was 24/24
+with chaos SKIPped). §11.4.92 5-pass: P1 captured-evidence per-iteration
+table; P2 blast-radius — <code>subscribe.go</code> baseURL seam is
+read-only when unused (production unaffected); P3 cross-feature — the
+seam mirrors existing <code>ensureBot</code> pattern, no novel state; P4
+deep-research — telebot.v3 <code>LongPoller</code> retry behavior under
+fault (poller logs + continues, no internal retry); P5 anti-bluff —
+handlerHits, fault-counter atomics, ctx-aware subscribe return, no
+goroutine leak (delta=1) all positive captured invariants from REAL
+Subscribe poller, not synthetic.</td>
+<td>2026-05-28</td>
+<td>pending — closes in same Wave C commit</td>
+<td>Universal §11.4.85 (stress + chaos test mandate, inherited per
+§11.4.35) + §11.4.50 (deterministic-under-race); spec V3 §11.1 + §11.4;
+operator tgram-completeness Section-2 mandate (2026-05-28); Herald §107
+/ §107.x evidence anchor; evidence
+<code>docs/qa/HRD-137-20260528T150000Z/stress_chaos/transcript.txt</code>
+(anchor <code>QA-ANCHOR: HRD-137-TGRAM-STRESS-CHAOS-20260528</code>) +
+<code>stress_chaos/fanout/{assertion.txt,latency.json,latency_histogram.csv}</code>
++ <code>stress_chaos/poller_chaos/chaos_assertion.txt</code>;
+Catalogue-Check: extend HRD-126 burst-subscriber pattern +
+commons/stresschaos primitives; files
+<code>commons_messaging/channels/tgram/stress_chaos_test.go</code>,
+<code>subscribe.go</code> (baseURL seam)</td>
+</tr>
+<tr>
+<td>HRD-138</td>
+<td>task</td>
+<td>low</td>
+<td>Tgram-completeness Wave A — <code>docs/guides/TELEGRAM.md</code>
+per-module operator deep-dive guide (810 lines, 11 §-sections, 58
+subsections, 3 siblings .html/.pdf/.docx). §1 architecture overview
+(inbound <code>getUpdates</code> + outbound
+<code>Send</code>/<code>SendReplyGeneric</code>); §2 BotFather
+walkthrough (<code>/newbot</code> → token → <code>/setprivacy</code>);
+§3 required env table + how to obtain <code>HERALD_TGRAM_CHAT_ID</code>
+(3 methods: getUpdates curl / @userinfobot / @RawDataBot); §4 pre-deploy
+smoke-test commands; §5 attachment size limits (4096 text, 10/50/2GB
+photo tiers, 50MB document Bot-API-cap workaround = local Bot API
+server) + the content-addressed inbox path; §6 chat-type matrix
+(private/group/supergroup/channel id formats + required bot permissions
+per type); §7 reply threading via <code>reply_to_message_id</code> + the
+attachment fan-out rationale (Wave 6.5 mutation gate M3); §8 self-filter
+contract (cross-the-wire <code>getMe</code> + cache + the echo-loop
+hazard if skipped — Wave 6 T12 M1); §9 12-entry troubleshooting cookbook
+(401/400/429/413/403/echo-loop/long-poll-stuck/409/privacy/webhook/zero-byte/wrong-inbox);
+§10 6-subsection pre-deploy operator audit (tick-box checklist mirroring
+<code>OPERATOR_CREDENTIALS.md</code> style); §11 references (spec V3
+§11.1/§32.2/§32.9/§43 + 13 HRDs + source paths). Cross-linked from
+existing <code>docs/guides/messengers/TELEGRAM.md</code> (HRD-011 setup,
+preserved untouched).</td>
+<td>2026-05-28</td>
+<td><code>ff9b9c0</code></td>
+<td>operator tgram-completeness Section-2 mandate (2026-05-28); operator
+memory <code>feedback_nano_detail_docs</code> (per-module nano-detail
+operator guides under <code>docs/guides/</code>); evidence
+<code>docs/qa/HRD-138-20260528T130000Z/transcript.txt</code> (anchor
+<code>QA-ANCHOR: HRD-138-TGRAM-OPERATOR-GUIDE-20260528</code>);
+Catalogue-Check: n/a (operator doc); files
+<code>docs/guides/TELEGRAM.md</code> + sibling .html/.pdf/.docx</td>
+</tr>
+<tr>
+<td>HRD-139</td>
+<td>task</td>
+<td>high</td>
+<td>Wave 8 Track B — <code>qaherald/internal/mtproto/</code> MTProto
+user-account Client live wiring (gotd/td v0.144.0 vendored as
+<code>submodules/gotd-td</code> per §11.4.74 catalogue-first). Client
+interface (<code>Connect</code> / <code>SendMessage</code> /
+<code>WaitForReply</code> / <code>WhoAmI</code> / <code>Close</code>)
+backed by gotd/td's <code>telegram.Client</code> with session-storage at
+<code>~/.config/herald/mtproto.session</code> (mode 0600, encrypted
+MTProto session blob). <code>qaherald mtproto login/whoami/logout</code>
+Cobra subcommands drive the AuthFlow: app_id + app_hash +
+phone-from-env, 2FA password from env, OOB-code via stdin (TTY by
+default; <code>HERALD_MTPROTO_ALLOW_NON_TTY=1</code> env override
+enables delegated-by-conductor FIFO-piped flow for §11.4.98-compliant
+headless login). Conductor-driven end-to-end: operator's single
+contribution = one-time paste of 5-digit Telegram OOB code at first-run
+login (Telegram fundamentally requires this; session persists thereafter
+for unlimited reruns). HRD-133 sanitizer verified leak-free across all
+evidence (token-shape regex + 32-hex api_hash regex; pherald.pid runtime
+artifact removed; .gitignore hardened).</td>
+<td>2026-05-28</td>
+<td><code>238448e</code> (live wiring) + <code>ec4c3c0</code>
+(HERALD_MTPROTO_ALLOW_NON_TTY override)</td>
+<td>spec V3 §11.1 + §107.x; Universal §11.4.98 full-automation testing
+(inherited per §11.4.35); operator §11.4.98 mandate (2026-05-28 verbatim
+"Make sure we have full automation testing of all scenarios with real
+bot, main group and users without any manual intervention"); evidence
+<code>docs/qa/HRD-LIVE-MTPROTO-20260528T125321Z/README.md</code>
+(operator-facing summary) + Wave 8 Track B closure documented in
+CONTINUATION r20; Catalogue-Check: gotd/td v0.144.0 vendored at
+<code>submodules/gotd-td</code> (§11.4.74 — Telegram MTProto-2.0
+protocol library, no Herald reimplementation); files
+<code>qaherald/internal/mtproto/mtproto.go</code>,
+<code>qaherald/cmd/qaherald/mtproto_cmd.go</code>,
+<code>submodules/gotd-td</code></td>
+</tr>
+<tr>
+<td>HRD-140</td>
+<td>task</td>
+<td>high</td>
+<td>Wave 8 Track B Test 1 —
+<code>TestMTProto_Subscribe_AutonomousRoundTrip</code>
+(<code>qaherald/internal/lifecycle/mtproto_subscribe_test.go</code>,
+build-tag <code>integration_mtproto</code>). §11.4.98 replacement for
+the legacy <code>TestSubscribe_LiveBotAPI</code> Bot-API-only path which
+is fundamentally non-autonomous (a bot can never send-to-itself, so the
+legacy test required an operator typing in chat). New test drives the
+closed loop end-to-end via MTProto user-account:
+Client.SendMessage(chat_id, stimulus) → poll bot.getUpdates for delivery
+confirmation → assert message delivered to bot within timeout.
+Honest-SKIP per §11.4.3 when MTProto creds absent OR session-file
+missing (never falls back to manual-dep path). Conductor-verified
+PASSING LIVE in 1.30s under §11.4.98-pure interpretation (chain runs
+without human action during execution).</td>
+<td>2026-05-28</td>
+<td><code>367d58b</code></td>
+<td>Universal §11.4.98 (full-automation anti-bluff mandate); spec V3
+§11.1 + §107.x; supersedes-via-§11.4.90
+<code>TestSubscribe_LiveBotAPI</code> (now Obsolete:
+Reason=superseded-by-later-mandate §11.4.98); evidence
+<code>docs/qa/HRD-LIVE-MTPROTO-20260528T125321Z/E135_subscribe/transcript.txt</code>;
+e2e_bluff_hunt invariant <code>E135 mtproto_subscribe_roundtrip</code>
+wired via <code>scripts/e2e_bluff_hunt.sh</code> commit
+<code>a80d206</code>; Catalogue-Check: reuse gotd/td + HRD-139 Client;
+files
+<code>qaherald/internal/lifecycle/mtproto_subscribe_test.go</code></td>
+</tr>
+<tr>
+<td>HRD-141</td>
+<td>task</td>
+<td>high</td>
+<td>Wave 8 Track B Test 2 —
+<code>TestMTProto_Wave6_AutonomousClosedLoop</code>
+(<code>qaherald/internal/lifecycle/mtproto_wave6_loop_test.go</code>,
+build-tag <code>integration_mtproto</code>). §11.4.98 replacement for
+<code>tests/test_wave6_live_loop.sh</code> (which required manual
+operator typing). Spawns <code>pherald listen</code> as a child process
+with <code>cmd.Dir = repoRoot</code> (CRITICAL — pherald resolves
+<code>docs/Issues.md</code> relative to its CWD), pre-acks pending
+updates via <code>consumePendingUpdates(t, botToken)</code> helper
+(calls <code>getUpdates(offset=max+1)</code> to ACK stale chat messages
+BEFORE pherald starts, preventing TLS-connection-reset storms from prior
+runs). MTProto sends stimulus, then journal-based §11.4.98 autonomy
+assertion polls pherald's <code>--qa-out-dir</code> JSONL transcript for
+<code>tgram.message</code> (in) + <code>cc.dispatch</code> +
+<code>cc.reply</code> directions, matched on the unique test-text string
+rather than message_id (MTProto's int64 message_id is a different
+namespace from Bot API's chat-local message_id — §11.4.98 contract is
+"chain runs end-to-end without human action", not "Claude generates
+perfect content"). PASSED LIVE in 48.58s.</td>
+<td>2026-05-28</td>
+<td><code>7e50ed0</code> (test scaffold) + <code>d7d6524</code>
+(pherald.Dir=repoRoot + consumePendingUpdates pre-ack fix) +
+<code>0797e85</code> (text-based journal-assertion refactor — autonomy
+contract is the chain runs, not content quality)</td>
+<td>Universal §11.4.98 (full-automation anti-bluff mandate); spec V3
+§11.1 + §107.x; supersedes-via-§11.4.90
+<code>tests/test_wave6_live_loop.sh</code> (Obsolete:
+Reason=superseded-by-later-mandate §11.4.98); evidence
+<code>docs/qa/HRD-LIVE-MTPROTO-20260528T125321Z/E136_wave6_closed_loop/transcript*.txt</code>;
+e2e_bluff_hunt invariant <code>E136 mtproto_wave6_closed_loop</code>
+wired in <code>a80d206</code>; Catalogue-Check: extend pherald
+<code>--qa-out-dir</code> JSONL journaling pattern (T10a); files
+<code>qaherald/internal/lifecycle/mtproto_wave6_loop_test.go</code></td>
+</tr>
+<tr>
+<td>HRD-142</td>
+<td>task</td>
+<td>high</td>
+<td>Wave 8 Track B Test 3 —
+<code>TestMTProto_Wave65_LifecycleAutonomous</code>
+(<code>qaherald/internal/lifecycle/mtproto_wave65_lifecycle_test.go</code>,
+build-tag <code>integration_mtproto</code>). §11.4.98 replacement for
+the legacy lifecycle <code>--manual</code> interactive mode (which
+required operator typing per-scenario stimuli). Drives 3 representative
+Wave 6.5 fast-path scenarios — Help / Status / Continue — autonomously
+via MTProto; each subtest spawns pherald + sends MTProto stimulus +
+asserts on the pherald journal for <code>tgram.message in</code> +
+`cc.reply</td>
+<td></td>
+<td>cc.dispatch</td>
+<td></td>
+</tr>
 <tr>
 <td>HRD-018</td>
 <td>task</td>
