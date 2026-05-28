@@ -47,7 +47,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>30</td>
+<td>31</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -63,8 +63,27 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>r30 (v0.6.0 Wave 7 T12 — operator guide; Wave 7
-CODE-COMPLETE) marks HRD-121 Open→in_progress.</strong>
+<td><strong>r31 (Tgram-completeness Wave A SA-a — HRD-135 lifecycle
+handlers) marks HRD-135 Open→in_progress.</strong>
+<code>commons_messaging/channels/tgram/subscribe.go</code> gains 3 new
+event handlers per the operator's tgram-completeness mandate (Section 2
+of the 2026-05-28 live-gap analysis): <strong>OnEdited</strong> rebuilds
+the same <code>InboundEvent</code> shape <code>OnText</code> does +
+<code>Raw["edited"]=true</code>; <strong>OnMyChatMember</strong> detects
+bot kicked/left/restricted status transitions (with Alice-left and
+promotion-to-Admin false-positive guards) + emits a grep-able
+<code>log.Printf</code> carrying <code>ErrBotKicked</code> text + the
+chat_id; <strong>15 service-message endpoints</strong>
+(UsersJoined/UserLeft/NewGroupTitle/etc.) registered to a single
+<code>serviceHandler</code> that emits nothing to
+<code>InboundHandler</code> but logs
+<code>tgram: ignored service message kind=… chat_id=…</code>. Sentinel
+<code>var ErrBotKicked</code> package-level so callers can
+<code>errors.Is</code>. 17/17 PASS <code>-race -count=1</code> (3 new in
+<code>subscribe_lifecycle_test.go</code> + 14 existing, zero
+regression). Part 1 of 6 in the tgram-completeness wave. <strong>Prior
+r30 (v0.6.0 Wave 7 T12 — operator guide; Wave 7 CODE-COMPLETE) marked
+HRD-121 Open→in_progress.</strong>
 <code>docs/guides/MESSENGER_CHANNELS.md</code> ships as the
 operator-facing entry point for the multi-channel messenger framework —
 610 lines, 11 sections covering architecture (commons.Channel outbound
@@ -165,7 +184,7 @@ inbound-runtime extension note
 <tr>
 <td>Issues</td>
 <td>HRD-008, HRD-015, HRD-019..HRD-025, HRD-029..HRD-056, HRD-081,
-HRD-085..HRD-090, HRD-115..HRD-121, HRD-131</td>
+HRD-085..HRD-090, HRD-115..HRD-121, HRD-135, HRD-131</td>
 </tr>
 <tr>
 <td>Issues summary</td>
@@ -1312,6 +1331,41 @@ evidence <code>docs/qa/HRD-121-20260528T120000Z/transcript.txt</code>
 (anchor
 <code>QA-ANCHOR: HRD-121-WAVE7-T12-MESSENGER-CHANNELS-DOC-20260528</code>);
 Catalogue-Check: n/a (operator doc).</td>
+</tr>
+<tr>
+<td>HRD-135</td>
+<td>task</td>
+<td>in_progress</td>
+<td>middle</td>
+<td>Tgram-completeness Wave A — edited-message + bot-kicked typed-error
++ service-message ignore-and-log handlers
+(<code>commons_messaging/channels/tgram/subscribe.go</code>):
+<code>bot.Handle(telebot.OnEdited, …)</code> builds the same
+InboundEvent shape OnText does + <code>Raw["edited"]=true</code>;
+<code>bot.Handle(telebot.OnMyChatMember, …)</code> →
+<code>botKickedFromUpdate</code> detects status transitions to
+kicked/left/restricted <strong>for this bot specifically</strong>
+(Alice-left + promotion-to-Admin false-positive guarded) and emits a
+grep-able
+<code>log.Printf "tgram: bot kicked from chat: chat_id=… new_status=… ErrBotKicked"</code>;
+<code>serviceHandler</code> registered against 15 telebot service
+On…-endpoints (UsersJoined / UserLeft / NewGroupTitle / etc.) emits
+NOTHING to InboundHandler + logs
+<code>tgram: ignored service message kind=… chat_id=…</code>. Sentinel
+<code>var ErrBotKicked = errors.New("tgram: bot kicked from chat")</code>
+package-level (callable via <code>errors.Is</code>). The OnMyChatMember
+closure returns nil deliberately so telebot's poller keeps running for
+OTHER chats. 17/17 PASS <code>-race -count=1</code> (3 new in
+<code>subscribe_lifecycle_test.go</code> + 14 existing).</td>
+<td>2026-05-28</td>
+<td>2026-05-28</td>
+<td>spec V3 §11.1; operator tgram-completeness Section-2 mandate
+(2026-05-28); evidence
+<code>docs/qa/HRD-135-20260528T130000Z/transcript.txt</code> (anchor
+<code>QA-ANCHOR: HRD-135-TGRAM-LIFECYCLE-HANDLERS-20260528</code>);
+Catalogue-Check: extend telebot.v3's <code>tele.OnEdited</code> /
+<code>tele.OnMyChatMember</code> / <code>tele.OnAddedToGroup</code>
+endpoints.</td>
 </tr>
 <tr>
 <td>HRD-131</td>

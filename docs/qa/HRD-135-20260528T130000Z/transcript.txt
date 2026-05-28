@@ -1,0 +1,100 @@
+QA-ANCHOR: HRD-135-TGRAM-LIFECYCLE-HANDLERS-20260528
+Date (UTC): 2026-05-28T06:28:56Z
+Repo:       /Users/milosvasic/Projects/Herald
+Branch:     main
+HEAD:       36b9545822825439e9ecec017bd6528dbd56a760
+Go:         go version go1.26.2 darwin/arm64
+
+====================================================================
+HRD-135 — Tgram completeness: edited_message + service-message
+ignore-and-log + bot-kicked typed error
+====================================================================
+
+Files modified:
+  - commons_messaging/channels/tgram/subscribe.go (added ErrBotKicked,
+    OnEdited/serviceHandler/OnMyChatMember wiring, buildEditedEvent,
+    serviceMessageKind, botKickedFromUpdate)
+  - commons_messaging/channels/tgram/export_test.go (BuildEditedEventForTest,
+    ServiceMessageKindForTest, BotKickedFromUpdateForTest)
+Files created:
+  - commons_messaging/channels/tgram/subscribe_lifecycle_test.go (3 new tests)
+
+====================================================================
+go build ./commons_messaging/...
+====================================================================
+exit=0
+
+====================================================================
+go vet ./commons_messaging/...
+====================================================================
+exit=0
+
+====================================================================
+go test -race -count=1 -v -run TestSubscribeEditedMessage|TestSubscribeServiceMessageIgnoreAndLog|TestSubscribeBotKickedTypedError ./commons_messaging/channels/tgram/...
+====================================================================
+=== RUN   TestSubscribeEditedMessage
+--- PASS: TestSubscribeEditedMessage (0.00s)
+=== RUN   TestSubscribeServiceMessageIgnoreAndLog
+--- PASS: TestSubscribeServiceMessageIgnoreAndLog (0.00s)
+=== RUN   TestSubscribeBotKickedTypedError
+--- PASS: TestSubscribeBotKickedTypedError (0.00s)
+PASS
+ok  	github.com/vasic-digital/herald/commons_messaging/channels/tgram	1.946s
+exit=0
+
+====================================================================
+go test -race -count=1 -v ./commons_messaging/channels/tgram/... (full tgram suite)
+====================================================================
+=== RUN   TestWebhook_ValidSecret_DispatchesToHandler
+--- PASS: TestWebhook_ValidSecret_DispatchesToHandler (0.01s)
+=== RUN   TestWebhook_InvalidSecret_Returns401_NoTokenLeak
+--- PASS: TestWebhook_InvalidSecret_Returns401_NoTokenLeak (0.00s)
+=== RUN   TestWebhook_MissingSecret_Returns401
+--- PASS: TestWebhook_MissingSecret_Returns401 (0.00s)
+=== RUN   TestWebhook_GET_Returns405
+--- PASS: TestWebhook_GET_Returns405 (0.00s)
+=== RUN   TestWebhook_MalformedJSON_Returns400
+--- PASS: TestWebhook_MalformedJSON_Returns400 (0.00s)
+=== RUN   TestWebhook_EmptySecretAtConstruction_ErrorsLoud
+--- PASS: TestWebhook_EmptySecretAtConstruction_ErrorsLoud (0.00s)
+=== RUN   TestWebhook_ConstantTimeCompare
+--- PASS: TestWebhook_ConstantTimeCompare (0.00s)
+=== RUN   TestDownloadAttachmentContentAddressed
+--- PASS: TestDownloadAttachmentContentAddressed (0.01s)
+=== RUN   TestSendReplyEmitsReplyToMessageID
+--- PASS: TestSendReplyEmitsReplyToMessageID (0.00s)
+=== RUN   TestSendReply_NilAttachments_BackwardCompat
+--- PASS: TestSendReply_NilAttachments_BackwardCompat (0.00s)
+=== RUN   TestSendReply_OnePhoto_TwoCalls
+--- PASS: TestSendReply_OnePhoto_TwoCalls (0.00s)
+=== RUN   TestSendReply_MultipleAttachments_RoutedByMIME
+--- PASS: TestSendReply_MultipleAttachments_RoutedByMIME (0.01s)
+=== RUN   TestSendReply_EmptyFilenameRejected
+--- PASS: TestSendReply_EmptyFilenameRejected (0.00s)
+=== RUN   TestSubscribeEditedMessage
+--- PASS: TestSubscribeEditedMessage (0.00s)
+=== RUN   TestSubscribeServiceMessageIgnoreAndLog
+--- PASS: TestSubscribeServiceMessageIgnoreAndLog (0.00s)
+=== RUN   TestSubscribeBotKickedTypedError
+--- PASS: TestSubscribeBotKickedTypedError (0.00s)
+=== RUN   TestSubscribeBotSelfFilter
+--- PASS: TestSubscribeBotSelfFilter (0.00s)
+PASS
+ok  	github.com/vasic-digital/herald/commons_messaging/channels/tgram	1.388s
+exit=0
+
+====================================================================
+git status --porcelain (scope-lock proof)
+====================================================================
+ M commons_messaging/channels/tgram/export_test.go
+ M commons_messaging/channels/tgram/subscribe.go
+?? commons_messaging/channels/tgram/subscribe_lifecycle_test.go
+?? commons_messaging/channels/tgram/webhook.go
+?? commons_messaging/channels/tgram/webhook_test.go
+?? docs/guides/TELEGRAM.docx
+?? docs/guides/TELEGRAM.html
+?? docs/guides/TELEGRAM.md
+?? docs/guides/TELEGRAM.pdf
+?? docs/qa/HRD-135-20260528T130000Z/
+?? docs/qa/HRD-136-20260528T130000Z/
+?? docs/qa/HRD-138-20260528T130000Z/
