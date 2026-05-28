@@ -8,7 +8,7 @@
 
 | Field | Value |
 |---|---|
-| Revision | 13 |
+| Revision | 14 |
 | Created | 2026-05-15 |
 | Last modified | 2026-05-27 |
 | Status | active |
@@ -174,7 +174,7 @@ Operative rule for Herald. (1) Every Herald HRD-NNN (V3 §8.3) work-item that in
 
 **Non-compliance is a release blocker.** No `--allow-residue`, `--skip-quiescence`, `--mutation-cleanup-later` flag exists.
 
-## Inherited covenant restatements — Helix §11.4.85 / §11.4.87 / §11.4.88 / §11.4.89 / §11.4.90 / §11.4.91 / §11.4.92 / §11.4.93 / §11.4.94 / §11.4.95 / §11.4.96 / §11.4.97 (inherited per §11.4.35)
+## Inherited covenant restatements — Helix §11.4.85 / §11.4.87 / §11.4.88 / §11.4.89 / §11.4.90 / §11.4.91 / §11.4.92 / §11.4.93 / §11.4.94 / §11.4.95 / §11.4.96 / §11.4.97 / §11.4.98 (inherited per §11.4.35)
 
 These twelve mandates are **inherited** from the HelixConstitution via parent-discovery (§11.4.35). Herald **restates + cites** them here — it does **NOT** redefine or weaken them. The literal anchors below are required by the §11.4.87 `CM-COVENANT-114-87-PROPAGATION` pre-build gate, which asserts that `11.4.85`, `11.4.87`, and `11.4.88` appear in every consuming repo's `CLAUDE.md` / `AGENTS.md` / `QWEN.md`.
 
@@ -225,6 +225,10 @@ Herald has no AOSP build, but the principle binds: during ANY long-running Heral
 ### §11.4.97 — Maximum-use-of-idle-time mandate + progress-update cadence (Helix, 2026-05-27)
 
 (A) Every minute of conductor idle time during which progressable, non-externally-blocked work exists is a violation — dispatch work continuously through the whole idle window, not just at scheduled wakes. (B) Emit concise (1–3 line) operator-facing progress updates at milestone boundaries with NO prompt required: every HEAD advance (what landed), every subagent return (integrated), every constitutional anchor propagated, every captured-evidence artefact (`docs/qa/` / `qa-results/` path), every Issues→Fixed/Obsolete closure. (C) Continuous physical-proof gathering per §11.4.5 / §11.4.6 / §11.4.69 — every closed item carries positive captured evidence committed alongside the closure. (E) Idle ONLY when genuinely blocked (operator STOP, external dependency, §12 host-safety). Canonical authority: HelixConstitution Constitution.md §11.4.97 (inherited per §11.4.35).
+
+### §11.4.98 — Full-Automation Anti-Bluff Mandate — Live tests MUST be re-runnable end-to-end without manual intervention (Helix, 2026-05-28)
+
+Every Herald test — unit/integration/e2e/Challenge/stress/chaos/live — MUST be fully self-driving end-to-end with NO human action during execution (operator typing a Telegram message, hand-triggering a webhook, clicking a UI, attaching a file, anything beyond test startup → PASS/FAIL report). A test requiring manual action during execution is **by definition a §11.4 PASS-bluff at the automation layer**, regardless of how thorough the manual run is — it cannot run in CI, cannot validate regressions between manual runs, and the human dependency masks drift. Single permissible exception: one-time credential bootstrap OUTSIDE test execution (`.env` populated from a vault, shell exports in `~/.bashrc`, OAuth approval at first install, MTProto session activation at first run — configuration, not test driving). Concrete Herald requirements: (1) no "operator MUST type a message" prompts in `tests/test_*.sh` or `_integration_test.go` — drive programmatically via MTProto user-account (Telegram), real-user-API (Slack), webhook fixture, or in-process loopback; (2) no `claude --resume <UUID>` against the same session UUID the dev conductor is using (Herald 2026-05-28 lesson: silent exit -1 collision — use a dedicated test-only UUID); (3) no 60s human-response windows (§11.4.50 determinism violation); (4) PASS at `-count=3` consecutive automated runs with self-cleaning state; (5) every existing test classified COMPLIANT vs NON-COMPLIANT in the §11.4.98 audit (release-gate item); (6) no false-positive PASS — silent-skip-as-PASS forbidden, stale-evidence forbidden, §11.4.3 SKIP-with-reason is correct. Currently NON-COMPLIANT Herald tests scheduled for MTProto-driven rewrite: `TestSubscribe_LiveBotAPI`, `tests/test_wave6_live_loop.sh`, Wave 6.5 lifecycle scenarios. Canonical authority: HelixConstitution Constitution.md §11.4.98 (inherited per §11.4.35).
 
 ## Mission (from the spec)
 

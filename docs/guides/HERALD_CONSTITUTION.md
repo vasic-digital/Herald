@@ -8,7 +8,7 @@
 
 | Field | Value |
 |---|---|
-| Revision | 7 |
+| Revision | 8 |
 | Created | 2026-05-15 |
 | Last modified | 2026-05-27 |
 | Status | active |
@@ -29,7 +29,7 @@
   - [§105. Inheritance gate (extends Universal §1.1)](#105-inheritance-gate-extends-universal-11)
   - [§106. Spec-change rule (extends Universal §11.4)](#106-spec-change-rule-extends-universal-114)
   - [§107. End-user-usability covenant (extends Universal §11.4 — MANDATORY ANTI-BLUFF)](#107-end-user-usability-covenant-extends-universal-114--mandatory-anti-bluff)
-  - [§108. Inherited covenant restatements (Helix §11.4.85 / §11.4.87 / §11.4.88 / §11.4.89 / §11.4.90 / §11.4.91 / §11.4.92 / §11.4.93 / §11.4.94 / §11.4.95 / §11.4.96 / §11.4.97)](#108-inherited-covenant-restatements-helix-11485--11487--11488--11489--11490--11491--11492--11493--11494--11495--11496--11497)
+  - [§108. Inherited covenant restatements (Helix §11.4.85 / §11.4.87 / §11.4.88 / §11.4.89 / §11.4.90 / §11.4.91 / §11.4.92 / §11.4.93 / §11.4.94 / §11.4.95 / §11.4.96 / §11.4.97 / §11.4.98)](#108-inherited-covenant-restatements-helix-11485--11487--11488--11489--11490--11491--11492--11493--11494--11495--11496--11497)
 - [Overrides of Universal Constitution](#overrides-of-universal-constitution)
 - [Owned-submodule set (per Universal §4)](#owned-submodule-set-per-universal-4)
 - [Project-specific remotes](#project-specific-remotes)
@@ -177,7 +177,7 @@ The Wave 4b test is the prototype; generalising the check across every paired-§
 
 **Non-compliance is a release blocker.** A mutation marker that lands in a tagged Herald commit is a critical defect regardless of how briefly it persisted — see commits `72e81ab` / `d5bd360` as forensic proof. No `--allow-residue`, `--skip-quiescence`, `--mutation-cleanup-later` flag exists.
 
-### §108. Inherited covenant restatements (Helix §11.4.85 / §11.4.87 / §11.4.88 / §11.4.89 / §11.4.90 / §11.4.91 / §11.4.92 / §11.4.93 / §11.4.94 / §11.4.95 / §11.4.96 / §11.4.97)
+### §108. Inherited covenant restatements (Helix §11.4.85 / §11.4.87 / §11.4.88 / §11.4.89 / §11.4.90 / §11.4.91 / §11.4.92 / §11.4.93 / §11.4.94 / §11.4.95 / §11.4.96 / §11.4.97 / §11.4.98)
 
 These twelve mandates are **inherited** from the Helix Universal Constitution via parent-discovery (§11.4.35). Herald **restates + cites** them at project-constitution level per the §1.1 multi-file propagation discipline — it does **NOT** redefine, narrow, or weaken them; the parent `constitution/Constitution.md` is the canonical authority for each. The literal anchors (`11.4.85`, `11.4.87`, `11.4.88`, `11.4.89`, `11.4.90`, `11.4.91`, `11.4.92`, `11.4.93`, `11.4.94`, `11.4.95`, `11.4.96`, `11.4.97`) are required across Herald's `CLAUDE.md` / `AGENTS.md` / `QWEN.md` by the §11.4.87 `CM-COVENANT-114-87-PROPAGATION` pre-build gate, which strips the literal in a paired §1.1 meta-test mutation and asserts the gate FAILs.
 
@@ -312,6 +312,20 @@ These twelve mandates are **inherited** from the Helix Universal Constitution vi
 **Propagation (§108.j–§108.l).** These three restatements are summarised — citing this section as the canonical Herald source — in Herald's `CLAUDE.md` and `AGENTS.md` (and `QWEN.md` when present). The universal mandates at Helix §11.4.95 / §11.4.96 / §11.4.97 are cascaded into the Helix-stack submodules per §1.1 multi-file propagation discipline. The literal anchors `11.4.95` / `11.4.96` / `11.4.97` are present in all three Herald root docs.
 
 **Non-compliance is a release blocker (§108.j–§108.l).** Each sub-clause carries its inherited no-escape-hatch posture: no `--gitignore-db` / `--regenerate-on-clone` (§108.j), no `--idle-during-build` / `--skip-parallel-catalogue` (§108.k), no `--idle-permitted` / `--silent-progress` / `--evidence-later` (§108.l).
+
+#### §108.m. Full-Automation Anti-Bluff Mandate — Live tests MUST be re-runnable end-to-end without manual intervention (extends Universal §11.4.98; Helix 2026-05-28)
+
+**Forensic anchor — verbatim user mandate (2026-05-28):**
+
+> "Make sure we have full automation testing of all scenarios with real bot, main group and users without any manual intervention or contribution of real user! Everything MUST BE fully automatic and autonomous! These tests MUST BE able to rerun endless times when needed! This is important to be done like this! It is critical! Continue all work and make this happen! We need such full automation testing so the whole System MUST BE fully valoidated and verified before it is integrated to our main projects! Make sure there is no false positives in testing! Every test and its results MUST obtain real proofs of everything working! No bluff is allowed!"
+
+**Canonical authority.** Helix Universal Constitution §11.4.98. Herald §108.m is the project-binding restatement.
+
+**Operative rule (Herald-binding).** Every Herald test — unit / integration / e2e / Challenge / stress / chaos / live — MUST be fully self-driving end-to-end with NO human action during execution (operator typing a Telegram message, hand-triggering a webhook, clicking a UI, attaching a file, anything beyond test startup → PASS / FAIL report). A test requiring manual action during execution is **by definition a §11.4 / §107 PASS-bluff at the automation layer**, regardless of how thorough the manual run is — it cannot run in CI, cannot validate regressions between manual runs, and the human dependency masks drift. (A) **Single permissible exception** — one-time credential bootstrap OUTSIDE test execution (`.env` populated from a vault, shell exports in `~/.bashrc`, OAuth approval at first install, MTProto session activation at first run) — configuration, not test driving. (B) **No "operator MUST type a message" prompts** in `tests/test_*.sh` or `_integration_test.go` — Herald drives programmatically (MTProto user-account for Telegram, real-user-API for Slack, IMAP-test-account for email, webhook fixture, in-process loopback; never human keystrokes during test execution). (C) **No `claude --resume <UUID>` collisions** — test runs MUST use a dedicated test-only session UUID that the production / dev session is NOT simultaneously using. Herald 2026-05-28 lesson encoded: same-UUID resume returns silent exit -1 with no output. (D) **No 60-second human-response windows** — these are §11.4.50 determinism violations: a single test invocation's PASS / FAIL depends on a human reaction-time variable, not on the code under test. (E) **Re-runnability proof** — every live test MUST PASS at `-count=3` consecutive automated invocations with self-cleaning state (persistent side effects — chats, files, DB rows, queued events — cleaned by the test in `defer`/`teardown`). (F) **§108.m obsolescence audit** — every existing Herald test classified COMPLIANT vs NON-COMPLIANT (release-gate item); currently NON-COMPLIANT and scheduled for MTProto-driven rewrite under Wave 8 Track B: `TestSubscribe_LiveBotAPI`, `tests/test_wave6_live_loop.sh`, Wave 6.5 lifecycle scenarios. (G) **No false-positive PASS** — silent-skip-as-PASS forbidden, stale-evidence forbidden, §11.4.3 SKIP-with-reason is correct. Composes with §107 (anti-bluff) + §107.x (docs/qa evidence mandate) + §108.a (stress + chaos) + §108.b (endless-loop autonomous) + §108.d (background-test) + §108.i (zero-idle parallel). No `--manual-test-OK` / `--skip-114-98-audit` / `--bluff-tolerance-temporary` escape exists.
+
+**Propagation.** §108.m is restated — citing this section as the canonical Herald source — in Herald's `CLAUDE.md`, `AGENTS.md`, `QWEN.md`. The universal mandate at Helix §11.4.98 is cascaded into the Helix-stack submodules per §1.1 multi-file propagation discipline. The literal anchor `11.4.98` MUST appear in all three Herald root docs; the §11.4.98 pre-build gate `CM-COVENANT-114-98-PROPAGATION` (when implemented) enforces this.
+
+**Non-compliance is a release blocker.** A commit that adds or modifies a test that requires manual human action during execution is blocked at release-gate. A NON-COMPLIANT test that has not been rewritten within 30 days of classification graduates to §108.e (§11.4.90 Obsolete) and is removed from the active test suite (not deleted — preserved with `Obsolete-Details:` citing §108.m / §11.4.98 as the obsolescence reason).
 
 ---
 

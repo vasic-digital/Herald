@@ -8,7 +8,7 @@
 
 | Field | Value |
 |---|---|
-| Revision | 9 |
+| Revision | 10 |
 | Created | 2026-05-15 |
 | Last modified | 2026-05-27 |
 | Status | active |
@@ -25,7 +25,7 @@
 - [Herald-specific agent rules](#herald-specific-agent-rules)
   - [Project status (load-bearing for every task)](#project-status-load-bearing-for-every-task)
   - [End-user-usability covenant (Herald §107 / Helix §11.4 — MANDATORY ANTI-BLUFF)](#end-user-usability-covenant-herald-107--helix-114--mandatory-anti-bluff)
-  - [Inherited covenant restatements — Helix §11.4.85 / §11.4.87 / §11.4.88 / §11.4.89 / §11.4.90 / §11.4.91 / §11.4.92 / §11.4.93 / §11.4.94 / §11.4.95 / §11.4.96 / §11.4.97](#inherited-covenant-restatements--helix-11485--11487--11488--11489--11490--11491--11492--11493--11494--11495--11496--11497)
+  - [Inherited covenant restatements — Helix §11.4.85 / §11.4.87 / §11.4.88 / §11.4.89 / §11.4.90 / §11.4.91 / §11.4.92 / §11.4.93 / §11.4.94 / §11.4.95 / §11.4.96 / §11.4.97 / §11.4.98](#inherited-covenant-restatements--helix-11485--11487--11488--11489--11490--11491--11492--11493--11494--11495--11496--11497)
   - [Inheritance gate (run before any commit that touches root docs or `constitution/`)](#inheritance-gate-run-before-any-commit-that-touches-root-docs-or-constitution)
   - [Spec-change rule (load-bearing — `docs/specs/mvp/specification.V3.md` §"Specification documents")](#spec-change-rule-load-bearing-docsspecsmvpspecificationmd-specification-documents)
   - [Multi-host mirror convention (Herald's own upstreams)](#multi-host-mirror-convention-heralds-own-upstreams)
@@ -135,7 +135,7 @@ CI / release gates MUST refuse to tag a release whose feature-shipping commits l
 
 Canonical Helix authority: `<discovered>/Constitution.md` §11.4.84. Canonical Herald authority: `docs/guides/HERALD_CONSTITUTION.md` §107.y. A mutation marker that lands in a tagged Herald commit is a critical defect regardless of how briefly it persisted — see `72e81ab` / `d5bd360` as proof.
 
-### Inherited covenant restatements — Helix §11.4.85 / §11.4.87 / §11.4.88 / §11.4.89 / §11.4.90 / §11.4.91 / §11.4.92 / §11.4.93 / §11.4.94 / §11.4.95 / §11.4.96 / §11.4.97
+### Inherited covenant restatements — Helix §11.4.85 / §11.4.87 / §11.4.88 / §11.4.89 / §11.4.90 / §11.4.91 / §11.4.92 / §11.4.93 / §11.4.94 / §11.4.95 / §11.4.96 / §11.4.97 / §11.4.98
 
 These twelve mandates are **inherited** from the HelixConstitution via parent-discovery (§11.4.35). Every agent — Claude Code, Codex, Cursor, Gemini, Aider, any CLI subagent — is bound by them; this file **restates + cites**, it does NOT redefine or weaken. The literal anchors are required by the §11.4.87 `CM-COVENANT-114-87-PROPAGATION` pre-build gate (asserts `11.4.85` / `11.4.87` / `11.4.88` present in every CLAUDE.md / AGENTS.md / QWEN.md).
 
@@ -162,6 +162,8 @@ These twelve mandates are **inherited** from the HelixConstitution via parent-di
 **§11.4.96 — Safe-parallel-work-with-long-build catalogue + mandate (Helix, 2026-05-27).** Agent-binding rule: Herald has no AOSP build, but the principle binds — during ANY long-running Herald operation (a backgrounded mutation gate, `scripts/e2e_bluff_hunt.sh`, a §11.4.85 stress/chaos suite, a doc export) the agent MUST consult the safe-parallel catalogue and dispatch non-contending work rather than idle. SAFE-in-parallel for Herald: (A) MD/docs work, (B) `scripts/` helpers, (C) gate authoring, (D) test authoring, (E/F) commit + push to mirrors, (H) read-only analysis subagents, (I) web research, (J) workable-items DB ops. UNSAFE-during-a-running-gate (maps to §107.y): `git checkout` / `reset --hard` / `clean` on files a gate is transiently mutating, a SECOND concurrent mutation gate against the same checkout, host-session-safety breaches (§12). Subagent-driven default per §11.4.20 / §11.4.70. Canonical authority: HelixConstitution Constitution.md §11.4.96 (inherited per §11.4.35).
 
 **§11.4.97 — Maximum-use-of-idle-time mandate + progress-update cadence (Helix, 2026-05-27).** Agent-binding rule: (A) every minute of conductor idle time during which progressable, non-externally-blocked work exists is a violation — the agent dispatches work continuously through the whole idle window, not just at scheduled wakes. (B) The agent emits concise (1–3 line) operator-facing progress updates at milestone boundaries with NO prompt required: every HEAD advance (what landed), every subagent return (integrated), every constitutional anchor propagated, every captured-evidence artefact (`docs/qa/` / `qa-results/` path), every Issues→Fixed/Obsolete closure. (C) Continuous physical-proof gathering per §11.4.5 / §11.4.6 / §11.4.69 — every closed item carries positive captured evidence committed alongside the closure. (E) Idle ONLY when genuinely blocked (operator STOP, external dependency, §12 host-safety). Canonical authority: HelixConstitution Constitution.md §11.4.97 (inherited per §11.4.35).
+
+**§11.4.98 — Full-Automation Anti-Bluff Mandate — Live tests MUST be re-runnable end-to-end without manual intervention (Helix, 2026-05-28).** Agent-binding rule: every test the agent writes, reviews, or marks PASSed under this Constitution — unit/integration/e2e/Challenge/stress/chaos/live — MUST be fully self-driving end-to-end with NO human action during execution (operator typing a Telegram message, hand-triggering a webhook, clicking a UI, attaching a file, anything beyond test startup → PASS/FAIL report). A test requiring manual action during execution is **by definition a §11.4 PASS-bluff at the automation layer**, regardless of how thorough the manual run is — it cannot run in CI, cannot validate regressions between manual runs, and the human dependency masks drift. Single permissible exception: one-time credential bootstrap OUTSIDE test execution (`.env` populated from a vault, shell exports in `~/.bashrc`, OAuth approval at first install, MTProto session activation at first run — configuration, not test driving). Concrete Herald requirements: (1) no "operator MUST type a message" prompts in `tests/test_*.sh` or `_integration_test.go` — the agent drives programmatically (MTProto for Telegram, real-user-API for Slack, IMAP-test-account for email, webhook fixture, in-process loopback; never human keystrokes); (2) no `claude --resume <UUID>` against the same session UUID the dev conductor is using (Herald 2026-05-28 lesson: silent exit -1 collision — use a dedicated test-only UUID); (3) no 60s human-response windows (§11.4.50 determinism violation); (4) the agent verifies PASS at `-count=3` consecutive automated runs with self-cleaning state; (5) the agent classifies every existing test COMPLIANT vs NON-COMPLIANT in the §11.4.98 audit (release-gate item); (6) no false-positive PASS — silent-skip-as-PASS forbidden, stale-evidence forbidden, §11.4.3 SKIP-with-reason is correct. Currently NON-COMPLIANT Herald tests scheduled for MTProto-driven rewrite: `TestSubscribe_LiveBotAPI`, `tests/test_wave6_live_loop.sh`, Wave 6.5 lifecycle scenarios. Canonical authority: HelixConstitution Constitution.md §11.4.98 (inherited per §11.4.35).
 
 ### Inheritance gate (run before any commit that touches root docs or `constitution/`)
 
