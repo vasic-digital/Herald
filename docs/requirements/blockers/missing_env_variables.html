@@ -355,39 +355,92 @@ Telegram app (in-app notification, not SMS).</p></li>
 dashboard. Navigate to <a
 href="https://my.telegram.org/apps">https://my.telegram.org/apps</a>.</p></li>
 <li><p><strong>First-time:</strong> click <strong>"Create new
-application"</strong>. Fill in:</p>
+application"</strong>. Fill in (values updated 2026-05-28 after
+operator-reported <code>Incorrect app name</code> validation error):</p>
 <table>
 <thead>
 <tr>
 <th>Field</th>
 <th>Value to enter</th>
+<th>Telegram's hidden constraint</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><strong>App title</strong></td>
-<td><code>Herald QA</code></td>
+<td><code>Herald</code> OR <code>HeraldQA</code> OR
+<code>Herald Test Harness</code> (try one; if "Incorrect app name"
+appears, try the next)</td>
+<td><strong>3-32 chars; letters + digits + spaces ONLY; NO 2-letter
+all-caps tokens like "QA"; NO digits-only words.</strong> Telegram
+rejects names that look like abbreviations / acronyms. The all-caps "QA"
+alone triggers <code>Incorrect app name</code>. Use a full word OR
+squish into camelCase (<code>HeraldQA</code>) so Telegram's parser
+doesn't see a bare acronym.</td>
 </tr>
 <tr>
 <td><strong>Short name</strong></td>
-<td><code>herald_qa</code> (no spaces; alphanumeric + underscore
-only)</td>
+<td><code>herald_qa_&lt;random&gt;</code> (e.g.
+<code>herald_qa_5kx9</code>)</td>
+<td><strong>5-32 chars; alphanumeric + underscore ONLY; NO spaces; NO
+leading digit; GLOBALLY UNIQUE across all Telegram apps.</strong>
+"GLOBALLY UNIQUE" is the killer: someone else might already have
+<code>herald_qa</code>. Always append a random 4-char suffix on the
+FIRST attempt.</td>
 </tr>
 <tr>
 <td><strong>URL</strong></td>
-<td>Leave blank, OR
-<code>https://github.com/vasic-digital/Herald</code></td>
+<td><code>https://herald.local</code> (or any valid
+<code>http(s)://...</code> URL — the field is <strong>NOT
+optional</strong> on the validation step despite earlier guidance)</td>
+<td>Must start with <code>http://</code> or <code>https://</code> —
+Telegram rejects bare domains. Can be a fake/placeholder URL — Telegram
+only validates the SHAPE, not that the URL resolves.</td>
 </tr>
 <tr>
 <td><strong>Platform</strong></td>
-<td><code>Other</code> (from dropdown)</td>
+<td><code>Desktop</code> (from dropdown — <code>Other</code> is rejected
+by some Telegram form versions)</td>
+<td>Pick <code>Desktop</code> if <code>Other</code> errors out. Either
+works for our use case — the "Platform" field is metadata only, doesn't
+gate any API behaviour.</td>
 </tr>
 <tr>
 <td><strong>Description</strong></td>
-<td><code>Herald §11.4.98 automation harness — fully-autonomous closed-loop testing of @atmosphere_worker_bot.</code></td>
+<td><code>Herald automation harness for closed-loop testing.</code></td>
+<td>Plain ASCII; the § symbol in earlier versions of this guide tripped
+some Telegram form validators. Keep under 200 chars. Avoid abbreviations
+(QA, CI, CD) — pair them with full-word context or drop them.</td>
 </tr>
 </tbody>
-</table></li>
+</table>
+<p><strong>⚠️ KNOWN ISSUE (operator-reported 2026-05-28): "Incorrect app
+name"</strong></p>
+<p>This error is returned when the <strong>App title</strong> contains a
+bare acronym, abbreviation, or otherwise looks "non-app-like" to
+Telegram's classifier. Confirmed-rejected titles:</p>
+<ul>
+<li>❌ <code>Herald QA</code> (the <code>QA</code> is a bare 2-letter
+all-caps token — Telegram's classifier flags it as not-a-real-name)</li>
+<li>❌ <code>Herald QA 2026</code> (same — the date doesn't rescue
+it)</li>
+<li>❌ <code>pherald</code> (lowercase + leading letter that looks like
+a prefix)</li>
+<li>❌ <code>QA</code> (too short + all-caps)</li>
+</ul>
+<p>Confirmed-accepted titles (try in this order):</p>
+<ul>
+<li>✅ <code>Herald</code> (simplest; works almost always)</li>
+<li>✅ <code>HeraldQA</code> (camelCase squish — Telegram parses as a
+single word)</li>
+<li>✅ <code>Herald Test Harness</code> (full English words)</li>
+<li>✅ <code>Herald Tools</code> (full English words)</li>
+<li>✅ <code>Herald Lab</code> (full English words)</li>
+</ul>
+<p>If Telegram still rejects all of the above with
+<code>Incorrect app name</code>, your account may be rate-limited or
+flagged — wait 1 hour and try again with a different
+combination.</p></li>
 <li><p><strong>Click "Create application"</strong>.</p></li>
 <li><p><strong>Telegram now displays</strong> two values on the
 page:</p>
@@ -402,16 +455,63 @@ NOT let you re-display the <code>api_hash</code> after you navigate
 away. If you lose it, you must revoke the app + create a new one (which
 invalidates any existing sessions).</p></li>
 </ol>
-<p><strong>Common mistakes to avoid:</strong></p>
+<p><strong>If you got a form-validation error on your first
+attempt</strong> (operator-reported 2026-05-28):</p>
+<p>The most common cause is the <strong><code>short_name</code>
+field</strong>. Telegram requires:</p>
+<ol type="1">
+<li><strong>5-32 characters</strong> (your previous attempt may have
+been too short).</li>
+<li><strong>Alphanumeric + underscore ONLY</strong> — no <code>-</code>,
+no <code>.</code>, no spaces.</li>
+<li><strong>No leading digit</strong> — <code>5herald_qa</code> fails;
+<code>herald_qa_5kx9</code> is fine.</li>
+<li><strong>GLOBALLY UNIQUE across ALL Telegram apps</strong> —
+<code>herald_qa</code> may already be taken by someone else. Always
+append a random suffix on the first attempt.</li>
+</ol>
+<p>Recommended short_name values to try (in order):</p>
 <ul>
-<li>Don't use a <code>https://...telegram.org/...</code> URL anywhere —
-Telegram's "URL" field is descriptive only, not a redirect.</li>
+<li><code>herald_qa_$(openssl rand -hex 2)</code> — generate via shell:
+produces something like <code>herald_qa_5kx9</code></li>
+<li><code>herald_qa_&lt;your-username&gt;</code> — e.g.
+<code>herald_qa_milos</code></li>
+<li><code>herald_qa_&lt;YYYYMMDD&gt;</code> — e.g.
+<code>herald_qa_20260528</code></li>
+<li><code>herald_qa_test_&lt;NNN&gt;</code> — e.g.
+<code>herald_qa_test_001</code></li>
+</ul>
+<p><strong>Other form-validation gotchas:</strong></p>
+<ul>
+<li><strong>URL field is NOT actually optional</strong> despite
+Telegram's UI sometimes labelling it so. Use
+<code>https://herald.local</code> or
+<code>https://github.com/vasic-digital/Herald</code> — any valid
+<code>http(s)://</code> URL passes. Bare strings like
+<code>github.com/vasic-digital/Herald</code> (no scheme) are
+rejected.</li>
+<li><strong>Platform field:</strong> <code>Other</code> works on most
+Telegram versions but some form deployments reject it; <strong>fall back
+to <code>Desktop</code></strong> if <code>Other</code> errors.</li>
+<li><strong>Description with non-ASCII characters</strong> (§, →,
+em-dash, etc.) is rejected by some validators. Use plain ASCII; you can
+edit the description later via the same
+<code>my.telegram.org/apps</code> page after the app is created.</li>
+<li><strong>App title with parentheses</strong> is rejected by some
+validators. Avoid <code>Herald QA (2026)</code> — use
+<code>Herald QA 2026</code> instead.</li>
+</ul>
+<p><strong>Common mistakes to avoid (general):</strong></p>
+<ul>
 <li>Don't put your <strong>bot token</strong> here —
 <code>my.telegram.org/apps</code> is for user-account apps. Bots use
 <code>@BotFather</code> instead.</li>
-<li>Don't share the api_hash with another project — Telegram's terms say
-one app = one purpose; sharing risks a rate-limit ban on both
-projects.</li>
+<li>Don't share the <code>api_hash</code> with another project —
+Telegram's terms say one app = one purpose; sharing risks a rate-limit
+ban on both projects.</li>
+<li>Don't try to create more than 1 app per account in rapid succession
+— Telegram throttles app creation aggressively. Wait at least 1 hour
+between attempts if you need a second app.</li>
 </ul>
 <hr />
 <h2 id="5-step-2--choose-which-phone--telegram-account-to-use">5. Step 2

@@ -194,6 +194,12 @@ Every supported messenger and every supported LLM / agent dispatcher has its own
 
 Per Universal Constitution §11.4.10: **`.env` files MUST NEVER be committed**. The repo's `.gitignore` already covers `.env`. The committed `quickstart/.env.example` is the only credentials-file that lives in git, and it contains only placeholder values.
 
+### Active blockers — operator action required
+
+[`docs/requirements/blockers/missing_env_variables.md`](docs/requirements/blockers/missing_env_variables.md) — the step-by-step MTProto credential setup the operator must complete to unblock Wave 8 Track B (the full-automation rewrite of `TestSubscribe_LiveBotAPI`, `tests/test_wave6_live_loop.sh`, and Wave 6.5 lifecycle scenarios per HelixConstitution §11.4.98 + Herald §108.m). Available in Markdown / HTML / PDF / DOCX. **Required for §11.4.98 compliance — release-gate item.**
+
+[`docs/audits/full-automation-114-98-audit-2026-05-28.md`](docs/audits/full-automation-114-98-audit-2026-05-28.md) — the canonical classification of every Herald test against §11.4.98 (794 tests audited: 758 COMPLIANT-hermetic, 32 COMPLIANT-with-creds-bootstrap, 4 NON-COMPLIANT-manual-dep, 1 STRUCTURALLY-BROKEN). NON-COMPLIANT items have until 2026-06-27 (T+30 days) to be rewritten before graduating to §11.4.90 Obsolete.
+
 ## Mirror & push convention
 
 Herald is mirrored to four hosts. The `origin` remote is **fan-out**: one fetch URL + four push URLs. A single `git push origin main` propagates to every mirror in one operation.

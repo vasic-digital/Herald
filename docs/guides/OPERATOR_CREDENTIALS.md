@@ -446,13 +446,13 @@ Solution: drive QA tests from a **real Telegram user account** via the **MTProto
 3. Telegram sends a login code to that phone's Telegram app (NOT SMS this time — only the in-app code).
 4. Enter the code at my.telegram.org/auth.
 5. After login, navigate to https://my.telegram.org/apps.
-6. **First-time:** click "Create new application". Fill in:
-   - **App title:** `Herald QA`
-   - **Short name:** `herald_qa` (no spaces; alphanumeric + underscore)
-   - **URL:** can be left blank or `https://github.com/vasic-digital/Herald`
-   - **Platform:** `Other`
-   - **Description:** `Herald §11.4.98 automation harness — fully-autonomous closed-loop testing of @atmosphere_worker_bot.`
-7. Click "Create application".
+6. **First-time:** click "Create new application". Fill in (values updated 2026-05-28 after operator reported `Incorrect app name` validation error):
+   - **App title:** `Herald` (simplest; works almost always) — fallbacks: `HeraldQA` (camelCase) → `Herald Test Harness` → `Herald Tools` → `Herald Lab`. **AVOID bare acronyms like `QA`** — Telegram's classifier rejects them with `Incorrect app name`.
+   - **Short name:** `herald_qa_<random4>` (e.g. `herald_qa_5kx9`) — must be 5-32 chars, alphanumeric + underscore only, GLOBALLY UNIQUE across all Telegram apps. Plain `herald_qa` may already be taken.
+   - **URL:** `https://herald.local` (or any valid `http(s)://` URL — Telegram requires the `http(s)://` prefix; bare domains rejected). Field is NOT actually optional.
+   - **Platform:** `Desktop` (fallback if `Other` is rejected on your Telegram form version).
+   - **Description:** `Herald automation harness for closed-loop testing.` (plain ASCII; no `§` symbol; under 200 chars; avoid acronyms QA/CI/CD).
+7. Click "Create application". **If you get `Incorrect app name`** — the App title contains a bare acronym Telegram flags as non-app-like; try the fallback titles above in order.
 8. Telegram displays:
    - `App api_id` — small integer (5-8 digits) → set as `HERALD_MTPROTO_APP_ID`
    - `App api_hash` — 32-char hex string → set as `HERALD_MTPROTO_APP_HASH`

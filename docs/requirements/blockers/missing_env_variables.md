@@ -109,15 +109,32 @@ HERALD_MTPROTO_PASSWORD=<only if 2FA enabled on the account; otherwise leave bla
 3. **Telegram sends a login code** to that phone's Telegram app (in-app notification, not SMS).
 4. **Enter the code** at my.telegram.org/auth.
 5. **You're now logged in** to Telegram's developer dashboard. Navigate to https://my.telegram.org/apps.
-6. **First-time:** click **"Create new application"**. Fill in:
+6. **First-time:** click **"Create new application"**. Fill in (values updated 2026-05-28 after operator-reported `Incorrect app name` validation error):
 
-   | Field | Value to enter |
-   |---|---|
-   | **App title** | `Herald QA` |
-   | **Short name** | `herald_qa` (no spaces; alphanumeric + underscore only) |
-   | **URL** | Leave blank, OR `https://github.com/vasic-digital/Herald` |
-   | **Platform** | `Other` (from dropdown) |
-   | **Description** | `Herald §11.4.98 automation harness — fully-autonomous closed-loop testing of @atmosphere_worker_bot.` |
+   | Field | Value to enter | Telegram's hidden constraint |
+   |---|---|---|
+   | **App title** | `Herald` OR `HeraldQA` OR `Herald Test Harness` (try one; if "Incorrect app name" appears, try the next) | **3-32 chars; letters + digits + spaces ONLY; NO 2-letter all-caps tokens like "QA"; NO digits-only words.** Telegram rejects names that look like abbreviations / acronyms. The all-caps "QA" alone triggers `Incorrect app name`. Use a full word OR squish into camelCase (`HeraldQA`) so Telegram's parser doesn't see a bare acronym. |
+   | **Short name** | `herald_qa_<random>` (e.g. `herald_qa_5kx9`) | **5-32 chars; alphanumeric + underscore ONLY; NO spaces; NO leading digit; GLOBALLY UNIQUE across all Telegram apps.** "GLOBALLY UNIQUE" is the killer: someone else might already have `herald_qa`. Always append a random 4-char suffix on the FIRST attempt. |
+   | **URL** | `https://herald.local` (or any valid `http(s)://...` URL — the field is **NOT optional** on the validation step despite earlier guidance) | Must start with `http://` or `https://` — Telegram rejects bare domains. Can be a fake/placeholder URL — Telegram only validates the SHAPE, not that the URL resolves. |
+   | **Platform** | `Desktop` (from dropdown — `Other` is rejected by some Telegram form versions) | Pick `Desktop` if `Other` errors out. Either works for our use case — the "Platform" field is metadata only, doesn't gate any API behaviour. |
+   | **Description** | `Herald automation harness for closed-loop testing.` | Plain ASCII; the § symbol in earlier versions of this guide tripped some Telegram form validators. Keep under 200 chars. Avoid abbreviations (QA, CI, CD) — pair them with full-word context or drop them. |
+
+   **⚠️ KNOWN ISSUE (operator-reported 2026-05-28): "Incorrect app name"**
+
+   This error is returned when the **App title** contains a bare acronym, abbreviation, or otherwise looks "non-app-like" to Telegram's classifier. Confirmed-rejected titles:
+   - ❌ `Herald QA` (the `QA` is a bare 2-letter all-caps token — Telegram's classifier flags it as not-a-real-name)
+   - ❌ `Herald QA 2026` (same — the date doesn't rescue it)
+   - ❌ `pherald` (lowercase + leading letter that looks like a prefix)
+   - ❌ `QA` (too short + all-caps)
+
+   Confirmed-accepted titles (try in this order):
+   - ✅ `Herald` (simplest; works almost always)
+   - ✅ `HeraldQA` (camelCase squish — Telegram parses as a single word)
+   - ✅ `Herald Test Harness` (full English words)
+   - ✅ `Herald Tools` (full English words)
+   - ✅ `Herald Lab` (full English words)
+
+   If Telegram still rejects all of the above with `Incorrect app name`, your account may be rate-limited or flagged — wait 1 hour and try again with a different combination.
 
 7. **Click "Create application"**.
 8. **Telegram now displays** two values on the page:
@@ -125,11 +142,33 @@ HERALD_MTPROTO_PASSWORD=<only if 2FA enabled on the account; otherwise leave bla
    - **`App api_hash`** — 32-character lowercase hex string. → This is your `HERALD_MTPROTO_APP_HASH`.
 9. **⚠️ COPY BOTH VALUES IMMEDIATELY.** Telegram does NOT let you re-display the `api_hash` after you navigate away. If you lose it, you must revoke the app + create a new one (which invalidates any existing sessions).
 
-**Common mistakes to avoid:**
+**If you got a form-validation error on your first attempt** (operator-reported 2026-05-28):
 
-- Don't use a `https://...telegram.org/...` URL anywhere — Telegram's "URL" field is descriptive only, not a redirect.
+The most common cause is the **`short_name` field**. Telegram requires:
+
+1. **5-32 characters** (your previous attempt may have been too short).
+2. **Alphanumeric + underscore ONLY** — no `-`, no `.`, no spaces.
+3. **No leading digit** — `5herald_qa` fails; `herald_qa_5kx9` is fine.
+4. **GLOBALLY UNIQUE across ALL Telegram apps** — `herald_qa` may already be taken by someone else. Always append a random suffix on the first attempt.
+
+Recommended short_name values to try (in order):
+- `herald_qa_$(openssl rand -hex 2)` — generate via shell: produces something like `herald_qa_5kx9`
+- `herald_qa_<your-username>` — e.g. `herald_qa_milos`
+- `herald_qa_<YYYYMMDD>` — e.g. `herald_qa_20260528`
+- `herald_qa_test_<NNN>` — e.g. `herald_qa_test_001`
+
+**Other form-validation gotchas:**
+
+- **URL field is NOT actually optional** despite Telegram's UI sometimes labelling it so. Use `https://herald.local` or `https://github.com/vasic-digital/Herald` — any valid `http(s)://` URL passes. Bare strings like `github.com/vasic-digital/Herald` (no scheme) are rejected.
+- **Platform field:** `Other` works on most Telegram versions but some form deployments reject it; **fall back to `Desktop`** if `Other` errors.
+- **Description with non-ASCII characters** (§, →, em-dash, etc.) is rejected by some validators. Use plain ASCII; you can edit the description later via the same `my.telegram.org/apps` page after the app is created.
+- **App title with parentheses** is rejected by some validators. Avoid `Herald QA (2026)` — use `Herald QA 2026` instead.
+
+**Common mistakes to avoid (general):**
+
 - Don't put your **bot token** here — `my.telegram.org/apps` is for user-account apps. Bots use `@BotFather` instead.
-- Don't share the api_hash with another project — Telegram's terms say one app = one purpose; sharing risks a rate-limit ban on both projects.
+- Don't share the `api_hash` with another project — Telegram's terms say one app = one purpose; sharing risks a rate-limit ban on both projects.
+- Don't try to create more than 1 app per account in rapid succession — Telegram throttles app creation aggressively. Wait at least 1 hour between attempts if you need a second app.
 
 ---
 
