@@ -172,6 +172,93 @@ next (after you reply "done")</a></li>
 <li><a href="#12-cross-references">Cross-references</a></li>
 </ol>
 <hr />
+<h2 id="warning-critical--read-this-before-starting-step-1">⚠️ CRITICAL
+— read this BEFORE starting Step 1</h2>
+<p>This setup uses an <strong>unofficial Telegram client</strong>
+(gotd/td library, MTProto layer). Per Telegram's own <a
+href="https://core.telegram.org/api/obtaining_api_id">official
+documentation</a> and the gotd/td maintainer guidance:</p>
+<blockquote>
+<p>"Due to excessive abuse of the Telegram API, <strong>all accounts
+that sign up or log in using unofficial Telegram clients are
+automatically put under observation</strong> to avoid violations of the
+Terms of Service."</p>
+</blockquote>
+<p><strong>Three hard rules you MUST follow to avoid a permanent account
+ban:</strong></p>
+<ol type="1">
+<li><p><strong>EMAIL <code>recover@telegram.org</code> BEFORE or AT
+first login</strong> — explain in plain words what the QA account will
+do. Suggested template:</p>
+<pre><code>To: recover@telegram.org
+Subject: Userbot purpose declaration — Herald automation testing
+
+Hello Telegram team,
+
+I&#39;m setting up a userbot via the MTProto API (using the gotd/td Go library)
+for the Herald open-source project (https://github.com/vasic-digital/Herald).
+
+The userbot will:
+- Send 3-10 messages per test run to a single group I own
+  (chat_id -4946584787 &quot;ATMOSphere Development&quot;) — entirely automated
+  testing of an internal bot&#39;s behaviour
+- Receive replies from that internal bot (@atmosphere_worker_bot)
+- Run ~5-20 test campaigns per day in CI
+- Never send messages to users outside this group
+- Never flood, spam, scrape, fake subscribers, or fake view counts
+- Use the gotd/contrib rate-limit + flood-wait middlewares
+
+Phone: &lt;YOUR E.164 PHONE&gt;
+App: &quot;Herald&quot; (api_id will be assigned by my.telegram.org/apps)
+
+Please flag this account as a known QA-automation userbot so the
+anti-abuse system does not put it under suspicion.
+
+Thank you,
+&lt;your name&gt;</code></pre>
+<p>Send this email FIRST. It takes Telegram ~0-3 days to acknowledge. Do
+not wait — proceed with Steps 1-5 in parallel, but the email must go
+BEFORE you make heavy use of the userbot.</p></li>
+<li><p><strong>DO NOT use a VoIP / Google Voice / Twilio / TextNow /
+virtual number.</strong> Earlier versions of this guide listed VoIP as
+"option (c)". That guidance was wrong. Telegram's anti-abuse system
+flags VoIP numbers aggressively and bans them at the slightest
+provocation. <strong>Use only:</strong></p>
+<ul>
+<li><strong>Option (a)</strong> — your personal Telegram account (proven
+number, has trust history). Fastest path. Recommended for first-cycle
+proof.</li>
+<li><strong>Option (b)</strong> — a dedicated SIM (eSIM is fine). Best
+long-term.</li>
+</ul></li>
+<li><p><strong>One phone = ONE app_id, FOREVER.</strong> Per Telegram's
+official docs: "For the moment each number can only have one api_id
+connected to it." If the phone you choose already has an app at
+my.telegram.org/apps from a previous project, <strong>you MUST reuse
+it</strong> — there is no way to create a second one for the same phone.
+The app_id + app_hash are also <strong>non-regenerable</strong> — if you
+lose them, you lose them forever (revoke + recreate is possible only for
+accounts that have NEVER had an app, which doesn't apply once you've
+created one).</p></li>
+</ol>
+<p><strong>Additional anti-ban hygiene</strong> (composes with §11.4.10
+/ §11.4.98):</p>
+<ul>
+<li>Use the harness PASSIVELY — receive more than send.</li>
+<li>Rate-limit via
+<code>github.com/gotd/contrib/middleware/ratelimit</code> (already
+vendored in <code>submodules/gotd-td</code>).</li>
+<li>Honor <code>FLOOD_WAIT_&lt;N&gt;</code> responses via
+<code>github.com/gotd/contrib/middleware/floodwait</code> (also
+vendored).</li>
+<li>Never share <code>HERALD_MTPROTO_APP_HASH</code> or the session
+file. Both are sufficient to impersonate the account.</li>
+</ul>
+<p>If your account gets banned despite all this, email
+<code>recover@telegram.org</code> from the same address explaining the
+userbot's purpose. Bans by the automated system can be reversed by a
+human reviewer when the use case is clearly legitimate.</p>
+<hr />
 <h2 id="1-why-this-blocker-exists">1. Why this blocker exists</h2>
 <p>Universal Constitution <strong>§11.4.98 Full-Automation Anti-Bluff
 Mandate</strong> (anchored 2026-05-28 by your verbatim instruction):</p>
@@ -290,12 +377,12 @@ v2.1.153)</td>
 <h2 id="3-what-you-must-provide">3. What you must provide</h2>
 <p>Four variables, one optional. Add to your existing <code>.env</code>
 (it's git-ignored at <code>.gitignore:28</code>):</p>
-<div class="sourceCode" id="cb1"><pre
-class="sourceCode ini"><code class="sourceCode ini"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># §11.4.98 MTProto user-account harness (Wave 8 Track B)</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="dt">HERALD_MTPROTO_APP_ID</span><span class="ot">=</span><span class="st">&lt;integer, 5-8 digits, from my.telegram.org/apps&gt;</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="dt">HERALD_MTPROTO_APP_HASH</span><span class="ot">=</span><span class="st">&lt;32-char hex string, from my.telegram.org/apps&gt;</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="dt">HERALD_MTPROTO_PHONE</span><span class="ot">=</span><span class="st">&lt;E.164 phone of QA user account, e.g. +12025551234&gt;</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="dt">HERALD_MTPROTO_PASSWORD</span><span class="ot">=</span><span class="st">&lt;only if 2FA enabled on the account; otherwise leave blank&gt;</span></span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode ini"><code class="sourceCode ini"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># §11.4.98 MTProto user-account harness (Wave 8 Track B)</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="dt">HERALD_MTPROTO_APP_ID</span><span class="ot">=</span><span class="st">&lt;integer, 5-8 digits, from my.telegram.org/apps&gt;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="dt">HERALD_MTPROTO_APP_HASH</span><span class="ot">=</span><span class="st">&lt;32-char hex string, from my.telegram.org/apps&gt;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="dt">HERALD_MTPROTO_PHONE</span><span class="ot">=</span><span class="st">&lt;E.164 phone of QA user account, e.g. +12025551234&gt;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="dt">HERALD_MTPROTO_PASSWORD</span><span class="ot">=</span><span class="st">&lt;only if 2FA enabled on the account; otherwise leave blank&gt;</span></span></code></pre></div>
 <p><strong>Where each value comes from:</strong></p>
 <table>
 <thead>
@@ -519,7 +606,30 @@ between attempts if you need a second app.</li>
 <p><code>HERALD_MTPROTO_PHONE</code> must be a <strong>real Telegram
 user account</strong> (not a bot). The account will appear as the
 "sender" of every test-driver message in your group chat
-<code>-4946584787</code>. Three options:</p>
+<code>-4946584787</code>.</p>
+<p><strong>⚠️ Important — check existing apps FIRST.</strong> Per
+Telegram's official doc: each phone number is permanently bound to AT
+MOST ONE app_id. If your candidate phone already has an app at
+my.telegram.org/apps from any prior project, you MUST reuse that
+existing app — Telegram will not let you create a second one for the
+same phone. To check:</p>
+<ol type="1">
+<li>Log in at <a
+href="https://my.telegram.org/auth">https://my.telegram.org/auth</a>
+with the candidate phone.</li>
+<li>Navigate to <a
+href="https://my.telegram.org/apps">https://my.telegram.org/apps</a>.</li>
+<li>If a row already exists (e.g. "App configuration" with a
+<code>App api_id</code> value visible), <strong>that IS your existing
+app — reuse it</strong>. Copy the <code>App api_id</code>. For the
+<code>App api_hash</code>, click "edit" / "details" if visible — most
+Telegram form versions let you retrieve the existing hash; if not, you
+cannot regenerate it (revocation invalidates any active session). Use
+what you can recover; if truly lost, this phone is unusable for new
+automation and you must pick a different phone.</li>
+<li>If no row exists, proceed to Step 1 to create a fresh one.</li>
+</ol>
+<p>Two valid options for which phone to use:</p>
 <table>
 <thead>
 <tr>
@@ -533,37 +643,39 @@ user account</strong> (not a bot). The account will appear as the
 <tr>
 <td><strong>(a) Your personal Telegram account</strong></td>
 <td>Fastest setup — no new SIM, no new login. The account already has
-Telegram installed and configured.</td>
-<td>Test messages appear "from you" in the QA chat. If a bug deletes
-group messages, it deletes them from YOUR account's perspective.
-Production CI runs use your personal session — not best practice
-long-term.</td>
-<td>First-cycle proof-of-concept. Get Wave 8 Track B working, then
-migrate to (b).</td>
+trust history with Telegram (reduces anti-abuse-system suspicion).</td>
+<td>Test messages appear "from you" in the QA chat. If a bug sends
+unintended messages, they appear from your real account. The account
+becomes "under observation" once you start using the userbot — minor
+risk of incorrect ban (recoverable via <a
+href="mailto:recover@telegram.org">recover@telegram.org</a>).</td>
+<td><strong>Recommended for first cycle.</strong> Get Wave 8 Track B
+proven working, then optionally migrate to (b).</td>
 </tr>
 <tr>
-<td><strong>(b) Dedicated QA SIM</strong></td>
-<td>Clean separation — purpose-built account, isolated from your
-personal Telegram. Best long-term posture.</td>
-<td>Requires a physical SIM card and ~$10-20/month.</td>
-<td>Production CI, when you've validated the harness works.</td>
-</tr>
-<tr>
-<td><strong>(c) Voice-over-IP number (Google Voice / Twilio /
-TextNow)</strong></td>
-<td>No physical SIM; free or cheap.</td>
-<td>Telegram increasingly rejects VoIP numbers — works ~60% of the time.
-The account may be flagged <code>USER_DEACTIVATED</code> even after
-successful initial signup.</td>
-<td>Budget-constrained scenarios; try (c) first, fall back to (b) if
-Telegram blocks.</td>
+<td><strong>(b) Dedicated QA SIM (or eSIM)</strong></td>
+<td>Clean separation — purpose-built account isolated from your personal
+Telegram. Even if the QA account gets banned, your personal account is
+unaffected.</td>
+<td>Requires a physical SIM or eSIM and ~$10-20/month. Brand-new
+accounts have ZERO trust history with Telegram → much higher ban risk in
+the first 30 days. <strong>Must email <a
+href="mailto:recover@telegram.org">recover@telegram.org</a> BEFORE first
+login</strong> to declare the userbot purpose.</td>
+<td>Production CI, only after you've validated the harness works with
+option (a) AND have notified <code>recover@telegram.org</code>.</td>
 </tr>
 </tbody>
 </table>
-<p><strong>Operator recommendation for first cycle:</strong> Use
-<strong>option (a) your personal account</strong>. The session file is
-portable — you can migrate to (b) later by just changing
-<code>HERALD_MTPROTO_PHONE</code> + the session file path; no test
+<p><strong>~~(c) VoIP / Google Voice / Twilio / TextNow ~~ —
+REMOVED.</strong> Earlier drafts of this guide listed VoIP as an option.
+Telegram's anti-abuse system flags VoIP/virtual numbers aggressively and
+frequently bans them with <code>USER_DEACTIVATED</code> (no appeal).
+<strong>Do not use VoIP</strong> under any circumstances for this
+harness.</p>
+<p><strong>Session file portability:</strong> the session file persists
+per phone; you can later migrate from (a) to (b) by changing
+<code>HERALD_MTPROTO_PHONE</code> + the session file path, no test
 rewrites needed.</p>
 <hr />
 <h2 id="6-step-3--add-the-qa-account-to-the-chat">6. Step 3 — Add the QA
@@ -596,12 +708,12 @@ variables to <code>.env</code></h2>
 <p><strong>Open <code>.env</code> in your normal editor</strong> (NOT
 through chat — never paste secret values into chat). Append to the
 existing file:</p>
-<div class="sourceCode" id="cb2"><pre
-class="sourceCode ini"><code class="sourceCode ini"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># §11.4.98 MTProto user-account harness (Wave 8 Track B)</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="dt">HERALD_MTPROTO_APP_ID</span><span class="ot">=</span><span class="dv">12345678</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="dt">HERALD_MTPROTO_APP_HASH</span><span class="ot">=</span><span class="st">0123456789abcdef0123456789abcdef</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="dt">HERALD_MTPROTO_PHONE</span><span class="ot">=</span><span class="st">+12025551234</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="dt">HERALD_MTPROTO_PASSWORD</span><span class="ot">=</span></span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode ini"><code class="sourceCode ini"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># §11.4.98 MTProto user-account harness (Wave 8 Track B)</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="dt">HERALD_MTPROTO_APP_ID</span><span class="ot">=</span><span class="dv">12345678</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="dt">HERALD_MTPROTO_APP_HASH</span><span class="ot">=</span><span class="st">0123456789abcdef0123456789abcdef</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="dt">HERALD_MTPROTO_PHONE</span><span class="ot">=</span><span class="st">+12025551234</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="dt">HERALD_MTPROTO_PASSWORD</span><span class="ot">=</span></span></code></pre></div>
 <p>Substitute the values you collected:</p>
 <ul>
 <li><code>HERALD_MTPROTO_APP_ID</code> — from Step 1.8 (small
@@ -621,12 +733,12 @@ git-ignored — your credentials will NOT be committed.</p>
 "done"</h2>
 <p><strong>Optional pre-flight check you can run yourself</strong>
 (validates the api_id + api_hash without exposing them):</p>
-<div class="sourceCode" id="cb3"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">set</span> <span class="at">-a</span><span class="kw">;</span> <span class="bu">source</span> .env<span class="kw">;</span> <span class="bu">set</span> +a</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&quot;APP_ID: </span><span class="va">$(</span><span class="bu">[</span> <span class="ot">-n</span> <span class="st">&quot;</span><span class="va">$HERALD_MTPROTO_APP_ID</span><span class="st">&quot;</span> <span class="bu">]</span> <span class="kw">&amp;&amp;</span> <span class="bu">echo</span> PRESENT <span class="kw">||</span> <span class="bu">echo</span> MISSING<span class="va">)</span><span class="st">&quot;</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&quot;APP_HASH: </span><span class="va">$(</span><span class="bu">[</span> <span class="va">${</span><span class="op">#</span><span class="va">HERALD_MTPROTO_APP_HASH}</span> <span class="ot">-eq</span> 32 <span class="bu">]</span> <span class="kw">&amp;&amp;</span> <span class="bu">echo</span> OK_LENGTH <span class="kw">||</span> <span class="bu">echo</span> WRONG_LENGTH<span class="va">)</span><span class="st">&quot;</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&quot;PHONE: </span><span class="va">$(</span><span class="bu">[</span> <span class="ot">-n</span> <span class="st">&quot;</span><span class="va">$HERALD_MTPROTO_PHONE</span><span class="st">&quot;</span> <span class="bu">]</span> <span class="kw">&amp;&amp;</span> <span class="bu">echo</span> PRESENT <span class="kw">||</span> <span class="bu">echo</span> MISSING<span class="va">)</span><span class="st">&quot;</span></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&quot;PASSWORD: </span><span class="va">$(</span><span class="bu">[</span> <span class="ot">-n</span> <span class="st">&quot;</span><span class="va">$HERALD_MTPROTO_PASSWORD</span><span class="st">&quot;</span> <span class="bu">]</span> <span class="kw">&amp;&amp;</span> <span class="bu">echo</span> PRESENT_2FA <span class="kw">||</span> <span class="bu">echo</span> BLANK_NO_2FA<span class="va">)</span><span class="st">&quot;</span></span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="bu">set</span> <span class="at">-a</span><span class="kw">;</span> <span class="bu">source</span> .env<span class="kw">;</span> <span class="bu">set</span> +a</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&quot;APP_ID: </span><span class="va">$(</span><span class="bu">[</span> <span class="ot">-n</span> <span class="st">&quot;</span><span class="va">$HERALD_MTPROTO_APP_ID</span><span class="st">&quot;</span> <span class="bu">]</span> <span class="kw">&amp;&amp;</span> <span class="bu">echo</span> PRESENT <span class="kw">||</span> <span class="bu">echo</span> MISSING<span class="va">)</span><span class="st">&quot;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&quot;APP_HASH: </span><span class="va">$(</span><span class="bu">[</span> <span class="va">${</span><span class="op">#</span><span class="va">HERALD_MTPROTO_APP_HASH}</span> <span class="ot">-eq</span> 32 <span class="bu">]</span> <span class="kw">&amp;&amp;</span> <span class="bu">echo</span> OK_LENGTH <span class="kw">||</span> <span class="bu">echo</span> WRONG_LENGTH<span class="va">)</span><span class="st">&quot;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&quot;PHONE: </span><span class="va">$(</span><span class="bu">[</span> <span class="ot">-n</span> <span class="st">&quot;</span><span class="va">$HERALD_MTPROTO_PHONE</span><span class="st">&quot;</span> <span class="bu">]</span> <span class="kw">&amp;&amp;</span> <span class="bu">echo</span> PRESENT <span class="kw">||</span> <span class="bu">echo</span> MISSING<span class="va">)</span><span class="st">&quot;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&quot;PASSWORD: </span><span class="va">$(</span><span class="bu">[</span> <span class="ot">-n</span> <span class="st">&quot;</span><span class="va">$HERALD_MTPROTO_PASSWORD</span><span class="st">&quot;</span> <span class="bu">]</span> <span class="kw">&amp;&amp;</span> <span class="bu">echo</span> PRESENT_2FA <span class="kw">||</span> <span class="bu">echo</span> BLANK_NO_2FA<span class="va">)</span><span class="st">&quot;</span></span></code></pre></div>
 <p>Expected output:</p>
 <pre><code>APP_ID: PRESENT
 APP_HASH: OK_LENGTH

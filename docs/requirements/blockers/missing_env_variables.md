@@ -35,6 +35,63 @@
 
 ---
 
+## ⚠️ CRITICAL — read this BEFORE starting Step 1
+
+This setup uses an **unofficial Telegram client** (gotd/td library, MTProto layer). Per Telegram's own [official documentation](https://core.telegram.org/api/obtaining_api_id) and the gotd/td maintainer guidance:
+
+> "Due to excessive abuse of the Telegram API, **all accounts that sign up or log in using unofficial Telegram clients are automatically put under observation** to avoid violations of the Terms of Service."
+
+**Three hard rules you MUST follow to avoid a permanent account ban:**
+
+1. **EMAIL `recover@telegram.org` BEFORE or AT first login** — explain in plain words what the QA account will do. Suggested template:
+
+   ```
+   To: recover@telegram.org
+   Subject: Userbot purpose declaration — Herald automation testing
+
+   Hello Telegram team,
+
+   I'm setting up a userbot via the MTProto API (using the gotd/td Go library)
+   for the Herald open-source project (https://github.com/vasic-digital/Herald).
+
+   The userbot will:
+   - Send 3-10 messages per test run to a single group I own
+     (chat_id -4946584787 "ATMOSphere Development") — entirely automated
+     testing of an internal bot's behaviour
+   - Receive replies from that internal bot (@atmosphere_worker_bot)
+   - Run ~5-20 test campaigns per day in CI
+   - Never send messages to users outside this group
+   - Never flood, spam, scrape, fake subscribers, or fake view counts
+   - Use the gotd/contrib rate-limit + flood-wait middlewares
+
+   Phone: <YOUR E.164 PHONE>
+   App: "Herald" (api_id will be assigned by my.telegram.org/apps)
+
+   Please flag this account as a known QA-automation userbot so the
+   anti-abuse system does not put it under suspicion.
+
+   Thank you,
+   <your name>
+   ```
+
+   Send this email FIRST. It takes Telegram ~0-3 days to acknowledge. Do not wait — proceed with Steps 1-5 in parallel, but the email must go BEFORE you make heavy use of the userbot.
+
+2. **DO NOT use a VoIP / Google Voice / Twilio / TextNow / virtual number.** Earlier versions of this guide listed VoIP as "option (c)". That guidance was wrong. Telegram's anti-abuse system flags VoIP numbers aggressively and bans them at the slightest provocation. **Use only:**
+   - **Option (a)** — your personal Telegram account (proven number, has trust history). Fastest path. Recommended for first-cycle proof.
+   - **Option (b)** — a dedicated SIM (eSIM is fine). Best long-term.
+
+3. **One phone = ONE app_id, FOREVER.** Per Telegram's official docs: "For the moment each number can only have one api_id connected to it." If the phone you choose already has an app at my.telegram.org/apps from a previous project, **you MUST reuse it** — there is no way to create a second one for the same phone. The app_id + app_hash are also **non-regenerable** — if you lose them, you lose them forever (revoke + recreate is possible only for accounts that have NEVER had an app, which doesn't apply once you've created one).
+
+**Additional anti-ban hygiene** (composes with §11.4.10 / §11.4.98):
+- Use the harness PASSIVELY — receive more than send.
+- Rate-limit via `github.com/gotd/contrib/middleware/ratelimit` (already vendored in `submodules/gotd-td`).
+- Honor `FLOOD_WAIT_<N>` responses via `github.com/gotd/contrib/middleware/floodwait` (also vendored).
+- Never share `HERALD_MTPROTO_APP_HASH` or the session file. Both are sufficient to impersonate the account.
+
+If your account gets banned despite all this, email `recover@telegram.org` from the same address explaining the userbot's purpose. Bans by the automated system can be reversed by a human reviewer when the use case is clearly legitimate.
+
+---
+
 ## 1. Why this blocker exists
 
 Universal Constitution **§11.4.98 Full-Automation Anti-Bluff Mandate** (anchored 2026-05-28 by your verbatim instruction):
@@ -174,15 +231,25 @@ Recommended short_name values to try (in order):
 
 ## 5. Step 2 — Choose which phone / Telegram account to use
 
-`HERALD_MTPROTO_PHONE` must be a **real Telegram user account** (not a bot). The account will appear as the "sender" of every test-driver message in your group chat `-4946584787`. Three options:
+`HERALD_MTPROTO_PHONE` must be a **real Telegram user account** (not a bot). The account will appear as the "sender" of every test-driver message in your group chat `-4946584787`.
+
+**⚠️ Important — check existing apps FIRST.** Per Telegram's official doc: each phone number is permanently bound to AT MOST ONE app_id. If your candidate phone already has an app at my.telegram.org/apps from any prior project, you MUST reuse that existing app — Telegram will not let you create a second one for the same phone. To check:
+
+1. Log in at https://my.telegram.org/auth with the candidate phone.
+2. Navigate to https://my.telegram.org/apps.
+3. If a row already exists (e.g. "App configuration" with a `App api_id` value visible), **that IS your existing app — reuse it**. Copy the `App api_id`. For the `App api_hash`, click "edit" / "details" if visible — most Telegram form versions let you retrieve the existing hash; if not, you cannot regenerate it (revocation invalidates any active session). Use what you can recover; if truly lost, this phone is unusable for new automation and you must pick a different phone.
+4. If no row exists, proceed to Step 1 to create a fresh one.
+
+Two valid options for which phone to use:
 
 | Option | Pros | Cons | When to pick |
 |---|---|---|---|
-| **(a) Your personal Telegram account** | Fastest setup — no new SIM, no new login. The account already has Telegram installed and configured. | Test messages appear "from you" in the QA chat. If a bug deletes group messages, it deletes them from YOUR account's perspective. Production CI runs use your personal session — not best practice long-term. | First-cycle proof-of-concept. Get Wave 8 Track B working, then migrate to (b). |
-| **(b) Dedicated QA SIM** | Clean separation — purpose-built account, isolated from your personal Telegram. Best long-term posture. | Requires a physical SIM card and ~$10-20/month. | Production CI, when you've validated the harness works. |
-| **(c) Voice-over-IP number (Google Voice / Twilio / TextNow)** | No physical SIM; free or cheap. | Telegram increasingly rejects VoIP numbers — works ~60% of the time. The account may be flagged `USER_DEACTIVATED` even after successful initial signup. | Budget-constrained scenarios; try (c) first, fall back to (b) if Telegram blocks. |
+| **(a) Your personal Telegram account** | Fastest setup — no new SIM, no new login. The account already has trust history with Telegram (reduces anti-abuse-system suspicion). | Test messages appear "from you" in the QA chat. If a bug sends unintended messages, they appear from your real account. The account becomes "under observation" once you start using the userbot — minor risk of incorrect ban (recoverable via recover@telegram.org). | **Recommended for first cycle.** Get Wave 8 Track B proven working, then optionally migrate to (b). |
+| **(b) Dedicated QA SIM (or eSIM)** | Clean separation — purpose-built account isolated from your personal Telegram. Even if the QA account gets banned, your personal account is unaffected. | Requires a physical SIM or eSIM and ~$10-20/month. Brand-new accounts have ZERO trust history with Telegram → much higher ban risk in the first 30 days. **Must email recover@telegram.org BEFORE first login** to declare the userbot purpose. | Production CI, only after you've validated the harness works with option (a) AND have notified `recover@telegram.org`. |
 
-**Operator recommendation for first cycle:** Use **option (a) your personal account**. The session file is portable — you can migrate to (b) later by just changing `HERALD_MTPROTO_PHONE` + the session file path; no test rewrites needed.
+**~~(c) VoIP / Google Voice / Twilio / TextNow ~~ — REMOVED.** Earlier drafts of this guide listed VoIP as an option. Telegram's anti-abuse system flags VoIP/virtual numbers aggressively and frequently bans them with `USER_DEACTIVATED` (no appeal). **Do not use VoIP** under any circumstances for this harness.
+
+**Session file portability:** the session file persists per phone; you can later migrate from (a) to (b) by changing `HERALD_MTPROTO_PHONE` + the session file path, no test rewrites needed.
 
 ---
 

@@ -429,6 +429,18 @@ Per Universal Constitution §11.4.98 + Herald §108.m (anchored 2026-05-28): eve
 
 Solution: drive QA tests from a **real Telegram user account** via the **MTProto protocol** (the same protocol Telegram apps use). The harness lives in `qaherald/internal/mtproto/` (vendor: `github.com/gotd/td`). A user account in the same chat as the bot can send messages that the bot's `getUpdates` poller picks up, enabling fully-autonomous closed-loop testing.
 
+### ⚠️ CRITICAL — anti-ban hygiene (read BEFORE Step 1)
+
+Per Telegram's [official docs](https://core.telegram.org/api/obtaining_api_id) + gotd/td's "How to not get banned" guide: **all accounts that log in via unofficial Telegram clients are automatically put under observation**. To avoid permanent bans:
+
+1. **EMAIL `recover@telegram.org` BEFORE or AT first login** declaring the userbot's purpose. Template in `docs/requirements/blockers/missing_env_variables.md` §"CRITICAL — read this BEFORE starting Step 1".
+2. **DO NOT use VoIP / Google Voice / Twilio / TextNow numbers** — Telegram flags them aggressively. Use only your personal account OR a dedicated SIM/eSIM.
+3. **One phone = ONE app_id, FOREVER** — if your phone already has an app at my.telegram.org/apps, you MUST reuse it; you cannot create a second one.
+4. **app_id + app_hash cannot be regenerated** — they are permanently bound to the Telegram account. Treat them as immutable secrets.
+5. Use the harness **passively** (receive more than send). Wire `github.com/gotd/contrib/middleware/ratelimit` + `floodwait` (already vendored in `submodules/gotd-td`).
+
+If banned despite all this, email `recover@telegram.org` from the same address explaining the userbot's purpose. Automated false-positives are recoverable; deliberate abuse is not.
+
 ### Variables (add to `.env`)
 
 | Variable | What | Example shape | Source |
