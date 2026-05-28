@@ -47,7 +47,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>29</td>
+<td>30</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -63,8 +63,35 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>r29 (v0.6.0 Wave 7 T11 — multi-channel §11.4.85
-stress+chaos) marks HRD-120 Open→in_progress.</strong> Extended
+<td><strong>r30 (v0.6.0 Wave 7 T12 — operator guide; Wave 7
+CODE-COMPLETE) marks HRD-121 Open→in_progress.</strong>
+<code>docs/guides/MESSENGER_CHANNELS.md</code> ships as the
+operator-facing entry point for the multi-channel messenger framework —
+610 lines, 11 sections covering architecture (commons.Channel outbound
+vs commons_messaging/channels.Channel inbound; ASCII fan-in diagram),
+HERALD_CHANNELS selector (fail-loud on unknown), Telegram + Slack
+live-setup walkthroughs (BotFather + api.slack.com/apps including Socket
+Mode app-token), §107 token-redaction security note for xoxb-/xapp-
+(citing <code>TestSlack_Send_ErrorDoesNotLeakToken</code>), per-channel
+inbox isolation, self-filter contract, URL schemes, "add a new channel"
+implementer checklist + "what you do NOT touch" companion (the
+framework's hot paths come for free), 10-entry troubleshooting cookbook,
+6-checklist pre-deploy audit, full HRD/spec cross-references. Generated
+3 siblings (.html/.pdf/.docx) via
+<code>REGEN_ALL=1 scripts/export_docs.sh</code>. <strong>Wave 7 (T1-T12)
+is now code-complete:</strong> HRD-110..114 (framework, already Fixed
+pre-session) + HRD-115 (slack adapter Socket Mode, <code>54d4316</code>)
++ HRD-116 (qaherald slack MessengerClient + builder,
+<code>6811114</code>) + HRD-117 (spec V3 r12→r13, <code>7f1b043</code>)
++ HRD-118 (e2e E124-E131, <code>17ecd0b</code>) + HRD-119 (paired §1.1
+mutation gate 4/0, <code>6737040</code>) + HRD-120 (multi-channel
+§11.4.85 stress+chaos 12/12, <code>86dfa1e</code>) + HRD-121 (this row).
+Wave 7 HRDs <strong>stay in_progress</strong> pending operator-live
+Slack evidence (mirrors Wave 6's v0.4.0 deferred-to-T13b pattern);
+v0.6.0 tag is operator-gated on live
+<code>docs/qa/HRD-115-LIVE-*/</code> workspace evidence per §107.x.
+<strong>Prior r29 (v0.6.0 Wave 7 T11 — multi-channel §11.4.85
+stress+chaos) marked HRD-120 Open→in_progress.</strong> Extended
 <code>pherald/cmd/pherald/listen_stress_chaos_test.go</code> (HRD-126's
 single-channel scaffold) with two W7-specific multi-channel tests:
 <code>TestListen_MultiChannel_StressBurst</code> (2 channels × 200
@@ -138,7 +165,7 @@ inbound-runtime extension note
 <tr>
 <td>Issues</td>
 <td>HRD-008, HRD-015, HRD-019..HRD-025, HRD-029..HRD-056, HRD-081,
-HRD-085..HRD-090, HRD-115..HRD-120, HRD-131</td>
+HRD-085..HRD-090, HRD-115..HRD-121, HRD-131</td>
 </tr>
 <tr>
 <td>Issues summary</td>
@@ -1248,6 +1275,43 @@ canonical precedent HRD-126 + commons/stresschaos; evidence
 <code>QA-ANCHOR: HRD-120-WAVE7-MULTICHANNEL-STRESS-CHAOS-20260528</code>);
 Catalogue-Check: extend commons/stresschaos + HRD-126
 burstSubscriber.</td>
+</tr>
+<tr>
+<td>HRD-121</td>
+<td>task</td>
+<td>in_progress</td>
+<td>low</td>
+<td>Wave 7 T12 — <code>docs/guides/MESSENGER_CHANNELS.md</code> operator
+guide (610 lines, 11 §-sections + 3 siblings .html/.pdf/.docx): §1
+architecture (commons.Channel outbound vs
+commons_messaging/channels.Channel inbound + registry + IsSelfEcho +
+per-channel inbox; ASCII fan-in diagram), §2
+<code>HERALD_CHANNELS</code> selector (fail-loud on unknown name), §3
+Telegram live setup (BotFather → token → chat-id), §4 Slack live setup
+(api.slack.com/apps → Socket Mode + scopes +
+<code>xoxb-</code>/<code>xapp-</code> tokens; §107 token-redaction
+sanitization note citing
+<code>TestSlack_Send_ErrorDoesNotLeakToken</code>), §5 inbox isolation
+under
+<code>${HERALD_INBOX_DIR}/&lt;channel&gt;/&lt;sha256&gt;.&lt;ext&gt;</code>,
+§6 anti-echo-loop self-filter (cross-the-wire-then-cache contract), §7
+URL schemes for both adapters, §8 14-item "add a new channel"
+implementer checklist + companion "what you do NOT touch" list
+(framework hot paths come for free), §9 10-entry troubleshooting
+cookbook (echo-loop / channel_not_found / invalid_auth / wrong inbox /
+HERALD_CHANNELS=unknown), §10 6-checklist operator pre-deploy audit
+mirroring OPERATOR_CREDENTIALS.md style, §11 references (cross-links
+spec V3 §11/§32.2/§43 + Wave 7 plan + adapter source paths + every
+HRD-110..121). Generated via
+<code>REGEN_ALL=1 bash scripts/export_docs.sh</code> (new-guide
+bootstrap).</td>
+<td>2026-05-28</td>
+<td>2026-05-28</td>
+<td>docs/superpowers/plans/2026-05-27-wave7-generic-messenger.md §T12;
+evidence <code>docs/qa/HRD-121-20260528T120000Z/transcript.txt</code>
+(anchor
+<code>QA-ANCHOR: HRD-121-WAVE7-T12-MESSENGER-CHANNELS-DOC-20260528</code>);
+Catalogue-Check: n/a (operator doc).</td>
 </tr>
 <tr>
 <td>HRD-131</td>

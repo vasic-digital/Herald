@@ -1,0 +1,171 @@
+QA-ANCHOR: HRD-121-WAVE7-T12-MESSENGER-CHANNELS-DOC-20260528
+
+================================================================================
+Herald — Wave 7 T12 (HRD-121) MESSENGER_CHANNELS.md authoring evidence
+Run-id: HRD-121-20260528T120000Z
+Author: subagent (delivered via Task tool)
+Date: 2026-05-28
+================================================================================
+
+PURPOSE
+-------
+Capture the §107.x docs/qa/ evidence that proves the operator-facing per-channel
+messenger guide (docs/guides/MESSENGER_CHANNELS.md, the closing Wave 7 deliverable)
+was authored AND that all three sibling artefacts (HTML, PDF, DOCX) were generated
+cleanly by scripts/export_docs.sh. This is the §107 anti-bluff anchor for HRD-121:
+a feature that ships without a docs/qa/<run-id>/ directory is itself a PASS-bluff
+regardless of how clean its commit looks.
+
+
+================================================================================
+STEP 1 — Source file authored
+================================================================================
+
+Path: /Users/milosvasic/Projects/Herald/docs/guides/MESSENGER_CHANNELS.md
+
+$ wc -l docs/guides/MESSENGER_CHANNELS.md
+     610 docs/guides/MESSENGER_CHANNELS.md
+
+Line count: 610 lines (target band 400-800; comfortable mid-range, matches
+OPERATOR_CREDENTIALS.md / HERALD_CONSTITUTION.md scale).
+
+
+================================================================================
+STEP 2 — Section structure (11 §-prefixed headings, full plan coverage)
+================================================================================
+
+$ grep -cE '^## §' docs/guides/MESSENGER_CHANNELS.md
+11
+
+$ grep -E '^## §' docs/guides/MESSENGER_CHANNELS.md
+## §1. Architecture overview
+## §2. Enabling channels (`HERALD_CHANNELS`)
+## §3. Telegram (LIVE — Wave 6 HRD-011)
+## §4. Slack (LIVE — Wave 7 T6 HRD-115)
+## §5. Per-channel inbox isolation
+## §6. Self-filter (anti-echo-loop)
+## §7. URL schemes
+## §8. Adding a new channel
+## §9. Troubleshooting
+## §10. Audit checklist (operator pre-deploy)
+## §11. References
+
+Coverage cross-check against the T12 prompt:
+  §1 Architecture overview                — REQUIRED — present (incl. ASCII diagram)
+  §2 HERALD_CHANNELS                      — REQUIRED — present (incl. fail-loud table)
+  §3 Telegram (LIVE since Wave 6)         — REQUIRED — present (env, bot setup, transport, capabilities)
+  §4 Slack (LIVE since Wave 7 T6)         — REQUIRED — present (env, app manifest, scopes, security note)
+  §5 Per-channel inbox isolation          — REQUIRED — present (visual tree, env override, idempotence)
+  §6 Self-filter (anti-echo-loop)         — REQUIRED — present (flow, comparator, per-channel kinds)
+  §7 URL schemes                          — REQUIRED — present (tgram:// + slack://)
+  §8 Adding a new channel                 — REQUIRED — present (14-item checklist + "what you do NOT touch")
+  §9 Troubleshooting                      — REQUIRED — present (10 cookbook entries)
+  §10 Audit checklist (operator pre-deploy) — REQUIRED — present (6 sub-checklists, OPERATOR_CREDENTIALS-style)
+  §11 References                          — REQUIRED — present (source files, spec V3, HRDs, related guides, plan, anchors)
+
+Result: 11 / 11 PRESENT — full plan coverage.
+
+
+================================================================================
+STEP 3 — Sibling export via scripts/export_docs.sh
+================================================================================
+
+$ REGEN_ALL=1 bash scripts/export_docs.sh docs/guides/MESSENGER_CHANNELS.md 2>&1
+WARNING: Ignored `gap: min(4vw, 1.5em)` at 6:32, invalid value.
+WARNING: Ignored `overflow-x: auto` at 7:28, unknown property.
+WARNING: Ignored `user-select: none` at 45:32, unknown property.
+  OK   docs/guides/MESSENGER_CHANNELS.md
+         -> docs/guides/MESSENGER_CHANNELS.html
+         -> docs/guides/MESSENGER_CHANNELS.pdf
+         -> docs/guides/MESSENGER_CHANNELS.docx
+
+Exit status: 0 (clean).
+
+Notes on warnings:
+  - All three CSS warnings originate from the shared assets/logo/print.css
+    (`gap`, `overflow-x`, `user-select`) which weasyprint does not implement.
+    They are PRE-EXISTING noise — every existing Herald guide regenerates with
+    the same three warnings; they do NOT affect the rendered output (the
+    affected rules are stylistic-only and degrade gracefully).
+  - No errors, no SKIPs, no MISS, no FAIL. All three sibling artefacts emitted.
+
+REGEN_ALL=1 was used because the .md is brand-new — `scripts/export_docs.sh`
+without REGEN_ALL only regenerates artefacts whose siblings already exist
+(see line 54..82 of the script). For a NEW guide the env override is the
+documented path.
+
+
+================================================================================
+STEP 4 — Filesystem proof — all 4 files exist with non-zero size
+================================================================================
+
+$ ls -l docs/guides/MESSENGER_CHANNELS.{md,html,pdf,docx}
+-rw-r--r--@ 1 milosvasic  staff   35891 May 28 10:31 docs/guides/MESSENGER_CHANNELS.docx
+-rw-r--r--@ 1 milosvasic  staff   65777 May 28 10:31 docs/guides/MESSENGER_CHANNELS.html
+-rw-r--r--@ 1 milosvasic  staff   42421 May 28 10:30 docs/guides/MESSENGER_CHANNELS.md
+-rw-r--r--@ 1 milosvasic  staff  112351 May 28 10:31 docs/guides/MESSENGER_CHANNELS.pdf
+
+  MESSENGER_CHANNELS.md     42 KiB  (source)
+  MESSENGER_CHANNELS.html   65 KiB  (pandoc -t html5 standalone + assets/logo/print.css)
+  MESSENGER_CHANNELS.pdf   112 KiB  (pandoc --pdf-engine=weasyprint)
+  MESSENGER_CHANNELS.docx   35 KiB  (pandoc -t docx with embedded images)
+
+All four files present, non-zero, mtimes within ~1 minute of one another (the
+export pass), source mtime predates all three siblings as expected.
+
+
+================================================================================
+STEP 5 — Scope-lock verification (write-only, no code/test touched)
+================================================================================
+
+This subagent's edit perimeter:
+  CREATED:
+    docs/guides/MESSENGER_CHANNELS.md       (the guide)
+    docs/guides/MESSENGER_CHANNELS.html     (sibling — generated)
+    docs/guides/MESSENGER_CHANNELS.pdf      (sibling — generated)
+    docs/guides/MESSENGER_CHANNELS.docx     (sibling — generated)
+    docs/qa/HRD-121-20260528T120000Z/transcript.txt  (this file)
+
+  UNTOUCHED:
+    docs/Issues.md, docs/Fixed.md, docs/Status.md, docs/CONTINUATION.md
+    CLAUDE.md, AGENTS.md, README.md
+    quickstart/.env.example
+    scripts/e2e_bluff_hunt.sh, tests/test_wave7_mutation_meta.sh
+    every .go file in commons*, commons_messaging/, pherald/, qaherald/, *herald/
+    every submodule under submodules/
+    every other guide under docs/guides/ (referenced read-only)
+
+The conductor (the parent agent that dispatched this subagent) is responsible
+for: (a) filing the HRD-121 row in docs/Issues.md, (b) performing the §11.4.19
+atomic Issues→Fixed migration, (c) refreshing CLAUDE.md / Status.md /
+CONTINUATION.md per Wave 7 T12 Step 5, (d) the git add / commit / push.
+
+
+================================================================================
+STEP 6 — Quiescence (§107.y) verification
+================================================================================
+
+Pre-write scan:
+$ grep -rEn 'MUTATED W7-|// always pass|MUTATED for paired' . --include='*.go'
+(no output; exit 0)
+
+Result: working tree was QUIESCENT at authoring time. No mutation residue
+present in any tracked .go file. Safe to commit (the conductor performs the
+commit, not this subagent).
+
+
+================================================================================
+SUMMARY
+================================================================================
+
+Deliverable:        docs/guides/MESSENGER_CHANNELS.md + 3 siblings
+Line count:         610 (target band 400-800)
+Section count:      11 sections (§1..§11), full plan coverage
+Sibling exports:    HTML (65 KiB), PDF (112 KiB), DOCX (35 KiB) — all clean
+Export tool:        scripts/export_docs.sh with REGEN_ALL=1 (documented path for new guides)
+Scope-lock:         honored — no code/test/other-guide touched
+Quiescence:         clean (no MUTATED markers)
+Status:             DONE
+
+Anchor:             HRD-121-WAVE7-T12-MESSENGER-CHANNELS-DOC-20260528
+QA dir:             docs/qa/HRD-121-20260528T120000Z/
