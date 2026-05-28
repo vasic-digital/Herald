@@ -2026,6 +2026,7 @@ SC_CS_DIR="$(sc_newest 'HRD-124-*')"
 SC_LISTEN_DIR="$(sc_newest '*HRD-126*')"
 SC_CC_DIR="$(sc_newest 'HRD-127-*')"
 SC_RES_DIR="$(sc_newest 'HRD-128-*')"
+SC_TGRAM_DIR="$(sc_newest 'HRD-137-*')"
 SC_CONST_DIR="$(sc_newest 'HRD-018-*')"
 SC_BIND_DIR="$(sc_newest 'HRD-019-*')"
 SC_SAFE_DIR="$(sc_newest 'HRD-020-*')"
@@ -2368,6 +2369,21 @@ check "E130 multi-channel pherald listen — Subscribers map dispatch + clean ct
 check "E131 qaherald messenger.Build(BuildConfig) — tgram + slack + unknown-channel-errors-loud (T7)" \
     "go test -race -count=1 -run 'TestBuilderTgram|TestBuilderSlack|TestBuilderUnknownErrors' ./qaherald/internal/messenger/..."
 sc_anchor "E131" "docs/qa/HRD-116-20260528T090000Z/transcript.txt" "QA-ANCHOR: HRD-116-WAVE7-T7-QAHERALD-SLACK-CLIENT-20260528"
+
+# ---- E132-E133: tgram §11.4.85 stress + chaos (HRD-137) ----
+# Wave C closure — multi-recipient fan-out stress proves the Send path under
+# 200 concurrent recipients × 5 messages stays panic-free + sanitizes errors;
+# chaos drives Subscribe()'s getUpdates poller through an httptest fault
+# injector (3× 500 + 2× 1.5s hangs + 1× mid-body Hijacker close + 2× success)
+# and asserts ≥3 InboundEvents reach the handler within a 12s window.
+# Deterministic across -race -count=3 per §11.4.50.
+check "E132 tgram stress — multi-recipient fan-out (HRD-137; 200 recipients × 5 msgs, race-free)" \
+    "go test -race -count=1 -run 'TestTgram_Stress_MultiRecipientFanOut' ./commons_messaging/channels/tgram/..."
+sc_anchor "E132" "${SC_TGRAM_DIR:+${SC_TGRAM_DIR}/stress_chaos/fanout/assertion.txt}" "status=PASS"
+
+check "E133 tgram chaos — getUpdates poller resilience under 4-mode fault injection (HRD-137; SKIP→PASS via subscribe.go baseURL seam)" \
+    "go test -race -count=1 -run 'TestTgram_Chaos_GetUpdatesPollerResilience' ./commons_messaging/channels/tgram/..."
+sc_anchor "E133" "${SC_TGRAM_DIR:+${SC_TGRAM_DIR}/stress_chaos/poller_chaos/chaos_assertion.txt}" "status=PASS"
 
 # ----------------------------------------------------------------------
 echo ""
