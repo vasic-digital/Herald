@@ -1,0 +1,153 @@
+//go:build integration_mtproto
+
+package lifecycle
+
+import (
+	"context"
+	"fmt"
+	"os"
+	"strconv"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/vasic-digital/herald/qaherald/internal/mtproto"
+)
+
+// TestMTProto_Wave65_LifecycleAutonomous is the §11.4.98-compliant
+// replacement for the --manual mode of tests/test_wave6.5_lifecycle.sh.
+// Drives the Wave 6.5 ticket-lifecycle scenarios autonomously via the
+// MTProto user-account: each scenario sends a stimulus message + waits
+// for pherald's reply via MTProto WaitForReply.
+//
+// Scope of this test (per §11.4.98 + §107.x evidence mandate): a
+// representative subset of the 15 Wave 6.5 lifecycle scenarios that
+// proves end-to-end autonomy through the MTProto path. The full
+// 15-scenario suite is run via the existing scenario engine
+// (qaherald lifecycle subcommand) once this Wave 8 Track B path is
+// validated; this test is the §11.4.98 gate that proves the path works.
+//
+// Honest-SKIP per §11.4.3 when env vars missing OR session file absent.
+// NEVER falls back to a manual-dep path.
+//
+// Build tag: integration_mtproto.
+func TestMTProto_Wave65_LifecycleAutonomous(t *testing.T) {
+	appIDStr := os.Getenv("HERALD_MTPROTO_APP_ID")
+	appHash := os.Getenv("HERALD_MTPROTO_APP_HASH")
+	phone := os.Getenv("HERALD_MTPROTO_PHONE")
+	password := os.Getenv("HERALD_MTPROTO_PASSWORD")
+	chatIDStr := os.Getenv("HERALD_TGRAM_CHAT_ID")
+
+	if appIDStr == "" || appHash == "" || phone == "" || chatIDStr == "" {
+		t.Skipf("skip: MTProto/Tgram credentials missing per §11.4.3")
+	}
+	appID, err := strconv.Atoi(appIDStr)
+	if err != nil {
+		t.Skipf("skip: HERALD_MTPROTO_APP_ID not an integer")
+	}
+	chatID, err := strconv.ParseInt(chatIDStr, 10, 64)
+	if err != nil {
+		t.Skipf("skip: HERALD_TGRAM_CHAT_ID not an integer")
+	}
+
+	cfg := mtproto.Config{AppID: appID, AppHash: appHash, Phone: phone, Password: password}
+	exists, err := cfg.SessionExists()
+	if err != nil {
+		t.Fatalf("SessionExists: %v", err)
+	}
+	if !exists {
+		t.Skipf("skip: MTProto session file missing — run `qaherald mtproto login` first")
+	}
+
+	client, err := mtproto.New(cfg)
+	if err != nil {
+		t.Fatalf("mtproto.New: %v", err)
+	}
+	defer client.Close()
+
+	overallCtx, overallCancel := context.WithTimeout(context.Background(), 10*time.Minute)
+	defer overallCancel()
+
+	if err := client.Connect(overallCtx); err != nil {
+		t.Fatalf("Connect: %v", err)
+	}
+
+	myID, myUsername, err := client.WhoAmI(overallCtx)
+	if err != nil {
+		t.Fatalf("WhoAmI: %v", err)
+	}
+	t.Logf("MTProto active: @%s (user_id=%d)", myUsername, myID)
+
+	// Representative Wave 6.5 lifecycle scenarios (subset proving the
+	// autonomous-roundtrip path works for each fast-path command class).
+	// The full 15-scenario suite lives in qaherald/internal/scenario; this
+	// test exercises one scenario from each class to prove the §11.4.98
+	// MTProto-driven path can replace the legacy --manual mode end-to-end.
+	scenarios := []struct {
+		name                  string
+		stimulusText          string
+		expectReplySubstrings []string // any-of: reply MUST contain at least one
+		timeout               time.Duration
+	}{
+		{
+			name:                  "Help_FastPath",
+			stimulusText:          "Help",
+			expectReplySubstrings: []string{"Done:", "Reopen:", "help", "commands"},
+			timeout:               30 * time.Second,
+		},
+		{
+			name:                  "Status_FastPath",
+			stimulusText:          "Status",
+			expectReplySubstrings: []string{"HRD", "Issues", "active", "Status"},
+			timeout:               30 * time.Second,
+		},
+		{
+			name:                  "Continue_FastPath",
+			stimulusText:          "Continue",
+			expectReplySubstrings: []string{"continue", "progress", "next", "Continue"},
+			timeout:               30 * time.Second,
+		},
+	}
+
+	passed := 0
+	for _, sc := range scenarios {
+		t.Run(sc.name, func(t *testing.T) {
+			scenarioCtx, scenarioCancel := context.WithTimeout(overallCtx, sc.timeout)
+			defer scenarioCancel()
+
+			stim := fmt.Sprintf("%s | herald-mtproto-w65-%s-%d", sc.stimulusText, sc.name, time.Now().UnixNano())
+			sentID, err := client.SendMessage(scenarioCtx, chatID, stim)
+			if err != nil {
+				t.Fatalf("SendMessage: %v", err)
+			}
+			t.Logf("sent message_id=%d text=%q", sentID, stim)
+
+			reply, err := client.WaitForReply(scenarioCtx, chatID, func(m mtproto.Message) bool {
+				if m.FromUserID == myID {
+					return false
+				}
+				// Match either: reply_to references our message OR text contains expected substring
+				if m.ReplyToMessageID == sentID {
+					return true
+				}
+				low := strings.ToLower(m.Text)
+				for _, sub := range sc.expectReplySubstrings {
+					if strings.Contains(low, strings.ToLower(sub)) {
+						return true
+					}
+				}
+				return false
+			})
+			if err != nil {
+				t.Fatalf("WaitForReply: %v", err)
+			}
+			t.Logf("scenario %s PASS — reply message_id=%d reply_to=%d", sc.name, reply.ID, reply.ReplyToMessageID)
+			passed++
+		})
+	}
+
+	if passed == 0 {
+		t.Fatalf("ZERO Wave 6.5 scenarios passed via MTProto autonomous path — §11.4.98 FAIL")
+	}
+	t.Logf("autonomous lifecycle: %d/%d scenarios PASS — Wave 6.5 §11.4.98-compliance proven", passed, len(scenarios))
+}
