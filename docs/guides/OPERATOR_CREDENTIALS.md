@@ -420,3 +420,121 @@ export HERALD_PG_DSN="postgres://herald:${HERALD_DB_PASSWORD}@127.0.0.1:24100/he
 **".env values not picked up by native `pherald`"**: You must source `.env` first — `pherald` reads `os.Getenv` only, not `.env` files. Use `set -a; source .env; set +a` or `direnv`.
 
 **"My credential leaked into git history"**: Rotate the credential IMMEDIATELY (regenerate the token, change the password). Then escalate per Universal Constitution §11.4.10 — git-history scrubbing is forensic-quality only; the leaked value is forever compromised once pushed to a remote.
+
+---
+
+## MTProto user-account harness (Wave 8 Track B — REQUIRED for §11.4.98 compliance)
+
+Per Universal Constitution §11.4.98 + Herald §108.m (anchored 2026-05-28): every live test MUST be re-runnable end-to-end without manual intervention. The Telegram Bot API alone cannot satisfy this for inbound-driven flows (`TestSubscribe_LiveBotAPI`, `tests/test_wave6_live_loop.sh`, Wave 6.5 lifecycle scenarios) because **bots cannot see other bots' messages in non-DM contexts** — empirically verified 2026-05-28 against group `-4946584787`: `@pherald_qa_bot` (id 8971749017) sent msg_id=18, `@atmosphere_worker_bot` observed 0 updates. Telegram's privacy boundary is structural, not configurable.
+
+Solution: drive QA tests from a **real Telegram user account** via the **MTProto protocol** (the same protocol Telegram apps use). The harness lives in `qaherald/internal/mtproto/` (vendor: `github.com/gotd/td`). A user account in the same chat as the bot can send messages that the bot's `getUpdates` poller picks up, enabling fully-autonomous closed-loop testing.
+
+### Variables (add to `.env`)
+
+| Variable | What | Example shape | Source |
+|---|---|---|---|
+| `HERALD_MTPROTO_APP_ID` | App api_id | `12345678` (integer, 5-8 digits) | https://my.telegram.org/apps |
+| `HERALD_MTPROTO_APP_HASH` | App api_hash | 32-char lowercase hex | https://my.telegram.org/apps |
+| `HERALD_MTPROTO_PHONE` | QA-driver phone (E.164) | `+12025551234` | YOU choose — see "Account choice" below |
+| `HERALD_MTPROTO_PASSWORD` | Cloud 2FA password | (32+ chars) | Set in Telegram → Settings → Privacy and Security → Two-Step Verification (only if 2FA enabled on the QA account) |
+| `HERALD_MTPROTO_SESSION_FILE` | Persisted session path | `~/.config/herald/mtproto.session` | Optional — defaults to that path. Auto-created on first login. |
+
+### Step 1: Create the QA Telegram app at my.telegram.org
+
+1. Open https://my.telegram.org/auth in a browser.
+2. Enter the **QA-driver phone** (the one you'll use for `HERALD_MTPROTO_PHONE` — see "Account choice" below for guidance).
+3. Telegram sends a login code to that phone's Telegram app (NOT SMS this time — only the in-app code).
+4. Enter the code at my.telegram.org/auth.
+5. After login, navigate to https://my.telegram.org/apps.
+6. **First-time:** click "Create new application". Fill in:
+   - **App title:** `Herald QA`
+   - **Short name:** `herald_qa` (no spaces; alphanumeric + underscore)
+   - **URL:** can be left blank or `https://github.com/vasic-digital/Herald`
+   - **Platform:** `Other`
+   - **Description:** `Herald §11.4.98 automation harness — fully-autonomous closed-loop testing of @atmosphere_worker_bot.`
+7. Click "Create application".
+8. Telegram displays:
+   - `App api_id` — small integer (5-8 digits) → set as `HERALD_MTPROTO_APP_ID`
+   - `App api_hash` — 32-char hex string → set as `HERALD_MTPROTO_APP_HASH`
+9. **Copy both immediately.** my.telegram.org will not let you re-display the api_hash once you navigate away (you can revoke + recreate the app if lost, but existing sessions break).
+
+### Step 2: Account choice — which phone to use
+
+The phone in `HERALD_MTPROTO_PHONE` MUST belong to a Telegram **user account** (not a bot). Three options:
+
+| Option | Pros | Cons |
+|---|---|---|
+| **(a) Your personal Telegram account** | Fastest setup. No SIM/VoIP needed. | Test runs send messages "from you" in the QA chat — visible to anyone in the group. Account-level mistakes (e.g. bug deletes all messages) hit your real account. Not recommended for production CI. |
+| **(b) Dedicated QA SIM** | Clean separation. Account is purpose-built. | Requires a physical SIM and ~$10-20/month. |
+| **(c) Voice-over-IP (Google Voice / Twilio / TextNow) number** | No physical SIM. Free or cheap. | Telegram increasingly rejects VoIP numbers — works ~60% of the time. Try first; fall back to (b). |
+
+**Operator recommendation for first-cycle:** use (a) your personal account. Once the harness is proven working, migrate to (b) for steady-state. The session file is portable — just `HERALD_MTPROTO_PHONE` + the session file change.
+
+### Step 3: Add the QA account to the chat
+
+The QA user account MUST be a member of `HERALD_TGRAM_CHAT_ID`. If using (a) and you're already a member: done. If using (b)/(c):
+1. Have an existing member of the group invite the new account (group invite link or add-by-phone).
+2. Verify membership before running the test: log into Telegram as the QA account and confirm the group is visible.
+
+### Step 4: First-run login (one-time bootstrap — §11.4.98 permitted exception)
+
+The harness binary (planned: `qaherald mtproto login`) connects to Telegram MTProto, sends a login code to the QA account's Telegram app, prompts you at the CLI to type the code (+ 2FA password if applicable), and persists the resulting session to `HERALD_MTPROTO_SESSION_FILE` (default `~/.config/herald/mtproto.session`). This is a **one-time interactive step**; subsequent test runs are fully autonomous (the §11.4.98 single permitted exception — configuration, not test driving).
+
+**Workflow (planned — implementation under Wave 8 Track B):**
+
+```bash
+# After populating .env with the 3 MTProto vars:
+set -a; source .env; set +a
+
+# One-time interactive login:
+qaherald mtproto login
+#   → prompts: "Enter code Telegram sent to <phone>:"
+#   → if 2FA enabled: "Enter cloud password:"
+#   → on success: writes ~/.config/herald/mtproto.session
+#   → prints: "MTProto session active for @<username> (user_id=<id>)"
+
+# Subsequent test runs (FULLY AUTONOMOUS — no CLI prompts):
+go test -tags=integration_mtproto -count=3 -run TestSubscribe_LiveMTProto \
+    ./commons_messaging/channels/tgram/...
+```
+
+### Step 5: Verify
+
+A `qaherald mtproto whoami` command (planned) connects via the persisted session and prints the QA account's identity — proves the session is alive without sending any messages. Re-run before each CI campaign to confirm Telegram hasn't expired the session (sessions are valid indefinitely unless explicitly revoked from another device).
+
+### Security notes (composes with §11.4.10)
+
+1. **Never commit `HERALD_MTPROTO_APP_HASH` or the session file to git.** Both are sufficient to impersonate the QA account.
+2. **Never share the api_hash with another project.** Each project gets its own my.telegram.org app per Telegram's terms; sharing risks rate-limit bans across both.
+3. **Treat the session file like an SSH private key.** `chmod 600`, owned by the running user, never world-readable.
+4. **Rotate the api_hash + invalidate the session** if leaked: my.telegram.org/apps → revoke + recreate; then `rm ~/.config/herald/mtproto.session` and re-login.
+5. **HRD-133 sanitizer applies to MTProto errors too** — the harness MUST `sanitizeMTProtoError()` wrap every error path to ensure api_hash, session bytes, and 2FA password text never appear in committed logs / `docs/qa/` transcripts.
+
+### Audit trail per §11.4.98
+
+After Wave 8 Track B lands, every closed-loop run produces a transcript under `docs/qa/HRD-LIVE-MTPROTO-<TS>/` documenting:
+- Tests executed (`TestSubscribe_LiveMTProto`, `TestWave6_LiveMTProto_ClosedLoop`, etc.)
+- `-count=3` consecutive PASS proof per §11.4.98 rule (4)
+- Self-cleaning state proof (chat-cleanup, session-file unchanged)
+- Sanitizer audit (token-shape regex + api_hash-shape regex on all transcripts → 0 matches required)
+- COMPLIANT classification per §108.m audit (release-gate item)
+
+A `TestSubscribe_LiveMTProto` test that requires any human action during execution is a release-blocking defect. SKIP-with-reason (when credentials absent) is the §11.4.3 correct posture; SKIP-reported-as-PASS or stale-evidence is forbidden.
+
+### Troubleshooting
+
+**`AUTH_KEY_UNREGISTERED` on first run**: The session file from a previous account is still present. `rm ~/.config/herald/mtproto.session` and re-run `qaherald mtproto login`.
+
+**`PHONE_CODE_INVALID`**: The login code was entered wrong or expired (codes valid ~5 minutes). Re-run; Telegram sends a fresh one.
+
+**`SESSION_PASSWORD_NEEDED`**: The QA account has 2FA enabled. Add `HERALD_MTPROTO_PASSWORD=<your cloud password>` to `.env` and re-run.
+
+**`FLOOD_WAIT_<N>`**: Telegram is rate-limiting login attempts on this phone. Wait `<N>` seconds (could be hours during aggressive throttling).
+
+**`PHONE_NUMBER_INVALID`**: Wrong E.164 format. Use `+<country code><number>` with no spaces or dashes (e.g. `+12025551234`).
+
+**`USER_DEACTIVATED`**: Telegram has deactivated the QA account (often happens to VoIP / suspicious-pattern accounts). Use option (b) — dedicated SIM.
+
+**The harness sends messages but `@atmosphere_worker_bot`'s poller doesn't see them**: Confirm the QA account is a member of `HERALD_TGRAM_CHAT_ID`. The privacy boundary that blocks bot-to-bot ALSO blocks "user-not-in-chat → bot". Add the QA account to the group.
+
+**The harness sees the worker bot's reply via `messages.getHistory` but it's not new**: MTProto returns chat history; you need to filter by `date > test_start_time` to confirm the reply was sent during the test, not a stale message from a prior run. The harness `WaitForReply()` helper does this filtering — never roll your own.
