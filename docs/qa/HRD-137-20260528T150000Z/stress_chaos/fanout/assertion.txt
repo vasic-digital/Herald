@@ -1,4 +1,4 @@
-surface=tgram scenario=stress_multi_recipient_fan_out unit=REAL Adapter.SendReply (httptest seam)
+surface=tgram scenario=stress_multi_recipient_fan_out status=PASS unit=REAL Adapter.SendReply (httptest seam)
 workers=20 iters_per_worker=20 total_calls=400 errors=0
 global_hits=400 (==total_calls: no_loss=1 no_double=1)
 throughput_per_sec=6033.7 (floor=100.0, satisfied=1)

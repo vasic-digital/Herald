@@ -312,7 +312,7 @@ func TestTgram_Stress_MultiRecipientFanOut(t *testing.T) {
 	}
 
 	if _, err := sd.WriteFile("assertion.txt", fmt.Sprintf(
-		"surface=tgram scenario=stress_multi_recipient_fan_out unit=REAL Adapter.SendReply (httptest seam)\n"+
+		"surface=tgram scenario=stress_multi_recipient_fan_out status=PASS unit=REAL Adapter.SendReply (httptest seam)\n"+
 			"workers=%d iters_per_worker=%d total_calls=%d errors=%d\n"+
 			"global_hits=%d (==total_calls: no_loss=1 no_double=1)\n"+
 			"throughput_per_sec=%.1f (floor=%.1f, satisfied=1)\n"+
