@@ -112,7 +112,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>12</td>
+<td>13</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -120,7 +120,7 @@
 </tr>
 <tr>
 <td>Last modified</td>
-<td>2026-05-22</td>
+<td>2026-05-28</td>
 </tr>
 <tr>
 <td>Status</td>
@@ -128,10 +128,35 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>V3 r12 — Wave 6 lands the pherald INBOUND runtime
-(closed-loop subscriber → CC → reply).</strong> New
-<code>pherald listen</code> Cobra subcommand runs Telegram
-<code>getUpdates</code> long-poll
+<td><strong>V3 r13 — Wave 7 generic messenger framework: Slack
+lands.</strong> §11.0 gains the Wave 7 inbound-runtime extension note
+(the richer <code>commons_messaging/channels.Channel</code> interface
+embedding <code>commons.Channel</code> + <code>SendReplyGeneric</code> +
+<code>BotSelfIdentity</code> + <code>DownloadAttachment</code> + the
+<code>init()</code>-registered name→constructor registry + generalized
+<code>IsSelfEcho</code> across
+IdentityUsername/IdentityUserID/IdentityAddress + per-channel
+<code>~/.herald/inbox/&lt;channel&gt;/&lt;sha256&gt;.&lt;ext&gt;</code>).
+§32.2 marks Telegram <strong>LIVE (Wave 6 / Wave 7)</strong> + Slack
+<strong>LIVE (Wave 7 T6 — Socket Mode)</strong>. §43 catalogue gains the
+multi-channel <code>pherald listen</code> row
+(<code>HERALD_CHANNELS=tgram,slack</code>, per-channel namespaced env,
+one Subscribe goroutine per enabled channel into one dispatcher). Slack
+ships as a Socket Mode adapter
+(<code>commons_messaging/channels/slack/</code>, 5 source files +
+hermetic httptest tests, 22 PASS -race), vendored via
+<code>submodules/slack-go</code> @ v0.16.0 (commit 209ec09). qaherald
+gains a parallel raw-HTTP Slack <code>MessengerClient</code> +
+channel-keyed <code>Build()</code> dispatcher
+(<code>qaherald/internal/messenger/{slack.go,builder.go}</code>, 30
+tests PASS -race — 17 new + 13 pre-existing tgram, zero regression; xoxb
+token NEVER in errors — <code>sanitizeError()</code> +
+<code>TestSlack_Send_ErrorDoesNotLeakToken</code> pin it). Per
+docs/superpowers/plans/2026-05-27-wave7-generic-messenger.md T6-T8.
+Workspace module count unchanged at 16. <strong>Prior r12 — Wave 6 lands
+the pherald INBOUND runtime (closed-loop subscriber → CC →
+reply).</strong> New <code>pherald listen</code> Cobra subcommand runs
+Telegram <code>getUpdates</code> long-poll
 (<code>OnText</code>/<code>OnPhoto</code>/<code>OnDocument</code>/<code>OnVoice</code>
 handlers) + bot self-filter (<code>bot.Me.Username</code> anti-echo
 guard captured at Subscribe construction; refuses to start if
@@ -2550,6 +2575,32 @@ contract). Additional helpers in <code>commons/cloudevents.go</code>
 <code>commons/branding.go</code> (per-flavor Branding factory),
 <code>commons/trace.go</code> (TraceContext propagation),
 <code>commons/uuidv7.go</code> (UUIDv7 generator).</p>
+<blockquote>
+<p><strong>Wave 7 inbound-runtime extension (channels.Channel).</strong>
+The <code>commons.Channel</code> above is the outbound contract every
+flavor's <code>serve</code> path consumes. The inbound runtime
+(<code>pherald listen</code>, §32) needs three additional per-adapter
+methods — quoted <code>SendReplyGeneric</code> (reply-anchored send with
+attachment fan-out), <code>BotSelfIdentity</code> (the anti-echo
+self-identity, §32.9), and content-addressed
+<code>DownloadAttachment</code>. These live on the richer
+<code>commons_messaging/channels.Channel</code> interface, which
+<strong>embeds</strong> <code>commons.Channel</code> and adds only the
+inbound methods. Adapters self-register with the
+<code>commons_messaging/channels</code> name → constructor registry via
+<code>init()</code>; the generalized self-filter
+<code>channels.IsSelfEcho</code> compares each adapter's native identity
+(Telegram username / Slack <code>bot_user_id</code> / Email From
+address) uniformly via
+<code>SelfIdentity{Kind: IdentityUsername | IdentityUserID | IdentityAddress, Value: …}</code>.
+Per-channel attachments land under
+<code>~/.herald/inbox/&lt;channel&gt;/&lt;sha256&gt;.&lt;ext&gt;</code>
+so multi-channel runs cannot collide. The first two concrete adapters
+under this richer interface are Telegram
+(<code>commons_messaging/channels/tgram/</code>, Wave 6) and Slack
+(<code>commons_messaging/channels/slack/</code>, Wave 7 T6 — Socket
+Mode).</p>
+</blockquote>
 <h3 id="111-telegram">11.1 Telegram</h3>
 <ul>
 <li><strong>SDK</strong>: <code>gopkg.in/telebot.v3</code>
@@ -6676,13 +6727,15 @@ implementation:</p>
 <tbody>
 <tr>
 <td>Telegram</td>
-<td>Bot API <code>getUpdates</code> long-poll (timeout 25 s)</td>
+<td>Bot API <code>getUpdates</code> long-poll (timeout 25 s) —
+<strong>LIVE (Wave 6 / Wave 7)</strong></td>
 <td>continuous, but a 30 s safety-net timer also fires
 <code>getUpdates</code> if the long-poll thread stalled</td>
 </tr>
 <tr>
 <td>Slack</td>
-<td>Socket Mode (WebSocket) OR Events API webhook</td>
+<td>Socket Mode (WebSocket) OR Events API webhook — <strong>LIVE (Wave 7
+T6 — Socket Mode)</strong></td>
 <td>continuous on Socket Mode; 30 s timer as keepalive ping</td>
 </tr>
 <tr>
@@ -10118,6 +10171,27 @@ Required env: <code>HERALD_TGRAM_BOT_TOKEN</code>,
 <code>--qa-out-dir</code> opt-in journals every event to
 <code>&lt;dir&gt;/transcript.jsonl</code> per §107.x.</td>
 <td>HRD-100</td>
+</tr>
+<tr>
+<td>Wave 7 multi-channel (2026-05-28) — generic messenger framework</td>
+<td><code>pherald</code></td>
+<td><code>pherald listen</code> (multi-channel mode)</td>
+<td>(no REST; long-running CLI daemon)</td>
+<td><code>HERALD_CHANNELS=tgram,slack</code> (default
+<code>tgram</code>) spins up one <code>Subscribe</code> goroutine per
+enabled channel, all fanning into the SAME
+<code>inbound.Dispatcher</code>. Per-channel namespaced env:
+<code>HERALD_TGRAM_*</code> (Wave 6) +
+<code>HERALD_SLACK_BOT_TOKEN</code> /
+<code>HERALD_SLACK_APP_TOKEN</code> /
+<code>HERALD_SLACK_CHANNEL_ID</code>. The generalized self-filter
+<code>channels.IsSelfEcho</code> drops bot-own echoes uniformly across
+IdentityUsername (tgram) and IdentityUserID (slack). Attachments isolate
+under
+<code>~/.herald/inbox/&lt;channel&gt;/&lt;sha256&gt;.&lt;ext&gt;</code>.
+Slack adapter is Socket Mode (parity with tgram long-poll — no public
+webhook required).</td>
+<td>HRD-110..HRD-115</td>
 </tr>
 </tbody>
 </table>

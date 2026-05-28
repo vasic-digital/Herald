@@ -47,7 +47,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>25</td>
+<td>26</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -63,265 +63,19 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>r25 (v0.6.0 Wave 7 T7 — qaherald Slack MessengerClient)
-marks HRD-116 Open→in_progress.</strong>
-<code>qaherald/internal/messenger/{slack.go,builder.go}</code> ships a
-raw-HTTP Slack client (mirroring <code>telegram.go</code>'s design — NOT
-the slack-go SDK; offset/watermark bookkeeping is qaherald-controlled)
-implementing all 11 <code>MessengerClient</code> methods + a
-channel-keyed <code>Build(BuildConfig)</code> dispatcher. Key
-Slack-specific design calls: <code>GetUpdates</code> via
-<code>conversations.history</code>+<code>oldest=&lt;ts&gt;</code>
-watermark (Slack has no <code>getUpdates</code> equivalent);
-<code>MessageID</code> = dotted-float ts string (e.g.
-<code>"1654.0001"</code>); <code>slackResponse.Channel</code> is
-<code>json.RawMessage</code> because Slack's <code>channel</code> field
-is a string in <code>chat.postMessage</code> but an object in
-<code>conversations.info</code>. <strong>§107 security:</strong> the
-xoxb token NEVER appears in errors — <code>sanitizeError()</code>
-defends + <code>TestSlack_Send_ErrorDoesNotLeakToken</code> pins the
-redaction by planting <code>xoxb-SUPERSECRET-must-not-leak-7777</code>
-and asserting it is absent from the resulting error string. 30 hermetic
-httptest tests <code>-race</code> green (17 new + 13 pre-existing tgram
-tests still green — zero regression); compile-time interface pin
-<code>var _ MessengerClient = (*SlackClient)(nil)</code>.
-KNOWN-FUTURE-CLEANUP: ships <code>files.upload</code> V1 (deprecated by
-Slack 2025-Q1 in favor of two-step V2 flow) — documented as a swappable
-internal in <code>slack.go</code>'s file-doc header. <strong>Prior r24
-(v0.6.0 Wave 7 T6 — Slack channel adapter) marked HRD-115
-Open→in_progress.</strong> Vendored <code>submodules/slack-go</code> @
-v0.16.0 (commit <code>209ec09</code>) +
-<code>commons_messaging/go.mod</code> <code>replace</code>.
-<code>commons_messaging/channels/slack/</code> (slack.go /
-healthcheck.go / selfidentity.go / send.go / attachments.go /
-subscribe.go) implements <code>channels.Channel</code> (the Wave 7
-interface HRD-110 defined): <code>Send</code> (chat.postMessage),
-<code>SendReply</code>(thread_ts) + <code>SendReplyGeneric</code>
-(interface delegate w/ files.uploadV2 attachment fan-out),
-<code>Subscribe</code> (Socket Mode loop), <code>BotSelfIdentity</code>
-(auth.test → IdentityUserID, cached), <code>DownloadAttachment</code>
-(files.info → content-addressed
-<code>inbox/slack/&lt;sha&gt;.&lt;ext&gt;</code> via
-<code>channels.WriteContentAddressed</code>), <code>HealthCheck</code>.
-URL scheme
-<code>slack://&lt;bot-token&gt;@&lt;workspace&gt;/&lt;channel-id&gt;[?app_token=…]</code>
-(bot-token + channel-id mandatory; app_token required only for
-Subscribe). 22 hermetic httptest tests (33 incl. subtests)
-<code>-race</code> green; inheritance gate 15 PASS / 0 FAIL
-post-<code>.gitmodules</code>-edit;
-<code>TestSlackSatisfiesChannel</code> confirms
-<code>var _ channels.Channel = (*slack.Adapter)(nil)</code> compiles.
-Per plan §T6 in
-<code>docs/superpowers/plans/2026-05-27-wave7-generic-messenger.md</code>.
-<strong>Prior r23 (v1.0.0 Batch D — commons_infra pgxTaskRepository)
-marked HRD-085/086/087/088/089 Open→in_progress, REAL-PG
-verified.</strong> Implemented 16 of 17
-previously-<code>ErrUnsupported</code> <code>pgxTaskRepository</code>
-methods (<code>commons_infra/task_repository.go</code>): HRD-085
-GetByID/Update/Delete (soft-delete), HRD-086
-UpdateStatus/UpdateProgress/UpdateHeartbeat/SaveCheckpoint, HRD-087
-GetByStatus/GetPendingTasks/CountByStatus/GetTaskHistory, HRD-088
-GetStaleTasks/GetByWorkerID, HRD-089
-SaveResourceSnapshot/GetResourceSnapshots + new migration
-<code>000013_task_resource_snapshots</code>.
-(<code>MoveToDeadLetter</code> remains <code>ErrUnsupported</code> →
-HRD-090, by design.) <strong>§107 real-PG evidence:</strong> all 14
-integration round-trips persist+read-back against live herald-postgres
-:24100
-(<code>go test -tags=integration -run TestRepo ./commons_infra/...</code>
-→ 14 PASS / 0 FAIL); transcript
-<code>docs/qa/HRD-085-089-20260528T070000Z/integration_realpg.log</code>;
-e2e <strong>E123</strong> wired (PG-gated, SKIP-with-reason when :24100
-absent). The real-PG run caught + fixed a latent pre-Batch-D bug:
-<code>LogEvent</code> passed marshalled JSON as <code>[]byte</code>
-(encoded as bytea → PG rejects bytea→jsonb, SQLSTATE 22P02) — now
-<code>string(payload)</code>, matching <code>Create</code>'s cast
-pattern. <strong>Prior r22 (v1.0.0 Batch C — §43 catalogue COMPLETE)
-marked the two stragglers HRD-034 (<code>sherald backup-snapshot</code>,
-§9.3 hardlinked snapshot) + HRD-047
-(<code>scherald status-digest</code>, §11.4.45 Status.md sweep)
-Open→in_progress.</strong> With C1-C5 + these two, the ENTIRE §43
-command catalogue (HRD-029..056, 30 commands across
-pherald/sherald/cherald/rherald/bherald/scherald) is implemented +
-e2e-proven (E97-E122). backup-snapshot creates <code>os.Link</code>
-hardlinks (inode-verified) → <code>.gate.recovered</code>; status-digest
-sweeps the status doc → <code>.policy.violation</code> on stale/missing.
-Hermetic <code>-race</code> green; e2e <strong>E121-E122</strong> wired.
-<strong>Prior r21 (v1.0.0 Batch C cluster C3 — cherald, COMPLETE) marked
-the 11 cherald §43 docs/compliance commands
-(HRD-036/037/038/039/042/048/050/051/052/054/055) Open→in_progress +
-landed the §107 cherald lazy-verifier fix.</strong> C3a docs-pipeline
-(<code>cherald/cmd/cherald/docops_cmds.go</code>):
-<code>docs-sync</code> (§11.4.61), <code>readme-sync</code> (§11.4.59),
-<code>export</code> (§11.4.65 wrapping
-<code>scripts/export_docs.sh</code>), <code>fixed-summary-sync</code>
-(§11.4.53), <code>fixed-align</code> (§11.4.53 drift-detect) —
-detect-by-default + <code>--apply</code>. C3b verify/check
-(<code>cherald/cmd/cherald/checkops_cmds.go</code>):
-<code>submanifest-verify</code> (§11.4.31), <code>composite-gate</code>
-(§11.4.60), <code>spec-version-check</code> (§11.4.73
-<code>checkSpecDrift</code>), <code>catalogue-check</code> (§11.4.74
-<code>checkCatalogueMiss</code>), <code>script-docs-check</code>
-(→§11.4.60, §11.4.62 has no cherald rule), <code>creds-scan</code>
-(→§11.4.10 credential-leak; findings REDACTED — no secret value ever
-printed, per the no-leak mandate). All feed the HRD-019 cherald binding
-(<code>markerCheck</code> keys on <code>Subject.Kind</code>); the §107
-fix mirrors sherald (verifier built lazily inside <code>serve</code>, so
-<code>cherald version</code> + the §43 CLI run bare without a JWT
-secret). Hermetic <code>-race</code> green; e2e
-<strong>E110-E120</strong> wired, each anchored to its
-<code>docs/qa/HRD-0NN-20260528T050000Z/transcript.txt</code>. With C1-C5
-landed, the §43 command catalogue (HRD-029..056) is implemented except
-HRD-034 (sherald backup-snapshot) + HRD-047 (scherald status-digest).
-<strong>Prior r20 (v1.0.0 Batch C clusters C4+C5) marked HRD-031/032/045
-(rherald §43 release) + HRD-041/035 (bherald §43 build/CI)
-Open→in_progress.</strong> rherald
-(<code>rherald/cmd/rherald/release_cmds.go</code>, HRD-022 binding):
-<code>tag-mirror</code> (§4 multi-mirror tag-parity →
-<code>.release.gate_blocked</code>), <code>changelog-generate</code> (§5
-Conventional-Commits → <code>docs/changelogs/&lt;v&gt;.md</code>),
-<code>gate-retest</code> (§11.4.40 pre-tag full-suite retest gate) —
-reuse the shared <code>commons/gitops</code>
-(<code>TagExists</code>/<code>RemoteHasTag</code>/<code>LogSubjects</code>).
-bherald (<code>bherald/cmd/bherald/build_cmds.go</code>, HRD-021
-binding): <code>test-tier-verify</code> (§11.4.27 8-tier matrix),
-<code>evidence-capture</code> (§11.4.2 anti-bluff recorded-evidence).
-Each DETECTS+classifies+exits-non-zero; all hermetic <code>-race</code>
-green; e2e <strong>E105-E109</strong> wired, each anchored to its
-<code>docs/qa/HRD-0NN-20260528T040000Z/transcript.txt</code>.
-<strong>Prior r19 (v1.0.0 Batch C cluster C2) marked HRD-033/040/046/056
-(sherald §43 system/safety commands) Open→in_progress + landed a §107
-lazy-verifier usability fix.</strong> The four sherald §43 commands
-landed as PRE-FLIGHT GATES
-(<code>sherald/cmd/sherald/sysops_cmds.go</code>) feeding the HRD-020
-sherald binding — <code>destructive-guard</code> (§9.1
-rm/reset/force-push), <code>constitution-pull</code> (§11.4.26/.32
-fetch+rebase+validate → <code>.bundle.updated</code>),
-<code>force-push-gate</code> (§11.4.41 merge-first+session-auth),
-<code>mem-budget-watch</code> (§12.6 60%-ceiling →
-<code>.host.safety_breach</code>); each
-DETECTS+classifies+exits-non-zero, never performs the op; reuse the
-shared <code>commons/gitops</code> + <code>commons/stresschaos</code>;
-hermetic <code>-race</code> green. <strong>§107 fix:</strong> sherald's
-<code>main.go</code> now builds the JWT verifier LAZILY inside
-<code>serve</code> (mirroring pherald) so the §43 CLI commands run bare
-without <code>HERALD_AUTH_MODE</code> — previously EVERY subcommand
-(even <code>sherald version</code>) died with "build verifier:
-HERALD_AUTH_MODE must be set", a §107 usability bluff (the cmd "exists"
-but no operator could run it). Also promoted
-<code>pherald/internal/gitops</code> → <code>commons/gitops</code>
-(commit <code>4a6b0ec</code>) so C2-C5 reuse the git primitives, and
-root-caused a flaky e2e E53 (cross-call byte-diff on the dynamic
-<code>/v1/safety_state</code> body). e2e: E31 rewritten (real HRD-033
-§9.1 gate + bare-CLI §107 proof), <strong>E101-E104</strong> wired
-(destructive-guard / constitution-pull / force-push-gate /
-mem-budget-watch), each anchored to its
-<code>docs/qa/HRD-0NN-20260528T030000Z/transcript.txt</code>.
-<strong>Prior r18 (v1.0.0 Batch C cluster C1) marked
-HRD-029/030/043/044/049/053 (pherald §43 gitops command catalogue)
-Open→in_progress.</strong> The six commands landed (commit
-<code>502ebf6</code>) as
-<code>commons/gitops/{gitops.go,upstreams.go}</code> (promoted from
-<code>pherald/internal/gitops</code> to the L0 commons module so C2-C5
-flavors can reuse the git primitives — §11.4.74) +
-<code>pherald/cmd/pherald/gitops_cmds.go</code>:
-<code>commit-push</code> (single locked entrypoint + multi-mirror push),
-<code>submodule propagate</code> (owned-submodule walk in propagation
-order), <code>install-upstreams</code> (§11.4.74
-<code>FindScript</code>-resolved constitution-submodule script,
-git-binary fallback), <code>fetch-guard</code> (§11.4.37 pre-edit fetch
-+ rebase enforcement), <code>reopen</code> (§11.4.55 Fixed→Issues
-reversal + <code>docs/Reopens/</code> history, reusing the Wave 6.5
-inbound migration), <code>pre-push</code> (§11.4.71 fetch + investigate
-+ integrate hook) — each <code>--emit</code> feeds the HRD-023 pherald
-binding, all hermetic temp-repo + <code>file://</code> fake-remote
-tested <code>-race -count=3</code> green. e2e invariants
-<strong>E97-E100</strong> wired (commit-push / reopen /
-install-upstreams / fetch-guard), each anchored to its
-<code>docs/qa/HRD-NNN-20260527T213201Z/transcript.txt</code>.
-<strong>Prior r17 (v1.0.0 Batch A) atomically migrated HRD-018 + HRD-026
-+ HRD-027 Issues→Fixed per §11.4.19.</strong> commons_constitution
-persistence layer completed: the Evaluator framework, 12 emit helpers,
-bundle-hash captureer, mode-ladder, and
-<code>constitution_state</code>/<code>constitution_bindings</code>
-migrations were already coded in r1 — this effort closed the remaining
-gaps: (1) <code>constitution_audit</code> write-through — the table
-existed in migration 000006 but the Runner never wrote a row
-(<code>RunOutcome.Audited</code> set true with nothing persisted = §107
-PASS-bluff at the audit layer); now <code>state.MemoryAudit</code> +
-<code>state.PostgresAudit</code> back a new <code>AuditStore</code>
-interface and <code>Runner.Run</code> writes a durable RLS-scoped row
-for every CHANGED Warn/Enforce transition, capturing the emitted event
-ID for Enforce; (2) HRD-026 bundle-hash persisted on every emitted event
-AND audit row for replay (§42.1.3); (3) HRD-027 mode-ladder runtime
-config wired to 3 admin REST endpoints on cherald
-(<code>GET</code>/<code>PUT /v1/compliance/modes[/:rule_id]</code>,
-JWT-gated, flip allow/warn/enforce per tenant with no redeploy). TDD
-RED→GREEN, <code>-race -count=3</code> deterministic; real-PG
-integration green at :24100. Evidence
-<code>docs/qa/HRD-018-20260527T142556Z/</code> (real-PG emit→persist +
-audit round-trip with DB-level <code>SELECT</code> proof, admin-REST
-flip round-trip, §11.4.85 stress 512 emit→persist exactly-512-rows
-no-lost-writes + chaos 960 concurrent flips, all <code>-race</code>
-clean). Prior r16 atomically migrated the completed GAP-3 §11.4.85
-stress+chaos suite (HRD-122..HRD-130, all Task→Completed) + the HRD-132
-Runner idempotency-window fix (Bug→Fixed) Issues→Fixed per §11.4.19.**
-GAP-3 commits <code>02d272d</code>→<code>d2a60d3</code> (HRD-122
-scaffold <code>commons/stresschaos/</code>, HRD-123 Gin
-<code>/v1/events</code>, HRD-124
-<code>/v1/compliance</code>+<code>/v1/safety_state</code>, HRD-125
-Runner, HRD-126 <code>pherald listen</code> inbound, HRD-127 claude_code
-dispatch, HRD-128 container/resource-exhaustion §12.6-safe, HRD-129 e2e
-E81-E88, HRD-130 paired §1.1 mutation gate); HRD-132 fix
-<code>354b883</code> (claim-before-dispatch at Runner Stage 2 —
-<code>INSERT events_processed … ON CONFLICT DO NOTHING</code> is now the
-authoritative exactly-once dispatch gate; latent
-<code>runner.go:132</code> <code>CachedRcpt.WasReplay</code> race
-closed; HRD-125 assertion upgraded to <code>sends==1</code>) +
-wave3-M4-retire <code>4f45f26</code>. Full
-<code>scripts/e2e_bluff_hunt.sh</code> reports 78 PASS / 0 FAIL; HRD-130
-gate 6 PASS / 0 FAIL (5 load-bearing mutations); HRD-132 evidence
-<code>docs/qa/HRD-125-stress-chaos-2026-05-27T131251-gap3/</code>
-(<code>dispatch_exactly_once=1</code>,
-<code>shared_key_sends=1 want=1</code>). HRD-131 (SQLite SSoT migration
-Phase 1) remains OPEN — Phases 2-6 follow-on. Prior r15 captured Wave 6
-(pherald inbound runtime + Claude Code headless bridge — code-doc
-closure; tag v0.4.0 deferred to T13b post live evidence). HRD-100 atomic
-Issues→Fixed in r15.** New Cobra subcommand <code>pherald listen</code>
-runs the closed-loop runtime: Telegram <code>getUpdates</code> long-poll
-(<code>OnText</code>/<code>OnPhoto</code>/<code>OnDocument</code>/<code>OnVoice</code>)
-+ bot self-filter (<code>bot.Me.Username</code> anti-echo guard, fails
-Subscribe if <code>getMe</code> returned no username) + sha256
-content-addressed attachment download into
-<code>~/.herald/inbox/&lt;sha256&gt;.&lt;ext&gt;</code> + Claude Code
-dispatch with <strong>Opus pinned in argv</strong>
-(<code>claude --model claude-opus-4-7 --resume &lt;UUID&gt; --print &lt;envelope&gt;</code>)
-+ envelope pre-text (verbatim operator wording "We have received new
-message from our communication channel <channel-name>. ...") preceding
-the <code>&lt;&lt;&lt;HERALD-DISPATCH-v1&gt;&gt;&gt;</code> structured
-block + <code>&lt;&lt;&lt;HERALD-REPLY&gt;&gt;&gt;</code> parser with
-<code>action</code> routing (<code>reply</code> /
-<code>issue.open</code> / <code>event.emit</code>) +
-<code>tgram.Adapter.SendReply</code> wiring
-<code>reply_to_message_id</code> from the inbound
-<code>message_id</code>. T10a <code>--qa-out-dir</code> flag journals
-every inbound/outbound event as JSONL per §107.x. 12 commits
-(T1=<code>ad87d7f</code>..T12=<code>96c7c6b</code>). 8 new e2e
-invariants E63-E70 added (currently SKIP with documented reasons —
-converting to PASS at T10b when operator runs the live closed-loop and
-commits <code>docs/qa/HRD-100/</code>). Wave 6 mutation gate
-<code>tests/test_wave6_mutation_meta.sh</code> lands 3 paired hermetic
-mutations. Tag <strong>v0.4.0 deferred to T13b</strong>
-(operator-supplied live evidence per §107.x). Prior r14 captured Wave 4b
-TOON <code>application/toon</code> content negotiation (tag v0.3.0).
-Prior r13 captured Wave 4a (HTTP/3 + Brotli + Alt-Svc + TLS 1.3). r12
-closed HRD-016 (Wave 3b pherald Runner live). r11 closed HRD-011
-(Telegram live, message_id=5).</td>
+<td><strong>r26 (v0.6.0 Wave 7 T8 — spec V3 r12→r13) marks HRD-117
+Open→in_progress.</strong> Spec edits document the already-shipped Wave
+7 framework + Slack: §11.0 gains the inbound-runtime extension note
+(<code>commons_messaging/channels.Channel</code> embeds
+<code>commons.Channel</code> + <code>SendReplyGeneric</code> +
+<code>BotSelfIdentity</code> + <code>DownloadAttachment</code> +
+<code>init()</code>-registered registry + generalized
+<code>IsSelfEcho</code> via `SelfIdentity{Kind: IdentityUsername</td>
 </tr>
 <tr>
 <td>Issues</td>
 <td>HRD-008, HRD-015, HRD-019..HRD-025, HRD-029..HRD-056, HRD-081,
-HRD-085..HRD-090, HRD-115, HRD-116, HRD-131</td>
+HRD-085..HRD-090, HRD-115, HRD-116, HRD-117, HRD-131</td>
 </tr>
 <tr>
 <td>Issues summary</td>
@@ -1323,6 +1077,23 @@ mirrors <code>qaherald/internal/messenger/telegram.go</code>; evidence
 Slack Web API endpoints via raw HTTP (NOT slack-go SDK — different layer
 from HRD-115; offset bookkeeping is qaherald-controlled;
 2026-05-28).</td>
+</tr>
+<tr>
+<td>HRD-117</td>
+<td>task</td>
+<td>in_progress</td>
+<td>low</td>
+<td>Wave 7 T8 — spec V3 r12→r13: §11.0 <code>channels.Channel</code>
+inbound-runtime extension note + §32.2 Telegram/Slack marked LIVE + §43
+multi-channel <code>pherald listen</code> row. Documents the Wave 7
+framework + Slack adapter (T6) + qaherald Slack client (T7) shipped
+reality — spec catches up to shipped code (no new product code in
+T8).</td>
+<td>2026-05-28</td>
+<td>2026-05-28</td>
+<td>spec V3 r13 §11.0/§32.2/§43;
+docs/superpowers/plans/2026-05-27-wave7-generic-messenger.md §T8;
+Catalogue-Check: n/a (doc-only).</td>
 </tr>
 <tr>
 <td>HRD-131</td>
