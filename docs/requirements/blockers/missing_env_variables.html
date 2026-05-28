@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Herald</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../../../assets/logo/print.css" />
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Herald</h1>
+</header>
+<div align="center">
+
+<img src="../../../assets/logo/herald_logo_square_128.png" alt="Herald" width="96" height="96" />
+
+</div>
+
+<h1 id="herald--missing-environment-variables-blocker">Herald — Missing
+Environment Variables (BLOCKER)</h1>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Document</td>
+<td>Operator action — provide MTProto credentials</td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-05-28</td>
+</tr>
+<tr>
+<td>Status</td>
+<td><strong>BLOCKING</strong> Wave 8 Track B (§11.4.98 full-automation
+compliance)</td>
+</tr>
+<tr>
+<td>Blocks</td>
+<td><code>TestSubscribe_LiveBotAPI</code> rewrite,
+<code>tests/test_wave6_live_loop.sh</code> rewrite, Wave 6.5 lifecycle
+scenarios — all currently NON-COMPLIANT per §11.4.98</td>
+</tr>
+<tr>
+<td>Authority</td>
+<td>HelixConstitution §11.4.98 + Herald §108.m (HelixConstitution commit
+<code>6828ff2</code>, Herald commit <code>bbf03c8</code>)</td>
+</tr>
+<tr>
+<td>Audit anchor</td>
+<td><code>docs/qa/HRD-LIVE-20260528T082128Z/README.md</code></td>
+</tr>
+<tr>
+<td>Resolution path</td>
+<td>Populate 3 required + 1 optional <code>HERALD_MTPROTO_*</code>
+variables in <code>.env</code>; reply "done"</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="table-of-contents">Table of contents</h2>
+<ol type="1">
+<li><a href="#1-why-this-blocker-exists">Why this blocker
+exists</a></li>
+<li><a href="#2-whats-already-in-env">What's already in
+<code>.env</code></a></li>
+<li><a href="#3-what-you-must-provide">What you must provide</a></li>
+<li><a href="#4-step-1--create-the-telegram-app-at-mytelegramorg">Step 1
+— Create the Telegram app at my.telegram.org</a></li>
+<li><a
+href="#5-step-2--choose-which-phone--telegram-account-to-use">Step 2 —
+Choose which phone / Telegram account to use</a></li>
+<li><a href="#6-step-3--add-the-qa-account-to-the-chat">Step 3 — Add the
+QA account to the chat</a></li>
+<li><a href="#7-step-4--add-the-variables-to-env">Step 4 — Add the
+variables to <code>.env</code></a></li>
+<li><a href="#8-step-5--verify--reply-done">Step 5 — Verify + reply
+"done"</a></li>
+<li><a href="#9-what-happens-next-after-you-reply-done">What happens
+next (after you reply "done")</a></li>
+<li><a href="#10-security-notes">Security notes</a></li>
+<li><a href="#11-troubleshooting">Troubleshooting</a></li>
+<li><a href="#12-cross-references">Cross-references</a></li>
+</ol>
+<hr />
+<h2 id="1-why-this-blocker-exists">1. Why this blocker exists</h2>
+<p>Universal Constitution <strong>§11.4.98 Full-Automation Anti-Bluff
+Mandate</strong> (anchored 2026-05-28 by your verbatim instruction):</p>
+<blockquote>
+<p>"Make sure we have full automation testing of all scenarios with real
+bot, main group and users without any manual intervention or
+contribution of real user! Everything MUST BE fully automatic and
+autonomous! These tests MUST BE able to rerun endless times when needed!
+[…] No bluff is allowed!"</p>
+</blockquote>
+<p>Herald has <strong>three live tests</strong> that currently require
+you to hand-send a Telegram message during their execution — making them
+§11.4 PASS-bluffs at the automation layer (cannot run in CI, cannot
+validate regressions between manual runs, human dependency masks
+drift):</p>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>Manual action currently required</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>TestSubscribe_LiveBotAPI</code></td>
+<td>Operator hand-sends a message during a 60s window</td>
+</tr>
+<tr>
+<td><code>tests/test_wave6_live_loop.sh</code></td>
+<td>Operator hand-sends a message; waits for bot reply</td>
+</tr>
+<tr>
+<td>Wave 6.5 lifecycle scenarios</td>
+<td>Operator hand-sends each scenario's stimulus</td>
+</tr>
+</tbody>
+</table>
+<p>The fix is to drive these tests from a <strong>Telegram user
+account</strong> (not a bot) via the <strong>MTProto protocol</strong> —
+the same wire protocol Telegram apps use. <strong>Why not a second
+bot?</strong> Empirically verified 2026-05-28:
+<code>@pherald_qa_bot</code> (id 8971749017) sent message_id=18 to group
+<code>-4946584787</code> (ATMOSphere Development); the worker bot
+<code>@atmosphere_worker_bot</code> observed <strong>0 updates</strong>.
+Telegram's privacy boundary is structural: bots cannot see other bots'
+messages in non-DM contexts. MTProto user-impersonation is the only
+autonomous path.</p>
+<p>The harness lives in <code>qaherald/internal/mtproto/</code>
+(vendored <code>github.com/gotd/td</code>). Once you provide credentials
+and complete the one-time login (the §11.4.98(B) permitted exception —
+configuration, not test driving), <strong>every subsequent test run is
+fully autonomous</strong>, re-runnable endlessly with no human
+action.</p>
+<hr />
+<h2 id="2-whats-already-in-env">2. What's already in
+<code>.env</code></h2>
+<p>Audited 2026-05-28 (presence-only, no values echoed):</p>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>HERALD_PROJECT_NAME</code></td>
+<td>✅ Set</td>
+</tr>
+<tr>
+<td><code>HERALD_TGRAM_BOT_TOKEN</code></td>
+<td>✅ Set (<code>@atmosphere_worker_bot</code>, id 8823384001)</td>
+</tr>
+<tr>
+<td><code>HERALD_TGRAM_CHAT_ID</code></td>
+<td>✅ Set (<code>-4946584787</code>, "ATMOSphere Development"
+group)</td>
+</tr>
+<tr>
+<td><code>HERALD_QA_BOT_TOKEN</code></td>
+<td>✅ Set (<code>@pherald_qa_bot</code>, id 8971749017) — but
+<strong>cannot drive worker bot</strong> (bot-to-bot wall, see §1)</td>
+</tr>
+<tr>
+<td><code>HERALD_OPERATOR_IDS</code></td>
+<td>✅ Set</td>
+</tr>
+<tr>
+<td><code>HERALD_CLAUDE_BIN</code></td>
+<td>✅ Set (<code>/Users/milosvasic/.local/bin/claude</code>,
+v2.1.153)</td>
+</tr>
+<tr>
+<td><code>HERALD_CLAUDE_PROJECT_NAME</code></td>
+<td>✅ Set (<code>Herald</code>)</td>
+</tr>
+<tr>
+<td><strong><code>HERALD_MTPROTO_APP_ID</code></strong></td>
+<td>❌ <strong>MISSING — required</strong></td>
+</tr>
+<tr>
+<td><strong><code>HERALD_MTPROTO_APP_HASH</code></strong></td>
+<td>❌ <strong>MISSING — required</strong></td>
+</tr>
+<tr>
+<td><strong><code>HERALD_MTPROTO_PHONE</code></strong></td>
+<td>❌ <strong>MISSING — required</strong></td>
+</tr>
+<tr>
+<td><strong><code>HERALD_MTPROTO_PASSWORD</code></strong></td>
+<td>❌ <strong>MISSING — required ONLY if 2FA enabled</strong></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="3-what-you-must-provide">3. What you must provide</h2>
+<p>Four variables, one optional. Add to your existing <code>.env</code>
+(it's git-ignored at <code>.gitignore:28</code>):</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode ini"><code class="sourceCode ini"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># §11.4.98 MTProto user-account harness (Wave 8 Track B)</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="dt">HERALD_MTPROTO_APP_ID</span><span class="ot">=</span><span class="st">&lt;integer, 5-8 digits, from my.telegram.org/apps&gt;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="dt">HERALD_MTPROTO_APP_HASH</span><span class="ot">=</span><span class="st">&lt;32-char hex string, from my.telegram.org/apps&gt;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="dt">HERALD_MTPROTO_PHONE</span><span class="ot">=</span><span class="st">&lt;E.164 phone of QA user account, e.g. +12025551234&gt;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="dt">HERALD_MTPROTO_PASSWORD</span><span class="ot">=</span><span class="st">&lt;only if 2FA enabled on the account; otherwise leave blank&gt;</span></span></code></pre></div>
+<p><strong>Where each value comes from:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>What it is</th>
+<th>How to get</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>HERALD_MTPROTO_APP_ID</code></td>
+<td>App api_id (integer)</td>
+<td><a
+href="https://my.telegram.org/apps">https://my.telegram.org/apps</a> —
+see Step 1 below</td>
+</tr>
+<tr>
+<td><code>HERALD_MTPROTO_APP_HASH</code></td>
+<td>App api_hash (32-char hex)</td>
+<td>Same page — see Step 1</td>
+</tr>
+<tr>
+<td><code>HERALD_MTPROTO_PHONE</code></td>
+<td>Phone in E.164 format (+countrycode + number, no spaces /
+dashes)</td>
+<td>YOUR phone (the Telegram <strong>user account</strong> that will
+drive QA tests). See Step 2 for account-choice trade-offs.</td>
+</tr>
+<tr>
+<td><code>HERALD_MTPROTO_PASSWORD</code></td>
+<td>Cloud 2FA password</td>
+<td>Set in Telegram → Settings → Privacy &amp; Security → Two-Step
+Verification (only if you've enabled 2FA on the account in
+<code>HERALD_MTPROTO_PHONE</code>)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="4-step-1--create-the-telegram-app-at-mytelegramorg">4. Step 1 —
+Create the Telegram app at my.telegram.org</h2>
+<p><strong>Estimated time:</strong> 5 minutes (one-time only).</p>
+<ol type="1">
+<li><p><strong>Open browser</strong> to <a
+href="https://my.telegram.org/auth">https://my.telegram.org/auth</a>.</p></li>
+<li><p><strong>Enter the QA-driver phone</strong> in E.164 format (e.g.
+<code>+12025551234</code>).</p>
+<ul>
+<li>This must be the same number you'll put in
+<code>HERALD_MTPROTO_PHONE</code> later.</li>
+<li>It MUST be a Telegram <strong>user account</strong>, not a bot.</li>
+</ul></li>
+<li><p><strong>Telegram sends a login code</strong> to that phone's
+Telegram app (in-app notification, not SMS).</p></li>
+<li><p><strong>Enter the code</strong> at my.telegram.org/auth.</p></li>
+<li><p><strong>You're now logged in</strong> to Telegram's developer
+dashboard. Navigate to <a
+href="https://my.telegram.org/apps">https://my.telegram.org/apps</a>.</p></li>
+<li><p><strong>First-time:</strong> click <strong>"Create new
+application"</strong>. Fill in:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value to enter</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>App title</strong></td>
+<td><code>Herald QA</code></td>
+</tr>
+<tr>
+<td><strong>Short name</strong></td>
+<td><code>herald_qa</code> (no spaces; alphanumeric + underscore
+only)</td>
+</tr>
+<tr>
+<td><strong>URL</strong></td>
+<td>Leave blank, OR
+<code>https://github.com/vasic-digital/Herald</code></td>
+</tr>
+<tr>
+<td><strong>Platform</strong></td>
+<td><code>Other</code> (from dropdown)</td>
+</tr>
+<tr>
+<td><strong>Description</strong></td>
+<td><code>Herald §11.4.98 automation harness — fully-autonomous closed-loop testing of @atmosphere_worker_bot.</code></td>
+</tr>
+</tbody>
+</table></li>
+<li><p><strong>Click "Create application"</strong>.</p></li>
+<li><p><strong>Telegram now displays</strong> two values on the
+page:</p>
+<ul>
+<li><strong><code>App api_id</code></strong> — small integer (5-8
+digits). → This is your <code>HERALD_MTPROTO_APP_ID</code>.</li>
+<li><strong><code>App api_hash</code></strong> — 32-character lowercase
+hex string. → This is your <code>HERALD_MTPROTO_APP_HASH</code>.</li>
+</ul></li>
+<li><p><strong>⚠️ COPY BOTH VALUES IMMEDIATELY.</strong> Telegram does
+NOT let you re-display the <code>api_hash</code> after you navigate
+away. If you lose it, you must revoke the app + create a new one (which
+invalidates any existing sessions).</p></li>
+</ol>
+<p><strong>Common mistakes to avoid:</strong></p>
+<ul>
+<li>Don't use a <code>https://...telegram.org/...</code> URL anywhere —
+Telegram's "URL" field is descriptive only, not a redirect.</li>
+<li>Don't put your <strong>bot token</strong> here —
+<code>my.telegram.org/apps</code> is for user-account apps. Bots use
+<code>@BotFather</code> instead.</li>
+<li>Don't share the api_hash with another project — Telegram's terms say
+one app = one purpose; sharing risks a rate-limit ban on both
+projects.</li>
+</ul>
+<hr />
+<h2 id="5-step-2--choose-which-phone--telegram-account-to-use">5. Step 2
+— Choose which phone / Telegram account to use</h2>
+<p><code>HERALD_MTPROTO_PHONE</code> must be a <strong>real Telegram
+user account</strong> (not a bot). The account will appear as the
+"sender" of every test-driver message in your group chat
+<code>-4946584787</code>. Three options:</p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Pros</th>
+<th>Cons</th>
+<th>When to pick</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>(a) Your personal Telegram account</strong></td>
+<td>Fastest setup — no new SIM, no new login. The account already has
+Telegram installed and configured.</td>
+<td>Test messages appear "from you" in the QA chat. If a bug deletes
+group messages, it deletes them from YOUR account's perspective.
+Production CI runs use your personal session — not best practice
+long-term.</td>
+<td>First-cycle proof-of-concept. Get Wave 8 Track B working, then
+migrate to (b).</td>
+</tr>
+<tr>
+<td><strong>(b) Dedicated QA SIM</strong></td>
+<td>Clean separation — purpose-built account, isolated from your
+personal Telegram. Best long-term posture.</td>
+<td>Requires a physical SIM card and ~$10-20/month.</td>
+<td>Production CI, when you've validated the harness works.</td>
+</tr>
+<tr>
+<td><strong>(c) Voice-over-IP number (Google Voice / Twilio /
+TextNow)</strong></td>
+<td>No physical SIM; free or cheap.</td>
+<td>Telegram increasingly rejects VoIP numbers — works ~60% of the time.
+The account may be flagged <code>USER_DEACTIVATED</code> even after
+successful initial signup.</td>
+<td>Budget-constrained scenarios; try (c) first, fall back to (b) if
+Telegram blocks.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Operator recommendation for first cycle:</strong> Use
+<strong>option (a) your personal account</strong>. The session file is
+portable — you can migrate to (b) later by just changing
+<code>HERALD_MTPROTO_PHONE</code> + the session file path; no test
+rewrites needed.</p>
+<hr />
+<h2 id="6-step-3--add-the-qa-account-to-the-chat">6. Step 3 — Add the QA
+account to the chat</h2>
+<p>The QA user account (<code>HERALD_MTPROTO_PHONE</code>) MUST be a
+<strong>member of <code>HERALD_TGRAM_CHAT_ID</code></strong> (the group
+<code>-4946584787</code> — "ATMOSphere Development"). Otherwise its
+messages won't reach the bot's <code>getUpdates</code> poller.</p>
+<ul>
+<li><strong>If using option (a) — your personal account</strong> and
+you're already in that group: ✅ <strong>Done. Skip this
+step.</strong></li>
+<li><strong>If using options (b) or (c) — a new account:</strong>
+<ol type="1">
+<li>From an existing member's Telegram (e.g. your personal account):
+<ul>
+<li>Open the "ATMOSphere Development" group.</li>
+<li>Tap the group name → <strong>Add Members</strong> → search for the
+QA account's phone or username → add.</li>
+</ul></li>
+<li><strong>OR:</strong> generate a group invite link, send it to the QA
+account, and have it join.</li>
+<li><strong>Verify membership</strong> by logging into Telegram as the
+QA account and confirming the group is visible in its chat list.</li>
+</ol></li>
+</ul>
+<hr />
+<h2 id="7-step-4--add-the-variables-to-env">7. Step 4 — Add the
+variables to <code>.env</code></h2>
+<p><strong>Open <code>.env</code> in your normal editor</strong> (NOT
+through chat — never paste secret values into chat). Append to the
+existing file:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode ini"><code class="sourceCode ini"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># §11.4.98 MTProto user-account harness (Wave 8 Track B)</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="dt">HERALD_MTPROTO_APP_ID</span><span class="ot">=</span><span class="dv">12345678</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="dt">HERALD_MTPROTO_APP_HASH</span><span class="ot">=</span><span class="st">0123456789abcdef0123456789abcdef</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="dt">HERALD_MTPROTO_PHONE</span><span class="ot">=</span><span class="st">+12025551234</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="dt">HERALD_MTPROTO_PASSWORD</span><span class="ot">=</span></span></code></pre></div>
+<p>Substitute the values you collected:</p>
+<ul>
+<li><code>HERALD_MTPROTO_APP_ID</code> — from Step 1.8 (small
+integer)</li>
+<li><code>HERALD_MTPROTO_APP_HASH</code> — from Step 1.8 (32-char
+hex)</li>
+<li><code>HERALD_MTPROTO_PHONE</code> — from Step 2 (the QA user
+account's phone in E.164)</li>
+<li><code>HERALD_MTPROTO_PASSWORD</code> — only if the account in
+<code>HERALD_MTPROTO_PHONE</code> has 2FA enabled; otherwise leave the
+value blank (Telegram will not prompt for it)</li>
+</ul>
+<p><strong>Save the file.</strong> The <code>.env</code> file is
+git-ignored — your credentials will NOT be committed.</p>
+<hr />
+<h2 id="8-step-5--verify--reply-done">8. Step 5 — Verify + reply
+"done"</h2>
+<p><strong>Optional pre-flight check you can run yourself</strong>
+(validates the api_id + api_hash without exposing them):</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">set</span> <span class="at">-a</span><span class="kw">;</span> <span class="bu">source</span> .env<span class="kw">;</span> <span class="bu">set</span> +a</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&quot;APP_ID: </span><span class="va">$(</span><span class="bu">[</span> <span class="ot">-n</span> <span class="st">&quot;</span><span class="va">$HERALD_MTPROTO_APP_ID</span><span class="st">&quot;</span> <span class="bu">]</span> <span class="kw">&amp;&amp;</span> <span class="bu">echo</span> PRESENT <span class="kw">||</span> <span class="bu">echo</span> MISSING<span class="va">)</span><span class="st">&quot;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&quot;APP_HASH: </span><span class="va">$(</span><span class="bu">[</span> <span class="va">${</span><span class="op">#</span><span class="va">HERALD_MTPROTO_APP_HASH}</span> <span class="ot">-eq</span> 32 <span class="bu">]</span> <span class="kw">&amp;&amp;</span> <span class="bu">echo</span> OK_LENGTH <span class="kw">||</span> <span class="bu">echo</span> WRONG_LENGTH<span class="va">)</span><span class="st">&quot;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&quot;PHONE: </span><span class="va">$(</span><span class="bu">[</span> <span class="ot">-n</span> <span class="st">&quot;</span><span class="va">$HERALD_MTPROTO_PHONE</span><span class="st">&quot;</span> <span class="bu">]</span> <span class="kw">&amp;&amp;</span> <span class="bu">echo</span> PRESENT <span class="kw">||</span> <span class="bu">echo</span> MISSING<span class="va">)</span><span class="st">&quot;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&quot;PASSWORD: </span><span class="va">$(</span><span class="bu">[</span> <span class="ot">-n</span> <span class="st">&quot;</span><span class="va">$HERALD_MTPROTO_PASSWORD</span><span class="st">&quot;</span> <span class="bu">]</span> <span class="kw">&amp;&amp;</span> <span class="bu">echo</span> PRESENT_2FA <span class="kw">||</span> <span class="bu">echo</span> BLANK_NO_2FA<span class="va">)</span><span class="st">&quot;</span></span></code></pre></div>
+<p>Expected output:</p>
+<pre><code>APP_ID: PRESENT
+APP_HASH: OK_LENGTH
+PHONE: PRESENT
+PASSWORD: PRESENT_2FA   # or BLANK_NO_2FA</code></pre>
+<p>If all four lines are correct, <strong>reply "done"</strong> in chat
+(a single word; do NOT paste any credential values).</p>
+<hr />
+<h2 id="9-what-happens-next-after-you-reply-done">9. What happens next
+(after you reply "done")</h2>
+<p>Conductor sequence (fully automated except where noted):</p>
+<ol type="1">
+<li><strong>Audit <code>.env</code></strong> — presence checks only; no
+values echoed; verifies <code>api_hash</code> length and phone
+format.</li>
+<li><strong>Vendor <code>github.com/gotd/td</code></strong> as a Git
+submodule under <code>submodules/gotd-td/</code> per Herald's vendoring
+convention.</li>
+<li><strong>Scaffold <code>qaherald/internal/mtproto/</code></strong>:
+<ul>
+<li><code>mtproto.go</code> — <code>Client</code> interface
+(<code>Connect</code>, <code>SendMessage</code>,
+<code>WaitForReply</code>, <code>Close</code>)</li>
+<li><code>session.go</code> — persistent session file management
+(<code>~/.config/herald/mtproto.session</code>)</li>
+<li><code>errors.go</code> — sanitizer wrapping all error paths so
+<code>api_hash</code>, session bytes, and 2FA password text never appear
+in committed logs (HRD-133 parity)</li>
+<li>Hermetic tests with mocked Telegram MTProto endpoint</li>
+</ul></li>
+<li><strong><code>qaherald mtproto login</code></strong> — Cobra
+subcommand for the one-time interactive bootstrap:
+<ul>
+<li>Connects to Telegram MTProto with your <code>app_id</code> +
+<code>app_hash</code>.</li>
+<li>Telegram sends a login code to <code>HERALD_MTPROTO_PHONE</code>'s
+Telegram app.</li>
+<li>CLI prompts: <strong>"Enter code Telegram sent to <phone>:"</strong>
+— you type the 5-6 digit code shown in your Telegram app.</li>
+<li>If 2FA: prompts <strong>"Enter cloud password:"</strong> — you type
+your <code>HERALD_MTPROTO_PASSWORD</code> (or it's read from env).</li>
+<li>On success: writes <code>~/.config/herald/mtproto.session</code>
+(chmod 600) + prints
+<code>"MTProto session active for @&lt;username&gt; (user_id=&lt;id&gt;)"</code>.</li>
+<li>This is the §11.4.98(B) permitted one-time exception —
+configuration, not test driving. All subsequent runs are fully
+autonomous.</li>
+</ul></li>
+<li><strong>Rewrite the 3 NON-COMPLIANT tests:</strong>
+<ul>
+<li><code>TestSubscribe_LiveBotAPI</code> →
+<code>TestSubscribe_LiveMTProto</code></li>
+<li><code>tests/test_wave6_live_loop.sh</code> →
+<code>tests/test_wave6_live_mtproto.sh</code></li>
+<li>Wave 6.5 lifecycle scenarios → MTProto-driven equivalents</li>
+</ul></li>
+<li><strong>Verify <code>-count=3</code> deterministic PASS</strong> per
+§11.4.98 rule (4) — every test must PASS 3 consecutive automated
+invocations with self-cleaning state.</li>
+<li><strong>Capture evidence</strong> under
+<code>docs/qa/HRD-LIVE-MTPROTO-&lt;TS&gt;/</code> with sanitizer audit
+(token-shape + api_hash-shape regex → 0 matches required).</li>
+<li><strong>Flip the SKIP-with-reason invariants</strong> in
+<code>scripts/e2e_bluff_hunt.sh</code> to PASS (E17 / E18 / E34 /
+E63-E70 / E71-E80).</li>
+<li><strong>Commit + push 4 mirrors</strong> + close the §11.4.98 audit
+(Task #223) — release-gate item.</li>
+</ol>
+<p><strong>Estimated wall-clock time</strong> from "done" reply to
+fully-COMPLIANT closed-loop: ~2-4 hours depending on Telegram
+code-delivery latency and number of test cycles. The login is ~1-minute
+interactive; everything else is autonomous.</p>
+<hr />
+<h2 id="10-security-notes-composes-with-11410">10. Security notes
+(composes with §11.4.10)</h2>
+<ol type="1">
+<li><strong>Never commit <code>HERALD_MTPROTO_APP_HASH</code> or the
+session file to git.</strong> Both are sufficient to impersonate the QA
+account. <code>.env</code> and
+<code>~/.config/herald/mtproto.session</code> MUST stay out of any
+tracked path.</li>
+<li><strong>Never share the <code>api_hash</code> with another
+project.</strong> Each project gets its own my.telegram.org app per
+Telegram's terms; sharing risks rate-limit bans across both.</li>
+<li><strong>Treat the session file like an SSH private key.</strong>
+<code>chmod 600</code>, owned by the running user, never
+world-readable.</li>
+<li><strong>Rotate the <code>api_hash</code> + invalidate the
+session</strong> if leaked: my.telegram.org/apps → revoke + recreate;
+then <code>rm ~/.config/herald/mtproto.session</code> and re-login.</li>
+<li><strong>HRD-133 sanitizer applies to MTProto errors too</strong> —
+the harness will <code>sanitizeMTProtoError()</code> wrap every error
+path. Any test transcript or log committed to <code>docs/qa/</code> is
+post-sanitization; the api_hash, session bytes, and 2FA password text
+NEVER appear in any committed artefact.</li>
+<li><strong>The session file is bound to your
+<code>HERALD_MTPROTO_PHONE</code>.</strong> Moving it to another machine
+for the same account is fine (chmod 600 it on the target). DO NOT use
+the same session file for two simultaneously-running test campaigns —
+Telegram detects parallel sessions and may invalidate one.</li>
+</ol>
+<hr />
+<h2 id="11-troubleshooting">11. Troubleshooting</h2>
+<p><strong><code>AUTH_KEY_UNREGISTERED</code> on first run:</strong> The
+session file from a previous account is present and stale. Run
+<code>rm ~/.config/herald/mtproto.session</code> and re-run
+<code>qaherald mtproto login</code>.</p>
+<p><strong><code>PHONE_CODE_INVALID</code>:</strong> The login code was
+entered wrong or expired (codes valid ~5 minutes). Re-run; Telegram
+sends a fresh one.</p>
+<p><strong><code>SESSION_PASSWORD_NEEDED</code>:</strong> The QA account
+has 2FA enabled. Add
+<code>HERALD_MTPROTO_PASSWORD=&lt;your cloud password&gt;</code> to
+<code>.env</code> and re-run. The cloud password is what Telegram asks
+you for when you reinstall the app — set under Settings → Privacy &amp;
+Security → Two-Step Verification.</p>
+<p><strong><code>FLOOD_WAIT_&lt;N&gt;</code>:</strong> Telegram is
+rate-limiting login attempts on this phone (often after multiple recent
+attempts). Wait <code>&lt;N&gt;</code> seconds (sometimes 30s, sometimes
+hours during aggressive throttling). Avoid hammering re-login
+attempts.</p>
+<p><strong><code>PHONE_NUMBER_INVALID</code>:</strong> Wrong E.164
+format. Use <code>+&lt;country code&gt;&lt;number&gt;</code> with NO
+spaces or dashes. Examples:</p>
+<ul>
+<li>US: <code>+12025551234</code></li>
+<li>UK: <code>+447911123456</code></li>
+<li>Serbia: <code>+381601234567</code></li>
+<li>Germany: <code>+4915123456789</code></li>
+</ul>
+<p><strong><code>USER_DEACTIVATED</code>:</strong> Telegram has
+deactivated the QA account (often happens to VoIP / suspicious-pattern
+accounts). Try option (b) — dedicated SIM. There is no appeal process
+for deactivated accounts in most cases.</p>
+<p><strong>The harness sends messages but
+<code>@atmosphere_worker_bot</code>'s poller doesn't see them:</strong>
+Confirm the QA account is a member of <code>HERALD_TGRAM_CHAT_ID</code>.
+The privacy boundary that blocks bot-to-bot ALSO blocks
+"user-not-in-chat → bot". Add the QA account to the group (Step 3
+above).</p>
+<p><strong><code>api_id</code> is reported invalid even though it's the
+right value:</strong> Make sure you're using the integer (no quotes, no
+leading zeros). Example correct:
+<code>HERALD_MTPROTO_APP_ID=12345678</code>. Example wrong:
+<code>HERALD_MTPROTO_APP_ID="12345678"</code> (don't quote; .env is
+sourced by shell which strips quotes inconsistently).</p>
+<p><strong>You created the app under your personal account but want to
+drive QA from a different account:</strong> The api_id + api_hash are
+bound to the my.telegram.org account that created them BUT can be used
+to log in as ANY Telegram user. So this is fine — the api_id/api_hash
+identify the <em>application</em>, the phone identifies the <em>user
+driving it</em>. You can re-use one app's credentials to log in many
+users.</p>
+<p><strong>You can't access my.telegram.org because Telegram requires
+phone confirmation but you're in a country where Telegram is
+blocked:</strong> Use a VPN to a country where Telegram is reachable
+(e.g. EU / US) for the initial app creation. Once you have the
+<code>api_id</code> + <code>api_hash</code>, they work from anywhere
+(the MTProto client connects to Telegram's IPs which may need their own
+VPN-around routing — but app creation is the bottleneck).</p>
+<hr />
+<h2 id="12-cross-references">12. Cross-references</h2>
+<ul>
+<li><strong>HelixConstitution §11.4.98</strong> —
+<code>&lt;parent&gt;/constitution/Constitution.md</code>, commit
+<code>6828ff2</code> (canonical authority for the full-automation
+mandate).</li>
+<li><strong>Herald §108.m</strong> —
+<code>docs/guides/HERALD_CONSTITUTION.md</code> r8 (project-binding
+restatement).</li>
+<li><strong>Herald restatements</strong> — <code>CLAUDE.md</code> r14,
+<code>AGENTS.md</code> r10, <code>QWEN.md</code> (all carry literal
+anchor <code>11.4.98</code>).</li>
+<li><strong>OPERATOR_CREDENTIALS.md</strong> —
+<code>docs/guides/OPERATOR_CREDENTIALS.md</code> §"MTProto user-account
+harness" (the full reference; this blocker doc is the
+operator-actionable subset).</li>
+<li><strong>Live evidence audit</strong> —
+<code>docs/qa/HRD-LIVE-20260528T082128Z/README.md</code> (the 2026-05-28
+honest classification that surfaced the manual-dependency NON-COMPLIANT
+status).</li>
+<li><strong>Empirical bot-to-bot wall test</strong> —
+<code>docs/qa/HRD-LIVE-20260528T082128Z/04_wave6_closed_loop/pherald_journal/transcript.jsonl</code>
++ the embedded chat log showing 0-update reception.</li>
+<li><strong>Telegram's MTProto docs</strong> — <a
+href="https://core.telegram.org/api/obtaining_api_id">https://core.telegram.org/api/obtaining_api_id</a>
+(the official Telegram doc for the my.telegram.org app-creation
+flow).</li>
+<li><strong><code>gotd/td</code> Go library</strong> — <a
+href="https://github.com/gotd/td">https://github.com/gotd/td</a> (the
+MTProto client Herald will vendor).</li>
+<li><strong>Operator memory
+<code>telegram_bot_to_bot_wall</code></strong> — the prior research note
+that called the MTProto requirement before this 2026-05-28 cycle
+empirically confirmed it.</li>
+</ul>
+<hr />
+<h2 id="status-tracking">Status tracking</h2>
+<table>
+<thead>
+<tr>
+<th>Track</th>
+<th>Status</th>
+<th>Reference</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>§11.4.98 propagation (HelixConstitution + Herald)</td>
+<td>✅ DONE</td>
+<td>HelixConstitution <code>6828ff2</code>, Herald
+<code>bbf03c8</code></td>
+</tr>
+<tr>
+<td><code>.env.example</code> expansion + canonical docs guide</td>
+<td>✅ DONE</td>
+<td>Herald <code>35fc10c</code></td>
+</tr>
+<tr>
+<td>This blocker document + sibling exports</td>
+<td>⏳ in flight</td>
+<td>Herald (this commit)</td>
+</tr>
+<tr>
+<td>Operator provides MTProto credentials</td>
+<td>⏳ <strong>AWAITING YOU</strong></td>
+<td>Reply "done" when <code>.env</code> is populated</td>
+</tr>
+<tr>
+<td>Vendor <code>gotd/td</code> + scaffold
+<code>qaherald/internal/mtproto/</code></td>
+<td>⏳ blocked-on-creds</td>
+<td>Wave 8 Track B (Task #221)</td>
+</tr>
+<tr>
+<td><code>qaherald mtproto login</code> (one-time interactive
+bootstrap)</td>
+<td>⏳ blocked-on-creds</td>
+<td>Wave 8 Track B</td>
+</tr>
+<tr>
+<td>Rewrite 3 NON-COMPLIANT tests to MTProto-driven</td>
+<td>⏳ blocked-on-creds</td>
+<td>Wave 8 Track B</td>
+</tr>
+<tr>
+<td>§11.4.98 audit of all existing tests</td>
+<td>⏳ pending</td>
+<td>Task #223</td>
+</tr>
+</tbody>
+</table>
+<p><strong>You can open this document and begin Step 1 now. Reply "done"
+when <code>.env</code> is populated.</strong></p>
+</body>
+</html>
