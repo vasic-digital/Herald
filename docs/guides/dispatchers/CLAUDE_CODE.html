@@ -392,5 +392,99 @@ href="../OPERATOR_CREDENTIALS.md"><code>OPERATOR_CREDENTIALS.md</code></a>
 href="../messengers/TELEGRAM.md"><code>../messengers/TELEGRAM.md</code></a>
 for the messenger half of the vertical slice</li>
 </ul>
+<hr />
+<h2 id="sources-verified">Sources verified</h2>
+<p>Per HelixConstitution §11.4.99 + Herald §108.n (Latest-Source
+Documentation Cross-Reference Mandate). Every operator-facing
+instruction in this document was cross-referenced against the LATEST
+official online documentation of the relevant service before
+publication.</p>
+<p><strong>Last verified:</strong> 2026-05-28</p>
+<table>
+<thead>
+<tr>
+<th>Source</th>
+<th>URL / path</th>
+<th>Authored / verified</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Anthropic — Claude Code documentation</td>
+<td><a
+href="https://docs.anthropic.com/claude-code">https://docs.anthropic.com/claude-code</a></td>
+<td>Step 1 (Claude Code install via npm + Node.js 18+ requirement;
+<code>claude --version</code> verification); Step 3 Path A
+(<code>claude --print</code> session-bootstrap behaviour returning a
+fresh session UUID in stdout); Step 3 Path B
+(<code>claude --resume &lt;UUID&gt;</code> semantics); Step 5
+(<code>claude --resume &lt;UUID&gt; --print &lt;prompt&gt;</code>
+non-interactive batch mode); the <code>HERALD_CLAUDE_BIN</code>
+PATH-lookup default.</td>
+</tr>
+<tr>
+<td>Anthropic — Claude Code session model</td>
+<td><a
+href="https://docs.anthropic.com/claude-code">https://docs.anthropic.com/claude-code</a>
+(sessions reference)</td>
+<td>The session-UUID format
+(<code>3e67dcd3-c66f-4687-b936-562191437310</code>); the anchor-file
+pattern (single line containing the UUID) is Herald-specific, not
+Anthropic-specified — Herald's invention per spec §33.2; the
+<code>--resume</code> invocation contract.</td>
+</tr>
+<tr>
+<td>Herald spec V3 §33 + §33.2 + §33.3</td>
+<td><code>docs/specs/mvp/specification.V3.md</code></td>
+<td>The §33.2 session-resolution algorithm (anchor-file at
+<code>&lt;workdir&gt;/.herald/claude-code/sessions/&lt;project&gt;.session</code>);
+the §33.3 envelope + <code>&lt;&lt;&lt;HERALD-REPLY&gt;&gt;&gt;</code>
+marker contract; the <code>Outcome</code> + <code>Summary</code> fields
+the §107 anti-bluff guard asserts non-empty.</td>
+</tr>
+<tr>
+<td>HelixConstitution §11.4.98 — Full-Automation mandate</td>
+<td><code>&lt;parent&gt;/constitution/Constitution.md</code> §11.4.98
+(HelixConstitution commit <code>c640947</code>)</td>
+<td>Step 3 Path A "auto-bootstrap (recommended)" — this is the §11.4.98
+/ §108.m fully-automatable session-resolution path; the Path-B
+manual-UUID model is restricted to one-time diagnostic use because
+operator-driven UUIDs during test execution violate §11.4.98 (no manual
+intervention during test runs).</td>
+</tr>
+<tr>
+<td>Empirical Herald operator testing 2026-05-28</td>
+<td><code>docs/qa/HRD-LIVE-20260528T082128Z/</code></td>
+<td>Step 5 expected output (~20-30s for cold-start
+<code>TestDispatch_LiveClaudeInvocation</code> PASS); Step 6 expected
+output (~30-40s for <code>TestDispatch_PersistsSessionState</code> with
+container boot); HRD-012 Fixed-with-live-evidence status.</td>
+</tr>
+<tr>
+<td>HelixConstitution §11.4.99 (this document's authority)</td>
+<td><code>&lt;parent&gt;/constitution/Constitution.md</code> §11.4.99
+(HelixConstitution commit <code>c640947</code>)</td>
+<td>This footer pattern + 6-month cadence.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Re-verification cadence (per §11.4.99 (C)):</strong> Claude
+Code is NOT currently classified as a risk-service in Herald §108.n (D)
+— the dispatcher's external surface is a CLI binary owned by the
+operator, not an account that faces anti-abuse-system bans; revocation
+is governed by Anthropic's standard API-key lifecycle. <strong>180-day
+max staleness</strong>, next re-verification due
+<strong>2026-11-24</strong>. Re-verify earlier on: Anthropic publishes a
+Claude Code breaking change (CLI flag rename, session-format change,
+<code>--resume</code> semantic change), operator-error reports, Herald
+vN.0.0 release boundary. <strong>If Anthropic publishes new model
+versions or upgrades the Opus pin</strong> (currently
+<code>claude-opus-4-7</code> per Herald spec §33.7), confirm the
+<code>--model</code> argv form has not changed.</p>
+<p><strong>Caveat on Node.js compatibility.</strong> Step 1
+troubleshooting notes a known incompatibility between codegraph 0.8+ on
+Node 25.x and <code>claude --version</code>; codegraph 0.6.8 was
+verified working as of 2026-05-22. Re-test Node compatibility on next
+re-verification — newer codegraph releases may have resolved this.</p>
 </body>
 </html>

@@ -807,4 +807,23 @@ Run through this checklist before every fresh deploy or after rotating credentia
 
 ---
 
+## Sources verified
+
+Per HelixConstitution §11.4.99 + Herald §108.n (Latest-Source Documentation Cross-Reference Mandate). Every operator-facing instruction in this document was cross-referenced against the LATEST official online documentation of the relevant service before publication.
+
+**Last verified:** 2026-05-28
+
+| Source | URL / path | Authored / verified |
+|---|---|---|
+| Telegram official Bot API documentation | https://core.telegram.org/bots/api | §2 (BotFather walkthrough — `/newbot`, `/setprivacy`, `/setname`, `/setdescription`, `/setuserpic`, `/setcommands`, `/deletebot`, `/revoke`); §3 (token format `<bot-id>:<api-token>`); §4 (`getMe`, `getChat`, `getUpdates`, `getWebhookInfo`, `deleteWebhook`); §5 (sendMessage 4096-char limit, sendPhoto/Document/Voice/Video/Audio 50 MB upload cap, getFile 20 MB download cap); §6 (chat-type taxonomy: private positive id / group negative / supergroup `-100…` / channel `-100…`); §7 (reply_to_message_id quoted-reply, message_thread_id forum-topic, sendMediaGroup album restrictions); §8 (`getMe.result.username` for self-filter identity); §9 (401/400/403/409/413/429 error code semantics, `Bad Request: chat not found`, `terminated by other getUpdates request`); §9.10 (webhook ↔ long-poll mutual exclusion). |
+| Telegram Bot Features — Privacy Mode | https://core.telegram.org/bots/features#privacy-mode | §2.2 (privacy-mode-ON default); §6.3 (`can_read_all_group_messages` flag semantics); §9.7 + §9.9 (privacy-mode-as-#1-stuck-cause); §10.2 (operator audit checklist entry). |
+| Telegram Bot API local server (open source) | https://github.com/tdlib/telegram-bot-api | §5.4 (lifting the 50 MB cap via self-hosted Bot API server — 2000 MB document upload, full-size download); §5.5 (HRD-135 reserved). |
+| telebot.v3 vendored library | `submodules/telebot/` (v3.3.8, pinned per §11.4.74) | §7 (`telebot.SendOptions.ReplyTo` → `reply_to_message_id`, `telebot.SendOptions.ThreadID` → `message_thread_id`); §8 (`telebot.NewBot` synchronous `getMe` populating `bot.Me`); §11.3 source-file mapping. |
+| Empirical Herald operator testing 2026-05-28 | `docs/qa/HRD-LIVE-20260528T082128Z/` | §1.2 status (Wave 6 + Wave 7 LIVE assertions); §4.4 hermetic Send-evidence test path; §4.5 inbound smoke envelope shape. |
+| HelixConstitution §11.4.99 (this document's authority) | `<parent>/constitution/Constitution.md` §11.4.99 (HelixConstitution commit `c640947`) | This footer (pattern + cadence requirement). |
+
+**Re-verification cadence (per §11.4.99 (C)):** Telegram is a risk-classified service (per §11.4.99 (D) and Herald §108.n (D) — bot APIs face automated-bot-detection + anti-abuse-system bans). Telegram-specific sections (every section §2..§9 of this document) → **90-day max staleness**, next re-verification due **2026-08-26**. Re-verify earlier on: Bot API breaking-change announcement (the `bots/api` changelog at https://core.telegram.org/bots/api#recent-changes), operator-error reports (a captured `description` field that does not match the cookbook), Herald vN.0.0 release boundary.
+
+---
+
 _End of guide._

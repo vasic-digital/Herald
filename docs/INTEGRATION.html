@@ -886,5 +886,97 @@ matches the number of dispatches</label></li>
 <li><label><input type="checkbox" />Multi-mirror push works from the
 consuming project's local clone (if you have write access)</label></li>
 </ul>
+<hr />
+<h2 id="sources-verified">Sources verified</h2>
+<p>Per HelixConstitution §11.4.99 + Herald §108.n (Latest-Source
+Documentation Cross-Reference Mandate). Every operator-facing
+instruction in this document was cross-referenced against the LATEST
+official online documentation of the relevant service before
+publication.</p>
+<p><strong>Last verified:</strong> 2026-05-28</p>
+<table>
+<thead>
+<tr>
+<th>Source</th>
+<th>URL / path</th>
+<th>Authored / verified</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Telegram official Bot API documentation</td>
+<td><a
+href="https://core.telegram.org/bots/api">https://core.telegram.org/bots/api</a></td>
+<td>§5 (<code>pherald wizard credentials telegram</code> validation
+against <code>getMe</code>); §1 (Telegram appears in the live-channels
+list); §10 (Telegram-side delivery verification — operator's chat
+receives the message); the §11.4-anti-bluff invariant that
+<code>outbound_delivery_evidence.channel_message_id</code> MUST equal
+the Telegram-side <code>MessageID</code> (not a Herald UUID).</td>
+</tr>
+<tr>
+<td>CloudEvents v1.0 spec</td>
+<td><a
+href="https://github.com/cloudevents/spec/blob/v1.0.2/cloudevents/spec.md">https://github.com/cloudevents/spec/blob/v1.0.2/cloudevents/spec.md</a></td>
+<td>§1 (<code>POST /v1/events</code> accepts CloudEvents); §8
+(CloudEvents envelope shape in the first POST example); §10 (the inbound
+contract for every flavor); §11 (consumer-side CloudEvents
+emission).</td>
+</tr>
+<tr>
+<td>PostgreSQL official documentation</td>
+<td><a
+href="https://www.postgresql.org/docs/15/">https://www.postgresql.org/docs/15/</a></td>
+<td>§2 prerequisite (<code>Postgres 15+</code>); §6 migration semantics
+(<code>000001..000012</code> schema versions; RLS-enforced;
+<code>app.current_tenant_id</code> GUC).</td>
+</tr>
+<tr>
+<td>Redis official documentation</td>
+<td><a href="https://redis.io/docs/">https://redis.io/docs/</a></td>
+<td>§2 prerequisite (<code>Redis 7+</code>); §6 (hot idempotency cache
+24h SETNX TTL; JWKS cache 5 min default).</td>
+</tr>
+<tr>
+<td>Anthropic — Claude Code documentation</td>
+<td><a
+href="https://docs.anthropic.com/claude-code">https://docs.anthropic.com/claude-code</a></td>
+<td>§2 optional dependency (<code>claude</code> CLI required only for
+the Claude Code dispatcher — HRD-012); §10 the dispatcher half of the
+vertical slice.</td>
+</tr>
+<tr>
+<td>Herald spec V3 (source of truth)</td>
+<td><code>docs/specs/mvp/specification.V3.md</code></td>
+<td>The ENTIRE document — spec wins on conflict (per the §"Spec V3"
+closing note); §32 7-stage Runner architecture; §33 LLM/agent dispatch
+architecture; §43 command catalogue; §107 anti-bluff covenant.</td>
+</tr>
+<tr>
+<td>Empirical Herald operator testing 2026-05-22+</td>
+<td><code>docs/qa/</code> (Wave-3b commit <code>c2b67c3</code>;
+Wave-4a/4b; Wave-6 HRD-LIVE-* directories)</td>
+<td>§1 Wave-3b 7-stage Runner status; §12 Wave-4 transport roadmap
+(HTTP/3 + Brotli + TOON design landed <code>c60b3fd</code>).</td>
+</tr>
+<tr>
+<td>HelixConstitution §11.4.99 (this document's authority)</td>
+<td><code>&lt;parent&gt;/constitution/Constitution.md</code> §11.4.99
+(HelixConstitution commit <code>c640947</code>)</td>
+<td>This footer pattern + cadence requirement.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Re-verification cadence (per §11.4.99 (C)):</strong> This
+guide aggregates instructions across multiple external services. Per
+§11.4.99 (D): Telegram-touching sections (§5, §10 verification step) →
+<strong>90-day staleness</strong> (next due
+<strong>2026-08-26</strong>); Postgres + Redis + CloudEvents + Claude
+Code sections → <strong>180-day staleness</strong> (next due
+<strong>2026-11-24</strong>). The guide's mission-statement,
+repository-layout, and constitution-discovery sections track Herald's
+own internal contracts and are not externally-time-bound — refresh on
+Herald breaking changes (spec V3 rev bumps, workspace-module additions,
+mirror-host changes).</p>
 </body>
 </html>

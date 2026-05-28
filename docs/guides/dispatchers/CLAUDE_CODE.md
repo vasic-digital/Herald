@@ -208,3 +208,24 @@ Run it per `../messengers/TELEGRAM.md` §6.
   - `commons_messaging/vertical_slice_integration_test.go` — E19 full slice
 - **Anchor-file format**: a single line containing the UUID. Stored at `<workdir>/.herald/claude-code/sessions/<project>.session`.
 - **Related**: [`OPERATOR_CREDENTIALS.md`](../OPERATOR_CREDENTIALS.md) §"Claude Code dispatcher"; [`../messengers/TELEGRAM.md`](../messengers/TELEGRAM.md) for the messenger half of the vertical slice
+
+---
+
+## Sources verified
+
+Per HelixConstitution §11.4.99 + Herald §108.n (Latest-Source Documentation Cross-Reference Mandate). Every operator-facing instruction in this document was cross-referenced against the LATEST official online documentation of the relevant service before publication.
+
+**Last verified:** 2026-05-28
+
+| Source | URL / path | Authored / verified |
+|---|---|---|
+| Anthropic — Claude Code documentation | https://docs.anthropic.com/claude-code | Step 1 (Claude Code install via npm + Node.js 18+ requirement; `claude --version` verification); Step 3 Path A (`claude --print` session-bootstrap behaviour returning a fresh session UUID in stdout); Step 3 Path B (`claude --resume <UUID>` semantics); Step 5 (`claude --resume <UUID> --print <prompt>` non-interactive batch mode); the `HERALD_CLAUDE_BIN` PATH-lookup default. |
+| Anthropic — Claude Code session model | https://docs.anthropic.com/claude-code (sessions reference) | The session-UUID format (`3e67dcd3-c66f-4687-b936-562191437310`); the anchor-file pattern (single line containing the UUID) is Herald-specific, not Anthropic-specified — Herald's invention per spec §33.2; the `--resume` invocation contract. |
+| Herald spec V3 §33 + §33.2 + §33.3 | `docs/specs/mvp/specification.V3.md` | The §33.2 session-resolution algorithm (anchor-file at `<workdir>/.herald/claude-code/sessions/<project>.session`); the §33.3 envelope + `<<<HERALD-REPLY>>>` marker contract; the `Outcome` + `Summary` fields the §107 anti-bluff guard asserts non-empty. |
+| HelixConstitution §11.4.98 — Full-Automation mandate | `<parent>/constitution/Constitution.md` §11.4.98 (HelixConstitution commit `c640947`) | Step 3 Path A "auto-bootstrap (recommended)" — this is the §11.4.98 / §108.m fully-automatable session-resolution path; the Path-B manual-UUID model is restricted to one-time diagnostic use because operator-driven UUIDs during test execution violate §11.4.98 (no manual intervention during test runs). |
+| Empirical Herald operator testing 2026-05-28 | `docs/qa/HRD-LIVE-20260528T082128Z/` | Step 5 expected output (~20-30s for cold-start `TestDispatch_LiveClaudeInvocation` PASS); Step 6 expected output (~30-40s for `TestDispatch_PersistsSessionState` with container boot); HRD-012 Fixed-with-live-evidence status. |
+| HelixConstitution §11.4.99 (this document's authority) | `<parent>/constitution/Constitution.md` §11.4.99 (HelixConstitution commit `c640947`) | This footer pattern + 6-month cadence. |
+
+**Re-verification cadence (per §11.4.99 (C)):** Claude Code is NOT currently classified as a risk-service in Herald §108.n (D) — the dispatcher's external surface is a CLI binary owned by the operator, not an account that faces anti-abuse-system bans; revocation is governed by Anthropic's standard API-key lifecycle. **180-day max staleness**, next re-verification due **2026-11-24**. Re-verify earlier on: Anthropic publishes a Claude Code breaking change (CLI flag rename, session-format change, `--resume` semantic change), operator-error reports, Herald vN.0.0 release boundary. **If Anthropic publishes new model versions or upgrades the Opus pin** (currently `claude-opus-4-7` per Herald spec §33.7), confirm the `--model` argv form has not changed.
+
+**Caveat on Node.js compatibility.** Step 1 troubleshooting notes a known incompatibility between codegraph 0.8+ on Node 25.x and `claude --version`; codegraph 0.6.8 was verified working as of 2026-05-22. Re-test Node compatibility on next re-verification — newer codegraph releases may have resolved this.

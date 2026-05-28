@@ -5054,3 +5054,28 @@ V3 r3 is the closing-out commit for the user-defined "after r1 + r2, refining an
 | V3 | `docs/specs/mvp/specification.V3.md` | 3 | active | ~3900 | **Current** — operator-product layer + nine refined flavors |
 
 Anyone reading the spec set starts at V3. V1 + V2 exist for traceability when a r3 or later change ID (V3-R-NN) needs cross-reference to the V2 audit log (§30.5) or the V1 R-NN ID-system (§30.1).
+
+---
+
+## Sources verified
+
+Per HelixConstitution §11.4.99 + Herald §108.n (Latest-Source Documentation Cross-Reference Mandate). Every design decision in this specification that references an external service contract was cross-referenced against the LATEST official documentation of that service before publication.
+
+**Last verified:** 2026-05-28
+
+| Source | URL / path | Authored / verified (which §s) |
+|---|---|---|
+| Telegram official Bot API documentation | https://core.telegram.org/bots/api | §11.1 (Telegram channel `Capabilities` declaration); §11.4 (outbound idempotency — Telegram NOT supporting upstream `Idempotency-Key`, requiring `outbound_dedup` Postgres-side); §32.2 (`getUpdates` long-poll 25 s timeout + 30 s safety-net timer); §32.9 (anti-echo-loop self-filter — `bot.Me.Username` via `getMe`); §43 (per-chat-type routing matrix); §"Costs" table (Bot API free tier). |
+| Slack Web API method index | https://api.slack.com/methods | §11.2 (Slack channel `Capabilities`); §11.4 (Slack `idempotency_key` extension — adapter MUST forward); §11.9 (Slack channel-vs-DM addressing). |
+| Slack Events API + Socket Mode | https://api.slack.com/apis/connections/socket + https://api.slack.com/apis/events-api | §32.2 (Slack inbound — Socket Mode WebSocket + Events API webhook variants); §43 (Slack routing matrix). |
+| Email RFCs — RFC 5322 (Message Format), RFC 6376 (DKIM), RFC 7208 (SPF), RFC 7489 (DMARC) | https://www.rfc-editor.org/rfc/rfc5322 / rfc6376 / rfc7208 / rfc7489 | §11.4 (Email `Message-ID` header forward for outbound idempotency); §11.4 (SMTP-vs-Resend choice); §"Costs" table (SMTP free; Resend transactional rates). |
+| Anthropic — Claude Code documentation | https://docs.anthropic.com/claude-code | §33 (LLM/agent dispatch architecture); §33.2 (session-resolution algorithm — `<workdir>/.herald/claude-code/sessions/<project>.session` anchor file); §33.3 (`<<<HERALD-REPLY>>>` envelope schema); §33.5 (`claude --resume <UUID> --print <prompt>` non-interactive batch invocation); §33.7 (Opus pin via `--model claude-opus-4-7` argv form). |
+| CloudEvents v1.0 specification | https://github.com/cloudevents/spec/blob/v1.0.2/cloudevents/spec.md | §10 / §32 (inbound CloudEvents v1.0 envelope contract — `id` / `source` / `type` / `specversion` / `datacontenttype` / `time` / `data` fields); §"Events processed" table semantics. |
+| PostgreSQL official documentation | https://www.postgresql.org/docs/15/ | §6/§9 schema (`events_processed`, `subscribers`, `subscriber_aliases`, `outbound_delivery_evidence`, `constitution_state`, `constitution_bindings`, `claude_code_sessions`); §"RLS" (Row-Level Security on every multi-tenant table, gated by `app.current_tenant_id` GUC). |
+| Redis official documentation | https://redis.io/docs/ | §"Hot idempotency cache" (SETNX with 24h TTL default); §"JWKS cache" (5 min TTL default). |
+| OAuth 2.0 / OIDC + RFC 7517 (JWK) + RFC 7518 (JWA) + RFC 7519 (JWT) | https://www.rfc-editor.org/rfc/rfc7517 / rfc7518 / rfc7519 + https://openid.net/specs/openid-connect-core-1_0.html | §"Auth" (JWT verification via JWKS; RS256 / ES256 algorithm selection; `iss` / `aud` / `exp` / `nbf` claim validation). |
+| HelixConstitution §11.4.99 (this document's authority) | `<parent>/constitution/Constitution.md` §11.4.99 (HelixConstitution commit `c640947`) | This footer pattern + cadence semantics. |
+
+**Re-verification cadence (per §11.4.99 (C)):** This document aggregates contracts of many external services. Per §11.4.99 (D): Telegram + Slack + Email sections (`§11.1`, `§11.2`, `§11.4`, `§32.2`, `§32.9`, `§43` rows) → **90-day staleness** (next due **2026-08-26**); Anthropic / Claude Code sections (`§33.x`) → **180-day staleness** (next due **2026-11-24**); CloudEvents / Postgres / Redis / OAuth / OIDC sections → **365-day staleness** (next due **2027-05-28**) — these protocols are stable + standards-track, breaking changes are years apart. Re-verify earlier on: any service changelog announces a breaking change; an operator-facing report surfaces a contradiction; Herald v1.0.0 release boundary.
+
+**Note on §11.4.99 application to specifications.** §11.4.99 was authored for OPERATOR-actionable instruction documents. This specification is design-of-record, not operator instructions — operator setup is delegated to the `docs/guides/*.md` family. The cross-reference table above documents the external-contract sources the spec's design choices depend on; if a spec section is REVISED to add new operator-actionable content (the spec body documenting "how operators set up X"), the new content MUST be covered by the table on the same revision.

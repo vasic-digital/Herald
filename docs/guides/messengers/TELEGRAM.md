@@ -402,3 +402,23 @@ https://api.telegram.org/bot<TOKEN>/deleteWebhook
   - `commons_messaging/vertical_slice_integration_test.go` — E19 full slice
 - **Vendored SDK**: `submodules/telebot/` (gopkg.in/telebot.v3 at v3.3.8, pinned to keep `gopkg.in/telebot.v3` import-path stable per §11.4.74)
 - **Related**: [`OPERATOR_CREDENTIALS.md`](../OPERATOR_CREDENTIALS.md) §"Telegram"; [`../dispatchers/CLAUDE_CODE.md`](../dispatchers/CLAUDE_CODE.md) for the LLM dispatch half of the vertical slice
+
+---
+
+## Sources verified
+
+Per HelixConstitution §11.4.99 + Herald §108.n (Latest-Source Documentation Cross-Reference Mandate). Every operator-facing instruction in this document was cross-referenced against the LATEST official online documentation of the relevant service before publication.
+
+**Last verified:** 2026-05-28
+
+| Source | URL / path | Authored / verified |
+|---|---|---|
+| Telegram official Bot API documentation | https://core.telegram.org/bots/api | Step 1 (`/newbot` flow + display-name vs username vs `<bot-id>:<api-token>` token format + `/revoke` semantics); Step 2 (chat-id discovery via `getUpdates`; per-chat-type id shapes — DM positive, group negative, supergroup `-100…`, channel `-100…`); Step 4 (`getMe` token-validity probe); Step 7 (`setWebhook` / `deleteWebhook` / `secret_token` validation header `X-Telegram-Bot-Api-Secret-Token`); Troubleshooting §401 / 409-Conflict / "chat not found"; MarkdownV2 reserved-character set. |
+| Telegram Bot Features — Privacy Mode | https://core.telegram.org/bots/features#privacy-mode | Step 2.5 entire section (privacy-mode-ON default; what the bot DOES vs DOES NOT see; admin-bypasses-privacy invariant; the four classes of always-delivered messages — commands / mentions / replies / service messages; the 24h update buffer); the `can_read_all_group_messages` `getMe` flag semantics. |
+| telebot.v3 vendored library | `submodules/telebot/` (v3.3.8, pinned per §11.4.74) | Step 4/5/6 integration-test mechanics (`telebot.NewBot` → `bot.Me` populated via synchronous `getMe`; `bot.Send` → `sendMessage`; `LongPoller{Timeout: 25 * time.Second}` per spec §32.2). |
+| Empirical Herald operator testing 2026-05-28 | `docs/qa/HRD-LIVE-20260528T082128Z/` | Status header (LIVE — HRD-011 code complete; E17 PASS; E19 awaiting operator-supplied live evidence); Step 5 expected output shape. |
+| HelixConstitution §11.4.99 (this document's authority) | `<parent>/constitution/Constitution.md` §11.4.99 (HelixConstitution commit `c640947`) | This footer pattern + 90-day cadence. |
+
+**Note on scope.** This guide documents the Bot API path ONLY (BotFather bot tokens — long-poll + future webhook). The MTProto user-account path (operator-driven QA harness, `qaherald mtproto login` bootstrap) is documented separately at `docs/requirements/blockers/missing_env_variables.md` and `docs/guides/OPERATOR_CREDENTIALS.md` §"MTProto", which carry their own §11.4.99 Sources-verified footers covering the MTProto-specific safety rules (the `recover@telegram.org` pre-login email; no VoIP / Google Voice / Twilio / TextNow numbers; one phone = one `api_id` forever; Short-name STRICTLY alphanumeric — underscores REJECTED; ratelimit + floodwait middlewares from `submodules/gotd-td/contrib`). If you are setting up a userbot, read those documents first.
+
+**Re-verification cadence (per §11.4.99 (C)):** Telegram is a risk-classified service (per §11.4.99 (D)) — Bot API breaking changes, MarkdownV2 escape-character rule changes, and webhook-secret-token validation changes all affect this guide. **90-day max staleness**, next re-verification due **2026-08-26**. Re-verify earlier on: Bot API changelog entry at https://core.telegram.org/bots/api#recent-changes, operator-error reports.

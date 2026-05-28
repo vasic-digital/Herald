@@ -457,3 +457,24 @@ If something in this guide is wrong or out of date, the spec wins. If the spec i
 - [ ] Real Telegram delivery observed (operator's chat receives the message)
 - [ ] `outbound_delivery_evidence` row count matches the number of dispatches
 - [ ] Multi-mirror push works from the consuming project's local clone (if you have write access)
+
+---
+
+## Sources verified
+
+Per HelixConstitution §11.4.99 + Herald §108.n (Latest-Source Documentation Cross-Reference Mandate). Every operator-facing instruction in this document was cross-referenced against the LATEST official online documentation of the relevant service before publication.
+
+**Last verified:** 2026-05-28
+
+| Source | URL / path | Authored / verified |
+|---|---|---|
+| Telegram official Bot API documentation | https://core.telegram.org/bots/api | §5 (`pherald wizard credentials telegram` validation against `getMe`); §1 (Telegram appears in the live-channels list); §10 (Telegram-side delivery verification — operator's chat receives the message); the §11.4-anti-bluff invariant that `outbound_delivery_evidence.channel_message_id` MUST equal the Telegram-side `MessageID` (not a Herald UUID). |
+| CloudEvents v1.0 spec | https://github.com/cloudevents/spec/blob/v1.0.2/cloudevents/spec.md | §1 (`POST /v1/events` accepts CloudEvents); §8 (CloudEvents envelope shape in the first POST example); §10 (the inbound contract for every flavor); §11 (consumer-side CloudEvents emission). |
+| PostgreSQL official documentation | https://www.postgresql.org/docs/15/ | §2 prerequisite (`Postgres 15+`); §6 migration semantics (`000001..000012` schema versions; RLS-enforced; `app.current_tenant_id` GUC). |
+| Redis official documentation | https://redis.io/docs/ | §2 prerequisite (`Redis 7+`); §6 (hot idempotency cache 24h SETNX TTL; JWKS cache 5 min default). |
+| Anthropic — Claude Code documentation | https://docs.anthropic.com/claude-code | §2 optional dependency (`claude` CLI required only for the Claude Code dispatcher — HRD-012); §10 the dispatcher half of the vertical slice. |
+| Herald spec V3 (source of truth) | `docs/specs/mvp/specification.V3.md` | The ENTIRE document — spec wins on conflict (per the §"Spec V3" closing note); §32 7-stage Runner architecture; §33 LLM/agent dispatch architecture; §43 command catalogue; §107 anti-bluff covenant. |
+| Empirical Herald operator testing 2026-05-22+ | `docs/qa/` (Wave-3b commit `c2b67c3`; Wave-4a/4b; Wave-6 HRD-LIVE-* directories) | §1 Wave-3b 7-stage Runner status; §12 Wave-4 transport roadmap (HTTP/3 + Brotli + TOON design landed `c60b3fd`). |
+| HelixConstitution §11.4.99 (this document's authority) | `<parent>/constitution/Constitution.md` §11.4.99 (HelixConstitution commit `c640947`) | This footer pattern + cadence requirement. |
+
+**Re-verification cadence (per §11.4.99 (C)):** This guide aggregates instructions across multiple external services. Per §11.4.99 (D): Telegram-touching sections (§5, §10 verification step) → **90-day staleness** (next due **2026-08-26**); Postgres + Redis + CloudEvents + Claude Code sections → **180-day staleness** (next due **2026-11-24**). The guide's mission-statement, repository-layout, and constitution-discovery sections track Herald's own internal contracts and are not externally-time-bound — refresh on Herald breaking changes (spec V3 rev bumps, workspace-module additions, mirror-host changes).

@@ -651,5 +651,92 @@ href="../OPERATOR_CREDENTIALS.md"><code>OPERATOR_CREDENTIALS.md</code></a>
 href="../dispatchers/CLAUDE_CODE.md"><code>../dispatchers/CLAUDE_CODE.md</code></a>
 for the LLM dispatch half of the vertical slice</li>
 </ul>
+<hr />
+<h2 id="sources-verified">Sources verified</h2>
+<p>Per HelixConstitution §11.4.99 + Herald §108.n (Latest-Source
+Documentation Cross-Reference Mandate). Every operator-facing
+instruction in this document was cross-referenced against the LATEST
+official online documentation of the relevant service before
+publication.</p>
+<p><strong>Last verified:</strong> 2026-05-28</p>
+<table>
+<thead>
+<tr>
+<th>Source</th>
+<th>URL / path</th>
+<th>Authored / verified</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Telegram official Bot API documentation</td>
+<td><a
+href="https://core.telegram.org/bots/api">https://core.telegram.org/bots/api</a></td>
+<td>Step 1 (<code>/newbot</code> flow + display-name vs username vs
+<code>&lt;bot-id&gt;:&lt;api-token&gt;</code> token format +
+<code>/revoke</code> semantics); Step 2 (chat-id discovery via
+<code>getUpdates</code>; per-chat-type id shapes — DM positive, group
+negative, supergroup <code>-100…</code>, channel <code>-100…</code>);
+Step 4 (<code>getMe</code> token-validity probe); Step 7
+(<code>setWebhook</code> / <code>deleteWebhook</code> /
+<code>secret_token</code> validation header
+<code>X-Telegram-Bot-Api-Secret-Token</code>); Troubleshooting §401 /
+409-Conflict / "chat not found"; MarkdownV2 reserved-character set.</td>
+</tr>
+<tr>
+<td>Telegram Bot Features — Privacy Mode</td>
+<td><a
+href="https://core.telegram.org/bots/features#privacy-mode">https://core.telegram.org/bots/features#privacy-mode</a></td>
+<td>Step 2.5 entire section (privacy-mode-ON default; what the bot DOES
+vs DOES NOT see; admin-bypasses-privacy invariant; the four classes of
+always-delivered messages — commands / mentions / replies / service
+messages; the 24h update buffer); the
+<code>can_read_all_group_messages</code> <code>getMe</code> flag
+semantics.</td>
+</tr>
+<tr>
+<td>telebot.v3 vendored library</td>
+<td><code>submodules/telebot/</code> (v3.3.8, pinned per §11.4.74)</td>
+<td>Step 4/5/6 integration-test mechanics (<code>telebot.NewBot</code> →
+<code>bot.Me</code> populated via synchronous <code>getMe</code>;
+<code>bot.Send</code> → <code>sendMessage</code>;
+<code>LongPoller{Timeout: 25 * time.Second}</code> per spec §32.2).</td>
+</tr>
+<tr>
+<td>Empirical Herald operator testing 2026-05-28</td>
+<td><code>docs/qa/HRD-LIVE-20260528T082128Z/</code></td>
+<td>Status header (LIVE — HRD-011 code complete; E17 PASS; E19 awaiting
+operator-supplied live evidence); Step 5 expected output shape.</td>
+</tr>
+<tr>
+<td>HelixConstitution §11.4.99 (this document's authority)</td>
+<td><code>&lt;parent&gt;/constitution/Constitution.md</code> §11.4.99
+(HelixConstitution commit <code>c640947</code>)</td>
+<td>This footer pattern + 90-day cadence.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Note on scope.</strong> This guide documents the Bot API path
+ONLY (BotFather bot tokens — long-poll + future webhook). The MTProto
+user-account path (operator-driven QA harness,
+<code>qaherald mtproto login</code> bootstrap) is documented separately
+at <code>docs/requirements/blockers/missing_env_variables.md</code> and
+<code>docs/guides/OPERATOR_CREDENTIALS.md</code> §"MTProto", which carry
+their own §11.4.99 Sources-verified footers covering the
+MTProto-specific safety rules (the <code>recover@telegram.org</code>
+pre-login email; no VoIP / Google Voice / Twilio / TextNow numbers; one
+phone = one <code>api_id</code> forever; Short-name STRICTLY
+alphanumeric — underscores REJECTED; ratelimit + floodwait middlewares
+from <code>submodules/gotd-td/contrib</code>). If you are setting up a
+userbot, read those documents first.</p>
+<p><strong>Re-verification cadence (per §11.4.99 (C)):</strong> Telegram
+is a risk-classified service (per §11.4.99 (D)) — Bot API breaking
+changes, MarkdownV2 escape-character rule changes, and
+webhook-secret-token validation changes all affect this guide.
+<strong>90-day max staleness</strong>, next re-verification due
+<strong>2026-08-26</strong>. Re-verify earlier on: Bot API changelog
+entry at <a
+href="https://core.telegram.org/bots/api#recent-changes">https://core.telegram.org/bots/api#recent-changes</a>,
+operator-error reports.</p>
 </body>
 </html>

@@ -11567,5 +11567,144 @@ flavors</td>
 traceability when a r3 or later change ID (V3-R-NN) needs
 cross-reference to the V2 audit log (§30.5) or the V1 R-NN ID-system
 (§30.1).</p>
+<hr />
+<h2 id="sources-verified">Sources verified</h2>
+<p>Per HelixConstitution §11.4.99 + Herald §108.n (Latest-Source
+Documentation Cross-Reference Mandate). Every design decision in this
+specification that references an external service contract was
+cross-referenced against the LATEST official documentation of that
+service before publication.</p>
+<p><strong>Last verified:</strong> 2026-05-28</p>
+<table>
+<thead>
+<tr>
+<th>Source</th>
+<th>URL / path</th>
+<th>Authored / verified (which §s)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Telegram official Bot API documentation</td>
+<td><a
+href="https://core.telegram.org/bots/api">https://core.telegram.org/bots/api</a></td>
+<td>§11.1 (Telegram channel <code>Capabilities</code> declaration);
+§11.4 (outbound idempotency — Telegram NOT supporting upstream
+<code>Idempotency-Key</code>, requiring <code>outbound_dedup</code>
+Postgres-side); §32.2 (<code>getUpdates</code> long-poll 25 s timeout +
+30 s safety-net timer); §32.9 (anti-echo-loop self-filter —
+<code>bot.Me.Username</code> via <code>getMe</code>); §43 (per-chat-type
+routing matrix); §"Costs" table (Bot API free tier).</td>
+</tr>
+<tr>
+<td>Slack Web API method index</td>
+<td><a
+href="https://api.slack.com/methods">https://api.slack.com/methods</a></td>
+<td>§11.2 (Slack channel <code>Capabilities</code>); §11.4 (Slack
+<code>idempotency_key</code> extension — adapter MUST forward); §11.9
+(Slack channel-vs-DM addressing).</td>
+</tr>
+<tr>
+<td>Slack Events API + Socket Mode</td>
+<td><a
+href="https://api.slack.com/apis/connections/socket">https://api.slack.com/apis/connections/socket</a>
++ <a
+href="https://api.slack.com/apis/events-api">https://api.slack.com/apis/events-api</a></td>
+<td>§32.2 (Slack inbound — Socket Mode WebSocket + Events API webhook
+variants); §43 (Slack routing matrix).</td>
+</tr>
+<tr>
+<td>Email RFCs — RFC 5322 (Message Format), RFC 6376 (DKIM), RFC 7208
+(SPF), RFC 7489 (DMARC)</td>
+<td><a
+href="https://www.rfc-editor.org/rfc/rfc5322">https://www.rfc-editor.org/rfc/rfc5322</a>
+/ rfc6376 / rfc7208 / rfc7489</td>
+<td>§11.4 (Email <code>Message-ID</code> header forward for outbound
+idempotency); §11.4 (SMTP-vs-Resend choice); §"Costs" table (SMTP free;
+Resend transactional rates).</td>
+</tr>
+<tr>
+<td>Anthropic — Claude Code documentation</td>
+<td><a
+href="https://docs.anthropic.com/claude-code">https://docs.anthropic.com/claude-code</a></td>
+<td>§33 (LLM/agent dispatch architecture); §33.2 (session-resolution
+algorithm —
+<code>&lt;workdir&gt;/.herald/claude-code/sessions/&lt;project&gt;.session</code>
+anchor file); §33.3 (<code>&lt;&lt;&lt;HERALD-REPLY&gt;&gt;&gt;</code>
+envelope schema); §33.5
+(<code>claude --resume &lt;UUID&gt; --print &lt;prompt&gt;</code>
+non-interactive batch invocation); §33.7 (Opus pin via
+<code>--model claude-opus-4-7</code> argv form).</td>
+</tr>
+<tr>
+<td>CloudEvents v1.0 specification</td>
+<td><a
+href="https://github.com/cloudevents/spec/blob/v1.0.2/cloudevents/spec.md">https://github.com/cloudevents/spec/blob/v1.0.2/cloudevents/spec.md</a></td>
+<td>§10 / §32 (inbound CloudEvents v1.0 envelope contract —
+<code>id</code> / <code>source</code> / <code>type</code> /
+<code>specversion</code> / <code>datacontenttype</code> /
+<code>time</code> / <code>data</code> fields); §"Events processed" table
+semantics.</td>
+</tr>
+<tr>
+<td>PostgreSQL official documentation</td>
+<td><a
+href="https://www.postgresql.org/docs/15/">https://www.postgresql.org/docs/15/</a></td>
+<td>§6/§9 schema (<code>events_processed</code>,
+<code>subscribers</code>, <code>subscriber_aliases</code>,
+<code>outbound_delivery_evidence</code>,
+<code>constitution_state</code>, <code>constitution_bindings</code>,
+<code>claude_code_sessions</code>); §"RLS" (Row-Level Security on every
+multi-tenant table, gated by <code>app.current_tenant_id</code>
+GUC).</td>
+</tr>
+<tr>
+<td>Redis official documentation</td>
+<td><a href="https://redis.io/docs/">https://redis.io/docs/</a></td>
+<td>§"Hot idempotency cache" (SETNX with 24h TTL default); §"JWKS cache"
+(5 min TTL default).</td>
+</tr>
+<tr>
+<td>OAuth 2.0 / OIDC + RFC 7517 (JWK) + RFC 7518 (JWA) + RFC 7519
+(JWT)</td>
+<td><a
+href="https://www.rfc-editor.org/rfc/rfc7517">https://www.rfc-editor.org/rfc/rfc7517</a>
+/ rfc7518 / rfc7519 + <a
+href="https://openid.net/specs/openid-connect-core-1_0.html">https://openid.net/specs/openid-connect-core-1_0.html</a></td>
+<td>§"Auth" (JWT verification via JWKS; RS256 / ES256 algorithm
+selection; <code>iss</code> / <code>aud</code> / <code>exp</code> /
+<code>nbf</code> claim validation).</td>
+</tr>
+<tr>
+<td>HelixConstitution §11.4.99 (this document's authority)</td>
+<td><code>&lt;parent&gt;/constitution/Constitution.md</code> §11.4.99
+(HelixConstitution commit <code>c640947</code>)</td>
+<td>This footer pattern + cadence semantics.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Re-verification cadence (per §11.4.99 (C)):</strong> This
+document aggregates contracts of many external services. Per §11.4.99
+(D): Telegram + Slack + Email sections (<code>§11.1</code>,
+<code>§11.2</code>, <code>§11.4</code>, <code>§32.2</code>,
+<code>§32.9</code>, <code>§43</code> rows) → <strong>90-day
+staleness</strong> (next due <strong>2026-08-26</strong>); Anthropic /
+Claude Code sections (<code>§33.x</code>) → <strong>180-day
+staleness</strong> (next due <strong>2026-11-24</strong>); CloudEvents /
+Postgres / Redis / OAuth / OIDC sections → <strong>365-day
+staleness</strong> (next due <strong>2027-05-28</strong>) — these
+protocols are stable + standards-track, breaking changes are years
+apart. Re-verify earlier on: any service changelog announces a breaking
+change; an operator-facing report surfaces a contradiction; Herald
+v1.0.0 release boundary.</p>
+<p><strong>Note on §11.4.99 application to specifications.</strong>
+§11.4.99 was authored for OPERATOR-actionable instruction documents.
+This specification is design-of-record, not operator instructions —
+operator setup is delegated to the <code>docs/guides/*.md</code> family.
+The cross-reference table above documents the external-contract sources
+the spec's design choices depend on; if a spec section is REVISED to add
+new operator-actionable content (the spec body documenting "how
+operators set up X"), the new content MUST be covered by the table on
+the same revision.</p>
 </body>
 </html>

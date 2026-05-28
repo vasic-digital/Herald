@@ -1350,6 +1350,128 @@ cascade (Herald §107.x).</li>
 <li>Helix §11.4.96 — safe-parallel-work catalogue.</li>
 </ul>
 <hr />
+<h2 id="sources-verified">Sources verified</h2>
+<p>Per HelixConstitution §11.4.99 + Herald §108.n (Latest-Source
+Documentation Cross-Reference Mandate). Every operator-facing
+instruction in this document was cross-referenced against the LATEST
+official online documentation of the relevant service before
+publication.</p>
+<p><strong>Last verified:</strong> 2026-05-28</p>
+<table>
+<thead>
+<tr>
+<th>Source</th>
+<th>URL / path</th>
+<th>Authored / verified</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Telegram official Bot API documentation</td>
+<td><a
+href="https://core.telegram.org/bots/api">https://core.telegram.org/bots/api</a></td>
+<td>§3 (<code>HERALD_TGRAM_BOT_TOKEN</code> format from BotFather;
+<code>HERALD_TGRAM_CHAT_ID</code> per-chat-type shape — private positive
+/ group negative / supergroup <code>-100…</code>); §3.2
+(<code>/newbot</code> username-ending-in-bot rule,
+<code>/setprivacy</code> Disable flow); §3.3 (chat-id discovery via
+<code>getUpdates</code>); §3.4 (sendMessage / sendPhoto / sendDocument /
+sendVoice / MarkdownV2 wire); §3.4 (long-poll 25 s timeout +
+<code>getUpdates</code> semantics); §3.5
+(<code>AttachmentMaxMiB = 50</code> hard cap); §9.7 + §9.8
+(privacy-mode,
+<code>Conflict: terminated by other getUpdates request</code>).</td>
+</tr>
+<tr>
+<td>Telegram Bot Features — Privacy Mode</td>
+<td><a
+href="https://core.telegram.org/bots/features#privacy-mode">https://core.telegram.org/bots/features#privacy-mode</a></td>
+<td>§3.2 step 4 (<code>/setprivacy</code> Disable); §9.7 (the
+"privacy-mode-on is the #1 stuck-cause" guidance).</td>
+</tr>
+<tr>
+<td>Slack Web API method index</td>
+<td><a
+href="https://api.slack.com/methods">https://api.slack.com/methods</a></td>
+<td>§4 (Slack adapter overview — <code>chat.postMessage</code>,
+<code>files.uploadV2</code>, <code>auth.test</code>,
+<code>conversations.history</code>); §4.5 (xoxb- token redaction
+rationale — workspace-scope credential semantics); §9.2
+(<code>channel_not_found</code>); §9.3 (<code>invalid_auth</code> /
+<code>token_expired</code>).</td>
+</tr>
+<tr>
+<td>Slack Events API + Socket Mode</td>
+<td><a
+href="https://api.slack.com/apis/connections/socket">https://api.slack.com/apis/connections/socket</a>
++ <a
+href="https://api.slack.com/apis/events-api">https://api.slack.com/apis/events-api</a></td>
+<td>§4.2 (Socket Mode WebSocket setup — <code>connections:write</code>
+scope on app-level token; <code>xapp-</code> prefix;
+<code>Enable Socket Mode</code> toggle;
+<code>apps.connections.open</code> dial); §4.3 (Socket Mode == no
+inbound NAT traversal / no public URL); §9.4
+(<code>not_allowed_token_type</code> for
+<code>apps.connections.open</code>).</td>
+</tr>
+<tr>
+<td>Slack OAuth + Bot Token Scopes</td>
+<td><a
+href="https://api.slack.com/scopes">https://api.slack.com/scopes</a></td>
+<td>§4.2 step 3 (<code>chat:write</code> / <code>files:read</code> /
+<code>files:write</code> / <code>channels:history</code> /
+<code>groups:history</code> / <code>users:read</code> Bot Token Scopes);
+§4.2 step 6 (<code>xoxb-</code> Bot User OAuth Token install); §10.2
+audit-checklist entries.</td>
+</tr>
+<tr>
+<td>Slack reply threading (<code>thread_ts</code>)</td>
+<td><a
+href="https://api.slack.com/messaging/retrieving#threads">https://api.slack.com/messaging/retrieving#threads</a></td>
+<td>§4.3 (thread_ts as Slack's reply anchor; per-channel router's
+reply-routing key).</td>
+</tr>
+<tr>
+<td>telebot.v3 vendored library</td>
+<td><code>submodules/telebot/</code> (v3.3.8, pinned per §11.4.74)</td>
+<td>§1.4 (<code>init()</code>-registered <code>tgram</code>
+constructor); §6.3 (<code>bot.Me.Username</code> →
+<code>IdentityUsername</code>).</td>
+</tr>
+<tr>
+<td>slack-go vendored library</td>
+<td><code>submodules/slack-go/</code></td>
+<td>§4 + §9 (Slack adapter behaviour — Web API client, Socket Mode
+handler, retry semantics).</td>
+</tr>
+<tr>
+<td>Empirical Herald operator testing 2026-05-28</td>
+<td><code>docs/qa/HRD-LIVE-20260528T082128Z/</code></td>
+<td>§3 LIVE-since-Wave-6 status; §4 Slack LIVE-since-Wave-7-T6 status;
+§1.5 multi-channel fan-in semantics.</td>
+</tr>
+<tr>
+<td>HelixConstitution §11.4.99 (this document's authority)</td>
+<td><code>&lt;parent&gt;/constitution/Constitution.md</code> §11.4.99
+(HelixConstitution commit <code>c640947</code>)</td>
+<td>This footer pattern + 90-day cadence.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Re-verification cadence (per §11.4.99 (C)):</strong> Both
+Telegram and Slack are risk-classified services (per §11.4.99 (D) — bot
+APIs face anti-abuse / token-revocation; OAuth scope changes can break
+installed apps silently). Telegram-specific subsections (§3, §9.7, §9.8)
+→ <strong>90-day max staleness</strong>, next due
+<strong>2026-08-26</strong>. Slack-specific subsections (§4, §9.2..§9.4)
+→ <strong>90-day max staleness</strong>, next due
+<strong>2026-08-26</strong>. Channel-agnostic substrate (§1, §2, §5, §6,
+§7, §8, §10) → <strong>180-day max staleness</strong>, next due
+<strong>2026-11-24</strong>. Re-verify earlier on: Telegram Bot API
+changelog entry, Slack API changelog entry (<a
+href="https://api.slack.com/changelog">https://api.slack.com/changelog</a>),
+operator-error reports, Herald vN.0.0 release boundary.</p>
+<hr />
 <p><em>End of guide.</em></p>
 </body>
 </html>

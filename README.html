@@ -557,5 +557,83 @@ remotes accordingly; the same pattern can be adapted for Herald.</p>
 <p>Substantive contributions land via PRs on GitHub; mirrors are
 read-only for external consumers. Inheritance rules and the gate apply
 to every PR.</p>
+<hr />
+<h2 id="sources-verified">Sources verified</h2>
+<p>Per HelixConstitution §11.4.99 + Herald §108.n (Latest-Source
+Documentation Cross-Reference Mandate). This README is a gateway
+document — the substantive operator-facing instructions live in the
+per-channel / per-dispatcher guides linked above. Each linked guide
+carries its own <code>## Sources verified</code> footer covering the
+external services it documents. The cross-references below cover the
+external claims this README makes directly.</p>
+<p><strong>Last verified:</strong> 2026-05-28</p>
+<table>
+<thead>
+<tr>
+<th>Source</th>
+<th>URL / path</th>
+<th>Authored / verified</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HelixConstitution</td>
+<td><a
+href="https://github.com/HelixDevelopment/HelixConstitution">https://github.com/HelixDevelopment/HelixConstitution</a></td>
+<td>§"Governance" (constitution authority + canonical URL);
+§"Quickstart" step 1 (clone-alongside command); §"Inherited invariants"
+list (§11.4 anti-bluff, §1.1 paired mutations, §11.4.6 no-guessing
+language, §11.4.10 credentials-never-tracked, §2.1 multi-upstream push,
+§9 hardlinked-backup).</td>
+</tr>
+<tr>
+<td>Telegram official Bot API documentation</td>
+<td><a
+href="https://core.telegram.org/bots/api">https://core.telegram.org/bots/api</a></td>
+<td>§"Messengers" table — Telegram channel status (LIVE — HRD-011 +
+HRD-100). The substantive setup steps are in <a
+href="docs/guides/messengers/TELEGRAM.md"><code>docs/guides/messengers/TELEGRAM.md</code></a>
++ <a
+href="docs/guides/TELEGRAM.md"><code>docs/guides/TELEGRAM.md</code></a>
+which carry their own §11.4.99 footers.</td>
+</tr>
+<tr>
+<td>Anthropic — Claude Code documentation</td>
+<td><a
+href="https://docs.anthropic.com/claude-code">https://docs.anthropic.com/claude-code</a></td>
+<td>§"LLM / agent dispatchers" table — Claude Code status (LIVE —
+HRD-012 Fixed). The substantive setup steps are in <a
+href="docs/guides/dispatchers/CLAUDE_CODE.md"><code>docs/guides/dispatchers/CLAUDE_CODE.md</code></a>
+which carries its own §11.4.99 footer.</td>
+</tr>
+<tr>
+<td>Herald active blockers — MTProto credential setup</td>
+<td><a
+href="docs/requirements/blockers/missing_env_variables.md"><code>docs/requirements/blockers/missing_env_variables.md</code></a></td>
+<td>§"Active blockers" link target — that document carries the canonical
+Telegram-userbot safety walkthrough (the
+<code>recover@telegram.org</code> pre-login email; no VoIP / Google
+Voice / Twilio / TextNow numbers; one phone = one <code>api_id</code>
+forever; Short-name STRICTLY alphanumeric — underscores REJECTED;
+ratelimit + floodwait middlewares) with its own §11.4.99 footer.</td>
+</tr>
+<tr>
+<td>Herald spec V3 (source of truth)</td>
+<td><a
+href="docs/specs/mvp/specification.V3.md"><code>docs/specs/mvp/specification.V3.md</code></a></td>
+<td>§"Status" claims about Herald implementation maturity; §"Mission"
+canonical statement; §"Repository layout"; the V1→V2→V3 supersession
+chain. The spec itself carries its own §11.4.99 footer covering the
+external service contracts its design decisions depend on.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Re-verification cadence (per §11.4.99 (C)):</strong> This
+README does not contain operator-actionable external-service
+instructions directly — those are in the linked guides, each with its
+own cadence. README-level re-verification is <strong>on Herald
+structural changes</strong> (repo-layout changes, new flavors, new
+mirror hosts, new linked guides) — no time-bound staleness. Linked
+guides MUST be kept current per their own footers.</p>
 </body>
 </html>
