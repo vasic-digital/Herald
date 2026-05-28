@@ -53,3 +53,5 @@ replace github.com/vasic-digital/herald/commons => ../commons
 replace gopkg.in/telebot.v3 => ../submodules/telebot
 
 replace digital.vasic.toon => ../submodules/TOON
+
+replace github.com/gotd/td => ../submodules/gotd-td

@@ -46,3 +46,6 @@
 [submodule "submodules/slack-go"]
 	path = submodules/slack-go
 	url = https://github.com/slack-go/slack.git
+[submodule "submodules/gotd-td"]
+	path = submodules/gotd-td
+	url = https://github.com/gotd/td.git
