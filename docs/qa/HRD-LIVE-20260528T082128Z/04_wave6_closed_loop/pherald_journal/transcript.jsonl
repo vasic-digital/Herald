@@ -1,0 +1,2 @@
+{"ts":"2026-05-28T08:58:48.896588Z","direction":"in","kind":"tgram.message","payload":{"attachments":[],"channel":"tgram","chat_id":"-4946584787","event_id":"","message_id":78,"text":"test"}}
+{"ts":"2026-05-28T08:58:48.902066Z","direction":"out","kind":"cc.dispatch","payload":{"attachments":[],"channel":"tgram","classification":{"Type":"query","Criticality":"middle","Confidence":0},"inbound_id":"","sender":"tgram:-4946584787","user_message":"test"}}

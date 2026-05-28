@@ -1,0 +1,6 @@
+=== RUN   TestDispatch_LiveClaudeInvocation
+    dispatch_integration_test.go:99: Dispatch: claude_code: dispatch claude --resume 19c3b53a-5114-499d-890d-3e1b53a39d7d: exit -1: 
+--- FAIL: TestDispatch_LiveClaudeInvocation (180.02s)
+FAIL
+FAIL	github.com/vasic-digital/herald/commons_messaging/dispatch/claude_code	181.423s
+FAIL

@@ -1,0 +1,8 @@
+=== RUN   TestBootstrapSession_LiveClaudeInvocation
+    bootstrap_integration_test.go:119: transcript found at /Users/milosvasic/.claude/projects/-private-var-folders-t3-dmp1fb1d61xbl27trnjtr0-c0000gn-T-TestBootstrapSession-LiveClaudeInvocation3723526092-001/ad633ff7-38e6-42ff-879c-e4ec0b60e6b0.jsonl (via recursive fallback)
+--- PASS: TestBootstrapSession_LiveClaudeInvocation (12.10s)
+=== RUN   TestDispatch_LiveClaudeInvocation
+    dispatch_integration_test.go:44: skip: hardware_not_present — HERALD_CLAUDE_SESSION_UUID absent per §11.4.3 (claude --resume needs an existing session for the workdir)
+--- SKIP: TestDispatch_LiveClaudeInvocation (0.00s)
+PASS
+ok  	github.com/vasic-digital/herald/commons_messaging/dispatch/claude_code	12.773s

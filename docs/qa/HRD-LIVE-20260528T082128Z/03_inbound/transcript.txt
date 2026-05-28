@@ -1,0 +1,4 @@
+=== RUN   TestSubscribe_LiveBotAPI
+--- PASS: TestSubscribe_LiveBotAPI (60.00s)
+PASS
+ok  	github.com/vasic-digital/herald/commons_messaging/channels/tgram	60.723s

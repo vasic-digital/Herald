@@ -1,0 +1,11 @@
+[wave6-live-loop] building pherald...
+[wave6-live-loop] capturing baseline getUpdates offset...
+[wave6-live-loop] baseline max update_id=0
+
+================================================================
+ PRE-CONDITION: operator MUST type a single message in the chat 
+                (chat_id=-4946584787) NOW.
+                Script polls for 60s.
+================================================================
+
+FAIL: no subscriber-typed message observed in 60s (chat_id=-4946584787)

@@ -1,0 +1,7 @@
+=== RUN   TestHealthCheck_LiveBotAPI
+--- PASS: TestHealthCheck_LiveBotAPI (0.58s)
+=== RUN   TestSend_LiveBotAPI
+    send_integration_test.go:48: Send OK: ChannelMsgID=76 Evidence=routed LatencyMillis=178
+--- PASS: TestSend_LiveBotAPI (0.32s)
+PASS
+ok  	github.com/vasic-digital/herald/commons_messaging/channels/tgram	2.223s
