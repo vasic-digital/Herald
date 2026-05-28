@@ -467,13 +467,18 @@ doesn't see a bare acronym.</td>
 </tr>
 <tr>
 <td><strong>Short name</strong></td>
-<td><code>herald_qa_&lt;random&gt;</code> (e.g.
-<code>herald_qa_5kx9</code>)</td>
-<td><strong>5-32 chars; alphanumeric + underscore ONLY; NO spaces; NO
-leading digit; GLOBALLY UNIQUE across all Telegram apps.</strong>
-"GLOBALLY UNIQUE" is the killer: someone else might already have
-<code>herald_qa</code>. Always append a random 4-char suffix on the
-FIRST attempt.</td>
+<td><code>heraldqa&lt;random4&gt;</code> (e.g.
+<code>heraldqa5kx9</code>) — <strong>NO UNDERSCORES</strong></td>
+<td><strong>5-32 chars; STRICTLY alphanumeric [a-zA-Z0-9] ONLY — NO
+underscores, NO dashes, NO spaces; NO leading digit; GLOBALLY UNIQUE
+across all Telegram apps.</strong> Despite Telegram's hint reading
+"alphanumeric, 5-32 characters" loosely, the validator enforces STRICT
+alphanumeric — underscores are REJECTED with
+<code>Incorrect app name</code>. (Operator-confirmed 2026-05-28:
+<code>herald_qa_5kx9</code> was rejected; <code>heraldqa5kx9</code> was
+accepted.) "GLOBALLY UNIQUE" is also a killer: someone else might
+already have <code>heraldqa</code>. Always append a random 4-char suffix
+on the FIRST attempt.</td>
 </tr>
 <tr>
 <td><strong>URL</strong></td>
@@ -542,31 +547,39 @@ NOT let you re-display the <code>api_hash</code> after you navigate
 away. If you lose it, you must revoke the app + create a new one (which
 invalidates any existing sessions).</p></li>
 </ol>
-<p><strong>If you got a form-validation error on your first
-attempt</strong> (operator-reported 2026-05-28):</p>
-<p>The most common cause is the <strong><code>short_name</code>
-field</strong>. Telegram requires:</p>
+<p><strong>If you got <code>Incorrect app name</code></strong>
+(operator-reported 2026-05-28):</p>
+<p>The actual cause is the <strong><code>Short name</code>
+field</strong> despite the error wording mentioning "app name" —
+Telegram internally calls the short_name the "app name". Telegram's
+validator enforces STRICTER rules than its own hint text suggests:</p>
 <ol type="1">
-<li><strong>5-32 characters</strong> (your previous attempt may have
-been too short).</li>
-<li><strong>Alphanumeric + underscore ONLY</strong> — no <code>-</code>,
-no <code>.</code>, no spaces.</li>
-<li><strong>No leading digit</strong> — <code>5herald_qa</code> fails;
-<code>herald_qa_5kx9</code> is fine.</li>
+<li><strong>5-32 characters.</strong></li>
+<li><strong>STRICTLY alphanumeric [a-zA-Z0-9] — NO UNDERSCORES.</strong>
+Telegram's hint reads "alphanumeric, 5-32 characters" — but underscores
+ARE NOT allowed despite many sources (including this guide's earlier
+drafts) claiming otherwise. <strong>Confirmed 2026-05-28 by operator
+test:</strong> <code>herald_qa_5kx9</code> REJECTED with
+<code>Incorrect app name</code>; <code>heraldqa5kx9</code>
+ACCEPTED.</li>
+<li><strong>No leading digit</strong> — <code>5heraldqa</code> fails;
+<code>heraldqa5kx9</code> is fine.</li>
 <li><strong>GLOBALLY UNIQUE across ALL Telegram apps</strong> —
-<code>herald_qa</code> may already be taken by someone else. Always
-append a random suffix on the first attempt.</li>
+<code>heraldqa</code> may already be taken. Always append a random
+4-char suffix on the first attempt.</li>
 </ol>
-<p>Recommended short_name values to try (in order):</p>
+<p>Recommended short_name values to try (in order — <strong>no
+underscores</strong>):</p>
 <ul>
-<li><code>herald_qa_$(openssl rand -hex 2)</code> — generate via shell:
-produces something like <code>herald_qa_5kx9</code></li>
-<li><code>herald_qa_&lt;your-username&gt;</code> — e.g.
-<code>herald_qa_milos</code></li>
-<li><code>herald_qa_&lt;YYYYMMDD&gt;</code> — e.g.
-<code>herald_qa_20260528</code></li>
-<li><code>herald_qa_test_&lt;NNN&gt;</code> — e.g.
-<code>herald_qa_test_001</code></li>
+<li><code>heraldqa$(openssl rand -hex 2)</code> — generate via shell:
+produces something like <code>heraldqa5kx9</code></li>
+<li><code>heraldqa&lt;your-username&gt;</code> — e.g.
+<code>heraldqaMilos</code> (camelCase to preserve human
+readability)</li>
+<li><code>heraldqa&lt;YYYYMMDD&gt;</code> — e.g.
+<code>heraldqa20260528</code></li>
+<li><code>heraldqatest&lt;NNN&gt;</code> — e.g.
+<code>heraldqatest001</code></li>
 </ul>
 <p><strong>Other form-validation gotchas:</strong></p>
 <ul>

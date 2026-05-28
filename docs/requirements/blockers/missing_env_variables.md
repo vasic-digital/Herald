@@ -171,7 +171,7 @@ HERALD_MTPROTO_PASSWORD=<only if 2FA enabled on the account; otherwise leave bla
    | Field | Value to enter | Telegram's hidden constraint |
    |---|---|---|
    | **App title** | `Herald` OR `HeraldQA` OR `Herald Test Harness` (try one; if "Incorrect app name" appears, try the next) | **3-32 chars; letters + digits + spaces ONLY; NO 2-letter all-caps tokens like "QA"; NO digits-only words.** Telegram rejects names that look like abbreviations / acronyms. The all-caps "QA" alone triggers `Incorrect app name`. Use a full word OR squish into camelCase (`HeraldQA`) so Telegram's parser doesn't see a bare acronym. |
-   | **Short name** | `herald_qa_<random>` (e.g. `herald_qa_5kx9`) | **5-32 chars; alphanumeric + underscore ONLY; NO spaces; NO leading digit; GLOBALLY UNIQUE across all Telegram apps.** "GLOBALLY UNIQUE" is the killer: someone else might already have `herald_qa`. Always append a random 4-char suffix on the FIRST attempt. |
+   | **Short name** | `heraldqa<random4>` (e.g. `heraldqa5kx9`) — **NO UNDERSCORES** | **5-32 chars; STRICTLY alphanumeric [a-zA-Z0-9] ONLY — NO underscores, NO dashes, NO spaces; NO leading digit; GLOBALLY UNIQUE across all Telegram apps.** Despite Telegram's hint reading "alphanumeric, 5-32 characters" loosely, the validator enforces STRICT alphanumeric — underscores are REJECTED with `Incorrect app name`. (Operator-confirmed 2026-05-28: `herald_qa_5kx9` was rejected; `heraldqa5kx9` was accepted.) "GLOBALLY UNIQUE" is also a killer: someone else might already have `heraldqa`. Always append a random 4-char suffix on the FIRST attempt. |
    | **URL** | `https://herald.local` (or any valid `http(s)://...` URL — the field is **NOT optional** on the validation step despite earlier guidance) | Must start with `http://` or `https://` — Telegram rejects bare domains. Can be a fake/placeholder URL — Telegram only validates the SHAPE, not that the URL resolves. |
    | **Platform** | `Desktop` (from dropdown — `Other` is rejected by some Telegram form versions) | Pick `Desktop` if `Other` errors out. Either works for our use case — the "Platform" field is metadata only, doesn't gate any API behaviour. |
    | **Description** | `Herald automation harness for closed-loop testing.` | Plain ASCII; the § symbol in earlier versions of this guide tripped some Telegram form validators. Keep under 200 chars. Avoid abbreviations (QA, CI, CD) — pair them with full-word context or drop them. |
@@ -199,20 +199,20 @@ HERALD_MTPROTO_PASSWORD=<only if 2FA enabled on the account; otherwise leave bla
    - **`App api_hash`** — 32-character lowercase hex string. → This is your `HERALD_MTPROTO_APP_HASH`.
 9. **⚠️ COPY BOTH VALUES IMMEDIATELY.** Telegram does NOT let you re-display the `api_hash` after you navigate away. If you lose it, you must revoke the app + create a new one (which invalidates any existing sessions).
 
-**If you got a form-validation error on your first attempt** (operator-reported 2026-05-28):
+**If you got `Incorrect app name`** (operator-reported 2026-05-28):
 
-The most common cause is the **`short_name` field**. Telegram requires:
+The actual cause is the **`Short name` field** despite the error wording mentioning "app name" — Telegram internally calls the short_name the "app name". Telegram's validator enforces STRICTER rules than its own hint text suggests:
 
-1. **5-32 characters** (your previous attempt may have been too short).
-2. **Alphanumeric + underscore ONLY** — no `-`, no `.`, no spaces.
-3. **No leading digit** — `5herald_qa` fails; `herald_qa_5kx9` is fine.
-4. **GLOBALLY UNIQUE across ALL Telegram apps** — `herald_qa` may already be taken by someone else. Always append a random suffix on the first attempt.
+1. **5-32 characters.**
+2. **STRICTLY alphanumeric [a-zA-Z0-9] — NO UNDERSCORES.** Telegram's hint reads "alphanumeric, 5-32 characters" — but underscores ARE NOT allowed despite many sources (including this guide's earlier drafts) claiming otherwise. **Confirmed 2026-05-28 by operator test:** `herald_qa_5kx9` REJECTED with `Incorrect app name`; `heraldqa5kx9` ACCEPTED.
+3. **No leading digit** — `5heraldqa` fails; `heraldqa5kx9` is fine.
+4. **GLOBALLY UNIQUE across ALL Telegram apps** — `heraldqa` may already be taken. Always append a random 4-char suffix on the first attempt.
 
-Recommended short_name values to try (in order):
-- `herald_qa_$(openssl rand -hex 2)` — generate via shell: produces something like `herald_qa_5kx9`
-- `herald_qa_<your-username>` — e.g. `herald_qa_milos`
-- `herald_qa_<YYYYMMDD>` — e.g. `herald_qa_20260528`
-- `herald_qa_test_<NNN>` — e.g. `herald_qa_test_001`
+Recommended short_name values to try (in order — **no underscores**):
+- `heraldqa$(openssl rand -hex 2)` — generate via shell: produces something like `heraldqa5kx9`
+- `heraldqa<your-username>` — e.g. `heraldqaMilos` (camelCase to preserve human readability)
+- `heraldqa<YYYYMMDD>` — e.g. `heraldqa20260528`
+- `heraldqatest<NNN>` — e.g. `heraldqatest001`
 
 **Other form-validation gotchas:**
 

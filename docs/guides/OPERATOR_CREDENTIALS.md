@@ -460,7 +460,7 @@ If banned despite all this, email `recover@telegram.org` from the same address e
 5. After login, navigate to https://my.telegram.org/apps.
 6. **First-time:** click "Create new application". Fill in (values updated 2026-05-28 after operator reported `Incorrect app name` validation error):
    - **App title:** `Herald` (simplest; works almost always) — fallbacks: `HeraldQA` (camelCase) → `Herald Test Harness` → `Herald Tools` → `Herald Lab`. **AVOID bare acronyms like `QA`** — Telegram's classifier rejects them with `Incorrect app name`.
-   - **Short name:** `herald_qa_<random4>` (e.g. `herald_qa_5kx9`) — must be 5-32 chars, alphanumeric + underscore only, GLOBALLY UNIQUE across all Telegram apps. Plain `herald_qa` may already be taken.
+   - **Short name:** `heraldqa<random4>` (e.g. `heraldqa5kx9`) — **NO UNDERSCORES**. Must be 5-32 chars, STRICTLY alphanumeric [a-zA-Z0-9] — despite Telegram's hint reading "alphanumeric, 5-32 characters", underscores ARE REJECTED with `Incorrect app name` (operator-confirmed 2026-05-28: `herald_qa_5kx9` REJECTED, `heraldqa5kx9` ACCEPTED). GLOBALLY UNIQUE across all Telegram apps — plain `heraldqa` may already be taken.
    - **URL:** `https://herald.local` (or any valid `http(s)://` URL — Telegram requires the `http(s)://` prefix; bare domains rejected). Field is NOT actually optional.
    - **Platform:** `Desktop` (fallback if `Other` is rejected on your Telegram form version).
    - **Description:** `Herald automation harness for closed-loop testing.` (plain ASCII; no `§` symbol; under 200 chars; avoid acronyms QA/CI/CD).
