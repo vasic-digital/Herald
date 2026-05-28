@@ -47,7 +47,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>28</td>
+<td>29</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -63,8 +63,32 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>r28 (v0.6.0 Wave 7 T10 — paired §1.1 mutation gate) marks
-HRD-119 Open→in_progress.</strong>
+<td><strong>r29 (v0.6.0 Wave 7 T11 — multi-channel §11.4.85
+stress+chaos) marks HRD-120 Open→in_progress.</strong> Extended
+<code>pherald/cmd/pherald/listen_stress_chaos_test.go</code> (HRD-126's
+single-channel scaffold) with two W7-specific multi-channel tests:
+<code>TestListen_MultiChannel_StressBurst</code> (2 channels × 200
+concurrent events → 400 unique IDs all dispatched exactly once +
+<strong>per-channel attribution</strong> via
+<code>perChannelCountingReplier</code> keyed on
+<code>rcpt.Channel</code> proves the channelRouter doesn't cross-wire;
+~9-19k events/s under <code>-race</code>) +
+<code>TestListen_MultiChannel_ChaosOneChannelDies_OtherKeepsGoing</code>
+(the fan-in concurrency proof — tgram errors immediately, slack ticks 50
+events at 2ms; assertion conjunction ≥5 slack dispatches landed BEFORE
+tgram fail-loud teardown AND the tgram error is tagged
+<code>channel="tgram-stub" + subscribe</code> → only true under a
+CONCURRENT goroutine orchestration, not a strictly-serial one).
+<strong>runListen contract:</strong> fail-loud-tears-down-siblings
+(<code>pherald/cmd/pherald/listen.go:387-398</code>); per-channel
+supervised restart is a deferred Wave 8 design and the doc-comment warns
+against silent change. 12/12 PASS over <code>-race -count=3</code> (3
+iterations × 2 new + 2 sibling HRD-126 tests); race-detector clean.
+Evidence anchors <code>multichannel_no_drop_under_burst=1</code>
+(stress) + <code>multichannel_concurrency_proven=1</code> (chaos) at
+<code>docs/qa/HRD-120-20260528T110000Z/</code>. <strong>Prior r28
+(v0.6.0 Wave 7 T10 — paired §1.1 mutation gate) marked HRD-119
+Open→in_progress.</strong>
 <code>tests/test_wave7_mutation_meta.sh</code> ships 3 paired hermetic
 mutations against the Wave 7 multi-channel framework —
 <strong>M1</strong> blank <code>IsSelfEcho</code> (echo-loop hazard),
@@ -114,7 +138,7 @@ inbound-runtime extension note
 <tr>
 <td>Issues</td>
 <td>HRD-008, HRD-015, HRD-019..HRD-025, HRD-029..HRD-056, HRD-081,
-HRD-085..HRD-090, HRD-115..HRD-119, HRD-131</td>
+HRD-085..HRD-090, HRD-115..HRD-120, HRD-131</td>
 </tr>
 <tr>
 <td>Issues summary</td>
@@ -1185,6 +1209,45 @@ canonical precedent <code>tests/test_wave6_mutation_meta.sh</code>;
 evidence <code>docs/qa/HRD-119-20260528T100000Z/transcript.txt</code>
 (anchor <code>QA-ANCHOR: HRD-119-WAVE7-MUTATION-GATE-20260528</code>);
 Catalogue-Check: n/a (gate).</td>
+</tr>
+<tr>
+<td>HRD-120</td>
+<td>task</td>
+<td>in_progress</td>
+<td>high</td>
+<td>Wave 7 T11 — §11.4.85 multi-channel stress + chaos. Extended
+HRD-126's <code>pherald/cmd/pherald/listen_stress_chaos_test.go</code>
+(NOT duplicated to a new file):
+<code>TestListen_MultiChannel_StressBurst</code> (2 channels × 200
+concurrent events through ONE runListen — pins no-loss/no-double +
+<strong>per-channel attribution</strong> via
+<code>perChannelCountingReplier</code> keyed on
+<code>rcpt.Channel</code> proving the channelRouter does NOT cross-wire;
+throughput ~9-19k ev/s under -race; clean shutdown &lt;3s + no goroutine
+leak) +
+<code>TestListen_MultiChannel_ChaosOneChannelDies_OtherKeepsGoing</code>
+(tgram fires 1 event then errors; slack ticks 50 events at 2ms — pins
+<strong>concurrency-of-fan-in under fault</strong> via conjunction: ≥5
+slack dispatches landed BEFORE fail-loud teardown AND tgram error
+surfaces tagged <code>channel="tgram-stub"</code> +
+<code>subscribe</code>). 12/12 PASS over <code>-race -count=3</code> (3
+iterations × 2 new + 2 sibling HRD-126); race-detector clean. runListen
+contract found: <strong>fail-loud-tears-down-siblings</strong>
+(per-channel supervised restart is a deferred Wave 8 design, doc-comment
+warns against silent change). Evidence anchors:
+<code>multichannel_no_drop_under_burst=1</code> (stress) +
+<code>multichannel_concurrency_proven=1</code> +
+<code>multichannel_one_channel_death_surfaced=1</code> (chaos).</td>
+<td>2026-05-28</td>
+<td>2026-05-28</td>
+<td>spec V3 §11.4.85;
+docs/superpowers/plans/2026-05-27-wave7-generic-messenger.md §T11;
+canonical precedent HRD-126 + commons/stresschaos; evidence
+<code>docs/qa/HRD-120-20260528T110000Z/stress_chaos/transcript.txt</code>
+(anchor
+<code>QA-ANCHOR: HRD-120-WAVE7-MULTICHANNEL-STRESS-CHAOS-20260528</code>);
+Catalogue-Check: extend commons/stresschaos + HRD-126
+burstSubscriber.</td>
 </tr>
 <tr>
 <td>HRD-131</td>

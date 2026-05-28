@@ -1,0 +1,67 @@
+QA-ANCHOR: HRD-120-WAVE7-MULTICHANNEL-STRESS-CHAOS-20260528
+Date: 2026-05-28T05:21:03Z
+Repo: /Users/milosvasic/Projects/Herald
+Go: go version go1.26.2 darwin/arm64
+Commit: 6737040f79f533c344e55682a4a4a1c6d4645d9c
+
+==== Wave 7 T11 (HRD-120) §11.4.85 multi-channel stress + chaos ====
+Tests added to pherald/cmd/pherald/listen_stress_chaos_test.go (append-only, single-channel HRD-126 tests untouched):
+  - TestListen_MultiChannel_StressBurst — 2 channels × 200 concurrent events through 1 dispatcher;
+                                          asserts no-loss/no-double/per-channel-attribution/clean-shutdown/no-leak.
+  - TestListen_MultiChannel_ChaosOneChannelDies_OtherKeepsGoing — tgram-stub fires 1 event then errors;
+                                          slack-stub ticks ~50 events at 2ms;
+                                          asserts (a) ≥5 slack dispatches BEFORE fail-loud teardown (concurrency proof)
+                                          + (b) tgram error surfaces tagged with channel="tgram-stub" + subscribe.
+
+==== go vet ./pherald/... ====
+(empty output = no diagnostics)
+
+==== go test -race -count=3 -v -run 'TestListen_MultiChannel' ./pherald/cmd/pherald/... ====
+=== RUN   TestListen_MultiChannel_StressBurst
+    listen_stress_chaos_test.go:563: listen multichannel stress[burst]: 400 events (tgram=200 slack=200) dispatched+replied with per-channel attribution, clean shutdown, goroutines 2→2 (leaked=0), tput=18977/s (persistent=false dir=/var/folders/t3/dmp1fb1d61xbl27trnjtr0_c0000gn/T/TestListen_MultiChannel_StressBurst1626495287/001/2026-05-28T102105-gap3/stress_chaos/listen)
+--- PASS: TestListen_MultiChannel_StressBurst (0.07s)
+=== RUN   TestListen_MultiChannel_ChaosOneChannelDies_OtherKeepsGoing
+    listen_stress_chaos_test.go:734: listen multichannel chaos[one-dies]: tgram-stub returned "pherald listen: channel \"tgram-stub\" subscribe: tgram subscribe failed (chaos: socket reset by peer)" after 1 dispatch; slack-stub had 25 concurrent dispatches (+25 replies) before fail-loud teardown
+--- PASS: TestListen_MultiChannel_ChaosOneChannelDies_OtherKeepsGoing (0.05s)
+=== RUN   TestListen_MultiChannel_StressBurst
+    listen_stress_chaos_test.go:563: listen multichannel stress[burst]: 400 events (tgram=200 slack=200) dispatched+replied with per-channel attribution, clean shutdown, goroutines 2→2 (leaked=0), tput=18820/s (persistent=false dir=/var/folders/t3/dmp1fb1d61xbl27trnjtr0_c0000gn/T/TestListen_MultiChannel_StressBurst2112882259/001/2026-05-28T102105-gap3/stress_chaos/listen)
+--- PASS: TestListen_MultiChannel_StressBurst (0.07s)
+=== RUN   TestListen_MultiChannel_ChaosOneChannelDies_OtherKeepsGoing
+    listen_stress_chaos_test.go:734: listen multichannel chaos[one-dies]: tgram-stub returned "pherald listen: channel \"tgram-stub\" subscribe: tgram subscribe failed (chaos: socket reset by peer)" after 1 dispatch; slack-stub had 25 concurrent dispatches (+25 replies) before fail-loud teardown
+--- PASS: TestListen_MultiChannel_ChaosOneChannelDies_OtherKeepsGoing (0.05s)
+=== RUN   TestListen_MultiChannel_StressBurst
+    listen_stress_chaos_test.go:563: listen multichannel stress[burst]: 400 events (tgram=200 slack=200) dispatched+replied with per-channel attribution, clean shutdown, goroutines 2→2 (leaked=0), tput=18360/s (persistent=false dir=/var/folders/t3/dmp1fb1d61xbl27trnjtr0_c0000gn/T/TestListen_MultiChannel_StressBurst2208008106/001/2026-05-28T102106-gap3/stress_chaos/listen)
+--- PASS: TestListen_MultiChannel_StressBurst (0.08s)
+=== RUN   TestListen_MultiChannel_ChaosOneChannelDies_OtherKeepsGoing
+    listen_stress_chaos_test.go:734: listen multichannel chaos[one-dies]: tgram-stub returned "pherald listen: channel \"tgram-stub\" subscribe: tgram subscribe failed (chaos: socket reset by peer)" after 1 dispatch; slack-stub had 25 concurrent dispatches (+25 replies) before fail-loud teardown
+--- PASS: TestListen_MultiChannel_ChaosOneChannelDies_OtherKeepsGoing (0.05s)
+PASS
+ok  	github.com/vasic-digital/herald/pherald/cmd/pherald	1.990s
+
+==== Single-channel HRD-126 + new multi-channel HRD-120 — all 4 together, -count=3 ====
+=== RUN   TestListen_Stress_BurstLoopThroughput
+--- PASS: TestListen_Stress_BurstLoopThroughput (0.07s)
+=== RUN   TestListen_Chaos_ChannelDeathFailsLoud
+--- PASS: TestListen_Chaos_ChannelDeathFailsLoud (0.00s)
+=== RUN   TestListen_MultiChannel_StressBurst
+--- PASS: TestListen_MultiChannel_StressBurst (0.08s)
+=== RUN   TestListen_MultiChannel_ChaosOneChannelDies_OtherKeepsGoing
+--- PASS: TestListen_MultiChannel_ChaosOneChannelDies_OtherKeepsGoing (0.05s)
+=== RUN   TestListen_Stress_BurstLoopThroughput
+--- PASS: TestListen_Stress_BurstLoopThroughput (0.08s)
+=== RUN   TestListen_Chaos_ChannelDeathFailsLoud
+--- PASS: TestListen_Chaos_ChannelDeathFailsLoud (0.00s)
+=== RUN   TestListen_MultiChannel_StressBurst
+--- PASS: TestListen_MultiChannel_StressBurst (0.07s)
+=== RUN   TestListen_MultiChannel_ChaosOneChannelDies_OtherKeepsGoing
+--- PASS: TestListen_MultiChannel_ChaosOneChannelDies_OtherKeepsGoing (0.05s)
+=== RUN   TestListen_Stress_BurstLoopThroughput
+--- PASS: TestListen_Stress_BurstLoopThroughput (0.07s)
+=== RUN   TestListen_Chaos_ChannelDeathFailsLoud
+--- PASS: TestListen_Chaos_ChannelDeathFailsLoud (0.00s)
+=== RUN   TestListen_MultiChannel_StressBurst
+--- PASS: TestListen_MultiChannel_StressBurst (0.07s)
+=== RUN   TestListen_MultiChannel_ChaosOneChannelDies_OtherKeepsGoing
+--- PASS: TestListen_MultiChannel_ChaosOneChannelDies_OtherKeepsGoing (0.05s)
+PASS
+ok  	github.com/vasic-digital/herald/pherald/cmd/pherald	2.214s
