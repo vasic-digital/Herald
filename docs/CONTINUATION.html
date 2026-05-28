@@ -112,7 +112,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>16</td>
+<td>17</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -681,26 +681,48 @@ responses, but the body carries live
 implemented + e2e-proven (E97-E122).</td>
 </tr>
 <tr>
+<td>Batch D (HRD-085..089)</td>
+<td>in_progress (IMPLEMENTED 2026-05-28, <code>5899623</code>)</td>
+<td><strong>commons_infra <code>pgxTaskRepository</code> — 16 of 17
+methods implemented + REAL-PG verified.</strong>
+GetByID/Update/Delete(soft) +
+UpdateStatus/Progress/Heartbeat/SaveCheckpoint +
+GetByStatus/GetPendingTasks/CountByStatus/GetTaskHistory +
+GetStaleTasks/GetByWorkerID + SaveResourceSnapshot/GetResourceSnapshots;
+migration <code>000013_task_resource_snapshots</code> (ledger 12→13).
+<strong>14/14 integration round-trips PASS against live PG</strong>
+(<code>docs/qa/HRD-085-089-20260528T070000Z/integration_realpg.log</code>);
+e2e E123 (gated <code>HERALD_BATCHD_LIVE=1</code> — self-boot collides
+with the e2e's shared PG). The real-PG run caught + fixed a latent
+<code>LogEvent</code> JSONB-as-[]byte→bytea 22P02 bug (now
+<code>string()</code>). <strong><code>MoveToDeadLetter</code> still
+<code>ErrUnsupported</code> → HRD-090</strong> (dead-letter table +
+retention, separate effort). PG boot: <code>podman machine start</code>
+(VM was never-started) + the integration suite self-boots
+herald-postgres via QuickstartBoot; a stale
+<code>herald-e2e_/herald-quickstart_herald-pg</code> volume caused a
+one-time 28P01 auth fail — removed both, recreated fresh with
+<code>herald_dev</code>.</td>
+</tr>
+<tr>
 <td>RESUME-AT (next units)</td>
 <td>next</td>
-<td>(1) <strong>Batch D</strong> commons_infra
-<code>pgxTaskRepository</code>
-(<code>commons_infra/task_repository.go</code>) — 17 methods currently
-<code>ErrUnsupported</code>: HRD-085 GetByID/Update/Delete, HRD-086
-UpdateStatus/UpdateProgress/UpdateHeartbeat/SaveCheckpoint, HRD-087
-GetByStatus/GetPendingTasks/CountByStatus/GetTaskHistory, HRD-088
-GetStaleTasks/GetByWorkerID, HRD-089
-SaveResourceSnapshot/GetResourceSnapshots (+new
-<code>task_resource_snapshots</code> migration). <strong>Needs live PG
-:24100</strong> (boot via containers submodule + podman socket) for §107
-anti-bluff integration evidence — NOT hermetic. HRD-081 is a
-containers-submodule podman/docker detect (already worked around in
-boot.go). (2) <strong>Batch E</strong> Wave 7 T6-T12 Slack HRD-115..121
-(slack-go submodule + I6 gate; e2e off E123+). (3) operator-live
-close-out flips HRD-019..025 + §43 rows →Fixed. (4) §11.4.93 SQLite
-(HRD-131, deferred). Plan
-<code>docs/superpowers/plans/2026-05-27-v1.0.0-execution.md</code>.
-HEAD=<code>ba27a0e</code>.</td>
+<td>(1) <strong>Batch E</strong> Wave 7 T6-T12 Slack HRD-115..121
+(vendor a slack-go submodule + the I6
+no-<code>&lt;repo&gt;/constitution/</code>/<code>.gitmodules</code> gate
+check; new <code>slack://</code> channel adapter per the Wave-7
+<code>Channel</code> framework; e2e off <strong>E124+</strong>). (2)
+<strong>HRD-090</strong> <code>MoveToDeadLetter</code> (dead-letter
+table + retention design) — the last <code>ErrUnsupported</code>
+TaskRepository method. (3) operator-live close-out: flip HRD-019..025
+(Batch B bindings) + the §43 rows (HRD-029..056) + Batch D rows
+(HRD-085..089) →Fixed once operator-live-validated. (4) HRD-008
+quickstart validation, HRD-015 gate-I8, HRD-081 (upstream containers
+podman/docker detect). (5) §11.4.93 SQLite (HRD-131, operator-deferred).
+Plan <code>docs/superpowers/plans/2026-05-27-v1.0.0-execution.md</code>.
+<strong>HEAD=<code>5899623</code></strong>; full e2e 148 PASS / 0 FAIL;
+podman VM now running + herald-postgres :24100 healthy (fresh herald_dev
+volume).</td>
 </tr>
 </tbody>
 </table>
