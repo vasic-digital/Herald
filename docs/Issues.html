@@ -47,7 +47,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>32</td>
+<td>33</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -63,8 +63,30 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>r32 (Tgram-completeness Wave A SA-b — HRD-136 webhook
-validator skeleton) marks HRD-136 Open→in_progress.</strong> New
+<td><strong>r33 (Tgram-completeness Wave A SA-c — HRD-138 operator
+deep-dive guide) marks HRD-138 Open→in_progress; Wave A is now CLOSED (3
+of 6 tgram-completeness tasks done).</strong>
+<code>docs/guides/TELEGRAM.md</code> (810 lines, 11 §-sections, 58
+subsections + 3 siblings .html/.pdf/.docx) is the per-module nano-detail
+operator guide called for by the operator memory
+<code>feedback_nano_detail_docs</code>. Sections: §1 architecture; §2
+BotFather walkthrough; §3 env table + 3 chat_id discovery methods; §4
+pre-deploy smoke-test commands; §5 attachment size limits +
+content-addressed inbox; §6 chat-type matrix
+(private/group/supergroup/channel id formats + bot permissions); §7
+reply threading + attachment-fan-out rationale; §8 self-filter +
+echo-loop hazard (Wave 6 T12 M1); §9 12-entry troubleshooting cookbook
+(401/400/429/413/403/echo-loop/long-poll/409/privacy/webhook/zero-byte/wrong-inbox);
+§10 6-subsection pre-deploy audit (tick-boxes); §11 references (spec V3
++ 13 HRDs + source paths). Cross-linked from the pre-existing
+<code>docs/guides/messengers/TELEGRAM.md</code> (HRD-011 setup,
+preserved untouched). Part 3 of 6 in the tgram-completeness wave — Wave
+A complete (HRD-135 + HRD-136 + HRD-138). <strong>Next: Wave B HRD-133 +
+HRD-134</strong> (combined subagent — both touch send.go:
+token-redaction symmetry + 429 retry_after honored), then <strong>Wave C
+HRD-137</strong> (multi-recipient stress+chaos). <strong>Prior r32
+(Tgram-completeness Wave A SA-b — HRD-136 webhook validator skeleton)
+marked HRD-136 Open→in_progress.</strong> New
 <code>commons_messaging/channels/tgram/webhook.go</code> lands the Bot
 API webhook <code>secret_token</code> validation layer for the future
 V1.x webhook-path operator (spec V3 §11.1 alternative to
@@ -210,7 +232,8 @@ inbound-runtime extension note
 <tr>
 <td>Issues</td>
 <td>HRD-008, HRD-015, HRD-019..HRD-025, HRD-029..HRD-056, HRD-081,
-HRD-085..HRD-090, HRD-115..HRD-121, HRD-135, HRD-136, HRD-131</td>
+HRD-085..HRD-090, HRD-115..HRD-121, HRD-135, HRD-136, HRD-138,
+HRD-131</td>
 </tr>
 <tr>
 <td>Issues summary</td>
@@ -1427,6 +1450,41 @@ tgram-completeness Section-2 mandate; evidence
 <code>QA-ANCHOR: HRD-136-TGRAM-WEBHOOK-VALIDATOR-20260528</code>);
 Catalogue-Check: reuse <code>crypto/subtle</code> + telebot.v3's
 <code>tele.Update</code>.</td>
+</tr>
+<tr>
+<td>HRD-138</td>
+<td>task</td>
+<td>in_progress</td>
+<td>low</td>
+<td>Tgram-completeness Wave A — <code>docs/guides/TELEGRAM.md</code>
+per-module operator deep-dive guide (810 lines, 11 §-sections, 58
+subsections, 3 siblings .html/.pdf/.docx): §1 architecture overview
+(inbound <code>getUpdates</code> + outbound
+<code>Send</code>/<code>SendReplyGeneric</code>); §2 BotFather
+walkthrough (<code>/newbot</code> → token → <code>/setprivacy</code>);
+§3 required env table + how to obtain <code>HERALD_TGRAM_CHAT_ID</code>
+(3 methods: getUpdates curl / @userinfobot / @RawDataBot); §4 pre-deploy
+smoke-test commands; §5 attachment size limits (4096 text, 10/50/2GB
+photo tiers, 50MB document Bot-API-cap workaround = local Bot API
+server) + the content-addressed inbox path; §6 chat-type matrix
+(private/group/supergroup/channel id formats + required bot permissions
+per type); §7 reply threading via <code>reply_to_message_id</code> + the
+attachment fan-out rationale (Wave 6.5 mutation gate M3); §8 self-filter
+contract (cross-the-wire <code>getMe</code> + cache + the echo-loop
+hazard if skipped — Wave 6 T12 M1); §9 12-entry troubleshooting cookbook
+(401/400/429/413/403/echo-loop/long-poll-stuck/409/privacy/webhook/zero-byte/wrong-inbox);
+§10 6-subsection pre-deploy operator audit (tick-box checklist mirroring
+<code>OPERATOR_CREDENTIALS.md</code> style); §11 references (spec V3
+§11.1/§32.2/§32.9/§43 + 13 HRDs + source paths). Cross-linked from
+existing <code>docs/guides/messengers/TELEGRAM.md</code> (HRD-011 setup,
+preserved).</td>
+<td>2026-05-28</td>
+<td>2026-05-28</td>
+<td>operator tgram-completeness Section-2 mandate; operator memory
+<code>feedback_nano_detail_docs</code>; evidence
+<code>docs/qa/HRD-138-20260528T130000Z/transcript.txt</code> (anchor
+<code>QA-ANCHOR: HRD-138-TGRAM-OPERATOR-GUIDE-20260528</code>);
+Catalogue-Check: n/a (operator doc).</td>
 </tr>
 <tr>
 <td>HRD-131</td>

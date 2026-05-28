@@ -1,0 +1,74 @@
+QA-ANCHOR: HRD-138-TGRAM-OPERATOR-GUIDE-20260528
+
+# Herald — HRD-138 Telegram Operator Guide — QA Transcript
+# Run-id: HRD-138-20260528T130000Z
+# Captured: 2026-05-28 (writer)
+# Scope: WRITE-ONLY (no commit/push — conductor handles).
+
+================================================================
+§1. Line count
+================================================================
+     810 docs/guides/TELEGRAM.md
+
+================================================================
+§2. Section count (H2 + H3)
+================================================================
+H2 sections (## §...):  11
+H3 sections (### §...): 58
+
+H2 section list:
+## §1. What is Herald's Telegram integration?
+## §2. BotFather walkthrough (creating a bot)
+## §3. Required env vars + how to obtain each
+## §4. Verifying the integration end-to-end
+## §5. Attachment size + type limits
+## §6. Chat types — private vs group vs supergroup vs channel
+## §7. Reply threading + `reply_to_message_id`
+## §8. Self-filter — preventing echo loops
+## §9. Troubleshooting cookbook
+## §10. Pre-deploy operator audit
+## §11. References
+
+================================================================
+§3. Export script run (REGEN_ALL=1)
+================================================================
+WARNING: Ignored `gap: min(4vw, 1.5em)` at 6:32, invalid value.
+WARNING: Ignored `overflow-x: auto` at 7:28, unknown property.
+WARNING: Ignored `user-select: none` at 45:32, unknown property.
+  OK   docs/guides/TELEGRAM.md
+         -> docs/guides/TELEGRAM.html
+         -> docs/guides/TELEGRAM.pdf
+         -> docs/guides/TELEGRAM.docx
+
+================================================================
+§4. Generated siblings (ls -l)
+================================================================
+-rw-r--r--@ 1 milosvasic  staff   41841 May 28 11:25 docs/guides/TELEGRAM.docx
+-rw-r--r--@ 1 milosvasic  staff   86250 May 28 11:25 docs/guides/TELEGRAM.html
+-rw-r--r--@ 1 milosvasic  staff   52157 May 28 11:24 docs/guides/TELEGRAM.md
+-rw-r--r--@ 1 milosvasic  staff  130794 May 28 11:25 docs/guides/TELEGRAM.pdf
+
+================================================================
+§5. Quiescence check (mutation markers in tracked .go)
+================================================================
+CLEAN — no MUTATED markers in tracked .go files.
+
+================================================================
+§6. git status --porcelain (scope-lock verification)
+================================================================
+?? commons_messaging/channels/tgram/webhook.go         <-- PRE-EXISTING (HRD-136 parallel subagent, mtime 11:19)
+?? commons_messaging/channels/tgram/webhook_test.go    <-- PRE-EXISTING (HRD-136 parallel subagent, mtime 11:20)
+?? docs/guides/TELEGRAM.docx                            <-- MY WORK (HRD-138, mtime 11:24+)
+?? docs/guides/TELEGRAM.html                            <-- MY WORK (HRD-138, mtime 11:24+)
+?? docs/guides/TELEGRAM.md                              <-- MY WORK (HRD-138, mtime 11:24+)
+?? docs/guides/TELEGRAM.pdf                             <-- MY WORK (HRD-138, mtime 11:24+)
+?? docs/qa/HRD-136-20260528T130000Z/                    <-- PRE-EXISTING (HRD-136 parallel subagent, mtime 11:23)
+?? docs/qa/HRD-138-20260528T130000Z/                    <-- MY WORK (this transcript)
+
+Scope-lock VERIFIED: this writer's work touched ONLY `docs/guides/TELEGRAM.{md,html,pdf,docx}`
+and `docs/qa/HRD-138-20260528T130000Z/`. The other untracked entries pre-date this writer's
+session (timestamps 11:19/11:20/11:23 vs my 11:24+ output) and belong to parallel HRD-136
+subagent work — they are NOT this writer's responsibility; the conductor will scope them
+to their own work item.
+
+Status: DONE
