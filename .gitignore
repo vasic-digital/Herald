@@ -52,3 +52,14 @@ docs/.workable_items.db-wal
 
 # Runtime artifacts (pid files, pherald background process IDs)
 *.pid
+
+# Compiled flavor binaries — anti-bluff fix 2026-05-28: a JetBrains-IDE "Auto-commit"
+# swept the 32MB `bin/qaherald` into the repo via commit 9796506. Compiled binaries
+# are NOT source of truth (§11.4.32 reproducibility — `go build` regenerates them
+# deterministically) and bloat every clone. Operators using IDE Auto-commit MUST
+# either disable it OR verify their staging area against §107.y working-tree
+# quiescence rules before every commit.
+bin/
+*.test
+herald-*.exe
+herald-*.bin
