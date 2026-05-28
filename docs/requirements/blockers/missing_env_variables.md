@@ -422,3 +422,20 @@ Use a VPN to a country where Telegram is reachable (e.g. EU / US) for the initia
 | §11.4.98 audit of all existing tests | ⏳ pending | Task #223 |
 
 **You can open this document and begin Step 1 now. Reply "done" when `.env` is populated.**
+
+---
+
+## Sources verified
+
+Per HelixConstitution §11.4.99 + Herald §108.n (Latest-Source Documentation Cross-Reference Mandate). Every instruction in this document was cross-referenced against the LATEST official online documentation of the relevant service before publication.
+
+**Last verified:** 2026-05-28
+
+| Source | URL / path | What it authored / verified in this doc |
+|---|---|---|
+| Telegram official API docs — "Obtaining an api_id" | https://core.telegram.org/api/obtaining_api_id | §1 "Why this blocker exists" (mandatory observation of unofficial-client accounts), §"⚠️ CRITICAL" rule 3 (one phone = one api_id forever), §"Common mistakes to avoid" (no bot-token-here; one-app-one-purpose). |
+| gotd/td library — "How to not get banned?" | `submodules/gotd-td/.github/SUPPORT.md` (vendored at HEAD `76282a6`, v0.144.0) | §"⚠️ CRITICAL" rules 1 + 2 (recover@telegram.org pre-login email; no VoIP), §"Anti-ban hygiene" (passive use, ratelimit + floodwait middlewares, never share app_hash + session file). |
+| Empirical operator testing 2026-05-28 | `docs/qa/HRD-LIVE-20260528T082128Z/README.md` + `04_wave6_closed_loop/pherald_journal/transcript.jsonl` | §1 "Why this blocker exists" — the bot-to-bot wall empirical proof (msg_id=18 sent by `@pherald_qa_bot`; `@atmosphere_worker_bot` getUpdates returned 0). |
+| HelixConstitution §11.4.99 (this document's authority) | `<parent>/constitution/Constitution.md` §11.4.99 (HelixConstitution commit `c640947`) | The entire §"## Sources verified" pattern below — this footer is itself the demonstration of §11.4.99 compliance. |
+
+**Re-verification cadence (per §11.4.99 (C)):** this document covers Telegram (a risk-classified service per §11.4.99 (D) and §108.n (D)) → 90-day max staleness. Next re-verification due **2026-08-26**. Re-verify earlier on: Telegram breaking-change announcement, operator-error reports, vN.0.0 Herald release boundary.

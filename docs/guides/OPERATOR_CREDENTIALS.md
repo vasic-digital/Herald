@@ -550,3 +550,24 @@ A `TestSubscribe_LiveMTProto` test that requires any human action during executi
 **The harness sends messages but `@atmosphere_worker_bot`'s poller doesn't see them**: Confirm the QA account is a member of `HERALD_TGRAM_CHAT_ID`. The privacy boundary that blocks bot-to-bot ALSO blocks "user-not-in-chat → bot". Add the QA account to the group.
 
 **The harness sees the worker bot's reply via `messages.getHistory` but it's not new**: MTProto returns chat history; you need to filter by `date > test_start_time` to confirm the reply was sent during the test, not a stale message from a prior run. The harness `WaitForReply()` helper does this filtering — never roll your own.
+
+---
+
+## Sources verified
+
+Per HelixConstitution §11.4.99 + Herald §108.n (Latest-Source Documentation Cross-Reference Mandate). Every instruction in the MTProto section of this document was cross-referenced against the LATEST official online documentation of the relevant service before publication.
+
+**Last verified:** 2026-05-28
+
+| Source | URL / path | Authored / verified |
+|---|---|---|
+| Telegram official API docs — "Obtaining an api_id" | https://core.telegram.org/api/obtaining_api_id | The one-phone-one-app-id constraint; the under-observation note on unofficial clients; the Terms-of-Service citation. |
+| gotd/td library — "How to not get banned?" + MadelineProto wisdom | `submodules/gotd-td/.github/SUPPORT.md` (v0.144.0 @ commit `76282a6`) | The pre-login `recover@telegram.org` email step; the no-VoIP recommendation; the passive-use + rate-limit guidance. |
+| Telegram official API docs — Bot API (HRD-011 / `@atmosphere_worker_bot` integration) | https://core.telegram.org/bots/api | Bot token format, `/getMe`, `/sendMessage`, `getUpdates`, webhook secret_token validation. |
+| Anthropic / Claude Code docs (HRD-012) | https://docs.anthropic.com/claude-code | `claude --resume <UUID>` session model; session UUID handling; PATH lookup defaults. |
+| Postgres + Redis container conventions | `containers/` submodule + Herald spec V3 §9.3 | Container ports (24100 / 24101); password-rotation flows; volume-data persistence. |
+| Empirical operator testing 2026-05-28 | `docs/qa/HRD-LIVE-20260528T082128Z/` | Bot-to-bot wall empirical proof; live HealthCheck + Send + Bootstrap PASS evidence. |
+
+**Other sections of this document (Postgres / Redis / non-MTProto Telegram / Claude Code) were authored against the same canonical sources during their respective HRD lifecycles** (HRD-010 / HRD-011 / HRD-012). They are due for §11.4.99 re-verification at the next Herald release boundary or sooner if any of those services publish a breaking change.
+
+**Re-verification cadence (per §11.4.99 (C)):** Telegram-related sections (risk-classified per §11.4.99 (D)) → 90-day staleness, next due **2026-08-26**. Other sections → 6-month staleness, next due **2026-11-28**.
