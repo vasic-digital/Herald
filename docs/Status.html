@@ -47,7 +47,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>16</td>
+<td>17</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -55,7 +55,7 @@
 </tr>
 <tr>
 <td>Last modified</td>
-<td>2026-05-22</td>
+<td>2026-05-29</td>
 </tr>
 <tr>
 <td>Status</td>
@@ -63,12 +63,43 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>r16 captures Wave 6 (pherald inbound runtime + Claude Code
-headless bridge — code-doc closure). HRD-100 closed atomically with 12
-Wave-6 commit SHAs. Tag <code>v0.4.0</code> is DEFERRED to T13b
-(operator-supplied live evidence per §107.x).</strong> New Cobra
-subcommand <code>pherald listen</code> runs the closed-loop runtime:
-Telegram <code>getUpdates</code> long-poll
+<td><strong>r17 catches up a week of release-cycle work that the doc had
+not tracked.</strong> HEAD <code>3048b48</code>; constitution at
+<code>3244bf4</code> (just gained §11.4.100 Video color + visual-quality
+fidelity mandate; Herald non-applicable-but-cite — no video-playback
+surface). Tags shipped since r16: v0.4.0 (Wave 6 closed-loop), v0.5.0
+(Wave 6.5 lifecycle), v0.6.0 (Wave 8 Track B MTProto §11.4.98
+full-automation). v0.6.0 covers MTProto user-account harness — 3
+MTProto-driven live tests (HRD-140/141/142 Subscribe / Wave-6
+closed-loop / Wave-6.5 lifecycle) all PASSING LIVE; gotd/td v0.144.0
+vendored as <code>submodules/gotd-td</code> per §11.4.74. 3 legacy
+NON-COMPLIANT tests (<code>TestSubscribe_LiveBotAPI</code>,
+<code>tests/test_wave6_live_loop.sh</code>, lifecycle
+<code>--manual</code>) graduated to §11.4.90 Obsolete (HRD-143/144/145)
+with triple-check evidence. Closed waves since r16: Wave 6 (HRD-100),
+Wave 6.5 (HRD-101 + 15-scenario lifecycle), Wave 7 multi-channel
+framework (HRD-110..121 — Slack adapter live), Tgram-completeness
+(HRD-133..138, 6-HRD wave), Wave 8 Track B (HRD-139..142). v1.0.0
+readiness workstream: Batch A (HRD-018/026/027 — commons_constitution
+audit write-through + admin REST mode-flip), Batch B (HRD-019..025 — 7
+flavor §42 constitution bindings, in_progress until §43 live-op surface
+lands), Batch C (HRD-029..056 — §43 command catalogue closed in 9
+sub-batches per Tasks #195-#204), Batch D (HRD-085..089 — commons_infra
+pgxTaskRepository), GAP-3 §11.4.85 stress+chaos suite (HRD-122..130 +
+HRD-132 Runner idempotency-window fix). Inheritance gate <strong>15 PASS
+/ 0 FAIL</strong>. <code>scripts/e2e_bluff_hunt.sh</code> run #1 today
+reported <strong>148 PASS / 1 FAIL</strong> (E132-anchor) — the 1 FAIL
+caught a real anti-bluff issue (canonical <code>status=PASS</code>
+literal missing from <code>fanout/assertion.txt</code>) which was
+atomically fixed in this session's <code>3048b48</code> (test source +
+committed evidence); bluff-hunt #2 running to confirm 149/0. Workspace
+at 16 Herald modules + 17 vendored submodules (9 Helix-stack +
+containers + Concurrency/Models/TOON/gotd-td/http3/slack-go/telebot).
+HRD-131 §11.4.93 SQLite workable-items SSoT migration Phase 1 remains
+OPEN-deferred per operator 2026-05-27 (constitution-repo migration
+binary unimplemented). Prior r16 captures Wave 6 closed-loop runtime.
+New Cobra subcommand <code>pherald listen</code> runs the closed-loop
+runtime: Telegram <code>getUpdates</code> long-poll
 (<code>OnText</code>/<code>OnPhoto</code>/<code>OnDocument</code>/<code>OnVoice</code>)
 + bot self-filter (<code>bot.Me.Username</code> anti-echo guard) +
 sha256 content-addressed attachment download into
@@ -125,24 +156,31 @@ closed HRD-016 (Wave 3b pherald Runner live). r12 closed HRD-011
 </tr>
 <tr>
 <td>Issues</td>
-<td>HRD-008, HRD-015, HRD-018 (in_progress), HRD-019..HRD-027,
-HRD-029..HRD-056, HRD-081, HRD-085..HRD-090</td>
+<td>HRD-008, HRD-015, HRD-019..HRD-025 (in_progress — §42 flavor
+bindings, live-op surface deferred to Batch C), HRD-029..HRD-056 (many
+migrating to Fixed in v1.0.0 Batch C closures — see Issues.md r36 for
+canonical state), HRD-081, HRD-085..HRD-090 (in_progress — Batch D live
+evidence), HRD-115..HRD-121 (Wave 7 T6-T12 — Slack adapter +
+multi-channel framework, code-complete per Tasks #206-#212, awaiting
+Issues→Fixed migration audit), HRD-131 (OPEN-deferred per operator). 3
+Obsolete-graduated this session: HRD-143/144/145 (legacy NON-COMPLIANT
+tests).</td>
 </tr>
 <tr>
 <td>Issues summary</td>
-<td>see <code>Issues.md</code> — 47 open items spanning §42 constitution
-bindings (HRD-018..027), §43 command-catalogue (HRD-029..056), HRD-081
-(containers podman-compose adapter refinement), HRD-085..090
-(queue-repository stub-completion surface). No HRDs migrated in r15
-(substrate upgrade only — Wave 4b). Prior cycle: HRD-016 (pherald
-Runner) + HRD-011 (Telegram live) + HRD-028 + HRD-098 + HRD-099 closed
-in r10-r13.</td>
+<td>see <code>Issues.md</code> r36 — atomic Obsolete graduation of 3
+legacy tests landed alongside Wave 8 Track B closure. ~48
+in_progress/open rows remain; many of HRD-029..HRD-056 are now closed
+per Tasks #195-#204 and need atomic Issues→Fixed migration sweep per
+§11.4.19 (next-session pickup).</td>
 </tr>
 <tr>
 <td>Fixed</td>
 <td>HRD-001..HRD-007, HRD-009, HRD-009b, HRD-010, HRD-011, HRD-012,
-HRD-013, HRD-014, HRD-016, HRD-017, HRD-028, HRD-080, HRD-092, HRD-093,
-HRD-094, HRD-095, HRD-096, HRD-097, HRD-098, HRD-099</td>
+HRD-013, HRD-014, HRD-016, HRD-017, HRD-018, HRD-026, HRD-027, HRD-028,
+HRD-080, HRD-092..HRD-101, HRD-110..HRD-114, HRD-122..HRD-130, HRD-132,
+HRD-133..HRD-138, HRD-139..HRD-142 — see <code>Fixed.md</code> r17 for
+canonical list.</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
