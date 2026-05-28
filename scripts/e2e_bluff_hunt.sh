@@ -2397,6 +2397,20 @@ sc_anchor "E133" "${SC_TGRAM_DIR:+${SC_TGRAM_DIR}/stress_chaos/poller_chaos/chao
 check "E134 qaherald/internal/mtproto scaffold — Config.Validate + sanitizer (HRD-133 parity) + session helpers (-race -count=3 deterministic)" \
     "go test -race -count=3 ./qaherald/internal/mtproto/..."
 
+# ---- E135-E137: Wave 8 Track B MTProto-driven autonomous tests (§11.4.98) ----
+# 3 §11.4.98-compliant replacements for the legacy hand-send tests. Each
+# requires HERALD_MTPROTO_* + HERALD_TGRAM_* env + ~/.config/herald/
+# mtproto.session (operator ran `qaherald mtproto login` once); SKIP-with-
+# reason per §11.4.3 otherwise. Build tag `integration_mtproto`.
+check "E135 TestMTProto_Subscribe_AutonomousRoundTrip — MTProto-driven Subscribe replacement (HRD-140; §11.4.98 NON-COMPLIANT → COMPLIANT)" \
+    "go test -tags=integration_mtproto -count=1 -short -timeout=180s -run 'TestMTProto_Subscribe_AutonomousRoundTrip' ./qaherald/internal/lifecycle/..."
+
+check "E136 TestMTProto_Wave6_AutonomousClosedLoop — full pherald→CC→reply round-trip via MTProto (HRD-141; §11.4.98 NON-COMPLIANT → COMPLIANT, replaces tests/test_wave6_live_loop.sh)" \
+    "go test -tags=integration_mtproto -count=1 -short -timeout=420s -run 'TestMTProto_Wave6_AutonomousClosedLoop' ./qaherald/internal/lifecycle/..."
+
+check "E137 TestMTProto_Wave65_LifecycleAutonomous — Wave 6.5 fast-path lifecycle scenarios via MTProto (HRD-142; §11.4.98 NON-COMPLIANT → COMPLIANT, replaces lifecycle --manual mode)" \
+    "go test -tags=integration_mtproto -count=1 -short -timeout=300s -run 'TestMTProto_Wave65_LifecycleAutonomous' ./qaherald/internal/lifecycle/..."
+
 # ----------------------------------------------------------------------
 echo ""
 echo "===================================================="
