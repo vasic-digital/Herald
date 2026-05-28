@@ -112,7 +112,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>17</td>
+<td>18</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -705,24 +705,70 @@ one-time 28P01 auth fail — removed both, recreated fresh with
 <code>herald_dev</code>.</td>
 </tr>
 <tr>
+<td>Wave 7 (HRD-110..121)</td>
+<td>in_progress — CODE-COMPLETE 2026-05-28</td>
+<td><strong>Generic messenger framework + Slack — entire Wave 7 (T1-T12)
+landed.</strong> Framework (HRD-110..114) Fixed pre-session:
+channels.Channel interface, init()-registered registry, per-channel
+inbox/<channel>/<sha256>.<ext>, generalized IsSelfEcho via
+SelfIdentity{Kind,Value}, multi-channel <code>pherald listen</code>.
+This session: <strong>HRD-115</strong> slack adapter Socket Mode
+(<code>54d4316</code>, vendored submodules/<a
+href="mailto:slack-go@v0.16.0">slack-go@v0.16.0</a>/209ec09, 22 hermetic
+httptest tests), <strong>HRD-116</strong> qaherald raw-HTTP slack
+MessengerClient + channel-keyed Build (<code>6811114</code>, 30 tests,
+xoxb token NEVER in errors via sanitizeError +
+TestSlack_Send_ErrorDoesNotLeakToken), <strong>HRD-117</strong> spec V3
+r12→r13 (<code>7f1b043</code>, §11.0 + §32.2 LIVE + §43),
+<strong>HRD-118</strong> e2e E124-E131 multi-channel invariants
+(<code>17ecd0b</code>, E127 LIVE-Slack triple-guarded against "no tests
+to run" PASS-bluff), <strong>HRD-119</strong> paired §1.1 mutation gate
+4 PASS / 0 FAIL (<code>6737040</code>, 3 mutations: blank-IsSelfEcho +
+drop-Register + drop-thread_ts), <strong>HRD-120</strong> multi-channel
+§11.4.85 stress+chaos 12/12 PASS (<code>86dfa1e</code>, per-channel
+attribution + concurrency-under-fault), <strong>HRD-121</strong>
+docs/guides/MESSENGER_CHANNELS.md operator guide (<code>1037019</code>,
+610 lines + 3 siblings). HRDs stay in_progress pending operator-live
+Slack evidence (mirrors Wave 6's v0.4.0 deferred-to-T13b
+convention).</td>
+</tr>
+<tr>
+<td>v0.6.0 tag</td>
+<td>operator-gated</td>
+<td>Operator runs the live closed-loop against a real Slack workspace +
+commits <code>docs/qa/HRD-115-LIVE-&lt;run-id&gt;/</code> evidence per
+§107.x; then E127 converts SKIP→PASS automatically (its sc_anchor
+already cites the future live transcript path). Tag command:
+<code>git tag -a v0.6.0 -m "Wave 7 — multi-channel messenger framework"</code>.
+Required env for the live run: <code>HERALD_SLACK_BOT_TOKEN</code>
+(xoxb-) + <code>HERALD_SLACK_CHANNEL_ID</code> (Cxxx) +
+<code>HERALD_SLACK_APP_TOKEN</code> (xapp- for Socket Mode);
+operator-setup walkthrough at
+<code>docs/guides/MESSENGER_CHANNELS.md</code> §4 + §10 pre-deploy
+checklist.</td>
+</tr>
+<tr>
 <td>RESUME-AT (next units)</td>
 <td>next</td>
-<td>(1) <strong>Batch E</strong> Wave 7 T6-T12 Slack HRD-115..121
-(vendor a slack-go submodule + the I6
-no-<code>&lt;repo&gt;/constitution/</code>/<code>.gitmodules</code> gate
-check; new <code>slack://</code> channel adapter per the Wave-7
-<code>Channel</code> framework; e2e off <strong>E124+</strong>). (2)
-<strong>HRD-090</strong> <code>MoveToDeadLetter</code> (dead-letter
+<td>(1) <strong>Operator-live close-out wave</strong> — flip
+HRD-019..025 (Batch B bindings) + HRD-029..056 §43 (Batch C) +
+HRD-085..089 (Batch D) + HRD-115..121 (Wave 7) →Fixed once their
+respective live workspaces / PG instances / messenger workspaces are
+exercised. Bundles with v0.4.0 (Wave 6 deferred) + v0.6.0 (Wave 7) tags.
+(2) <strong>HRD-090</strong> <code>MoveToDeadLetter</code> (dead-letter
 table + retention design) — the last <code>ErrUnsupported</code>
-TaskRepository method. (3) operator-live close-out: flip HRD-019..025
-(Batch B bindings) + the §43 rows (HRD-029..056) + Batch D rows
-(HRD-085..089) →Fixed once operator-live-validated. (4) HRD-008
-quickstart validation, HRD-015 gate-I8, HRD-081 (upstream containers
-podman/docker detect). (5) §11.4.93 SQLite (HRD-131, operator-deferred).
-Plan <code>docs/superpowers/plans/2026-05-27-v1.0.0-execution.md</code>.
-<strong>HEAD=<code>5899623</code></strong>; full e2e 148 PASS / 0 FAIL;
-podman VM now running + herald-postgres :24100 healthy (fresh herald_dev
-volume).</td>
+TaskRepository method. (3) <strong>Wave 8</strong> — design new channels
+(Max / Email / Discord / WhatsApp / Viber) on the now-stable Wave 7
+framework + the supervised-restart redesign noted in HRD-120's T11 chaos
+doc-comment. (4) HRD-008 quickstart validation, HRD-015 gate-I8, HRD-081
+(upstream containers podman/docker detect). (5) §11.4.93 SQLite
+(HRD-131, operator-deferred). Plan
+<code>docs/superpowers/plans/2026-05-27-v1.0.0-execution.md</code> +
+<code>docs/superpowers/plans/2026-05-27-wave7-generic-messenger.md</code>.
+<strong>HEAD=<code>1037019</code></strong>; Wave 7 e2e = 142 PASS / 0
+FAIL (T9 invariants green, T10 mutation gate 4/0, T11 stress+chaos
+12/12); inheritance gate 15/0 post-<code>.gitmodules</code>
+slack-go-submodule add.</td>
 </tr>
 </tbody>
 </table>
