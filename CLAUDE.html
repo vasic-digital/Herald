@@ -112,7 +112,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>13</td>
+<td>16</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -120,7 +120,7 @@
 </tr>
 <tr>
 <td>Last modified</td>
-<td>2026-05-27</td>
+<td>2026-05-29</td>
 </tr>
 <tr>
 <td>Status</td>
@@ -128,7 +128,17 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>r13: propagated HelixConstitution §11.4.95–§11.4.97
+<td><strong>r16: propagated HelixConstitution §11.4.100 (Video color +
+visual-quality fidelity mandate, 2026-05-28) as a short-form restatement
+citing the literal anchor <code>11.4.100</code>, inherited per §11.4.35;
+restated + cited, not redefined. Herald-applicability classification:
+non-applicable-but-cite (Herald has NO video-playback surface —
+<code>pherald listen</code> downloads video attachments as opaque
+sha256-blobs without decoding/rendering); mandate binds latently if
+Herald ever ships a video-rendering surface in future. Cascade-parallel:
+§11.4.96 ("Herald has no AOSP build, but the principle binds"). Required
+by the upcoming <code>CM-COVENANT-114-100-PROPAGATION</code> pre-build
+gate. Prior r13: propagated HelixConstitution §11.4.95–§11.4.97
 (workable-items SQLite DB is tracked-in-git not gitignored,
 safe-parallel-work-with-long-build catalogue + mandate,
 maximum-use-of-idle-time + progress-update cadence) as short-form
@@ -628,10 +638,11 @@ proof.</p>
 <code>--allow-residue</code>, <code>--skip-quiescence</code>,
 <code>--mutation-cleanup-later</code> flag exists.</p>
 <h2
-id="inherited-covenant-restatements--helix-11485--11487--11488--11489--11490--11491--11492--11493--11494--11495--11496--11497-inherited-per-11435">Inherited
+id="inherited-covenant-restatements--helix-11485--11487--11488--11489--11490--11491--11492--11493--11494--11495--11496--11497--11498--11499--114100-inherited-per-11435">Inherited
 covenant restatements — Helix §11.4.85 / §11.4.87 / §11.4.88 / §11.4.89
 / §11.4.90 / §11.4.91 / §11.4.92 / §11.4.93 / §11.4.94 / §11.4.95 /
-§11.4.96 / §11.4.97 (inherited per §11.4.35)</h2>
+§11.4.96 / §11.4.97 / §11.4.98 / §11.4.99 / §11.4.100 (inherited per
+§11.4.35)</h2>
 <p>These twelve mandates are <strong>inherited</strong> from the
 HelixConstitution via parent-discovery (§11.4.35). Herald
 <strong>restates + cites</strong> them here — it does
@@ -852,6 +863,126 @@ every closed item carries positive captured evidence committed alongside
 the closure. (E) Idle ONLY when genuinely blocked (operator STOP,
 external dependency, §12 host-safety). Canonical authority:
 HelixConstitution Constitution.md §11.4.97 (inherited per §11.4.35).</p>
+<h3
+id="11498--full-automation-anti-bluff-mandate--live-tests-must-be-re-runnable-end-to-end-without-manual-intervention-helix-2026-05-28">§11.4.98
+— Full-Automation Anti-Bluff Mandate — Live tests MUST be re-runnable
+end-to-end without manual intervention (Helix, 2026-05-28)</h3>
+<p>Every Herald test — unit/integration/e2e/Challenge/stress/chaos/live
+— MUST be fully self-driving end-to-end with NO human action during
+execution (operator typing a Telegram message, hand-triggering a
+webhook, clicking a UI, attaching a file, anything beyond test startup →
+PASS/FAIL report). A test requiring manual action during execution is
+<strong>by definition a §11.4 PASS-bluff at the automation
+layer</strong>, regardless of how thorough the manual run is — it cannot
+run in CI, cannot validate regressions between manual runs, and the
+human dependency masks drift. Single permissible exception: one-time
+credential bootstrap OUTSIDE test execution (<code>.env</code> populated
+from a vault, shell exports in <code>~/.bashrc</code>, OAuth approval at
+first install, MTProto session activation at first run — configuration,
+not test driving). Concrete Herald requirements: (1) no "operator MUST
+type a message" prompts in <code>tests/test_*.sh</code> or
+<code>_integration_test.go</code> — drive programmatically via MTProto
+user-account (Telegram), real-user-API (Slack), webhook fixture, or
+in-process loopback; (2) no <code>claude --resume &lt;UUID&gt;</code>
+against the same session UUID the dev conductor is using (Herald
+2026-05-28 lesson: silent exit -1 collision — use a dedicated test-only
+UUID); (3) no 60s human-response windows (§11.4.50 determinism
+violation); (4) PASS at <code>-count=3</code> consecutive automated runs
+with self-cleaning state; (5) every existing test classified COMPLIANT
+vs NON-COMPLIANT in the §11.4.98 audit (release-gate item); (6) no
+false-positive PASS — silent-skip-as-PASS forbidden, stale-evidence
+forbidden, §11.4.3 SKIP-with-reason is correct. Currently NON-COMPLIANT
+Herald tests scheduled for MTProto-driven rewrite:
+<code>TestSubscribe_LiveBotAPI</code>,
+<code>tests/test_wave6_live_loop.sh</code>, Wave 6.5 lifecycle
+scenarios. Canonical authority: HelixConstitution Constitution.md
+§11.4.98 (inherited per §11.4.35).</p>
+<h3
+id="11499--latest-source-documentation-cross-reference-mandate--instructionsguidesmanuals-must-be-verified-against-latest-official-online-sources-before-publication-helix-2026-05-28">§11.4.99
+— Latest-Source Documentation Cross-Reference Mandate —
+instructions/guides/manuals MUST be verified against latest official
+online sources BEFORE publication (Helix, 2026-05-28)</h3>
+<p>Every Herald operator-facing instruction document —
+<code>docs/requirements/blockers/*.md</code>,
+<code>docs/guides/*.md</code>, README operator-action sections,
+troubleshooting cookbooks, <code>OPERATOR_CREDENTIALS.md</code>,
+<code>MESSENGER_CHANNELS.md</code>, <code>TELEGRAM.md</code>,
+<code>HERALD_CONSTITUTION.md</code>, integration setup walkthroughs —
+MUST be cross-referenced against the LATEST official online
+documentation of every external service/library being documented BEFORE
+the commit lands. Misguidance-by-stale-docs is a §11.4 PASS-bluff at the
+documentation layer. Anchoring case study (Herald 2026-05-28):
+first-draft MTProto setup guide recommended VoIP numbers + omitted the
+<code>recover@telegram.org</code> pre-login email — both directly
+contradicted Telegram's official docs (<a
+href="https://core.telegram.org/api/obtaining_api_id">https://core.telegram.org/api/obtaining_api_id</a>)
+and the gotd/td maintainer guidance (vendored at
+<code>submodules/gotd-td/.github/SUPPORT.md</code>); following the
+original guide could have permanently banned the operator's Telegram
+account. (A) Pre-commit cross-reference workflow: fetch latest official
+docs via WebFetch/MCP/direct browsing (NEVER training data, memory, or
+prior committed docs); cross-reference each instruction; seek secondary
+authoritative sources (library maintainer SUPPORT.md, official
+changelogs, vetted community FAQs) when the official source is
+sparse/silent; cite source URLs + date in a
+<code>## Sources verified</code> footer on the document; cite the
+cross-reference in the commit-message footer
+(<code>Sources verified &lt;date&gt;: &lt;urls&gt;</code>). (B) Negative
+findings documented explicitly — gaps/silences/contradictions never
+silently assumed authoritative. (C) Re-verification cadence: 6-month
+default staleness, 90-day staleness for risk-classified services
+(Telegram/messenger/cloud/payment/AI-LLM/code-hosting/package-managers);
+re-verify before operator-authority citation, at every vN.0.0 release
+boundary, on service breaking-change announcements, on operator-error
+report. (D) Risk-classified services MUST include explicit safety
+warnings cross-referenced against latest published policies. (E)
+Composes with §11.4.92 Pass 4 INDEPENDENT — cannot substitute. (F)
+Inheritance per §11.4.35 with literal anchor <code>11.4.99</code>. (G)
+Enforcement: missing <code>Sources verified</code> footer (doc + commit)
+→ release-gate BLOCK; stale-beyond-grace → §11.4.90 Obsolete with
+<code>Reason=stale-documentation</code>. Canonical authority:
+HelixConstitution Constitution.md §11.4.99 (inherited per §11.4.35).</p>
+<h3
+id="114100--video-color--visual-quality-fidelity-mandate--every-video-playback-pass-must-carry-captured-frame-deep-analysis-proving-rendered-output-matches-source-within-tolerance-helix-2026-05-28">§11.4.100
+— Video color + visual-quality fidelity mandate — every video-playback
+PASS MUST carry captured-frame deep-analysis proving rendered output
+matches source within tolerance (Helix, 2026-05-28)</h3>
+<p>Universal mandate (§11.4.17 classification): every user-visible
+video-playback test PASS MUST carry a captured-frame deep-analysis
+artefact proving the device's actually-rendered output matches the
+host-extracted ground-truth source within documented tolerance, across
+the closed-set checks — ΔE2000 + RGB/HSV histogram correlation + no
+pale/washed-out + no over-saturation + no hue shift + gamma/luma
+fidelity (the BT.601/709/2020 + full-range-vs-limited-range negotiation
+is the single most common real-world cause of pale rendering and MUST be
+exercised explicitly), sharpness (Laplacian-variance ≥ source within
+tolerance), aspect ratio (no stretch / letterbox-crop), frame rate +
+speed (sustained window), and continuity (no freeze ≥1s SSIM&gt;0.99, no
+drop-burst, no glitch, no obstruction-overlay per the §11.4.5 OCR
+census). Metadata-only PASS (file exists / frames&gt;0 / codec
+registered) is forbidden. Comparison harness MUST itself be golden-pair
++ bad-pair self-validated to prevent false-positive AND false-negative.
+<strong>Herald applicability:</strong> Herald is a
+messaging/notification system with NO video-playback surface —
+<code>pherald listen</code> downloads video attachments
+(<code>OnVideo</code> / <code>OnDocument</code> MIME-typed
+<code>video/*</code>) to
+<code>~/.herald/inbox/&lt;sha&gt;.&lt;ext&gt;</code> as opaque
+sha256-content-addressed blobs (HRD-005 attachment pipeline) but never
+decodes / renders / displays them; the Claude Code dispatcher receives
+the file path as text reference, not a rendered frame. The mandate binds
+latently — if Herald ever ships a video-rendering surface (preview
+thumbnails in a future dashboard flavor, an in-app player, an inline
+diff viewer), §11.4.100 applies in full at that point. Current
+Herald-side compliance: opaque-blob handling validated by sha256 +
+content-length + MIME match (no rendering claim made, so no
+rendering-fidelity claim to bluff). Cascade-pattern parallel: §11.4.96
+("Herald has no AOSP build, but the principle binds") — same
+restatement-with-non-applicability-but-cite shape. Inheritance per
+§11.4.35 with literal anchor <code>11.4.100</code> required by the
+upcoming <code>CM-COVENANT-114-100-PROPAGATION</code> pre-build gate.
+Canonical authority: HelixConstitution Constitution.md §11.4.100
+(inherited per §11.4.35).</p>
 <h2 id="mission-from-the-spec">Mission (from the spec)</h2>
 <blockquote>
 <p>Ingesting system events and reliably fanning them out to multiple

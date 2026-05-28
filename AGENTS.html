@@ -112,7 +112,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>9</td>
+<td>12</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -120,7 +120,7 @@
 </tr>
 <tr>
 <td>Last modified</td>
-<td>2026-05-27</td>
+<td>2026-05-29</td>
 </tr>
 <tr>
 <td>Status</td>
@@ -128,11 +128,22 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td>r9: propagated HelixConstitution §11.4.95–§11.4.97 (workable-items
-SQLite DB tracked-in-git-not-gitignored,
-safe-parallel-work-with-long-build catalogue + mandate,
-maximum-use-of-idle-time + progress-update cadence) into the agent-rule
-covenant cluster as short-form restatements citing the literal anchors
+<td>r12: propagated HelixConstitution §11.4.100 (Video color +
+visual-quality fidelity mandate, 2026-05-28) into the agent-rule
+covenant cluster as a short-form restatement citing the literal anchor
+<code>11.4.100</code>, inherited per §11.4.35; restated + cited, not
+redefined. Herald-applicability: non-applicable-but-cite (Herald has NO
+video-playback surface — <code>pherald listen</code> downloads video
+attachments as opaque sha256-blobs without decoding/rendering); mandate
+binds latently if Herald ever ships a video-rendering surface.
+Cascade-parallel: §11.4.96 ("Herald has no AOSP build, but the principle
+binds"). Required by upcoming
+<code>CM-COVENANT-114-100-PROPAGATION</code> pre-build gate. Prior r9:
+propagated HelixConstitution §11.4.95–§11.4.97 (workable-items SQLite DB
+tracked-in-git-not-gitignored, safe-parallel-work-with-long-build
+catalogue + mandate, maximum-use-of-idle-time + progress-update cadence)
+into the agent-rule covenant cluster as short-form restatements citing
+the literal anchors
 <code>11.4.95</code>/<code>11.4.96</code>/<code>11.4.97</code>,
 inherited per §11.4.35; restated + cited, not redefined. Prior r8:
 propagated HelixConstitution §11.4.89–§11.4.94 (background-test
@@ -222,7 +233,7 @@ covenant (Herald §107 / Helix §11.4 — MANDATORY ANTI-BLUFF)</a></li>
 href="#inherited-covenant-restatements--helix-11485--11487--11488--11489--11490--11491--11492--11493--11494--11495--11496--11497">Inherited
 covenant restatements — Helix §11.4.85 / §11.4.87 / §11.4.88 / §11.4.89
 / §11.4.90 / §11.4.91 / §11.4.92 / §11.4.93 / §11.4.94 / §11.4.95 /
-§11.4.96 / §11.4.97</a></li>
+§11.4.96 / §11.4.97 / §11.4.98 / §11.4.99</a></li>
 <li><a
 href="#inheritance-gate-run-before-any-commit-that-touches-root-docs-or-constitution">Inheritance
 gate (run before any commit that touches root docs or
@@ -475,10 +486,10 @@ Herald authority: <code>docs/guides/HERALD_CONSTITUTION.md</code>
 critical defect regardless of how briefly it persisted — see
 <code>72e81ab</code> / <code>d5bd360</code> as proof.</p>
 <h3
-id="inherited-covenant-restatements--helix-11485--11487--11488--11489--11490--11491--11492--11493--11494--11495--11496--11497">Inherited
+id="inherited-covenant-restatements--helix-11485--11487--11488--11489--11490--11491--11492--11493--11494--11495--11496--11497--11498--11499">Inherited
 covenant restatements — Helix §11.4.85 / §11.4.87 / §11.4.88 / §11.4.89
 / §11.4.90 / §11.4.91 / §11.4.92 / §11.4.93 / §11.4.94 / §11.4.95 /
-§11.4.96 / §11.4.97</h3>
+§11.4.96 / §11.4.97 / §11.4.98 / §11.4.99</h3>
 <p>These twelve mandates are <strong>inherited</strong> from the
 HelixConstitution via parent-discovery (§11.4.35). Every agent — Claude
 Code, Codex, Cursor, Gemini, Aider, any CLI subagent — is bound by them;
@@ -674,6 +685,108 @@ per §11.4.5 / §11.4.6 / §11.4.69 — every closed item carries positive
 captured evidence committed alongside the closure. (E) Idle ONLY when
 genuinely blocked (operator STOP, external dependency, §12 host-safety).
 Canonical authority: HelixConstitution Constitution.md §11.4.97
+(inherited per §11.4.35).</p>
+<p><strong>§11.4.98 — Full-Automation Anti-Bluff Mandate — Live tests
+MUST be re-runnable end-to-end without manual intervention (Helix,
+2026-05-28).</strong> Agent-binding rule: every test the agent writes,
+reviews, or marks PASSed under this Constitution —
+unit/integration/e2e/Challenge/stress/chaos/live — MUST be fully
+self-driving end-to-end with NO human action during execution (operator
+typing a Telegram message, hand-triggering a webhook, clicking a UI,
+attaching a file, anything beyond test startup → PASS/FAIL report). A
+test requiring manual action during execution is <strong>by definition a
+§11.4 PASS-bluff at the automation layer</strong>, regardless of how
+thorough the manual run is — it cannot run in CI, cannot validate
+regressions between manual runs, and the human dependency masks drift.
+Single permissible exception: one-time credential bootstrap OUTSIDE test
+execution (<code>.env</code> populated from a vault, shell exports in
+<code>~/.bashrc</code>, OAuth approval at first install, MTProto session
+activation at first run — configuration, not test driving). Concrete
+Herald requirements: (1) no "operator MUST type a message" prompts in
+<code>tests/test_*.sh</code> or <code>_integration_test.go</code> — the
+agent drives programmatically (MTProto for Telegram, real-user-API for
+Slack, IMAP-test-account for email, webhook fixture, in-process
+loopback; never human keystrokes); (2) no
+<code>claude --resume &lt;UUID&gt;</code> against the same session UUID
+the dev conductor is using (Herald 2026-05-28 lesson: silent exit -1
+collision — use a dedicated test-only UUID); (3) no 60s human-response
+windows (§11.4.50 determinism violation); (4) the agent verifies PASS at
+<code>-count=3</code> consecutive automated runs with self-cleaning
+state; (5) the agent classifies every existing test COMPLIANT vs
+NON-COMPLIANT in the §11.4.98 audit (release-gate item); (6) no
+false-positive PASS — silent-skip-as-PASS forbidden, stale-evidence
+forbidden, §11.4.3 SKIP-with-reason is correct. Currently NON-COMPLIANT
+Herald tests scheduled for MTProto-driven rewrite:
+<code>TestSubscribe_LiveBotAPI</code>,
+<code>tests/test_wave6_live_loop.sh</code>, Wave 6.5 lifecycle
+scenarios. Canonical authority: HelixConstitution Constitution.md
+§11.4.98 (inherited per §11.4.35).</p>
+<p><strong>§11.4.99 — Latest-Source Documentation Cross-Reference
+Mandate — instructions/guides/manuals MUST be verified against latest
+official online sources BEFORE publication (Helix, 2026-05-28).</strong>
+Agent-binding rule: every operator-facing instruction the agent authors
+or modifies — <code>docs/requirements/blockers/*.md</code>,
+<code>docs/guides/*.md</code>, README operator-action sections,
+troubleshooting cookbooks, <code>OPERATOR_CREDENTIALS.md</code>,
+<code>MESSENGER_CHANNELS.md</code>, <code>TELEGRAM.md</code>,
+<code>HERALD_CONSTITUTION.md</code>, integration setup walkthroughs —
+MUST be cross-referenced against the LATEST official online docs of
+every external service / library being documented BEFORE the commit
+lands. Misguidance-by-stale-docs is a §11.4 PASS-bluff at the
+documentation layer. Anchoring case study (Herald 2026-05-28):
+first-draft MTProto setup guide recommended VoIP + omitted the
+<code>recover@telegram.org</code> pre-login email; both contradicted
+Telegram's official docs + gotd/td maintainer guidance and could have
+permanently banned the operator's account. Concrete agent workflow: (1)
+fetch latest official docs via WebFetch / MCP / direct browsing — NEVER
+training data, NEVER memory, NEVER prior committed docs as the source of
+truth; (2) cross-reference each instruction against the source; (3) seek
+secondary authoritative sources (library maintainer SUPPORT.md, official
+changelogs, vetted community FAQs) when official source is sparse /
+silent; (4) cite source URLs + date in a
+<code>## Sources verified</code> document footer; (5) cite the
+cross-reference in the commit-message footer
+(<code>Sources verified &lt;date&gt;: &lt;urls&gt;</code>). (B) Negative
+findings documented (gaps / silences / contradictions never silently
+assumed authoritative). (C) Re-verification cadence: 6-month default
+staleness, 90-day for risk-classified services (messengers / cloud /
+payment / AI-LLM / code-hosting / package-managers); re-verify before
+operator-authority citation, at every vN.0.0 release, on breaking-change
+announcements, on operator-error report. (D) Risk-classified docs
+include explicit safety warnings vs latest policies. (E) Composes with
+§11.4.92 Pass 4 INDEPENDENT — cannot substitute. (F) Inheritance per
+§11.4.35, literal anchor <code>11.4.99</code>. (G) Enforcement: missing
+<code>Sources verified</code> footer (doc + commit) → release-gate
+BLOCK; stale-beyond-grace → §11.4.90 Obsolete with
+<code>Reason=stale-documentation</code>. Canonical authority:
+HelixConstitution Constitution.md §11.4.99 (inherited per §11.4.35).</p>
+<p><strong>§11.4.100 — Video color + visual-quality fidelity mandate —
+every video-playback PASS MUST carry captured-frame deep-analysis
+(Helix, 2026-05-28).</strong> Agent-binding rule: when an agent authors
+or marks PASSed a video-playback test under this Constitution, the PASS
+MUST carry a captured-frame deep-analysis artefact proving rendered
+output matches host-extracted ground-truth source within tolerance —
+ΔE2000 + RGB/HSV histogram correlation + no
+pale/over-saturation/hue-shift + gamma/luma fidelity (BT.601/709/2020 +
+full-range-vs-limited-range explicitly), sharpness (Laplacian-variance),
+aspect-ratio, FPS+speed, continuity (no freeze, no drop-burst, no
+glitch, no obstruction-overlay per the §11.4.5 OCR census).
+Metadata-only PASS ("file exists" / frames&gt;0 / codec registered) is
+forbidden; comparison harness MUST itself be golden-pair + bad-pair
+self-validated (no false-positive AND no false-negative). <strong>Herald
+applicability:</strong> non-applicable-but-cite — Herald has NO
+video-playback surface (<code>pherald listen</code> downloads video
+attachments as opaque sha256-content-addressed blobs via the HRD-005
+attachment pipeline and never decodes / renders / displays); Claude Code
+dispatcher receives the file path as text reference, not a rendered
+frame. The mandate binds latently — if Herald ever ships a
+video-rendering surface (preview thumbnails, in-app player, inline diff
+viewer), the agent applies §11.4.100 in full at that point.
+Cascade-parallel: §11.4.96 ("Herald has no AOSP build, but the principle
+binds") — same restatement-with-non-applicability-but-cite shape.
+Inheritance per §11.4.35, literal anchor <code>11.4.100</code>, required
+by upcoming <code>CM-COVENANT-114-100-PROPAGATION</code> pre-build gate.
+Canonical authority: HelixConstitution Constitution.md §11.4.100
 (inherited per §11.4.35).</p>
 <h3
 id="inheritance-gate-run-before-any-commit-that-touches-root-docs-or-constitution">Inheritance
