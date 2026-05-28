@@ -47,7 +47,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>31</td>
+<td>32</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -63,8 +63,34 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>r31 (Tgram-completeness Wave A SA-a — HRD-135 lifecycle
-handlers) marks HRD-135 Open→in_progress.</strong>
+<td><strong>r32 (Tgram-completeness Wave A SA-b — HRD-136 webhook
+validator skeleton) marks HRD-136 Open→in_progress.</strong> New
+<code>commons_messaging/channels/tgram/webhook.go</code> lands the Bot
+API webhook <code>secret_token</code> validation layer for the future
+V1.x webhook-path operator (spec V3 §11.1 alternative to
+<code>getUpdates</code>). <code>WebhookHandler</code> validates the
+<code>X-Telegram-Bot-Api-Secret-Token</code> header via
+<code>crypto/subtle.ConstantTimeCompare</code> (timing-attack-safe),
+refuses empty secret at construction
+(<code>NewWebhookHandler("",…)</code> errors — §107 footgun guard),
+returns 401 with EMPTY body on header mismatch/missing (no
+token-existence-oracle leakage to probes), 400 on malformed JSON, 405 on
+wrong method, 500 (no body) on InboundHandler error. Decoded
+<code>tele.Update</code> is forwarded as the SAME
+<code>InboundEvent</code> shape
+<code>OnText</code>/<code>OnEdited</code> produce — unified downstream
+contract. <strong>Skeleton-only:</strong> wiring into
+<code>pherald listen --webhook</code> +
+<code>setWebhook(secret_token=…)</code> registration + TLS-bound public
+listener deferred to V1.x; the cryptographic layer is here + tested so
+the future flip is one-flag. 7/7 hermetic httptest tests
+<code>-race</code>: ValidSecret_Dispatches,
+InvalidSecret_Returns401_NoTokenLeak, MissingSecret_Returns401,
+GET_Returns405, MalformedJSON_Returns400,
+EmptySecretAtConstruction_ErrorsLoud, ConstantTimeCompare. Part 2 of 6
+in the tgram-completeness wave. <strong>Prior r31 (Tgram-completeness
+Wave A SA-a — HRD-135 lifecycle handlers) marked HRD-135
+Open→in_progress.</strong>
 <code>commons_messaging/channels/tgram/subscribe.go</code> gains 3 new
 event handlers per the operator's tgram-completeness mandate (Section 2
 of the 2026-05-28 live-gap analysis): <strong>OnEdited</strong> rebuilds
@@ -184,7 +210,7 @@ inbound-runtime extension note
 <tr>
 <td>Issues</td>
 <td>HRD-008, HRD-015, HRD-019..HRD-025, HRD-029..HRD-056, HRD-081,
-HRD-085..HRD-090, HRD-115..HRD-121, HRD-135, HRD-131</td>
+HRD-085..HRD-090, HRD-115..HRD-121, HRD-135, HRD-136, HRD-131</td>
 </tr>
 <tr>
 <td>Issues summary</td>
@@ -1366,6 +1392,41 @@ OTHER chats. 17/17 PASS <code>-race -count=1</code> (3 new in
 Catalogue-Check: extend telebot.v3's <code>tele.OnEdited</code> /
 <code>tele.OnMyChatMember</code> / <code>tele.OnAddedToGroup</code>
 endpoints.</td>
+</tr>
+<tr>
+<td>HRD-136</td>
+<td>task</td>
+<td>in_progress</td>
+<td>low</td>
+<td>Tgram-completeness Wave A — Bot API webhook
+<code>secret_token</code> validation skeleton
+(<code>commons_messaging/channels/tgram/webhook.go</code>):
+<code>WebhookHandler</code> http.Handler that validates
+<code>X-Telegram-Bot-Api-Secret-Token</code> via
+<code>crypto/subtle.ConstantTimeCompare</code> (timing-attack-safe);
+refuses empty secret at construction time
+(<code>NewWebhookHandler("",…)</code> errors loud — §107 footgun guard);
+returns 401 with empty body on header mismatch / missing header (no
+token-existence oracle leakage); 400 on malformed JSON body; 405 on
+wrong method (POST-only); 500 (no body) on InboundHandler error.
+Forwards a decoded <code>tele.Update</code> as the same
+<code>InboundEvent</code> shape
+<code>OnText</code>/<code>OnEdited</code> produce — same downstream
+contract. <strong>Skeleton-only:</strong> wiring into
+<code>pherald listen --webhook</code> + the
+<code>setWebhook(secret_token=…)</code> registration + the
+public-endpoint TLS listener are deferred to V1.x; the
+cryptographic-validation layer is here + tested so the future flip is a
+one-flag affair. 7/7 hermetic httptest tests <code>-race -count=1</code>
+PASS.</td>
+<td>2026-05-28</td>
+<td>2026-05-28</td>
+<td>spec V3 §11.1 (webhook alternative to getUpdates); operator
+tgram-completeness Section-2 mandate; evidence
+<code>docs/qa/HRD-136-20260528T130000Z/transcript.txt</code> (anchor
+<code>QA-ANCHOR: HRD-136-TGRAM-WEBHOOK-VALIDATOR-20260528</code>);
+Catalogue-Check: reuse <code>crypto/subtle</code> + telebot.v3's
+<code>tele.Update</code>.</td>
 </tr>
 <tr>
 <td>HRD-131</td>

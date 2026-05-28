@@ -1,0 +1,132 @@
+QA-ANCHOR: HRD-136-TGRAM-WEBHOOK-VALIDATOR-20260528
+Feature: Bot API webhook secret_token validation skeleton (HRD-136).
+Scope: validator-only — wiring into `pherald listen --webhook` is deferred to V1.x.
+Evidence kind: hermetic httptest -race -count=1 runs against the new
+  commons_messaging/channels/tgram/webhook.go validator-skeleton.
+
+CONTEXT
+=======
+Spec V3 §11.1 says Telegram inbound CAN use webhooks OR getUpdates long-poll.
+Wave 6 shipped getUpdates (pherald listen, subscribe.go). HRD-136 lands the
+cryptographic-validation layer for the future webhook ingress path — so when
+a V1.x operator switches to webhooks, the secret_token impersonation defense
+is already proven by hermetic tests.
+
+Bot API §6 (https://core.telegram.org/bots/api#setwebhook) stamps every webhook
+POST with header `X-Telegram-Bot-Api-Secret-Token: <secret>` (set via
+setWebhook(secret_token=…)). Validating that header constant-time on every
+request is mandatory — without it an attacker who guesses the webhook URL
+can impersonate Telegram. subtle.ConstantTimeCompare denies the timing-
+oracle path that would let an attacker recover the secret one byte at a time
+via naive `==` short-circuit.
+
+DELIVERABLE
+===========
+NEW FILE: commons_messaging/channels/tgram/webhook.go
+  - WebhookHandler struct + NewWebhookHandler(secret, handler, logger) constructor
+  - http.Handler.ServeHTTP that:
+      1. enforces POST (405 on mismatch)
+      2. constant-time-compares X-Telegram-Bot-Api-Secret-Token header
+         against the configured secret using subtle.ConstantTimeCompare
+         (401 on mismatch — uniform empty-body, no token leak)
+      3. decodes the body into telebot.Update (400 on malformed)
+      4. converts Update → commons.InboundEvent via updateToInboundEvent
+      5. dispatches to the caller-supplied commons.InboundHandler
+         (500 on handler error — error message logged, NEVER echoed)
+      6. returns 200 with body `{"ok":true}` per Bot API convention
+  - Refuses empty secret at construction time with a loud error.
+  - Refuses nil handler at construction time with a loud error.
+  - subtle.ConstantTimeCompare is invoked at webhook.go:222 + :229.
+  - HeaderName() exposes the canonical header string for tests + future
+    `pherald listen --webhook` wiring.
+
+NEW FILE: commons_messaging/channels/tgram/webhook_test.go
+  - 7 hermetic httptest tests covering the contract:
+
+TEST RESULTS (go test -race -count=1 -v ./commons_messaging/channels/tgram/... -run 'TestWebhook_')
+====================================================================================================
+
+=== RUN   TestWebhook_ValidSecret_DispatchesToHandler
+--- PASS: TestWebhook_ValidSecret_DispatchesToHandler (0.01s)
+=== RUN   TestWebhook_InvalidSecret_Returns401_NoTokenLeak
+--- PASS: TestWebhook_InvalidSecret_Returns401_NoTokenLeak (0.00s)
+=== RUN   TestWebhook_MissingSecret_Returns401
+--- PASS: TestWebhook_MissingSecret_Returns401 (0.00s)
+=== RUN   TestWebhook_GET_Returns405
+--- PASS: TestWebhook_GET_Returns405 (0.00s)
+=== RUN   TestWebhook_MalformedJSON_Returns400
+--- PASS: TestWebhook_MalformedJSON_Returns400 (0.00s)
+=== RUN   TestWebhook_EmptySecretAtConstruction_ErrorsLoud
+--- PASS: TestWebhook_EmptySecretAtConstruction_ErrorsLoud (0.00s)
+=== RUN   TestWebhook_ConstantTimeCompare
+--- PASS: TestWebhook_ConstantTimeCompare (0.00s)
+PASS
+ok  	github.com/vasic-digital/herald/commons_messaging/channels/tgram	1.544s
+
+7/7 PASS — race detector clean.
+
+BUILD + VET
+===========
+$ go build ./commons_messaging/...
+(clean, no output)
+
+$ go vet ./commons_messaging/...
+(clean, no output)
+
+ANTI-BLUFF CHECKS
+=================
+- subtle.ConstantTimeCompare is on the hot path (webhook.go line 222 + 229).
+  TestWebhook_ConstantTimeCompare directly invokes secretMatches() against
+  equal-length-but-different-content secrets (`AAAA...A` vs `AAAA...B`)
+  to prove the comparator does not regress to a `==` short-circuit
+  (which would compare byte-by-byte in non-constant time and leak the
+  secret via timing).
+- 401 path returns EMPTY body — TestWebhook_InvalidSecret_Returns401_NoTokenLeak
+  asserts response body contains NEITHER the configured secret NOR the
+  presented (probe) token; TestWebhook_ConstantTimeCompare asserts
+  len(body) == 0 on every 401, denying the body-grep oracle.
+- Constructor refuses empty secret AND nil handler — TestWebhook_EmptySecretAtConstruction_ErrorsLoud
+  asserts both rejection paths return non-nil error + nil handler.
+- Decode-error trace lands in logger only, never response body —
+  TestWebhook_MalformedJSON_Returns400 asserts response body does NOT
+  contain "decode" AND logger buffer DOES contain "decode failed".
+
+SCOPE-LOCK
+==========
+$ git status --porcelain
+?? commons_messaging/channels/tgram/webhook.go
+?? commons_messaging/channels/tgram/webhook_test.go
+?? docs/qa/HRD-136-20260528T130000Z/
+
+Two new files in commons_messaging/channels/tgram/ + this QA directory. No
+modifications to existing source. subscribe.go / send.go / attachments.go /
+healthcheck.go / persist.go / tgram.go untouched per task scope.
+
+QUIESCENCE
+==========
+No MUTATED markers in tracked .go files in commons_messaging/channels/tgram/.
+
+DEFERRED TO V1.x
+================
+- Wiring into pherald listen — operator-facing `pherald listen --webhook
+  --secret-token=$HERALD_TGRAM_WEBHOOK_SECRET --bind=:8443` subcommand
+  that constructs a NewWebhookHandler and serves it via http.ListenAndServeTLS
+  (with cert/key from commons_tls).
+- setWebhook registration on bot startup (calling Bot API setWebhook with
+  url=https://<our-host>/<path> + secret_token=$HERALD_TGRAM_WEBHOOK_SECRET).
+- Reverse-proxy pattern docs (nginx/Caddy snippet that strips X-Forwarded-For
+  and forwards X-Telegram-Bot-Api-Secret-Token verbatim).
+- Integration with the existing OnPhoto/OnDocument/OnVoice attachment-
+  download pipeline + bot-self-filter (Wave 6 substrate).
+- Live evidence under docs/qa/HRD-136-<run-id>/ once an operator-supplied
+  webhook endpoint can be exercised against api.telegram.org.
+
+These items are intentionally OUT OF SCOPE for HRD-136 — this task lands the
+cryptographic-validation skeleton + its hermetic test gate. The skeleton +
+gate make the V1.x wiring task pure plumbing.
+
+GO VERSION
+==========
+$ go version
+(operator runs on Go 1.25+ per CLAUDE.md; this code uses crypto/subtle,
+encoding/json, net/http, sync/atomic, log — all stdlib stable since pre-1.0)
