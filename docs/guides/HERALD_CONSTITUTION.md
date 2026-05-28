@@ -8,7 +8,7 @@
 
 | Field | Value |
 |---|---|
-| Revision | 8 |
+| Revision | 9 |
 | Created | 2026-05-15 |
 | Last modified | 2026-05-27 |
 | Status | active |
@@ -29,7 +29,7 @@
   - [§105. Inheritance gate (extends Universal §1.1)](#105-inheritance-gate-extends-universal-11)
   - [§106. Spec-change rule (extends Universal §11.4)](#106-spec-change-rule-extends-universal-114)
   - [§107. End-user-usability covenant (extends Universal §11.4 — MANDATORY ANTI-BLUFF)](#107-end-user-usability-covenant-extends-universal-114--mandatory-anti-bluff)
-  - [§108. Inherited covenant restatements (Helix §11.4.85 / §11.4.87 / §11.4.88 / §11.4.89 / §11.4.90 / §11.4.91 / §11.4.92 / §11.4.93 / §11.4.94 / §11.4.95 / §11.4.96 / §11.4.97 / §11.4.98)](#108-inherited-covenant-restatements-helix-11485--11487--11488--11489--11490--11491--11492--11493--11494--11495--11496--11497)
+  - [§108. Inherited covenant restatements (Helix §11.4.85 / §11.4.87 / §11.4.88 / §11.4.89 / §11.4.90 / §11.4.91 / §11.4.92 / §11.4.93 / §11.4.94 / §11.4.95 / §11.4.96 / §11.4.97 / §11.4.98 / §11.4.99)](#108-inherited-covenant-restatements-helix-11485--11487--11488--11489--11490--11491--11492--11493--11494--11495--11496--11497)
 - [Overrides of Universal Constitution](#overrides-of-universal-constitution)
 - [Owned-submodule set (per Universal §4)](#owned-submodule-set-per-universal-4)
 - [Project-specific remotes](#project-specific-remotes)
@@ -177,7 +177,7 @@ The Wave 4b test is the prototype; generalising the check across every paired-§
 
 **Non-compliance is a release blocker.** A mutation marker that lands in a tagged Herald commit is a critical defect regardless of how briefly it persisted — see commits `72e81ab` / `d5bd360` as forensic proof. No `--allow-residue`, `--skip-quiescence`, `--mutation-cleanup-later` flag exists.
 
-### §108. Inherited covenant restatements (Helix §11.4.85 / §11.4.87 / §11.4.88 / §11.4.89 / §11.4.90 / §11.4.91 / §11.4.92 / §11.4.93 / §11.4.94 / §11.4.95 / §11.4.96 / §11.4.97 / §11.4.98)
+### §108. Inherited covenant restatements (Helix §11.4.85 / §11.4.87 / §11.4.88 / §11.4.89 / §11.4.90 / §11.4.91 / §11.4.92 / §11.4.93 / §11.4.94 / §11.4.95 / §11.4.96 / §11.4.97 / §11.4.98 / §11.4.99)
 
 These twelve mandates are **inherited** from the Helix Universal Constitution via parent-discovery (§11.4.35). Herald **restates + cites** them at project-constitution level per the §1.1 multi-file propagation discipline — it does **NOT** redefine, narrow, or weaken them; the parent `constitution/Constitution.md` is the canonical authority for each. The literal anchors (`11.4.85`, `11.4.87`, `11.4.88`, `11.4.89`, `11.4.90`, `11.4.91`, `11.4.92`, `11.4.93`, `11.4.94`, `11.4.95`, `11.4.96`, `11.4.97`) are required across Herald's `CLAUDE.md` / `AGENTS.md` / `QWEN.md` by the §11.4.87 `CM-COVENANT-114-87-PROPAGATION` pre-build gate, which strips the literal in a paired §1.1 meta-test mutation and asserts the gate FAILs.
 
@@ -326,6 +326,53 @@ These twelve mandates are **inherited** from the Helix Universal Constitution vi
 **Propagation.** §108.m is restated — citing this section as the canonical Herald source — in Herald's `CLAUDE.md`, `AGENTS.md`, `QWEN.md`. The universal mandate at Helix §11.4.98 is cascaded into the Helix-stack submodules per §1.1 multi-file propagation discipline. The literal anchor `11.4.98` MUST appear in all three Herald root docs; the §11.4.98 pre-build gate `CM-COVENANT-114-98-PROPAGATION` (when implemented) enforces this.
 
 **Non-compliance is a release blocker.** A commit that adds or modifies a test that requires manual human action during execution is blocked at release-gate. A NON-COMPLIANT test that has not been rewritten within 30 days of classification graduates to §108.e (§11.4.90 Obsolete) and is removed from the active test suite (not deleted — preserved with `Obsolete-Details:` citing §108.m / §11.4.98 as the obsolescence reason).
+
+#### §108.n. Latest-Source Documentation Cross-Reference Mandate (extends Universal §11.4.99; Helix 2026-05-28)
+
+**Forensic anchor — verbatim user mandate (2026-05-28):**
+
+> "Make sure we ALWAYS check against latest versions of services we use web / online docs before creating instructions! This situation is illustration of how we can misguide ourselves or get banned! Add this all important generic / general points as proper mandatory rules when we are creating documentation or guides! These are mandatory rules / constraints and the result is consistency and safety of created instructions, guides and manuals!"
+
+**Canonical authority.** Helix Universal Constitution §11.4.99. Herald §108.n is the project-binding restatement.
+
+**Anchoring case study (Herald 2026-05-28).** The first-draft MTProto setup guide (commits `35fc10c` / `fb00354` / `f089dd6`) recommended VoIP / Google Voice / Twilio / TextNow numbers as a budget-friendly fallback AND omitted the `recover@telegram.org` pre-login email step. Both directly contradicted (a) Telegram's official docs at `https://core.telegram.org/api/obtaining_api_id` and (b) the gotd/td maintainer's "How to not get banned?" guidance vendored at `submodules/gotd-td/.github/SUPPORT.md`. An operator following the original guide could have had their Telegram account permanently banned. The corrected guide landed at commit `8470ba7` after a forced cross-reference. This is forensic evidence that misguidance-by-stale-docs is the same severity class as a §11.4 / §107 PASS-bluff at the documentation layer.
+
+**Operative rule (Herald-binding).** Every Herald operator-facing instruction document — `docs/requirements/blockers/*.md`, `docs/guides/*.md`, README operator-action sections, troubleshooting cookbooks, `OPERATOR_CREDENTIALS.md`, `MESSENGER_CHANNELS.md`, `TELEGRAM.md`, the present `HERALD_CONSTITUTION.md`, integration setup walkthroughs, credential acquisition guides, security configuration docs — MUST be cross-referenced against the LATEST official online documentation of every external service / library it touches BEFORE the commit lands.
+
+**(A) Pre-commit cross-reference workflow.** The Herald author MUST:
+
+1. **Fetch the latest official online docs** of every third-party service / library the new document references via WebFetch / MCP / direct browsing / equivalent authoritative real-time source. Do NOT rely on training data, memory, prior assumptions, or older committed Herald docs as the source of truth.
+2. **Cross-reference each instruction in the new document** against that source. For each step the operator will take, verify: (a) the service still supports that action; (b) form fields / parameters / endpoints are still the same; (c) any new constraints, deprecations, ToS changes, or warnings the service published since the doc's last verification.
+3. **Seek secondary authoritative sources** when the official documentation is sparse / silent on a critical requirement. Examples: the library maintainer's `submodules/<lib>/{README,SUPPORT,SECURITY}.md`, the service's official changelog / blog, the service's official support channels' responses, community-vetted FAQs.
+4. **Cite source URLs + date checked** at the bottom of the document in a `## Sources verified` section. Example: `Sources verified 2026-05-28: https://core.telegram.org/api/obtaining_api_id + submodules/gotd-td/.github/SUPPORT.md`.
+5. **Cite the cross-reference in the commit message footer** as a `Sources verified <date>: <urls>` line so the audit trail is reachable via `git log`.
+
+**(B) Negative-finding documentation is required.** If the cross-reference reveals the official source is silent / contradictory / outdated, the Herald document MUST explicitly note that gap so the next reader does not assume the absence of contradiction means authoritative agreement. The author MAY proceed with the best-available secondary sources, but MUST document the methodology.
+
+**(C) Re-verification cadence.**
+
+1. **6-month default staleness.** Herald documents older than 6 months without re-verification are STALE — operators MUST NOT trust them for fresh action without re-running the cross-reference.
+2. **90-day staleness for risk-classified services** (per §(D) below).
+3. **Triggered re-verification** before being cited as the authority for an operator-action campaign, at every vN.0.0 Herald release boundary, on service breaking-change announcements, and when an operator reports an error following the guide (auto-triggers re-verification).
+
+**(D) Service-specific risk-classifications for Herald.** Herald documentation for the following service families MUST include explicit safety warnings cross-referenced against the latest published policies, with a `Sources verified` date never older than 90 days:
+
+| Service family Herald uses | Risks Herald documentation MUST address |
+|---|---|
+| **Telegram (Bot API + MTProto)** — `commons_messaging/channels/tgram`, `qaherald/internal/mtproto`, `submodules/telebot`, `submodules/gotd-td` | Anti-abuse-system observation; one-phone-one-app-id limits; ban-on-VoIP policies; rate-limit floods; user-impersonation risks; pre-login `recover@telegram.org` declaration emails. |
+| **Slack** — `commons_messaging/channels/slack`, `submodules/slack-go` | Token revocation policies (xoxb-, xapp- prefixes); rate-limit Tier 4 endpoints; Socket Mode app-token requirements; OAuth scopes; workspace owner permissions. |
+| **Claude Code / Anthropic API** — `commons_messaging/dispatch/claude_code` | ToS violation triggers; rate-limit + quota policies; session UUID handling (Herald 2026-05-28 lesson: dev-session collision); data-retention defaults; PII-in-prompt risks; model-name pinning (`claude-opus-4-7`). |
+| **Postgres / Redis / container infrastructure** — `commons_infra`, `commons_storage`, `submodules/database`, `containers/` | Volume-data-loss policies on container destroy; password-rotation flows; SQLSTATE error semantics; migration ordering. |
+| **Code-hosting (GitHub / GitLab / GitFlic / GitVerse)** — `upstreams/` mirror scripts | Token-leak revocation policies; force-push to protected-branch policies; rate-limit-on-API-tokens; secret-scanning bot behaviour. |
+| **OS / package managers** — `apt`, `brew`, `pip`, `pandoc`, `weasyprint`, `go modules` | Supply-chain compromise vectors; signature verification; lockfile discipline; mirror-trust policies. |
+
+This list is **NOT exhaustive** — when a new external service is documented in Herald, the §108.n author judges whether the service has comparable risk surface; if yes, the same safety-warning requirement applies.
+
+**(E) Composition.** §108.n composes with §107 (anti-bluff), §107.x (docs/qa evidence), §107.y (working-tree quiescence), §108.a (stress + chaos), §108.b (endless-loop autonomous), §108.d (background-test), §108.i (zero-idle parallel), §108.l (max-idle + progress-cadence), §108.m (full-automation testing), and Universal §11.4.92 Pass 4 (deep-research). The §108.n cross-reference is INDEPENDENT of §11.4.92 Pass 4 deep-research — the agent CANNOT cite §11.4.92 as a substitute for §108.n; the two pass independently.
+
+**Propagation.** §108.n is restated — citing this section as the canonical Herald source — in Herald's `CLAUDE.md`, `AGENTS.md`, `QWEN.md`. The universal mandate at Helix §11.4.99 is cascaded into the Helix-stack submodules per §1.1 multi-file propagation discipline. The literal anchor `11.4.99` MUST appear in all three Herald root docs; the §11.4.99 pre-build gate `CM-COVENANT-114-99-PROPAGATION` (when implemented) enforces this.
+
+**Non-compliance is a release blocker.** A commit that adds or modifies operator-facing instruction documentation without (a) a `## Sources verified <date>: ...` footer in the document itself AND (b) a `Sources verified <date>: ...` line in the commit-message footer is blocked at release-gate. A Herald document with operator-actionable steps that becomes stale (>6 months default; >90 days for risk-classified services per §(D)) graduates to §108.e (Universal §11.4.90 Obsolete) after the 30-day grace window with `Obsolete-Details: Reason=stale-documentation; Superseding-item=<replacement-doc-or-rewrite>`. No `--skip-source-check` / `--docs-freshness-optional` / `--cite-sources-later` / `--trust-prior-doc-as-authoritative` escape exists.
 
 ---
 
