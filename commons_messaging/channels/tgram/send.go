@@ -3,6 +3,7 @@ package tgram
 import (
 	"context"
 	"fmt"
+	"log"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -12,6 +13,80 @@ import (
 
 	"github.com/vasic-digital/herald/commons"
 )
+
+// retryDefaults bound the 429 retry loop per HRD-134:
+//
+//   - maxRetry429Attempts: total attempts including the first call. Hard-cap
+//     keeps Send latency bounded (3 attempts × clamp ≤ 180s wall-clock).
+//   - maxRetryAfterSeconds: per-attempt sleep clamp. Defense-in-depth
+//     against a Bot API regression that returns retry_after=3600 — the
+//     real-world ceiling is well below 60s.
+const (
+	maxRetry429Attempts  = 3
+	maxRetryAfterSeconds = 60
+)
+
+// withRetry429 invokes fn() and, when the returned error is a
+// telebot.FloodError carrying retry_after, sleeps the indicated
+// duration (clamped to maxRetryAfterSeconds, honoring ctx.Done) and
+// retries up to maxRetry429Attempts total invocations. Other errors
+// short-circuit immediately — only 429-with-retry_after is retried.
+//
+// HRD-134 §107 anti-bluff anchor: the four send_ratelimit_test.go cases
+// (HonorsRetryAfter / GivesUpAfter3Attempts / RespectsCtxCancel /
+// ClampsRetryAfter_60s) pin every branch. A regression that hardcodes
+// a 1-attempt loop, drops the clamp, or ignores ctx would fail
+// independently.
+//
+// sleeper is injected so tests can substitute a fake clock — production
+// callers go through the package-level realSleep. token is threaded
+// through so log lines are sanitized via sanitizeTgramError.
+func withRetry429(ctx context.Context, token string, sleeper func(context.Context, time.Duration) error, fn func() error) error {
+	var lastErr error
+	for attempt := 1; attempt <= maxRetry429Attempts; attempt++ {
+		lastErr = fn()
+		if lastErr == nil {
+			return nil
+		}
+		retryAfter, ok := extractRetryAfter(lastErr)
+		if !ok {
+			return lastErr
+		}
+		if attempt == maxRetry429Attempts {
+			// Exhausted — return the last 429 to the caller.
+			break
+		}
+		clamped := retryAfter
+		if clamped > maxRetryAfterSeconds {
+			clamped = maxRetryAfterSeconds
+		}
+		log.Printf("tgram: 429 from Bot API, retry_after=%ds (clamped=%ds), attempt %d/%d: %s",
+			retryAfter, clamped, attempt, maxRetry429Attempts,
+			sanitizeTgramError(lastErr.Error(), token))
+		if err := sleeper(ctx, time.Duration(clamped)*time.Second); err != nil {
+			// ctx cancelled mid-sleep — return ctx.Err() not the 429.
+			return err
+		}
+	}
+	return lastErr
+}
+
+// realSleep is the production sleeper — blocks for d or returns
+// ctx.Err() if ctx fires first. Tests inject a fake that records the
+// requested duration instead of actually sleeping.
+func realSleep(ctx context.Context, d time.Duration) error {
+	if d <= 0 {
+		return nil
+	}
+	t := time.NewTimer(d)
+	defer t.Stop()
+	select {
+	case <-t.C:
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
+	}
+}
 
 // Send dispatches an OutboundMessage to the bot's configured chat via
 // the live Bot API sendMessage endpoint with parse_mode=MarkdownV2 per
@@ -32,15 +107,13 @@ import (
 // transport delivery (which Telegram does not expose to bots without
 // Business API read markers).
 func (a *Adapter) Send(ctx context.Context, msg commons.OutboundMessage) (commons.Receipt, error) {
-	_ = ctx // reserved — telebot.v3.3.8 does not thread ctx through sendMessage
-
 	if err := a.ensureBot(); err != nil {
-		return commons.Receipt{}, fmt.Errorf("tgram.Send: %w", err)
+		return commons.Receipt{}, fmt.Errorf("tgram.Send: %s", sanitizeTgramError(err.Error(), a.botToken))
 	}
 
 	chatIDInt, err := strconv.ParseInt(a.chatID, 10, 64)
 	if err != nil {
-		return commons.Receipt{}, fmt.Errorf("tgram.Send: chatID %q not numeric: %w", a.chatID, err)
+		return commons.Receipt{}, fmt.Errorf("tgram.Send: chatID %q not numeric: %s", a.chatID, sanitizeTgramError(err.Error(), a.botToken))
 	}
 	chat := &telebot.Chat{ID: chatIDInt}
 
@@ -65,9 +138,24 @@ func (a *Adapter) Send(ctx context.Context, msg commons.OutboundMessage) (common
 	}
 
 	start := time.Now()
-	sent, err := a.bot.Send(chat, text, opts)
-	if err != nil {
-		return commons.Receipt{}, fmt.Errorf("tgram.Send: sendMessage to chat %d: %w", chatIDInt, err)
+	var sent *telebot.Message
+	sleeper := a.sleeper
+	if sleeper == nil {
+		sleeper = realSleep
+	}
+	// HRD-134: wrap the telebot Send call in withRetry429 so a Bot API
+	// 429 with parameters.retry_after is honored (sleep + retry, bounded
+	// at maxRetry429Attempts attempts and maxRetryAfterSeconds per-sleep
+	// clamp). Errors that are not 429-with-retry_after short-circuit
+	// without retry — preserves the original immediate-fail semantics
+	// for every other error class.
+	retryErr := withRetry429(ctx, a.botToken, sleeper, func() error {
+		var sErr error
+		sent, sErr = a.bot.Send(chat, text, opts)
+		return sErr
+	})
+	if retryErr != nil {
+		return commons.Receipt{}, fmt.Errorf("tgram.Send: sendMessage to chat %d: %s", chatIDInt, sanitizeTgramError(retryErr.Error(), a.botToken))
 	}
 	if sent == nil || sent.ID == 0 {
 		return commons.Receipt{}, fmt.Errorf("tgram.Send: empty Message in sendMessage response (§107 bluff guard — Telegram did not return a chat-side message_id)")
@@ -122,10 +210,8 @@ func (a *Adapter) Send(ctx context.Context, msg commons.OutboundMessage) (common
 // replyToID == 0 is the no-reply sentinel — opts.ReplyTo stays nil and
 // the reply renders as a fresh message.
 func (a *Adapter) SendReply(ctx context.Context, chatID int64, text string, replyToID int, attachments []commons.Attachment) (int, error) {
-	_ = ctx // reserved — telebot.v3.3.8 does not thread ctx through sendMessage
-
 	if err := a.ensureBot(); err != nil {
-		return 0, fmt.Errorf("tgram.SendReply: %w", err)
+		return 0, fmt.Errorf("tgram.SendReply: %s", sanitizeTgramError(err.Error(), a.botToken))
 	}
 	if text == "" {
 		return 0, fmt.Errorf("tgram.SendReply: empty text")
@@ -140,9 +226,17 @@ func (a *Adapter) SendReply(ctx context.Context, chatID int64, text string, repl
 		textOpts.ReplyTo = &telebot.Message{ID: replyToID}
 	}
 
-	sentText, err := a.bot.Send(chat, text, textOpts)
-	if err != nil {
-		return 0, fmt.Errorf("tgram.SendReply: %w", err)
+	sleeper := a.sleeper
+	if sleeper == nil {
+		sleeper = realSleep
+	}
+	var sentText *telebot.Message
+	if err := withRetry429(ctx, a.botToken, sleeper, func() error {
+		var sErr error
+		sentText, sErr = a.bot.Send(chat, text, textOpts)
+		return sErr
+	}); err != nil {
+		return 0, fmt.Errorf("tgram.SendReply: %s", sanitizeTgramError(err.Error(), a.botToken))
 	}
 	if sentText == nil || sentText.ID == 0 {
 		return 0, fmt.Errorf("tgram.SendReply: empty Message in sendMessage response (§107 bluff guard — Telegram did not return a chat-side message_id)")
@@ -152,7 +246,9 @@ func (a *Adapter) SendReply(ctx context.Context, chatID int64, text string, repl
 	// call so all sit at the same thread depth as the text reply. Wave
 	// 6.5 keeps it sequential (one wire call per attachment) — no
 	// sendMediaGroup batching — so every attachment is a real, auditable
-	// multipart upload (§107 anti-bluff anchor).
+	// multipart upload (§107 anti-bluff anchor). Each call is also
+	// retry-wrapped per HRD-134 so the attachment fan-out is independently
+	// rate-limit-aware.
 	for i, att := range attachments {
 		if att.Filename == "" {
 			return 0, fmt.Errorf("tgram.SendReply: attachment[%d] Filename empty (Wave 6 T5 convention: on-disk content-addressed path)", i)
@@ -162,8 +258,11 @@ func (a *Adapter) SendReply(ctx context.Context, chatID int64, text string, repl
 		if replyToID > 0 {
 			mediaOpts.ReplyTo = &telebot.Message{ID: replyToID}
 		}
-		if _, merr := a.bot.Send(chat, media, mediaOpts); merr != nil {
-			return 0, fmt.Errorf("tgram.SendReply (attachment[%d] mime=%q): %w", i, att.MIMEType, merr)
+		if merr := withRetry429(ctx, a.botToken, sleeper, func() error {
+			_, e := a.bot.Send(chat, media, mediaOpts)
+			return e
+		}); merr != nil {
+			return 0, fmt.Errorf("tgram.SendReply (attachment[%d] mime=%q): %s", i, att.MIMEType, sanitizeTgramError(merr.Error(), a.botToken))
 		}
 	}
 

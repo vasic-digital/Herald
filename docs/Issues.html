@@ -47,7 +47,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>33</td>
+<td>34</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -63,9 +63,36 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>r33 (Tgram-completeness Wave A SA-c — HRD-138 operator
-deep-dive guide) marks HRD-138 Open→in_progress; Wave A is now CLOSED (3
-of 6 tgram-completeness tasks done).</strong>
+<td><strong>r34 (Tgram-completeness Wave B combined — HRD-133
+token-redaction + HRD-134 429 retry_after) marks BOTH Open→in_progress;
+Wave B is now CLOSED (5 of 6 tgram-completeness tasks done).</strong>
+Both HRDs land in ONE commit because they share
+<code>commons_messaging/channels/tgram/send.go</code>'s error-and-retry
+paths atomically — splitting them would require partial-file commits
+with messy <code>git add -p</code> (precedent: C4+C5 / D-stragglers were
+the same shape). <strong>HRD-133</strong> ships
+<code>sanitizeTgramError</code> (new <code>errors.go</code>) wrapping 6
+error-return sites in Send + SendReply so the Bot API token NEVER
+appears in any error / log message;
+<code>TestTgram_Send_ErrorDoesNotLeakToken</code> plants
+<code>123456:supersecret-must-not-leak-9999</code> + asserts absence
+(mirrors <code>TestSlack_Send_ErrorDoesNotLeakToken</code>).
+<strong>HRD-134</strong> ships <code>withRetry429</code> wrapping all 3
+telebot <code>bot.Send</code> call sites; on
+<code>429 + retry_after=N</code> sleeps N seconds
+(<code>ctx.Done()</code>-aware), retries up to 3 attempts, clamps
+per-retry to 60s; <code>retry_after</code> extracted via
+<code>errors.As(err, &amp;telebot.FloodError{}).RetryAfter</code>
+(telebot's typed error — no body parse). Composition: the retry's log
+lines + final error are themselves sanitized so 429 logging never leaks
+the token. Injectable <code>sleeper</code> field on <code>Adapter</code>
+for hermetic tests. 7 new tests <code>-race -count=1</code> (2 HRD-133 +
+5 HRD-134) → tgram suite now 24/24 PASS. Parts 4+5 of 6 in the
+tgram-completeness wave. <strong>Next: Wave C HRD-137</strong>
+(multi-recipient fan-out stress + getUpdates resilience) on a now-stable
+send.go. <strong>Prior r33 (Tgram-completeness Wave A SA-c — HRD-138
+operator deep-dive guide) marked HRD-138 Open→in_progress and closed
+Wave A (3 of 6 tgram-completeness tasks).</strong>
 <code>docs/guides/TELEGRAM.md</code> (810 lines, 11 §-sections, 58
 subsections + 3 siblings .html/.pdf/.docx) is the per-module nano-detail
 operator guide called for by the operator memory
@@ -232,7 +259,7 @@ inbound-runtime extension note
 <tr>
 <td>Issues</td>
 <td>HRD-008, HRD-015, HRD-019..HRD-025, HRD-029..HRD-056, HRD-081,
-HRD-085..HRD-090, HRD-115..HRD-121, HRD-135, HRD-136, HRD-138,
+HRD-085..HRD-090, HRD-115..HRD-121, HRD-133..HRD-136, HRD-138,
 HRD-131</td>
 </tr>
 <tr>
@@ -1485,6 +1512,71 @@ preserved).</td>
 <code>docs/qa/HRD-138-20260528T130000Z/transcript.txt</code> (anchor
 <code>QA-ANCHOR: HRD-138-TGRAM-OPERATOR-GUIDE-20260528</code>);
 Catalogue-Check: n/a (operator doc).</td>
+</tr>
+<tr>
+<td>HRD-133</td>
+<td>task</td>
+<td>in_progress</td>
+<td>high</td>
+<td>Tgram-completeness Wave B — token-redaction symmetry
+(<code>commons_messaging/channels/tgram/errors.go</code> + send.go
+wraps): <code>sanitizeTgramError(msg, token) string</code> strips the
+bot token from every Send/SendReply error message + log line so it can
+NEVER appear in observable output. 6 error-return sites wrapped
+(ensureBot/ParseInt/withRetry429 paths in both Send + SendReply).
+<code>TestTgram_Send_ErrorDoesNotLeakToken</code> plants
+<code>123456:supersecret-must-not-leak-9999</code>, drives an httptest
+401 path, asserts the token substring is absent from the returned
+<code>err.Error()</code> (mirrors slack's
+<code>TestSlack_Send_ErrorDoesNotLeakToken</code>). Unit-level
+<code>TestTgram_SanitizeTgramError_Unit</code> (4 subtests) pins the
+helper. Tradeoff captured: <code>%w</code> error-wrap replaced with
+<code>%s + sanitizeTgramError(err.Error(), token)</code> since
+<code>strings.ReplaceAll</code> operates on the string form — error
+chain sacrificed for security guarantee.</td>
+<td>2026-05-28</td>
+<td>2026-05-28</td>
+<td>spec V3 §107 anti-bluff; operator no-sensitive-data-leak mandate;
+evidence <code>docs/qa/HRD-133-20260528T140000Z/transcript.txt</code>
+(anchor <code>QA-ANCHOR: HRD-133-TGRAM-TOKEN-REDACTION-20260528</code>);
+Catalogue-Check: mirror slack adapter's <code>sanitizeError</code> (Wave
+7 T7).</td>
+</tr>
+<tr>
+<td>HRD-134</td>
+<td>task</td>
+<td>in_progress</td>
+<td>high</td>
+<td>Tgram-completeness Wave B — Bot API rate-limit 429 +
+<code>retry_after</code> honored
+(<code>commons_messaging/channels/tgram/send.go</code> +
+<code>tgram.go</code> <code>sleeper</code> field +
+<code>errors.go::extractRetryAfter</code>):
+<code>withRetry429(ctx, fn) error</code> wraps all 3 telebot
+<code>bot.Send</code> call sites (Send text body + SendReply text +
+SendReply per-attachment fan-out). On <code>429 + retry_after=N</code> →
+sleep N seconds (<code>ctx.Done()</code>-aware), retry up to <strong>3
+attempts</strong> total, clamp per-retry wait to <strong>60 s</strong>
+(defense-in-depth against Bot API spec violations).
+<code>retry_after</code> extracted via
+<code>errors.As(err, &amp;telebot.FloodError{}).RetryAfter</code>
+(telebot's typed error — NOT body parse). Logged retry line goes through
+<code>sanitizeTgramError</code> so the token stays out of logs (composes
+with HRD-133). Injectable <code>sleeper</code> field on
+<code>Adapter</code> for hermetic tests (real-time + fake-clock both
+supported via <code>SetSleeperForTest</code>). 4 hermetic httptest tests
+(HonorsRetryAfter / GivesUpAfter3Attempts / RespectsCtxCancel /
+ClampsRetryAfter_60s) + 1 unit test (ExtractRetryAfter_Unit) — 5 total,
+all <code>-race -count=1</code> green.</td>
+<td>2026-05-28</td>
+<td>2026-05-28</td>
+<td>spec V3 §17 (rate-limit-aware capability); operator
+tgram-completeness Section-2 mandate; evidence
+<code>docs/qa/HRD-134-20260528T140000Z/transcript.txt</code> (anchor
+<code>QA-ANCHOR: HRD-134-TGRAM-RATE-LIMIT-429-20260528</code>);
+Catalogue-Check: extend <code>gopkg.in/telebot.v3 FloodError</code>
+typed-error model (NO body-parse fallback needed — telebot already
+exposes the field).</td>
 </tr>
 <tr>
 <td>HRD-131</td>

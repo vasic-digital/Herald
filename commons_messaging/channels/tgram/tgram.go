@@ -22,6 +22,7 @@ import (
 	"net/url"
 	"strconv"
 	"sync"
+	"time"
 
 	db "digital.vasic.database/pkg/database"
 
@@ -39,6 +40,13 @@ type Adapter struct {
 	botOnce  sync.Once    // guards bot construction across goroutines (Task 2 review carry-forward)
 	botErr   error        // captured by botOnce if NewBot fails
 	pool     db.Database  // optional; nil = persistence disabled (Send-only adapter)
+
+	// sleeper is the injection seam for HRD-134's 429-retry sleeper.
+	// Production callers leave this nil; Send/SendReply default to
+	// realSleep (send.go). Tests substitute a fake clock that records
+	// the requested duration without actually blocking — see
+	// send_ratelimit_test.go's recordSleeper.
+	sleeper func(context.Context, time.Duration) error
 }
 
 // ensureBot lazily constructs a.bot exactly once across all goroutines.

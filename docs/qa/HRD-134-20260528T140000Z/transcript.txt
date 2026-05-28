@@ -1,0 +1,124 @@
+QA-ANCHOR: HRD-134-TGRAM-RATE-LIMIT-429-20260528
+
+HRD-134 — Bot API rate-limit (429 + retry_after) honored
+=========================================================
+
+Mandate
+-------
+When the Telegram Bot API returns 429 Too Many Requests with
+parameters.retry_after = N, tgram.Send MUST sleep N seconds and retry
+(bounded) instead of returning the error immediately. Spec V3 §17
+"rate-limit aware" + tgram-completeness mandate (2026-05-28 live-gap
+analysis, Section 2 task #1).
+
+Implementation
+--------------
+- Added const maxRetry429Attempts = 3 and maxRetryAfterSeconds = 60
+  in commons_messaging/channels/tgram/send.go.
+
+- Added withRetry429(ctx, token, sleeper, fn) helper:
+  Calls fn(); on FloodError + retry_after extractable → sleep clamped
+  retry_after honoring ctx.Done() → retry. Caps at maxRetry429Attempts
+  total invocations. Caps per-attempt sleep at maxRetryAfterSeconds.
+  Logs each retry with the retry_after value, the clamped value, and
+  the attempt counter (and sanitizes the token from the log line).
+
+- Added realSleep(ctx, d) — production sleeper that blocks with a
+  ctx-aware timer.
+
+- Added Adapter.sleeper field (commons_messaging/channels/tgram/
+  tgram.go) — injection seam for test fakes; nil = realSleep default.
+
+- Added extractRetryAfter(err) helper (errors.go) — single point
+  where telebot.FloodError → seconds mapping is asserted.
+  Uses errors.As against telebot.FloodError value (NOT pointer; per
+  submodules/telebot/errors.go:17 FloodError is a struct value type
+  with non-pointer Error() method).
+
+- Wrapped all three telebot bot.Send call sites in withRetry429:
+    Send: text body
+    SendReply: text body
+    SendReply: attachment fan-out (per attachment — each independently
+    rate-limit-aware)
+
+retry_after extraction method
+-----------------------------
+Used telebot's typed FloodError (NOT direct body parse).
+  submodules/telebot/errors.go:17 — type FloodError struct {
+      err        *Error
+      RetryAfter int
+  }
+  submodules/telebot/bot_raw.go:329 — FloodError is constructed when
+  extractOk sees error_code=429 + parameters.retry_after in the JSON
+  envelope.
+extractRetryAfter uses errors.As(err, &fe) with fe a FloodError value
+to recover the RetryAfter int field.
+
+Test evidence
+-------------
+$ go test -race -count=1 -v \
+    -run 'TestTgram_Send_429|TestTgram_ExtractRetryAfter' \
+    ./commons_messaging/channels/tgram/...
+
+=== RUN   TestTgram_Send_429_HonorsRetryAfter
+2026/05/28 11:50:35 tgram: 429 from Bot API, retry_after=1s (clamped=1s), attempt 1/3: telegram: retry after 1 (429)
+--- PASS: TestTgram_Send_429_HonorsRetryAfter (0.01s)
+=== RUN   TestTgram_Send_429_GivesUpAfter3Attempts
+2026/05/28 11:50:35 tgram: 429 from Bot API, retry_after=1s (clamped=1s), attempt 1/3: telegram: retry after 1 (429)
+2026/05/28 11:50:35 tgram: 429 from Bot API, retry_after=1s (clamped=1s), attempt 2/3: telegram: retry after 1 (429)
+--- PASS: TestTgram_Send_429_GivesUpAfter3Attempts (0.00s)
+=== RUN   TestTgram_Send_429_RespectsCtxCancel
+2026/05/28 11:50:35 tgram: 429 from Bot API, retry_after=30s (clamped=30s), attempt 1/3: telegram: retry after 30 (429)
+--- PASS: TestTgram_Send_429_RespectsCtxCancel (0.00s)
+=== RUN   TestTgram_Send_429_ClampsRetryAfter_60s
+2026/05/28 11:50:35 tgram: 429 from Bot API, retry_after=300s (clamped=60s), attempt 1/3: telegram: retry after 300 (429)
+--- PASS: TestTgram_Send_429_ClampsRetryAfter_60s (0.00s)
+=== RUN   TestTgram_ExtractRetryAfter_Unit
+--- PASS: TestTgram_ExtractRetryAfter_Unit (0.00s)
+PASS
+ok  	github.com/vasic-digital/herald/commons_messaging/channels/tgram	2.102s
+
+Test cases (4 ratelimit + 1 unit = 5)
+-------------------------------------
+TestTgram_Send_429_HonorsRetryAfter
+  Stub: [429 retry_after=1, 200 OK]
+  Asserts: ChannelMsgID="777" + exactly 1 sleep request of 1s.
+
+TestTgram_Send_429_GivesUpAfter3Attempts
+  Stub: [429, 429, 429] (all rate-limited).
+  Asserts: error returned + sendMessage hit count = 3 + sleep request
+  count = 2 (between attempts 1↔2 and 2↔3; NOT after attempt 3).
+
+TestTgram_Send_429_RespectsCtxCancel
+  Stub: [429 retry_after=30].
+  Pre-cancels ctx before Send; sleeper observes cancelled ctx and
+  returns ctx.Err(). Asserts: error contains "context canceled" and
+  elapsed wall-clock < 2s (not the 30s requested).
+
+TestTgram_Send_429_ClampsRetryAfter_60s
+  Stub: [429 retry_after=300, 200 OK].
+  Asserts: exactly 1 sleep request of 60s (NOT 300s) — clamp engaged.
+
+TestTgram_ExtractRetryAfter_Unit
+  Unit-level pin of the telebot.FloodError → int mapping in isolation.
+  Asserts FloodError{RetryAfter:7} → (7, true); non-FloodError → (0, false);
+  nil → (0, false).
+
+§107 anti-bluff anchor
+----------------------
+The sleeper-injection seam (Adapter.SetSleeperForTest) is the test-only
+hook that records the requested durations. The four tests assert
+DURATION VALUES directly — a regression that:
+  - drops the withRetry429 wrap → HonorsRetryAfter fails (gets the 429 immediately)
+  - drops the 3-attempt cap → GivesUpAfter3Attempts loops forever or fails count
+  - drops ctx.Done() handling → RespectsCtxCancel times out at 30s
+  - drops the clamp → ClampsRetryAfter_60s sees a 300s request
+
+All four failures are deterministic and fast (each test runs in <50ms
+with the fake sleeper).
+
+Status: HRD-134 IS FIXED — tgram.Send + tgram.SendReply now honor Bot
+API 429 retry_after, bounded at 3 attempts × 60s clamp = 180s max
+wall-clock for the worst-case stuck-in-rate-limit case. End users no
+longer see Send fail on the first 429 — the adapter waits and retries
+transparently.
