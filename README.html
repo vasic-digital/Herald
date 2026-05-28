@@ -488,6 +488,24 @@ MUST NEVER be committed</strong>. The repo's <code>.gitignore</code>
 already covers <code>.env</code>. The committed
 <code>quickstart/.env.example</code> is the only credentials-file that
 lives in git, and it contains only placeholder values.</p>
+<h3 id="active-blockers--operator-action-required">Active blockers —
+operator action required</h3>
+<p><a
+href="docs/requirements/blockers/missing_env_variables.md"><code>docs/requirements/blockers/missing_env_variables.md</code></a>
+— the step-by-step MTProto credential setup the operator must complete
+to unblock Wave 8 Track B (the full-automation rewrite of
+<code>TestSubscribe_LiveBotAPI</code>,
+<code>tests/test_wave6_live_loop.sh</code>, and Wave 6.5 lifecycle
+scenarios per HelixConstitution §11.4.98 + Herald §108.m). Available in
+Markdown / HTML / PDF / DOCX. <strong>Required for §11.4.98 compliance —
+release-gate item.</strong></p>
+<p><a
+href="docs/audits/full-automation-114-98-audit-2026-05-28.md"><code>docs/audits/full-automation-114-98-audit-2026-05-28.md</code></a>
+— the canonical classification of every Herald test against §11.4.98
+(794 tests audited: 758 COMPLIANT-hermetic, 32
+COMPLIANT-with-creds-bootstrap, 4 NON-COMPLIANT-manual-dep, 1
+STRUCTURALLY-BROKEN). NON-COMPLIANT items have until 2026-06-27 (T+30
+days) to be rewritten before graduating to §11.4.90 Obsolete.</p>
 <h2 id="mirror--push-convention">Mirror &amp; push convention</h2>
 <p>Herald is mirrored to four hosts. The <code>origin</code> remote is
 <strong>fan-out</strong>: one fetch URL + four push URLs. A single
