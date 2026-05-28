@@ -47,7 +47,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>24</td>
+<td>25</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -63,7 +63,32 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>r24 (v0.6.0 Wave 7 T6 — Slack channel adapter) marks HRD-115
+<td><strong>r25 (v0.6.0 Wave 7 T7 — qaherald Slack MessengerClient)
+marks HRD-116 Open→in_progress.</strong>
+<code>qaherald/internal/messenger/{slack.go,builder.go}</code> ships a
+raw-HTTP Slack client (mirroring <code>telegram.go</code>'s design — NOT
+the slack-go SDK; offset/watermark bookkeeping is qaherald-controlled)
+implementing all 11 <code>MessengerClient</code> methods + a
+channel-keyed <code>Build(BuildConfig)</code> dispatcher. Key
+Slack-specific design calls: <code>GetUpdates</code> via
+<code>conversations.history</code>+<code>oldest=&lt;ts&gt;</code>
+watermark (Slack has no <code>getUpdates</code> equivalent);
+<code>MessageID</code> = dotted-float ts string (e.g.
+<code>"1654.0001"</code>); <code>slackResponse.Channel</code> is
+<code>json.RawMessage</code> because Slack's <code>channel</code> field
+is a string in <code>chat.postMessage</code> but an object in
+<code>conversations.info</code>. <strong>§107 security:</strong> the
+xoxb token NEVER appears in errors — <code>sanitizeError()</code>
+defends + <code>TestSlack_Send_ErrorDoesNotLeakToken</code> pins the
+redaction by planting <code>xoxb-SUPERSECRET-must-not-leak-7777</code>
+and asserting it is absent from the resulting error string. 30 hermetic
+httptest tests <code>-race</code> green (17 new + 13 pre-existing tgram
+tests still green — zero regression); compile-time interface pin
+<code>var _ MessengerClient = (*SlackClient)(nil)</code>.
+KNOWN-FUTURE-CLEANUP: ships <code>files.upload</code> V1 (deprecated by
+Slack 2025-Q1 in favor of two-step V2 flow) — documented as a swappable
+internal in <code>slack.go</code>'s file-doc header. <strong>Prior r24
+(v0.6.0 Wave 7 T6 — Slack channel adapter) marked HRD-115
 Open→in_progress.</strong> Vendored <code>submodules/slack-go</code> @
 v0.16.0 (commit <code>209ec09</code>) +
 <code>commons_messaging/go.mod</code> <code>replace</code>.
@@ -296,7 +321,7 @@ closed HRD-016 (Wave 3b pherald Runner live). r11 closed HRD-011
 <tr>
 <td>Issues</td>
 <td>HRD-008, HRD-015, HRD-019..HRD-025, HRD-029..HRD-056, HRD-081,
-HRD-085..HRD-090, HRD-115, HRD-131</td>
+HRD-085..HRD-090, HRD-115, HRD-116, HRD-131</td>
 </tr>
 <tr>
 <td>Issues summary</td>
@@ -1264,6 +1289,39 @@ satisfaction.</td>
 spec V3 §11 Slack + §32.2; evidence
 <code>docs/qa/HRD-115-20260528T080000Z/</code>; Catalogue-Check: reuse
 <code>slack-go/slack@209ec09</code> (vendored submodule v0.16.0,
+2026-05-28).</td>
+</tr>
+<tr>
+<td>HRD-116</td>
+<td>task</td>
+<td>in_progress</td>
+<td>middle</td>
+<td>Wave 7 T7 — qaherald Slack <code>MessengerClient</code> +
+channel-keyed builder
+(<code>qaherald/internal/messenger/{slack.go,builder.go}</code>):
+raw-HTTP client implementing all 11 <code>MessengerClient</code> methods
+(Me/Send/SendPhoto/SendDocument/SendVoice/GetUpdates/WaitForReply/Download/Preflight/GetChatMember/Close);
+<code>GetUpdates</code> via
+<code>conversations.history</code>+<code>oldest=&lt;ts&gt;</code>
+watermark (Slack has no <code>getUpdates</code>); <code>MessageID</code>
+= dotted-float ts string; channel-keyed <code>Build(BuildConfig)</code>
+(tgram/slack/unknown→error). Token NEVER in errors —
+<code>sanitizeError()</code> defense +
+<code>TestSlack_Send_ErrorDoesNotLeakToken</code> pins it with a planted
+<code>xoxb-SUPERSECRET-must-not-leak-7777</code>. 30 hermetic httptest
+tests <code>-race</code> green; compile-time pin
+<code>var _ MessengerClient = (*SlackClient)(nil)</code>.
+KNOWN-FUTURE-CLEANUP: ships <code>files.upload</code> V1 (deprecated by
+Slack 2025-Q1 in favor of two-step V2) — functionally equivalent for the
+httptest seam, swappable without API breakage; documented in
+<code>slack.go</code> header.</td>
+<td>2026-05-28</td>
+<td>2026-05-28</td>
+<td>docs/superpowers/plans/2026-05-27-wave7-generic-messenger.md §T7;
+mirrors <code>qaherald/internal/messenger/telegram.go</code>; evidence
+<code>docs/qa/HRD-116-20260528T090000Z/</code>; Catalogue-Check: reuse
+Slack Web API endpoints via raw HTTP (NOT slack-go SDK — different layer
+from HRD-115; offset bookkeeping is qaherald-controlled;
 2026-05-28).</td>
 </tr>
 <tr>

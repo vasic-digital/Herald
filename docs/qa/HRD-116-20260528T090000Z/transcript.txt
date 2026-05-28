@@ -1,0 +1,185 @@
+QA-ANCHOR: HRD-116-WAVE7-T7-QAHERALD-SLACK-CLIENT-20260528
+
+Wave 7 Task 7 (HRD-116): qaherald Slack MessengerClient + channel-keyed builder.
+Per §107.x: this transcript IS the auditable runtime evidence the feature works.
+The Slack adapter is hermetically verified via httptest round-trips counting wire
+hits; live transcripts SKIP-with-reason in this run (operator credentials TBD).
+
+Files landed (4 new under qaherald/internal/messenger/):
+  - slack.go              — full SlackClient impl (raw HTTP, parity with telegram.go)
+  - slack_test.go         — 12 hermetic httptest cases (see PASS list below)
+  - builder.go            — channel-keyed Build() dispatcher
+  - builder_test.go       — 5 builder cases (tgram, tgram-default, tgram-error, slack, unknown)
+
+MessengerClient interface methods implemented by SlackClient (every method
+crosses real wire — no stubs):
+  Me              → auth.test (caches result; second call hits cache)
+  Send            → chat.postMessage (returns Slack ts as MessageID)
+  SendPhoto       → files.upload multipart (filetype=auto, initial_comment)
+  SendDocument    → files.upload multipart
+  SendVoice       → files.upload multipart (no caption)
+  GetUpdates      → conversations.history with oldest=<ts watermark>
+  WaitForReply    → polls GetUpdates; advances watermark only past matched ts
+  Download        → files.info + GET url_private_download with Bearer token
+  Preflight       → auth.test + conversations.info → PreflightReport
+  GetChatMember   → conversations.members (best-effort numeric id match)
+  Close           → no-op (idempotent; clears me cache)
+
+Compile-time interface assertion at end of slack.go:
+  var _ MessengerClient = (*SlackClient)(nil)
+
+Token-redaction security mandate (§107 + operator anti-leak rule):
+  Test name: TestSlack_Send_ErrorDoesNotLeakToken
+  Sensitive token sentinel: "xoxb-SUPERSECRET-must-not-leak-7777"
+  Stub returns: {"ok": false, "error": "invalid_auth"}
+  Asserted error string (logged via t.Logf): "chat.postMessage failed: invalid_auth"
+  Assertion: err.Error() MUST NOT contain "xoxb-SUPERSECRET-must-not-leak-7777"
+              err.Error() MUST contain "chat.postMessage" (method name)
+              err.Error() MUST contain "invalid_auth" (slack-side reason)
+  Defense layers:
+    1. No URL ever interpolated into error strings (callJSON wraps with method name only)
+    2. sanitizeError(msg, token) strips any token substring before formatting
+    3. http.Client errors return generic "<method>: request failed" (URL hidden)
+
+==================================================================
+=== go build ./qaherald/... ===
+(exit=0)
+
+=== go vet ./qaherald/... ===
+(exit=0)
+
+=== go test -race -count=1 -v ./qaherald/internal/messenger/... ===
+=== RUN   TestTelegramClient_SatisfiesInterface
+--- PASS: TestTelegramClient_SatisfiesInterface (0.00s)
+=== RUN   TestNewTelegramClient_RejectsEmptyToken
+--- PASS: TestNewTelegramClient_RejectsEmptyToken (0.00s)
+=== RUN   TestNewTelegramClient_RejectsZeroChatID
+--- PASS: TestNewTelegramClient_RejectsZeroChatID (0.00s)
+=== RUN   TestSentinels_Reachable
+--- PASS: TestSentinels_Reachable (0.00s)
+=== RUN   TestSlackClientSendCrossesWire
+--- PASS: TestSlackClientSendCrossesWire (0.00s)
+=== RUN   TestSlack_Me_AuthTest
+--- PASS: TestSlack_Me_AuthTest (0.00s)
+=== RUN   TestSlack_SendPhoto_MultipartShape
+--- PASS: TestSlack_SendPhoto_MultipartShape (0.00s)
+=== RUN   TestSlack_SendDocument_MultipartShape
+--- PASS: TestSlack_SendDocument_MultipartShape (0.00s)
+=== RUN   TestSlack_SendVoice_MultipartShape
+--- PASS: TestSlack_SendVoice_MultipartShape (0.00s)
+=== RUN   TestSlack_GetUpdates_DecodesMessages
+--- PASS: TestSlack_GetUpdates_DecodesMessages (0.00s)
+=== RUN   TestSlack_WaitForReply_PreservesNonMatching
+--- PASS: TestSlack_WaitForReply_PreservesNonMatching (0.00s)
+=== RUN   TestSlack_WaitForReply_TimeoutReturnsDeadlineExceeded
+--- PASS: TestSlack_WaitForReply_TimeoutReturnsDeadlineExceeded (0.30s)
+=== RUN   TestSlack_Download_FilesInfoAndPrivateDownload
+--- PASS: TestSlack_Download_FilesInfoAndPrivateDownload (0.01s)
+=== RUN   TestSlack_Preflight_StructuredReport
+--- PASS: TestSlack_Preflight_StructuredReport (0.01s)
+=== RUN   TestSlack_Send_ErrorDoesNotLeakToken
+    slack_test.go:597: redacted error text: "chat.postMessage failed: invalid_auth"
+--- PASS: TestSlack_Send_ErrorDoesNotLeakToken (0.00s)
+=== RUN   TestSlack_TSOffsetRoundTrip
+--- PASS: TestSlack_TSOffsetRoundTrip (0.00s)
+=== RUN   TestTelegram_Send_JSONShape
+--- PASS: TestTelegram_Send_JSONShape (0.01s)
+=== RUN   TestTelegram_SendPhoto_MultipartShape
+--- PASS: TestTelegram_SendPhoto_MultipartShape (0.01s)
+=== RUN   TestTelegram_SendDocument_MultipartShape
+--- PASS: TestTelegram_SendDocument_MultipartShape (0.01s)
+=== RUN   TestTelegram_SendVoice_MultipartShape
+--- PASS: TestTelegram_SendVoice_MultipartShape (0.01s)
+=== RUN   TestTelegram_GetUpdates_DecodesUpdates
+--- PASS: TestTelegram_GetUpdates_DecodesUpdates (0.00s)
+=== RUN   TestTelegram_WaitForReply_PreservesNonMatching
+--- PASS: TestTelegram_WaitForReply_PreservesNonMatching (0.00s)
+=== RUN   TestTelegram_Preflight_StructuredReport
+--- PASS: TestTelegram_Preflight_StructuredReport (0.00s)
+=== RUN   TestGetChatMember
+--- PASS: TestGetChatMember (0.00s)
+=== RUN   TestGetChatMember_APIError
+--- PASS: TestGetChatMember_APIError (0.00s)
+=== RUN   TestTelegram_Send_ErrorDoesNotLeakToken
+--- PASS: TestTelegram_Send_ErrorDoesNotLeakToken (0.00s)
+=== RUN   TestBuilderTgram
+--- PASS: TestBuilderTgram (0.00s)
+=== RUN   TestBuilderTgramDefault
+--- PASS: TestBuilderTgramDefault (0.00s)
+=== RUN   TestBuilderTgramPropagatesConstructorError
+--- PASS: TestBuilderTgramPropagatesConstructorError (0.00s)
+=== RUN   TestBuilderSlack
+--- PASS: TestBuilderSlack (0.00s)
+=== RUN   TestBuilderUnknownErrors
+--- PASS: TestBuilderUnknownErrors (0.00s)
+PASS
+ok  	github.com/vasic-digital/herald/qaherald/internal/messenger	1.683s
+==================================================================
+
+Test tally — 30 tests total in qaherald/internal/messenger:
+  - 4 messenger sentinels + interface compile-time checks (pre-existing)
+  - 11 Telegram cases (pre-existing — all still PASS, no regression)
+  - 12 Slack cases (NEW this task — all PASS)
+  - 5 builder cases (NEW this task — all PASS)
+  - 0 SKIP — all hermetic, deterministic
+  - 0 FAIL
+
+Plan-mandated test names (from
+docs/superpowers/plans/2026-05-27-wave7-generic-messenger.md Task 7):
+  - TestBuilderTgram                            (Step 2 snippet)        PASS
+  - TestBuilderSlack                            (Step 2 snippet)        PASS
+  - TestBuilderUnknownErrors                    (Step 2 snippet)        PASS
+  - TestSlackClientSendCrossesWire              (Step 3 snippet)        PASS
+
+Extra cases beyond the plan snippets (defensive — pin every wire path):
+  - TestBuilderTgramDefault                     (empty Channel → tgram default)
+  - TestBuilderTgramPropagatesConstructorError  (no silent nil on bad config)
+  - TestSlack_Me_AuthTest                       (auth.test + cache verification)
+  - TestSlack_SendPhoto/Document/Voice_MultipartShape
+                                                (each Send* multipart)
+  - TestSlack_GetUpdates_DecodesMessages        (conversations.history)
+  - TestSlack_WaitForReply_PreservesNonMatching (§107 anti-bluff anchor)
+  - TestSlack_WaitForReply_TimeoutReturnsDeadlineExceeded
+                                                (sentinel errors.Is contract)
+  - TestSlack_Download_FilesInfoAndPrivateDownload
+                                                (files.info + Bearer download)
+  - TestSlack_Preflight_StructuredReport        (auth.test + conversations.info)
+  - TestSlack_Send_ErrorDoesNotLeakToken        (security mandate)
+  - TestSlack_TSOffsetRoundTrip                 (ts ↔ int64 watermark helpers)
+
+==================================================================
+Quiescence (§107.y working-tree quiescence rule) — pre-handoff scan:
+  grep -rEn 'MUTATED for paired|MUTATED W7-|// always pass' \
+       qaherald/ commons_messaging/ → clean (no markers)
+  ls .git/MUTATION_IN_PROGRESS                                  → absent
+
+git status --porcelain (only the 4 new files in scope):
+  ?? qaherald/internal/messenger/builder.go
+  ?? qaherald/internal/messenger/builder_test.go
+  ?? qaherald/internal/messenger/slack.go
+  ?? qaherald/internal/messenger/slack_test.go
+
+==================================================================
+Bidirectional QA — hermetic round-trip transcript per §107.x:
+
+Request (qaherald → slack stub, TestSlackClientSendCrossesWire):
+  POST <baseURL>/chat.postMessage
+  Authorization: Bearer xoxb-test
+  Content-Type: application/json; charset=utf-8
+  Body: {"channel":"C1","text":"hello from qa"}
+
+Response (stub → qaherald):
+  HTTP/1.1 200 OK
+  Content-Type: application/json
+  Body: {"ok":true,"ts":"1654.0001"}
+
+Assertion: client returned MessageID == "1654.0001"; stub recorded
+1 hit on /chat.postMessage. A no-op Send would FAIL because the test
+counts wire hits (§107 anti-bluff anchor).
+
+==================================================================
+End of transcript. HRD-116 hermetic implementation complete; live-bot
+evidence under docs/qa/HRD-116-live-<run-id>/ awaits operator-supplied
+Slack workspace credentials (per §107.x SKIP-with-documented-reason
+contract — hermetic transcripts committed verbatim until live creds
+land).
