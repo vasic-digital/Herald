@@ -4,8 +4,10 @@ package lifecycle
 
 import (
 	"context"
+	tgJSON "encoding/json"
 	"errors"
 	"fmt"
+	tgHTTP "net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -138,6 +140,10 @@ func TestMTProto_Wave6_AutonomousClosedLoop(t *testing.T) {
 		"HERALD_CLAUDE_PROJECT_NAME="+pheraldProjectName,
 	)
 	pheraldCmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+	// CRITICAL: pherald listen resolves `docs/Issues.md` relative to its
+	// CWD. The Go test runs in qaherald/internal/lifecycle/ — set Dir to
+	// the repo root so pherald finds the docs tree.
+	pheraldCmd.Dir = repoRoot
 	logFile, err := os.Create(filepath.Join(qaDir, "pherald.log"))
 	if err != nil {
 		t.Fatalf("create pherald.log: %v", err)
@@ -149,6 +155,12 @@ func TestMTProto_Wave6_AutonomousClosedLoop(t *testing.T) {
 		t.Fatalf("start pherald: %v", err)
 	}
 	t.Logf("pherald listen PID=%d (project=%s, journal=%s)", pheraldCmd.Process.Pid, pheraldProjectName, qaDir)
+	// Pre-ack stale updates so pherald (which we just spawned, but won't
+	// have ack'd anything on its first getUpdates call) doesn't process
+	// the prior session's chat history. Without this, pherald would try
+	// to SendReply to N+1 messages in parallel → TLS connection-reset
+	// storm from Telegram's anti-abuse rate limiter.
+	consumePendingUpdates(t, os.Getenv("HERALD_TGRAM_BOT_TOKEN"))
 	defer func() {
 		// SIGTERM with grace, then SIGKILL
 		_ = syscall.Kill(-pheraldCmd.Process.Pid, syscall.SIGTERM)
@@ -208,4 +220,52 @@ func min(a, b int) int {
 		return a
 	}
 	return b
+}
+
+// consumePendingUpdates walks the bot's getUpdates queue + ACKs every
+// pending update so a freshly-spawned pherald doesn't process stale
+// chat history. Critical for §11.4.98 autonomous tests because the test
+// chat is reused across many runs; without this, each run's pherald
+// would attempt to reply to every prior run's stimulus in parallel,
+// triggering Telegram's TLS connection-reset rate limiter.
+//
+// Best-effort — failures are logged but don't fail the test.
+func consumePendingUpdates(t *testing.T, botToken string) {
+	t.Helper()
+	if botToken == "" {
+		return
+	}
+	type gu struct {
+		OK     bool `json:"ok"`
+		Result []struct {
+			UpdateID int64 `json:"update_id"`
+		} `json:"result"`
+	}
+	pollURL := fmt.Sprintf("https://api.telegram.org/bot%s/getUpdates?limit=100&timeout=0", botToken)
+	resp, err := tgHTTP.Get(pollURL)
+	if err != nil {
+		t.Logf("pre-ack getUpdates: %s (continuing)", strings.ReplaceAll(err.Error(), botToken, "<redacted-bot-token>"))
+		return
+	}
+	defer resp.Body.Close()
+	var r gu
+	if err := tgJSON.NewDecoder(resp.Body).Decode(&r); err != nil {
+		t.Logf("pre-ack decode: %v", err)
+		return
+	}
+	if len(r.Result) == 0 {
+		t.Logf("pre-ack: queue already empty")
+		return
+	}
+	var maxID int64
+	for _, u := range r.Result {
+		if u.UpdateID > maxID {
+			maxID = u.UpdateID
+		}
+	}
+	ackURL := fmt.Sprintf("https://api.telegram.org/bot%s/getUpdates?offset=%d&limit=1&timeout=0", botToken, maxID+1)
+	if r2, err := tgHTTP.Get(ackURL); err == nil {
+		r2.Body.Close()
+	}
+	t.Logf("pre-ack: discarded %d stale updates (max_update_id=%d)", len(r.Result), maxID)
 }

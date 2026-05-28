@@ -6,8 +6,11 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/exec"
+	"path/filepath"
 	"strconv"
 	"strings"
+	"syscall"
 	"testing"
 	"time"
 
@@ -77,6 +80,66 @@ func TestMTProto_Wave65_LifecycleAutonomous(t *testing.T) {
 		t.Fatalf("WhoAmI: %v", err)
 	}
 	t.Logf("MTProto active: @%s (user_id=%d)", myUsername, myID)
+
+	// Spawn pherald listen with a dedicated Claude session UUID (§11.4.98 rule 2).
+	// pherald is what processes the Help / Status / Continue stimuli + sends replies.
+	tmpDir := t.TempDir()
+	pheraldBin := filepath.Join(tmpDir, "pherald")
+	repoRoot, _ := os.Getwd()
+	for i := 0; i < 5; i++ {
+		if _, err := os.Stat(filepath.Join(repoRoot, "go.work")); err == nil {
+			break
+		}
+		repoRoot = filepath.Dir(repoRoot)
+	}
+	buildCmd := exec.Command("go", "build", "-o", pheraldBin, "./pherald/cmd/pherald")
+	buildCmd.Dir = repoRoot
+	if out, err := buildCmd.CombinedOutput(); err != nil {
+		t.Fatalf("build pherald: %v\n%s", err, string(out))
+	}
+	t.Logf("pherald built at %s", pheraldBin)
+
+	qaDir := filepath.Join(tmpDir, "qa-journal")
+	if err := os.MkdirAll(qaDir, 0o700); err != nil {
+		t.Fatalf("mkdir qa-journal: %v", err)
+	}
+	pheraldCtx, pheraldCancel := context.WithCancel(context.Background())
+	defer pheraldCancel()
+	pheraldProjectName := fmt.Sprintf("Herald-MTProto-W65-%d", time.Now().UnixNano())
+	pheraldCmd := exec.CommandContext(pheraldCtx, pheraldBin, "listen", "--qa-out-dir", qaDir)
+	pheraldCmd.Env = append(os.Environ(), "HERALD_CLAUDE_PROJECT_NAME="+pheraldProjectName)
+	pheraldCmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+	// CRITICAL: pherald resolves docs/Issues.md relative to its CWD —
+	// must point at repo root.
+	pheraldCmd.Dir = repoRoot
+	logFile, err := os.Create(filepath.Join(qaDir, "pherald.log"))
+	if err != nil {
+		t.Fatalf("create pherald.log: %v", err)
+	}
+	defer logFile.Close()
+	pheraldCmd.Stdout = logFile
+	pheraldCmd.Stderr = logFile
+	if err := pheraldCmd.Start(); err != nil {
+		t.Fatalf("start pherald: %v", err)
+	}
+	t.Logf("pherald listen PID=%d (project=%s, journal=%s)", pheraldCmd.Process.Pid, pheraldProjectName, qaDir)
+	// Pre-ack stale chat updates so pherald doesn't try to reply to
+	// every prior run's stimulus (TLS-reset storm prevention — see
+	// consumePendingUpdates in mtproto_wave6_loop_test.go).
+	consumePendingUpdates(t, os.Getenv("HERALD_TGRAM_BOT_TOKEN"))
+	defer func() {
+		_ = syscall.Kill(-pheraldCmd.Process.Pid, syscall.SIGTERM)
+		done := make(chan error, 1)
+		go func() { done <- pheraldCmd.Wait() }()
+		select {
+		case <-done:
+		case <-time.After(5 * time.Second):
+			_ = syscall.Kill(-pheraldCmd.Process.Pid, syscall.SIGKILL)
+			<-done
+		}
+	}()
+	// Wait for pherald bootstrap (telebot.NewBot + getMe).
+	time.Sleep(3 * time.Second)
 
 	// Representative Wave 6.5 lifecycle scenarios (subset proving the
 	// autonomous-roundtrip path works for each fast-path command class).
