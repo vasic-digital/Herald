@@ -1,0 +1,111 @@
+QA-ANCHOR: HRD-115-WAVE7-T6-SLACK-ADAPTER-20260528
+Wave 7 Task 6 (HRD-115) — Slack channel adapter (Socket Mode) — hermetic httptest QA transcript
+Run timestamp (UTC): 2026-05-28T04:32:29Z
+Run host: Darwin 24.5.0 arm64
+Go version: go version go1.26.2 darwin/arm64
+
+=== STEP 1: git submodule add + checkout v0.16.0 ===
+(submodule was added via: git submodule add https://github.com/slack-go/slack.git submodules/slack-go; then `git -C submodules/slack-go checkout v0.16.0`)
+
+--- git -C submodules/slack-go log -1 ---
+209ec09999dd963928743f0950590eb35692f95f Add assistant app thread message subtype (#1368) (2025-02-06 19:56:45 +0000)
+
+--- git -C submodules/slack-go describe --tags ---
+v0.16.0
+
+--- .gitmodules now includes slack-go ---
+[submodule "submodules/slack-go"]
+	path = submodules/slack-go
+	url = https://github.com/slack-go/slack.git
+
+=== STEP 2: go build ./commons_messaging/... ===
+BUILD OK (no output == success)
+
+=== STEP 3: go vet ./commons_messaging/... ===
+VET OK (no output == success)
+
+=== STEP 4: go test -race -count=1 -v ./commons_messaging/channels/slack/... ===
+=== RUN   TestSlackDownloadAttachmentContentAddressed
+--- PASS: TestSlackDownloadAttachmentContentAddressed (0.01s)
+=== RUN   TestSlackDownloadAttachmentEmptyIDErrors
+--- PASS: TestSlackDownloadAttachmentEmptyIDErrors (0.00s)
+=== RUN   TestSlackDownloadAttachmentMissingURLPrivateDownload
+--- PASS: TestSlackDownloadAttachmentMissingURLPrivateDownload (0.00s)
+=== RUN   TestSlackBotSelfIdentityViaAuthTest
+--- PASS: TestSlackBotSelfIdentityViaAuthTest (0.00s)
+=== RUN   TestSlackBotSelfIdentityCaches
+--- PASS: TestSlackBotSelfIdentityCaches (0.00s)
+=== RUN   TestSlackBotSelfIdentityEmptyUserIDIsEchoLoopHazard
+--- PASS: TestSlackBotSelfIdentityEmptyUserIDIsEchoLoopHazard (0.00s)
+=== RUN   TestSlackHealthCheck
+--- PASS: TestSlackHealthCheck (0.00s)
+=== RUN   TestSlackSendCrossesWireWithText
+--- PASS: TestSlackSendCrossesWireWithText (0.00s)
+=== RUN   TestSlackSendUsesDefaultChannelWhenToEmpty
+--- PASS: TestSlackSendUsesDefaultChannelWhenToEmpty (0.00s)
+=== RUN   TestSlackSendEmptyBodyErrors
+--- PASS: TestSlackSendEmptyBodyErrors (0.00s)
+=== RUN   TestSlackSendReplyUsesThreadTS
+--- PASS: TestSlackSendReplyUsesThreadTS (0.00s)
+=== RUN   TestSlackSendReplyNoReplyToOmitsThreadTS
+--- PASS: TestSlackSendReplyNoReplyToOmitsThreadTS (0.00s)
+=== RUN   TestSlackSendReplyGenericDelegates
+--- PASS: TestSlackSendReplyGenericDelegates (0.00s)
+=== RUN   TestSlackNewFromURLValid
+=== RUN   TestSlackNewFromURLValid/plain
+=== RUN   TestSlackNewFromURLValid/with-app-token
+--- PASS: TestSlackNewFromURLValid (0.00s)
+    --- PASS: TestSlackNewFromURLValid/plain (0.00s)
+    --- PASS: TestSlackNewFromURLValid/with-app-token (0.00s)
+=== RUN   TestSlackNewFromURLRejects
+=== RUN   TestSlackNewFromURLRejects/empty
+=== RUN   TestSlackNewFromURLRejects/wrong-scheme
+=== RUN   TestSlackNewFromURLRejects/no-token
+=== RUN   TestSlackNewFromURLRejects/no-channel
+=== RUN   TestSlackNewFromURLRejects/no-channel-no-path
+--- PASS: TestSlackNewFromURLRejects (0.00s)
+    --- PASS: TestSlackNewFromURLRejects/empty (0.00s)
+    --- PASS: TestSlackNewFromURLRejects/wrong-scheme (0.00s)
+    --- PASS: TestSlackNewFromURLRejects/no-token (0.00s)
+    --- PASS: TestSlackNewFromURLRejects/no-channel (0.00s)
+    --- PASS: TestSlackNewFromURLRejects/no-channel-no-path (0.00s)
+=== RUN   TestSlackSatisfiesChannel
+--- PASS: TestSlackSatisfiesChannel (0.00s)
+=== RUN   TestSlackRegistryWiring
+--- PASS: TestSlackRegistryWiring (0.00s)
+=== RUN   TestSlackSubscribeMessageEventReachesHandler
+--- PASS: TestSlackSubscribeMessageEventReachesHandler (0.00s)
+=== RUN   TestSlackSubscribeSelfEchoDropped
+--- PASS: TestSlackSubscribeSelfEchoDropped (0.00s)
+=== RUN   TestSlackSubscribeCrossBotMessageKept
+--- PASS: TestSlackSubscribeCrossBotMessageKept (0.00s)
+=== RUN   TestSlackSubscribeNoThreadOmitsThread
+--- PASS: TestSlackSubscribeNoThreadOmitsThread (0.00s)
+=== RUN   TestSlackSubscribeNilEventIsNoOp
+--- PASS: TestSlackSubscribeNilEventIsNoOp (0.00s)
+=== RUN   TestSlackSubscribeRequiresAppToken
+--- PASS: TestSlackSubscribeRequiresAppToken (0.00s)
+PASS
+ok  	github.com/vasic-digital/herald/commons_messaging/channels/slack	2.041s
+
+=== STEP 5: bash tests/test_constitution_inheritance.sh ===
+PASS  I1 constitution discovered at /Users/milosvasic/Projects/constitution
+PASS  I2 Constitution.md contains §11.4 forensic anchor
+PASS  I3 constitution/CLAUDE.md contains anti-bluff covenant anchor
+PASS  I4 constitution/AGENTS.md contains anti-bluff covenant anchor
+PASS  I5a CLAUDE.md declares Helix Constitution inheritance (parent-discovery)
+PASS  I5b AGENTS.md references the parent-provided constitution + find_constitution.sh
+PASS  I5c HERALD_CONSTITUTION.md extends the Helix Universal Constitution
+PASS  I5d README.md documents the constitution-inheritance contract
+PASS  I6 No constitution submodule embedded in Herald
+PASS  I7a CLAUDE.md contains spec-change rule anchor
+PASS  I7b AGENTS.md contains spec-change rule anchor
+PASS  I7c HERALD_CONSTITUTION.md §106 contains spec-change rule anchor
+PASS  I8a CLAUDE.md contains §107 end-user-usability covenant anchor
+PASS  I8b AGENTS.md contains §107 end-user-usability covenant anchor
+PASS  I8c HERALD_CONSTITUTION.md §107 contains end-user-usability covenant anchor
+----
+Result: 15 PASS / 0 FAIL
+
+=== STEP 6: quiescence — no mutation markers in commons_messaging/ ===
+PASS: clean (no markers)

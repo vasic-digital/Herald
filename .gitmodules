@@ -43,3 +43,6 @@
 [submodule "submodules/TOON"]
 	path = submodules/TOON
 	url = git@github.com:vasic-digital/TOON.git
+[submodule "submodules/slack-go"]
+	path = submodules/slack-go
+	url = https://github.com/slack-go/slack.git

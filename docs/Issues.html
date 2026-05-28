@@ -47,7 +47,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>23</td>
+<td>24</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -63,11 +63,36 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>r23 (v1.0.0 Batch D — commons_infra pgxTaskRepository) marks
-HRD-085/086/087/088/089 Open→in_progress, REAL-PG verified.</strong>
-Implemented 16 of 17 previously-<code>ErrUnsupported</code>
-<code>pgxTaskRepository</code> methods
-(<code>commons_infra/task_repository.go</code>): HRD-085
+<td><strong>r24 (v0.6.0 Wave 7 T6 — Slack channel adapter) marks HRD-115
+Open→in_progress.</strong> Vendored <code>submodules/slack-go</code> @
+v0.16.0 (commit <code>209ec09</code>) +
+<code>commons_messaging/go.mod</code> <code>replace</code>.
+<code>commons_messaging/channels/slack/</code> (slack.go /
+healthcheck.go / selfidentity.go / send.go / attachments.go /
+subscribe.go) implements <code>channels.Channel</code> (the Wave 7
+interface HRD-110 defined): <code>Send</code> (chat.postMessage),
+<code>SendReply</code>(thread_ts) + <code>SendReplyGeneric</code>
+(interface delegate w/ files.uploadV2 attachment fan-out),
+<code>Subscribe</code> (Socket Mode loop), <code>BotSelfIdentity</code>
+(auth.test → IdentityUserID, cached), <code>DownloadAttachment</code>
+(files.info → content-addressed
+<code>inbox/slack/&lt;sha&gt;.&lt;ext&gt;</code> via
+<code>channels.WriteContentAddressed</code>), <code>HealthCheck</code>.
+URL scheme
+<code>slack://&lt;bot-token&gt;@&lt;workspace&gt;/&lt;channel-id&gt;[?app_token=…]</code>
+(bot-token + channel-id mandatory; app_token required only for
+Subscribe). 22 hermetic httptest tests (33 incl. subtests)
+<code>-race</code> green; inheritance gate 15 PASS / 0 FAIL
+post-<code>.gitmodules</code>-edit;
+<code>TestSlackSatisfiesChannel</code> confirms
+<code>var _ channels.Channel = (*slack.Adapter)(nil)</code> compiles.
+Per plan §T6 in
+<code>docs/superpowers/plans/2026-05-27-wave7-generic-messenger.md</code>.
+<strong>Prior r23 (v1.0.0 Batch D — commons_infra pgxTaskRepository)
+marked HRD-085/086/087/088/089 Open→in_progress, REAL-PG
+verified.</strong> Implemented 16 of 17
+previously-<code>ErrUnsupported</code> <code>pgxTaskRepository</code>
+methods (<code>commons_infra/task_repository.go</code>): HRD-085
 GetByID/Update/Delete (soft-delete), HRD-086
 UpdateStatus/UpdateProgress/UpdateHeartbeat/SaveCheckpoint, HRD-087
 GetByStatus/GetPendingTasks/CountByStatus/GetTaskHistory, HRD-088
@@ -271,7 +296,7 @@ closed HRD-016 (Wave 3b pherald Runner live). r11 closed HRD-011
 <tr>
 <td>Issues</td>
 <td>HRD-008, HRD-015, HRD-019..HRD-025, HRD-029..HRD-056, HRD-081,
-HRD-085..HRD-090, HRD-131</td>
+HRD-085..HRD-090, HRD-115, HRD-131</td>
 </tr>
 <tr>
 <td>Issues summary</td>
@@ -1208,6 +1233,38 @@ extend
 <code>digital.vasic.background.TaskRepository@2d46dd60b2ffcb9d3b584b029b711a6fbc71b296</code>
 (failure-terminal surface — composes with HRD-085 GetByID + HRD-018
 cherald event emission).</td>
+</tr>
+<tr>
+<td>HRD-115</td>
+<td>task</td>
+<td>in_progress</td>
+<td>high</td>
+<td>Wave 7 T6 — Slack channel adapter (Socket Mode):
+<code>commons_messaging/channels/slack/</code> implements
+<code>channels.Channel</code> —
+<code>New</code>/<code>NewWithBaseURL</code>/<code>NewFromURL</code>
+parsing
+<code>slack://&lt;bot-token&gt;@&lt;workspace&gt;/&lt;channel-id&gt;[?app_token=…]</code>,
+<code>Send</code> (chat.postMessage), <code>SendReply</code>(thread_ts)
++ <code>SendReplyGeneric</code> (interface delegate w/ files.uploadV2
+attachment fan-out), <code>Subscribe</code> (Socket Mode),
+<code>BotSelfIdentity</code> (auth.test → IdentityUserID, cached),
+<code>DownloadAttachment</code> (files.info → content-addressed
+<code>inbox/slack/&lt;sha&gt;.&lt;ext&gt;</code> via
+channels.WriteContentAddressed), <code>HealthCheck</code>. Vendored
+<code>submodules/slack-go</code> @ v0.16.0 (commit <code>209ec09</code>)
++ <code>commons_messaging/go.mod</code> replace per Herald §11.4.74. 22
+hermetic httptest tests (33 incl. subtests) <code>-race</code> green;
+inheritance gate 15/0 post-.gitmodules-edit;
+<code>TestSlackSatisfiesChannel</code> confirms interface
+satisfaction.</td>
+<td>2026-05-28</td>
+<td>2026-05-28</td>
+<td>docs/superpowers/plans/2026-05-27-wave7-generic-messenger.md §T6;
+spec V3 §11 Slack + §32.2; evidence
+<code>docs/qa/HRD-115-20260528T080000Z/</code>; Catalogue-Check: reuse
+<code>slack-go/slack@209ec09</code> (vendored submodule v0.16.0,
+2026-05-28).</td>
 </tr>
 <tr>
 <td>HRD-131</td>

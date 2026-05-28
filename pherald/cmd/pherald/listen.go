@@ -68,10 +68,10 @@ import (
 
 	"github.com/vasic-digital/herald/commons"
 	"github.com/vasic-digital/herald/commons_messaging/channels"
-	// tgram is blank-imported for its init() registration with the
-	// channels registry (Wave 7 T2) — pherald listen resolves "tgram" by
-	// name via channels.New. The Slack adapter (Wave 7 T6) will be added
-	// here the same way once it lands.
+	// tgram + slack are blank-imported for their init() registration with
+	// the channels registry (Wave 7 T2 / T6) — pherald listen resolves
+	// "tgram" and "slack" by name via channels.New, driven by HERALD_CHANNELS.
+	_ "github.com/vasic-digital/herald/commons_messaging/channels/slack"
 	_ "github.com/vasic-digital/herald/commons_messaging/channels/tgram"
 	"github.com/vasic-digital/herald/commons_messaging/dispatch/claude_code"
 	"github.com/vasic-digital/herald/pherald/internal/inbound"
