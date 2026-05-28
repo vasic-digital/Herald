@@ -47,7 +47,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>26</td>
+<td>27</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -63,9 +63,28 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>r26 (v0.6.0 Wave 7 T8 — spec V3 r12→r13) marks HRD-117
-Open→in_progress.</strong> Spec edits document the already-shipped Wave
-7 framework + Slack: §11.0 gains the inbound-runtime extension note
+<td><strong>r27 (v0.6.0 Wave 7 T9 — e2e multi-channel invariants) marks
+HRD-118 Open→in_progress.</strong>
+<code>scripts/e2e_bluff_hunt.sh</code> gains <strong>E124-E131</strong>
+(8 invariants anchored to live test names already shipped in
+HRD-110..117): E124 channels registry (resolve + unknown-errors), E125
+tgram self-filter post-Wave-7 generalization
+(<code>TestSubscribeBotSelfFilter</code>), E126 slack adapter
+(TestSlackSatisfiesChannel + auth.test + chat.postMessage + registry
+wiring + sc_anchor to T6 docs/qa), <strong>E127 LIVE Slack</strong>
+triple-guarded (<code>HERALD_SLACK_BOT_TOKEN</code> +
+<code>HERALD_SLACK_CHANNEL_ID</code> +
+<code>grep TestSlack_Live_Send</code> — the third guard prevents the
+§107 "no tests to run = exit 0 = PASS-bluff" gotcha when env is set but
+no live-test exists), E128 per-channel inbox isolation +
+content-addressed idempotency, E129 generalized IsSelfEcho (Username +
+UserID + empty-self echo-loop hazard), E130 multi-channel pherald listen
+wiring (<code>TestListenWiresHandlerAndExitsOnCancel</code>), E131
+qaherald messenger.Build dispatch (tgram + slack + unknown-errors-loud +
+sc_anchor to T7 docs/qa). <strong>Prior r26 (v0.6.0 Wave 7 T8 — spec V3
+r12→r13) marked HRD-117 Open→in_progress.</strong> Spec edits document
+the already-shipped Wave 7 framework + Slack: §11.0 gains the
+inbound-runtime extension note
 (<code>commons_messaging/channels.Channel</code> embeds
 <code>commons.Channel</code> + <code>SendReplyGeneric</code> +
 <code>BotSelfIdentity</code> + <code>DownloadAttachment</code> +
@@ -75,7 +94,7 @@ Open→in_progress.</strong> Spec edits document the already-shipped Wave
 <tr>
 <td>Issues</td>
 <td>HRD-008, HRD-015, HRD-019..HRD-025, HRD-029..HRD-056, HRD-081,
-HRD-085..HRD-090, HRD-115, HRD-116, HRD-117, HRD-131</td>
+HRD-085..HRD-090, HRD-115..HRD-118, HRD-131</td>
 </tr>
 <tr>
 <td>Issues summary</td>
@@ -1094,6 +1113,28 @@ T8).</td>
 <td>spec V3 r13 §11.0/§32.2/§43;
 docs/superpowers/plans/2026-05-27-wave7-generic-messenger.md §T8;
 Catalogue-Check: n/a (doc-only).</td>
+</tr>
+<tr>
+<td>HRD-118</td>
+<td>task</td>
+<td>in_progress</td>
+<td>high</td>
+<td>Wave 7 T9 — e2e_bluff_hunt.sh E124-E131 multi-channel invariants:
+E124 channels registry resolution, E125 tgram self-filter post-Wave-7
+(pure-refactor invariant), E126 slack adapter (interface satisfied +
+auth.test + chat.postMessage wire bytes + registry wiring), <strong>E127
+LIVE Slack</strong> (env-gated
+<code>HERALD_SLACK_BOT_TOKEN</code>+<code>HERALD_SLACK_CHANNEL_ID</code>+<code>TestSlack_Live_Send</code>
+triple-guard to prevent silent "no tests to run" PASS-bluff), E128
+per-channel inbox isolation, E129 generalized IsSelfEcho
+(Username+UserID+empty-self), E130 multi-channel pherald listen wiring,
+E131 qaherald messenger.Build dispatch. sc_anchor on the T6+T7 committed
+transcripts.</td>
+<td>2026-05-28</td>
+<td>2026-05-28</td>
+<td>spec V3 r13 §11.4;
+docs/superpowers/plans/2026-05-27-wave7-generic-messenger.md §T9;
+Catalogue-Check: n/a (e2e wiring against shipped tests).</td>
 </tr>
 <tr>
 <td>HRD-131</td>

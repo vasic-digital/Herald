@@ -2331,6 +2331,44 @@ else
 fi
 sc_anchor "E123" "docs/qa/HRD-085-089-20260528T070000Z/integration_realpg.log" "QA-ANCHOR: HRD-085-089-BATCHD-REALPG-INTEGRATION-20260528"
 
+# ---- E124-E131: Wave 7 multi-channel framework + Slack invariants (HRD-118) ----
+# All anchored to live test names in the channels framework (HRD-110..114) +
+# slack adapter (HRD-115) + qaherald messenger (HRD-116). E127 is LIVE Slack —
+# env-gated like E34/E70: runs against a real workspace when HERALD_SLACK_BOT_TOKEN
+# + HERALD_SLACK_CHANNEL_ID are present, else SKIP-with-reason citing the
+# committed T6/T7 hermetic transcripts as the standing §107 evidence.
+
+check "E124 channels registry resolves registered name + unknown-name errors (Wave 7 T2)" \
+    "go test -race -count=1 -run 'TestRegistryResolvesRegisteredChannel|TestRegistryUnknownChannelErrors' ./commons_messaging/channels/..."
+
+check "E125 tgram bot self-filter still drops self-echo + keeps cross-bot (post-Wave-7 BotSelfIdentity generalization, T1/T4 pure-refactor invariant)" \
+    "go test -race -count=1 -run 'TestSubscribeBotSelfFilter' ./commons_messaging/channels/tgram/..."
+
+check "E126 slack adapter — channels.Channel satisfied + auth.test self-identity + chat.postMessage wire bytes + init() registry wiring (T6)" \
+    "go test -race -count=1 -run 'TestSlackSatisfiesChannel|TestSlackRegistryWiring|TestSlackBotSelfIdentityViaAuthTest|TestSlackSendCrossesWireWithText' ./commons_messaging/channels/slack/..."
+sc_anchor "E126" "docs/qa/HRD-115-20260528T080000Z/transcript.txt" "QA-ANCHOR: HRD-115-WAVE7-T6-SLACK-ADAPTER-20260528"
+
+if [ -n "${HERALD_SLACK_BOT_TOKEN:-}" ] && [ -n "${HERALD_SLACK_CHANNEL_ID:-}" ] \
+   && grep -q 'func TestSlack_Live_Send' qaherald/internal/messenger/*_test.go 2>/dev/null; then
+    check "E127 LIVE Slack Send + reply round-trip via qaherald MessengerClient (real workspace)" \
+        "go test -tags=integration -count=1 -run TestSlack_Live_Send ./qaherald/internal/messenger/... -timeout=120s"
+else
+    echo "SKIP  E127 (live Slack round-trip requires HERALD_SLACK_BOT_TOKEN + HERALD_SLACK_CHANNEL_ID *and* a TestSlack_Live_Send test in qaherald/internal/messenger/; the latter is a future operator-evidence task — running -run against a missing test would silently 'no tests to run' = PASS-bluff, so guard on both. Hermetic round-trip evidence stands at docs/qa/HRD-115-20260528T080000Z/ + docs/qa/HRD-116-20260528T090000Z/; §11.4.3 explicit SKIP-with-reason)"
+fi
+
+check "E128 inbox/<channel>/<sha256>.<ext> per-channel isolation + content-addressed idempotency (T3)" \
+    "go test -race -count=1 -run 'TestInboxDirIsPerChannel|TestWriteContentAddressedHashesAndIsIdempotent' ./commons_messaging/channels/..."
+
+check "E129 generalized self-filter — IdentityUsername + IdentityUserID + empty-self echo-loop hazard (T4)" \
+    "go test -race -count=1 -run 'TestIsSelfEchoUsername|TestIsSelfEchoUserID|TestIsSelfEchoEmptySelfNeverEchoes' ./commons_messaging/channels/..."
+
+check "E130 multi-channel pherald listen — Subscribers map dispatch + clean ctx-cancel exit (T5)" \
+    "go test -race -count=1 -run 'TestListenWiresHandlerAndExitsOnCancel' ./pherald/cmd/pherald/..."
+
+check "E131 qaherald messenger.Build(BuildConfig) — tgram + slack + unknown-channel-errors-loud (T7)" \
+    "go test -race -count=1 -run 'TestBuilderTgram|TestBuilderSlack|TestBuilderUnknownErrors' ./qaherald/internal/messenger/..."
+sc_anchor "E131" "docs/qa/HRD-116-20260528T090000Z/transcript.txt" "QA-ANCHOR: HRD-116-WAVE7-T7-QAHERALD-SLACK-CLIENT-20260528"
+
 # ----------------------------------------------------------------------
 echo ""
 echo "===================================================="
