@@ -62,14 +62,17 @@ func TestNew_ScaffoldRejectsBadConfig(t *testing.T) {
 	}
 }
 
-// TestNew_ScaffoldReturnsErrNotImplemented confirms that during the Track-B
-// scaffold phase (no gotd/td wiring yet) every runtime method returns
-// ErrNotImplemented — loudly visible, never silent no-op. §107 anti-bluff.
-func TestNew_ScaffoldReturnsErrNotImplemented(t *testing.T) {
+// TestNew_LiveReturnsRuntimeErrorsBeforeConnect — the live client must
+// reject runtime calls before Connect with a clear "not connected" error
+// (no nil deref, no silent zero return). §107 anti-bluff posture: every
+// pre-Connect call surfaces a useful diagnostic.
+func TestNew_LiveReturnsRuntimeErrorsBeforeConnect(t *testing.T) {
+	tmp := t.TempDir()
 	cfg := Config{
-		AppID:   12345678,
-		AppHash: "0123456789abcdef0123456789abcdef",
-		Phone:   "+12025551234",
+		AppID:       12345678,
+		AppHash:     "0123456789abcdef0123456789abcdef",
+		Phone:       "+12025551234",
+		SessionFile: filepath.Join(tmp, "session.bin"),
 	}
 	c, err := New(cfg)
 	if err != nil {
@@ -78,18 +81,16 @@ func TestNew_ScaffoldReturnsErrNotImplemented(t *testing.T) {
 	t.Cleanup(func() { _ = c.Close() })
 
 	ctx := context.Background()
-
-	if err := c.Connect(ctx); !errors.Is(err, ErrNotImplemented) {
-		t.Errorf("Connect: want ErrNotImplemented, got %v", err)
+	// SendMessage / WaitForReply / WhoAmI must error (not nil-deref)
+	// before Connect has been called.
+	if _, err := c.SendMessage(ctx, -100123456, "test"); err == nil {
+		t.Errorf("SendMessage pre-Connect: want non-nil error")
 	}
-	if _, err := c.SendMessage(ctx, -100123456, "test"); !errors.Is(err, ErrNotImplemented) {
-		t.Errorf("SendMessage: want ErrNotImplemented, got %v", err)
+	if _, err := c.WaitForReply(ctx, -100123456, func(Message) bool { return true }); err == nil {
+		t.Errorf("WaitForReply pre-Connect: want non-nil error")
 	}
-	if _, err := c.WaitForReply(ctx, -100123456, func(Message) bool { return true }); !errors.Is(err, ErrNotImplemented) {
-		t.Errorf("WaitForReply: want ErrNotImplemented, got %v", err)
-	}
-	if _, _, err := c.WhoAmI(ctx); !errors.Is(err, ErrNotImplemented) {
-		t.Errorf("WhoAmI: want ErrNotImplemented, got %v", err)
+	if _, _, err := c.WhoAmI(ctx); err == nil {
+		t.Errorf("WhoAmI pre-Connect: want non-nil error")
 	}
 }
 

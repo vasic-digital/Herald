@@ -157,11 +157,6 @@ var (
 	// ErrFloodWait wraps Telegram's FLOOD_WAIT_<N> response. Use
 	// errors.As to extract the retry-after duration.
 	ErrFloodWait = errors.New("mtproto: FLOOD_WAIT")
-
-	// ErrNotImplemented is returned by the scaffold stub during the period
-	// between credentials being requested (2026-05-28) and the live
-	// implementation landing. Will be removed when Track B completes.
-	ErrNotImplemented = errors.New("mtproto: not yet implemented — Track B scaffold; awaiting operator credentials")
 )
 
 // FloodWaitError carries the retry-after duration. Returned wrapped in
@@ -202,37 +197,6 @@ func (c *Config) Validate() error {
 	return nil
 }
 
-// scaffoldClient is the placeholder Client implementation that ships with
-// the scaffold. Every method returns ErrNotImplemented so a Track-B-incomplete
-// state is loudly visible — never silently no-ops, never returns synthetic
-// success per §107 anti-bluff.
-type scaffoldClient struct {
-	cfg Config
-}
-
-// New constructs a Client from Config. Returns ErrInvalidConfig if Config
-// is malformed. During the Wave 8 Track B scaffold phase, the returned
-// Client's runtime methods all return ErrNotImplemented; once gotd/td is
-// wired up, this constructor returns a fully-functional Client.
-func New(cfg Config) (Client, error) {
-	if err := cfg.Validate(); err != nil {
-		return nil, ErrInvalidConfig
-	}
-	return &scaffoldClient{cfg: cfg}, nil
-}
-
-func (s *scaffoldClient) Connect(ctx context.Context) error { return ErrNotImplemented }
-
-func (s *scaffoldClient) SendMessage(ctx context.Context, chatID int64, text string) (int64, error) {
-	return 0, ErrNotImplemented
-}
-
-func (s *scaffoldClient) WaitForReply(ctx context.Context, chatID int64, matcher func(Message) bool) (Message, error) {
-	return Message{}, ErrNotImplemented
-}
-
-func (s *scaffoldClient) WhoAmI(ctx context.Context) (int64, string, error) {
-	return 0, "", ErrNotImplemented
-}
-
-func (s *scaffoldClient) Close() error { return nil }
+// New is defined in client_live.go — it returns a *liveClient (the
+// gotd/td-backed implementation). The scaffoldClient that used to live
+// here has been removed in favour of the live wiring.
