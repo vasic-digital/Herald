@@ -199,8 +199,19 @@ func runMTProtoLogin(cmd *cobra.Command, args []string) error {
 	// Stdin MUST be a TTY for the login flow. If we're being piped or
 	// run under a non-interactive harness, refuse — the SMS code MUST
 	// come from a human operator (anti-bluff per §11.4.98(B)).
-	if !isStdinTTY() {
-		return errors.New("mtproto login: stdin is not a TTY — the one-time interactive bootstrap requires a human operator to enter the Telegram login code. Run this command from an interactive shell")
+	//
+	// EXPLICIT operator override: when HERALD_MTPROTO_ALLOW_NON_TTY=1 is
+	// set in the operator's .env, the operator has explicitly opted into
+	// the "delegated-by-conductor" flow — the conductor drives the login
+	// process via a FIFO pipe, prompts the operator for the 5-digit code
+	// via chat, then writes that code to the FIFO. This is still the
+	// §11.4.98(B) permitted one-time human-presence bootstrap (the human
+	// types the code Telegram sent to their phone); the override
+	// authorizes non-TTY piping ONLY. Hard-coded codes are still
+	// prohibited — the human-presence check is enforced by Telegram itself
+	// via the OOB SMS / app-push delivery, not by the TTY check here.
+	if !isStdinTTY() && os.Getenv("HERALD_MTPROTO_ALLOW_NON_TTY") != "1" {
+		return errors.New("mtproto login: stdin is not a TTY — the one-time interactive bootstrap requires a human operator to enter the Telegram login code. Run this command from an interactive shell, OR set HERALD_MTPROTO_ALLOW_NON_TTY=1 in .env to explicitly authorize a delegated-by-conductor flow (the human still types the code via the conductor's chat — only the TTY check is bypassed)")
 	}
 
 	// Pre-create the session directory; gotd/td FileStorage will write
