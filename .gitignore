@@ -26,6 +26,8 @@ go.work.sum
 
 # env file
 .env
+.env.local
+.env.*
 
 # Editor/IDE
 # .idea/
@@ -47,3 +49,6 @@ qa-results/
 # The transient SQLite WAL/SHM sidecars are the only DB files that stay ignored:
 docs/.workable_items.db-shm
 docs/.workable_items.db-wal
+
+# Runtime artifacts (pid files, pherald background process IDs)
+*.pid
