@@ -47,7 +47,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>27</td>
+<td>28</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -63,8 +63,28 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>r27 (v0.6.0 Wave 7 T9 — e2e multi-channel invariants) marks
-HRD-118 Open→in_progress.</strong>
+<td><strong>r28 (v0.6.0 Wave 7 T10 — paired §1.1 mutation gate) marks
+HRD-119 Open→in_progress.</strong>
+<code>tests/test_wave7_mutation_meta.sh</code> ships 3 paired hermetic
+mutations against the Wave 7 multi-channel framework —
+<strong>M1</strong> blank <code>IsSelfEcho</code> (echo-loop hazard),
+<strong>M2</strong> drop slack <code>channels.Register</code> in
+<code>init()</code> (registry-resolution broken), <strong>M3</strong>
+drop slack <code>thread_ts</code> append (reply threading degrades) —
+each mutated build observed FAIL on the matching e2e detector + restored
+byte-for-byte + post-restore PASS. New
+<code>TestSlackRegisteredViaInit</code> detector added to
+<code>slack_test.go</code> (it asserts <code>channels.Names()</code>
+contains <code>"slack"</code> — the only test that would FAIL under M2
+specifically; without it M2 would silently "no tests to run"
+PASS-bluff). Gate run = <strong>4 PASS / 0 FAIL</strong> (3 mutations +
+1 quiescence assertion, no <code>MUTATED W7-</code> residue in 3
+production target files post-restore). Reuses Wave 6 canonical lockfile
++ trap + assert_restored + pre-flight guard verbatim.
+<strong>FOREGROUND-ONLY</strong> (§107.y /
+<code>feedback_no_concurrent_mutation_gates</code> operator mandate).
+<strong>Prior r27 (v0.6.0 Wave 7 T9 — e2e multi-channel invariants)
+marked HRD-118 Open→in_progress.</strong>
 <code>scripts/e2e_bluff_hunt.sh</code> gains <strong>E124-E131</strong>
 (8 invariants anchored to live test names already shipped in
 HRD-110..117): E124 channels registry (resolve + unknown-errors), E125
@@ -94,7 +114,7 @@ inbound-runtime extension note
 <tr>
 <td>Issues</td>
 <td>HRD-008, HRD-015, HRD-019..HRD-025, HRD-029..HRD-056, HRD-081,
-HRD-085..HRD-090, HRD-115..HRD-118, HRD-131</td>
+HRD-085..HRD-090, HRD-115..HRD-119, HRD-131</td>
 </tr>
 <tr>
 <td>Issues summary</td>
@@ -1135,6 +1155,36 @@ transcripts.</td>
 <td>spec V3 r13 §11.4;
 docs/superpowers/plans/2026-05-27-wave7-generic-messenger.md §T9;
 Catalogue-Check: n/a (e2e wiring against shipped tests).</td>
+</tr>
+<tr>
+<td>HRD-119</td>
+<td>task</td>
+<td>in_progress</td>
+<td>high</td>
+<td>Wave 7 T10 — paired §1.1 mutation gate
+<code>tests/test_wave7_mutation_meta.sh</code> (4 PASS / 0 FAIL):
+<strong>M1</strong> blank <code>IsSelfEcho</code> →
+<code>TestIsSelfEchoUsername</code> FAILs (echo-loop hazard caught) →
+restored → PASS; <strong>M2</strong> drop slack
+<code>channels.Register</code> in <code>init()</code> → new
+<code>TestSlackRegisteredViaInit</code> FAILs → restored → PASS;
+<strong>M3</strong> drop slack <code>thread_ts</code> append in
+<code>send.go</code> → <code>TestSlackSendReplyUsesThreadTS</code> FAILs
+→ restored → PASS; <strong>+ quiescence</strong> assertion (no
+<code>MUTATED W7-</code> residue in 3 production target files
+post-restore). Reuses Wave 6 canonical
+<code>.git/MUTATION_IN_PROGRESS</code> lockfile + trap-on-EXIT +
+pre-flight dirty-tree-and-residue guard + byte-for-byte
+<code>assert_restored</code>. FOREGROUND-ONLY (§107.y /
+no-concurrent-mutation operator mandate).</td>
+<td>2026-05-28</td>
+<td>2026-05-28</td>
+<td>spec V3 §11.4 + §1.1 + §107.y;
+docs/superpowers/plans/2026-05-27-wave7-generic-messenger.md §T10;
+canonical precedent <code>tests/test_wave6_mutation_meta.sh</code>;
+evidence <code>docs/qa/HRD-119-20260528T100000Z/transcript.txt</code>
+(anchor <code>QA-ANCHOR: HRD-119-WAVE7-MUTATION-GATE-20260528</code>);
+Catalogue-Check: n/a (gate).</td>
 </tr>
 <tr>
 <td>HRD-131</td>

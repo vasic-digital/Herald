@@ -81,6 +81,22 @@ func TestSlackSatisfiesChannel(t *testing.T) {
 	}
 }
 
+// TestSlackRegisteredViaInit is the §1.1 paired-mutation detector for Wave 7
+// M2 — proves slack.init() actually called channels.Register so the global
+// Names() catalogue includes "slack". The Wave 7 mutation gate
+// (tests/test_wave7_mutation_meta.sh) comments out the Register call and
+// re-runs this test; with the registration gone Names() lacks "slack" and
+// this assertion FAILs, observing the mutation. Restoring the source returns
+// the test to PASS — the paired §1.1 contract.
+func TestSlackRegisteredViaInit(t *testing.T) {
+	for _, n := range channels.Names() {
+		if n == string(commons.ChannelSlack) {
+			return
+		}
+	}
+	t.Fatalf("slack not registered via init(); Names()=%v", channels.Names())
+}
+
 // TestSlackRegistryWiring proves the init() registers "slack" with the
 // channels registry so pherald listen can resolve it by name (Wave 7 T6
 // step 5 — the registration is the runtime contract).

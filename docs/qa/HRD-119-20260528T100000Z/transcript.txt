@@ -1,0 +1,37 @@
+QA-ANCHOR: HRD-119-WAVE7-MUTATION-GATE-20260528
+Repo: /Users/milosvasic/Projects/Herald
+Date: 2026-05-28T05:10:49Z
+Gate: tests/test_wave7_mutation_meta.sh
+----
+
+== M1-self-echo-filter ==
+  → applying mutation
+  → mutation marker present; running detector (expect FAIL)
+  ✓ detector FAILed as expected on mutated build
+  → restoring tree
+  → post-restore detector (expect PASS)
+PASS  M1-self-echo-filter (mutation observable + restore clean + post-restore PASS)
+
+== M2-slack-registry ==
+  → applying mutation
+  → mutation marker present; running detector (expect FAIL)
+  ✓ detector FAILed as expected on mutated build
+  → restoring tree
+  → post-restore detector (expect PASS)
+PASS  M2-slack-registry (mutation observable + restore clean + post-restore PASS)
+
+== M3-thread-ts ==
+  → applying mutation
+  → mutation marker present; running detector (expect FAIL)
+  ✓ detector FAILed as expected on mutated build
+  → restoring tree
+  → post-restore detector (expect PASS)
+PASS  M3-thread-ts (mutation observable + restore clean + post-restore PASS)
+
+== Quiescence: working tree free of MUTATED W7-M* markers ==
+PASS  Quiescence: no MUTATED W7-M* markers leaked into tracked source
+
+----
+Result: 4 PASS / 0 FAIL
+PASS: wave7 mutation gate (3 paired)
+[wave7-mutation] cleanup: restoring mutated files + clearing lockfile
