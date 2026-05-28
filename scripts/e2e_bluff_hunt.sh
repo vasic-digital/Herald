@@ -2385,6 +2385,18 @@ check "E133 tgram chaos — getUpdates poller resilience under 4-mode fault inje
     "go test -race -count=1 -run 'TestTgram_Chaos_GetUpdatesPollerResilience' ./commons_messaging/channels/tgram/..."
 sc_anchor "E133" "${SC_TGRAM_DIR:+${SC_TGRAM_DIR}/stress_chaos/poller_chaos/chaos_assertion.txt}" "status=PASS"
 
+# ---- E134: Wave 8 MTProto scaffold (Track B prep — §11.4.98 / §108.m) ----
+# Validates the MTProto user-account harness scaffold compiles + its hermetic
+# tests pass with -race -count=3 determinism. The runtime implementation is
+# blocked on operator MTProto credentials (see docs/requirements/blockers/
+# missing_env_variables.md); this invariant covers the scaffold layer so a
+# regression in Config.Validate / sanitizer / session helpers is caught at
+# the gate. Once Track B lands the gotd/td-backed runtime, this invariant
+# will gain the autonomous closed-loop coverage that replaces the SKIPped
+# Wave 6 live-loop test.
+check "E134 qaherald/internal/mtproto scaffold — Config.Validate + sanitizer (HRD-133 parity) + session helpers (-race -count=3 deterministic)" \
+    "go test -race -count=3 ./qaherald/internal/mtproto/..."
+
 # ----------------------------------------------------------------------
 echo ""
 echo "===================================================="
