@@ -1,0 +1,20 @@
+=== RUN   TestMTProto_Wave65_LifecycleAutonomous
+    mtproto_wave65_lifecycle_test.go:79: MTProto active: @milos85vasic (user_id=2057253161)
+=== RUN   TestMTProto_Wave65_LifecycleAutonomous/Help_FastPath
+    mtproto_wave65_lifecycle_test.go:123: sent message_id=211456 text="Help | herald-mtproto-w65-Help_FastPath-1779977819469933000"
+    mtproto_wave65_lifecycle_test.go:142: WaitForReply: context deadline exceeded
+=== RUN   TestMTProto_Wave65_LifecycleAutonomous/Status_FastPath
+    mtproto_wave65_lifecycle_test.go:123: sent message_id=211457 text="Status | herald-mtproto-w65-Status_FastPath-1779977849471840000"
+    mtproto_wave65_lifecycle_test.go:142: WaitForReply: context deadline exceeded
+=== RUN   TestMTProto_Wave65_LifecycleAutonomous/Continue_FastPath
+    mtproto_wave65_lifecycle_test.go:123: sent message_id=211458 text="Continue | herald-mtproto-w65-Continue_FastPath-1779977879473659000"
+    mtproto_wave65_lifecycle_test.go:142: WaitForReply: context deadline exceeded
+=== NAME  TestMTProto_Wave65_LifecycleAutonomous
+    mtproto_wave65_lifecycle_test.go:150: ZERO Wave 6.5 scenarios passed via MTProto autonomous path — §11.4.98 FAIL
+--- FAIL: TestMTProto_Wave65_LifecycleAutonomous (90.58s)
+    --- FAIL: TestMTProto_Wave65_LifecycleAutonomous/Help_FastPath (30.00s)
+    --- FAIL: TestMTProto_Wave65_LifecycleAutonomous/Status_FastPath (30.00s)
+    --- FAIL: TestMTProto_Wave65_LifecycleAutonomous/Continue_FastPath (30.00s)
+FAIL
+FAIL	github.com/vasic-digital/herald/qaherald/internal/lifecycle	91.351s
+FAIL

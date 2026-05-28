@@ -1,0 +1,20 @@
+=== RUN   TestMTProto_Wave6_AutonomousClosedLoop
+    mtproto_wave6_loop_test.go:106: pherald built at /var/folders/t3/dmp1fb1d61xbl27trnjtr0_c0000gn/T/TestMTProto_Wave6_AutonomousClosedLoop1042248315/001/pherald
+    mtproto_wave6_loop_test.go:126: MTProto active: @milos85vasic (user_id=2057253161)
+    mtproto_wave6_loop_test.go:155: pherald listen PID=35048 (project=Herald-MTProto-Test-1779978008000132000, journal=/var/folders/t3/dmp1fb1d61xbl27trnjtr0_c0000gn/T/TestMTProto_Wave6_AutonomousClosedLoop1042248315/001/qa-journal)
+    mtproto_wave6_loop_test.go:178: MTProto sent message_id=211459 text="herald-mtproto-wave6-closed-loop-1779978011003183000"
+    mtproto_wave6_loop_test.go:181: waiting up to 180s for pherald → claude_code → SendReply round-trip...
+    mtproto_wave6_loop_test.go:190: WaitForReply: context deadline exceeded — pherald log tail:
+        pherald listen: starting Telegram getUpdates long-poll loop
+        pherald listen: QA journaling enabled — /var/folders/t3/dmp1fb1d61xbl27trnjtr0_c0000gn/T/TestMTProto_Wave6_AutonomousClosedLoop1042248315/001/qa-journal
+        pherald listen: docs dir docs; 1 operator(s) authorised for Done:/Reopen:
+        2026/05/28 19:21:37 359150584 inbound: send reply: tgram.SendReply: tgram.ensureBot: connect to Bot API (getMe): telebot: Post "https://api.telegram.org/bot<token>/getMe": read tcp 10.1.111.44:59899->149.154.166.110:443: read: connection reset by peer
+        2026/05/28 19:21:37 359150583 inbound: send reply: tgram.SendReply: tgram.ensureBot: connect to Bot API (getMe): telebot: Post "https://api.telegram.org/bot<token>/getMe": read tcp 10.1.111.44:59899->149.154.166.110:443: read: connection reset by peer
+        2026/05/28 19:21:37 359150588 inbound: send reply: tgram.SendReply: tgram.ensureBot: connect to Bot API (getMe): telebot: Post "https://api.telegram.org/bot<token>/getMe": read tcp 10.1.111.44:59899->149.154.166.110:443: read: connection reset by peer
+        2026/05/28 19:21:37 359150586 inbound: send reply: tgram.SendReply: tgram.ensureBot: connect to Bot API (getMe): telebot: Post "https://api.telegram.org/bot<token>/getMe": read tcp 10.1.111.44:59899->149.154.166.110:443: read: connection reset by peer
+        2026/05/28 19:21:37 359150585 inbound: send reply: tgram.SendReply: tgram.ensureBot: connect to Bot API (getMe): telebot: Post "https://api.telegram.org/bot<token>/getMe": read tcp 10.1.111.44:59899->149.154.166.110:443: read: connection reset by peer
+        2026/05/28 19:22:53 359150587 inbound: send reply: tgram.SendReply: tgram.ensureBot: connect to Bot API (getMe): telebot: Post "https://api.telegram.org/bot<token>/getMe": read tcp 10.1.111.44:59899->149.154.166.110:443: read: connection reset by peer
+--- FAIL: TestMTProto_Wave6_AutonomousClosedLoop (186.29s)
+FAIL
+FAIL	github.com/vasic-digital/herald/qaherald/internal/lifecycle	186.876s
+FAIL

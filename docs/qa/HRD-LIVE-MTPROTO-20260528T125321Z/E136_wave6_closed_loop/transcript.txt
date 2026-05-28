@@ -1,0 +1,12 @@
+=== RUN   TestMTProto_Wave6_AutonomousClosedLoop
+    mtproto_wave6_loop_test.go:106: pherald built at /var/folders/t3/dmp1fb1d61xbl27trnjtr0_c0000gn/T/TestMTProto_Wave6_AutonomousClosedLoop4005951064/001/pherald
+    mtproto_wave6_loop_test.go:126: MTProto active: @milos85vasic (user_id=2057253161)
+    mtproto_wave6_loop_test.go:151: pherald listen PID=7394 (project=Herald-MTProto-Test-1779972847278573000, journal=/var/folders/t3/dmp1fb1d61xbl27trnjtr0_c0000gn/T/TestMTProto_Wave6_AutonomousClosedLoop4005951064/001/qa-journal)
+    mtproto_wave6_loop_test.go:174: MTProto sent message_id=211435 text="herald-mtproto-wave6-closed-loop-1779972850281048000"
+    mtproto_wave6_loop_test.go:177: waiting up to 180s for pherald → claude_code → SendReply round-trip...
+    mtproto_wave6_loop_test.go:186: WaitForReply: getHistory: rpcDoRequest: retryUntilAck: engine forcibly closed: context canceled — pherald log tail:
+        pherald: pherald listen: docs Issues.md not found at docs/Issues.md — set --docs-dir or chdir to repo root: stat docs/Issues.md: no such file or directory
+--- FAIL: TestMTProto_Wave6_AutonomousClosedLoop (185.47s)
+FAIL
+FAIL	github.com/vasic-digital/herald/qaherald/internal/lifecycle	185.756s
+FAIL

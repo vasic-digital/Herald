@@ -1,0 +1,8 @@
+=== RUN   TestMTProto_Subscribe_AutonomousRoundTrip
+    mtproto_subscribe_test.go:78: MTProto user active: @milos85vasic (user_id=2057253161)
+    mtproto_subscribe_test.go:84: baseline getUpdates max_update_id=0
+    mtproto_subscribe_test.go:91: MTProto sent message_id=211433 text="herald-mtproto-autonomous-1779972819001316000"
+    mtproto_subscribe_test.go:128: PASS: autonomous round-trip — bot saw update_id=359150583 carrying our MTProto-sent text
+--- PASS: TestMTProto_Subscribe_AutonomousRoundTrip (1.30s)
+PASS
+ok  	github.com/vasic-digital/herald/qaherald/internal/lifecycle	1.998s

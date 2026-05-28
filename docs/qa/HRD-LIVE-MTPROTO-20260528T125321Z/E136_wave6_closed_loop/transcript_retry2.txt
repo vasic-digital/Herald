@@ -1,0 +1,16 @@
+=== RUN   TestMTProto_Wave6_AutonomousClosedLoop
+    mtproto_wave6_loop_test.go:108: pherald built at /var/folders/t3/dmp1fb1d61xbl27trnjtr0_c0000gn/T/TestMTProto_Wave6_AutonomousClosedLoop3192494180/001/pherald
+    mtproto_wave6_loop_test.go:128: MTProto active: @milos85vasic (user_id=2057253161)
+    mtproto_wave6_loop_test.go:157: pherald listen PID=48865 (project=Herald-MTProto-Test-1779978359096767000, journal=/var/folders/t3/dmp1fb1d61xbl27trnjtr0_c0000gn/T/TestMTProto_Wave6_AutonomousClosedLoop3192494180/001/qa-journal)
+    mtproto_wave6_loop_test.go:163: pre-ack: queue already empty
+    mtproto_wave6_loop_test.go:186: MTProto sent message_id=211460 text="herald-mtproto-wave6-closed-loop-1779978362523769000"
+    mtproto_wave6_loop_test.go:189: waiting up to 180s for pherald → claude_code → SendReply round-trip...
+    mtproto_wave6_loop_test.go:198: WaitForReply: context deadline exceeded — pherald log tail:
+        pherald listen: starting Telegram getUpdates long-poll loop
+        pherald listen: QA journaling enabled — /var/folders/t3/dmp1fb1d61xbl27trnjtr0_c0000gn/T/TestMTProto_Wave6_AutonomousClosedLoop3192494180/001/qa-journal
+        pherald listen: docs dir docs; 1 operator(s) authorised for Done:/Reopen:
+        2026/05/28 19:26:16 359150589 inbound: send reply: tgram.SendReply: empty text
+--- FAIL: TestMTProto_Wave6_AutonomousClosedLoop (185.79s)
+FAIL
+FAIL	github.com/vasic-digital/herald/qaherald/internal/lifecycle	186.067s
+FAIL

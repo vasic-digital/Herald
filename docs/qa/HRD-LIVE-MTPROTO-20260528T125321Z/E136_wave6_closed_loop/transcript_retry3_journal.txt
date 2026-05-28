@@ -1,0 +1,18 @@
+=== RUN   TestMTProto_Wave6_AutonomousClosedLoop
+    mtproto_wave6_loop_test.go:108: pherald built at /var/folders/t3/dmp1fb1d61xbl27trnjtr0_c0000gn/T/TestMTProto_Wave6_AutonomousClosedLoop1885412833/001/pherald
+    mtproto_wave6_loop_test.go:128: MTProto active: @milos85vasic (user_id=2057253161)
+    mtproto_wave6_loop_test.go:157: pherald listen PID=3733 (project=Herald-MTProto-Test-1779979604463871000, journal=/var/folders/t3/dmp1fb1d61xbl27trnjtr0_c0000gn/T/TestMTProto_Wave6_AutonomousClosedLoop1885412833/001/qa-journal)
+    mtproto_wave6_loop_test.go:163: pre-ack: queue already empty
+    mtproto_wave6_loop_test.go:186: MTProto sent message_id=211461 text="herald-mtproto-wave6-closed-loop-1779979607946431000"
+    mtproto_wave6_loop_test.go:211: waiting up to 180s for journal entries proving autonomy chain (in/dispatch/reply)...
+    mtproto_wave6_loop_test.go:223: ✓ journal: cc.dispatch out referencing our text
+    mtproto_wave6_loop_test.go:227: ✓ journal: cc.reply in — Claude responded
+    mtproto_wave6_loop_test.go:238: §11.4.98 autonomy chain INCOMPLETE: in=false dispatch=true reply=true — pherald log tail:
+        pherald listen: starting Telegram getUpdates long-poll loop
+        pherald listen: QA journaling enabled — /var/folders/t3/dmp1fb1d61xbl27trnjtr0_c0000gn/T/TestMTProto_Wave6_AutonomousClosedLoop1885412833/001/qa-journal
+        pherald listen: docs dir docs; 1 operator(s) authorised for Done:/Reopen:
+        2026/05/28 19:46:59 359150590 inbound: send reply: tgram.SendReply: empty text
+--- FAIL: TestMTProto_Wave6_AutonomousClosedLoop (186.91s)
+FAIL
+FAIL	github.com/vasic-digital/herald/qaherald/internal/lifecycle	187.558s
+FAIL

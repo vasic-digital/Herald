@@ -1,0 +1,31 @@
+=== RUN   TestMTProto_Wave65_LifecycleAutonomous
+    mtproto_wave65_lifecycle_test.go:82: MTProto active: @milos85vasic (user_id=2057253161)
+    mtproto_wave65_lifecycle_test.go:100: pherald built at /var/folders/t3/dmp1fb1d61xbl27trnjtr0_c0000gn/T/TestMTProto_Wave65_LifecycleAutonomous133392397/001/pherald
+    mtproto_wave65_lifecycle_test.go:125: pherald listen PID=11926 (project=Herald-MTProto-W65-1779979899097154000, journal=/var/folders/t3/dmp1fb1d61xbl27trnjtr0_c0000gn/T/TestMTProto_Wave65_LifecycleAutonomous133392397/001/qa-journal)
+    mtproto_wave65_lifecycle_test.go:129: pre-ack: queue already empty
+=== RUN   TestMTProto_Wave65_LifecycleAutonomous/Help_FastPath
+    mtproto_wave65_lifecycle_test.go:187: sent message_id=211463 text="Help | herald-mtproto-w65-Help_FastPath-1779979902525992000"
+    mtproto_wave65_lifecycle_test.go:206: ✓ journal: tgram.message in carrying our stimulus
+    mtproto_wave65_lifecycle_test.go:212: ✓ journal: dispatch/reply attempted
+    mtproto_wave65_lifecycle_test.go:224: scenario Help_FastPath PASS via journal — autonomy chain proven
+    mtproto_wave65_lifecycle_test.go:247: note: Help_FastPath — MTProto did not observe a matching bot reply within 5s (autonomy still proven via journal): getHistory: rpcDoRequest: context deadline exceeded
+=== RUN   TestMTProto_Wave65_LifecycleAutonomous/Status_FastPath
+    mtproto_wave65_lifecycle_test.go:187: sent message_id=211464 text="Status | herald-mtproto-w65-Status_FastPath-1779979908821113000"
+    mtproto_wave65_lifecycle_test.go:212: ✓ journal: dispatch/reply attempted
+    mtproto_wave65_lifecycle_test.go:206: ✓ journal: tgram.message in carrying our stimulus
+    mtproto_wave65_lifecycle_test.go:224: scenario Status_FastPath PASS via journal — autonomy chain proven
+    mtproto_wave65_lifecycle_test.go:247: note: Status_FastPath — MTProto did not observe a matching bot reply within 5s (autonomy still proven via journal): getHistory: rpcDoRequest: context deadline exceeded
+=== RUN   TestMTProto_Wave65_LifecycleAutonomous/Continue_FastPath
+    mtproto_wave65_lifecycle_test.go:187: sent message_id=211465 text="Continue | herald-mtproto-w65-Continue_FastPath-1779979915524423000"
+    mtproto_wave65_lifecycle_test.go:212: ✓ journal: dispatch/reply attempted
+    mtproto_wave65_lifecycle_test.go:206: ✓ journal: tgram.message in carrying our stimulus
+    mtproto_wave65_lifecycle_test.go:224: scenario Continue_FastPath PASS via journal — autonomy chain proven
+    mtproto_wave65_lifecycle_test.go:247: note: Continue_FastPath — MTProto did not observe a matching bot reply within 5s (autonomy still proven via journal): getHistory: rpcDoRequest: context deadline exceeded
+=== NAME  TestMTProto_Wave65_LifecycleAutonomous
+    mtproto_wave65_lifecycle_test.go:257: autonomous lifecycle: 3/3 scenarios PASS — Wave 6.5 §11.4.98-compliance proven
+--- PASS: TestMTProto_Wave65_LifecycleAutonomous (26.04s)
+    --- PASS: TestMTProto_Wave65_LifecycleAutonomous/Help_FastPath (6.29s)
+    --- PASS: TestMTProto_Wave65_LifecycleAutonomous/Status_FastPath (6.70s)
+    --- PASS: TestMTProto_Wave65_LifecycleAutonomous/Continue_FastPath (7.22s)
+PASS
+ok  	github.com/vasic-digital/herald/qaherald/internal/lifecycle	27.562s

@@ -1,0 +1,15 @@
+=== RUN   TestMTProto_Wave6_AutonomousClosedLoop
+    mtproto_wave6_loop_test.go:108: pherald built at /var/folders/t3/dmp1fb1d61xbl27trnjtr0_c0000gn/T/TestMTProto_Wave6_AutonomousClosedLoop2064644522/001/pherald
+    mtproto_wave6_loop_test.go:128: MTProto active: @milos85vasic (user_id=2057253161)
+    mtproto_wave6_loop_test.go:157: pherald listen PID=9958 (project=Herald-MTProto-Test-1779979831751364000, journal=/var/folders/t3/dmp1fb1d61xbl27trnjtr0_c0000gn/T/TestMTProto_Wave6_AutonomousClosedLoop2064644522/001/qa-journal)
+    mtproto_wave6_loop_test.go:163: pre-ack: queue already empty
+    mtproto_wave6_loop_test.go:186: MTProto sent message_id=211462 text="herald-mtproto-wave6-closed-loop-1779979835706107000"
+    mtproto_wave6_loop_test.go:211: waiting up to 180s for journal entries proving autonomy chain (in/dispatch/reply)...
+    mtproto_wave6_loop_test.go:222: ✓ journal: tgram.message in carrying our text (sent_id=211462)
+    mtproto_wave6_loop_test.go:226: ✓ journal: cc.dispatch out referencing our text
+    mtproto_wave6_loop_test.go:230: ✓ journal: cc.reply in — Claude responded
+    mtproto_wave6_loop_test.go:244: PASS: §11.4.98 autonomy chain proven via journal — MTProto → bot inbound → Claude dispatch → Claude reply
+    mtproto_wave6_loop_test.go:257: note: bot reply not observed via MTProto within 30s (Claude may have returned empty text — autonomy still proven via journal): getHistory: rpcDoRequest: context deadline exceeded
+--- PASS: TestMTProto_Wave6_AutonomousClosedLoop (48.58s)
+PASS
+ok  	github.com/vasic-digital/herald/qaherald/internal/lifecycle	49.176s
