@@ -112,7 +112,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>20</td>
+<td>21</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -120,7 +120,7 @@
 </tr>
 <tr>
 <td>Last modified</td>
-<td>2026-05-28</td>
+<td>2026-05-29</td>
 </tr>
 <tr>
 <td>Status</td>
@@ -128,17 +128,64 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>2026-05-28 (day-3) — Wave 8 Track B COMPLETE + v0.6.0 tagged
-(HEAD <code>b313a5e</code>; constitution at <code>15cd4bc</code>; all 4
-mirrors synced).</strong> Wave 8 Track B (MTProto user-account harness
-for §11.4.98 full-automation testing) is now end-to-end
-live-evidence-proven: HRD-139 <code>qaherald/internal/mtproto/</code>
-Client live wiring (<code>238448e</code> — gotd/td v0.144.0 vendored as
-a submodule, Connect/SendMessage/WaitForReply/WhoAmI/Close interface,
-4198-byte encrypted session file at
-<code>~/.config/herald/mtproto.session</code>, mode 0600) +
-<code>qaherald mtproto login/whoami/logout</code> Cobra subcommands
-(<code>ec4c3c0</code> — added
+<td><strong>2026-05-29 — Session-resume sweep: constitution sync
+c640947→3244bf4 + §11.4.100 propagation + 3 cleanup commits (HEAD
+<code>873aab4</code>; constitution at <code>3244bf4</code>; all 4
+mirrors synced).</strong> Resumed work after operator power-off. (a)
+<strong>Constitution sync</strong> — pulled HelixConstitution
+c640947→3244bf4 (gained §11.4.100 Video color + visual-quality fidelity
+mandate). (b) <strong>§11.4.100 propagation</strong> to Herald root
+(commit <code>5aece5d</code>) — CLAUDE.md r15→r16, AGENTS.md r11→r12,
+QWEN.md, docs/guides/HERALD_CONSTITUTION.md r9→r10 with new §108.o;
+Herald-applicability classification:
+<strong>non-applicable-but-cite</strong> (Herald has NO video-playback
+surface — pherald downloads video attachments as opaque sha256-blobs via
+HRD-005 attachment pipeline, never decodes/renders; mandate binds
+latently if Herald ever ships a video-rendering surface);
+cascade-parallel to §108.k AOSP-pattern; literal anchor
+<code>11.4.100</code> present in all 4 docs per upcoming
+<code>CM-COVENANT-114-100-PROPAGATION</code> pre-build gate. (c)
+<strong>§107.y anti-bluff fix</strong> (commit <code>c0903bc</code>) —
+purged bin/qaherald (32MB compiled binary auto-committed by JetBrains
+IDE in commit <code>9796506</code>) + closed .gitignore gap (bin/ +
+<em>.test + herald-</em>.exe/bin); root cause documented: IDE
+Auto-commit mechanism (also caused historical <code>1ce7cda</code> PDF
+sweep + <code>b2d4b18</code> rename sweep); 32MB blob remains in git
+history at 9796506 — purging requires git-filter-repo + force-push which
+§11.4.41 gates on operator authorization (filed as accepted tech-debt).
+(d) <strong>§11.4.19 atomic Issues→Fixed migration of
+HRD-139..142</strong> (commit <code>873aab4</code>) — Wave 8 Track B
+closure recorded in Fixed.md r16→r17: HRD-139 (MTProto Client live
+wiring), HRD-140 (Subscribe roundtrip), HRD-141 (Wave 6 closed loop),
+HRD-142 (Wave 6.5 lifecycle) all graduate directly from TaskList →
+Fixed.md. (e) <strong>§11.4.90 Obsolete graduation of 3 legacy
+NON-COMPLIANT tests</strong> (same commit <code>873aab4</code>) —
+HRD-143 marks <code>TestSubscribe_LiveBotAPI</code> Obsolete (superseded
+by §11.4.98+HRD-140; literal source-comment "requires the operator to
+hand-send a message" cited per §11.4.6 no-guessing); HRD-144 marks
+<code>tests/test_wave6_live_loop.sh</code> Obsolete (superseded by
+§11.4.98+HRD-141); HRD-145 marks
+<code>qaherald lifecycle --manual</code> mode Obsolete (superseded by
+§11.4.98+HRD-142). Each Obsolete-Details cites
+Since/Reason/Superseding-item + triple-check evidence per §11.4.6. (f)
+<strong>Docs sibling-export audit</strong> — 117 fresh / 0 stale
+<code>.md ↔︎ .html/.pdf/.docx</code> pairs across the tracked tree
+(Python-based mtime-comparison) — Herald's
+<code>scripts/export_docs.sh</code> discipline holds. Inheritance gate
+15 PASS / 0 FAIL post-§11.4.100 propagation. 3 commits c0903bc + 5aece5d
++ 873aab4 all pushed to 4 mirrors via §11.4.88 background-push
+(per-mirror flock, push detached after commit-lock release). Prior r20
+(still valid history):** <strong>2026-05-28 (day-3) — Wave 8 Track B
+COMPLETE + v0.6.0 tagged (HEAD <code>b313a5e</code>; constitution at
+<code>15cd4bc</code>; all 4 mirrors synced).</strong> Wave 8 Track B
+(MTProto user-account harness for §11.4.98 full-automation testing) is
+now end-to-end live-evidence-proven: HRD-139
+<code>qaherald/internal/mtproto/</code> Client live wiring
+(<code>238448e</code> — gotd/td v0.144.0 vendored as a submodule,
+Connect/SendMessage/WaitForReply/WhoAmI/Close interface, 4198-byte
+encrypted session file at <code>~/.config/herald/mtproto.session</code>,
+mode 0600) + <code>qaherald mtproto login/whoami/logout</code> Cobra
+subcommands (<code>ec4c3c0</code> — added
 <code>HERALD_MTPROTO_ALLOW_NON_TTY=1</code> env override for
 delegated-by-conductor login per the operator "can you run it alone?"
 mandate; conductor-driven FIFO-piped OOB-code flow proven autonomous
@@ -379,7 +426,20 @@ absent. Next free invariant id is <strong>E138+</strong>.</li>
 <li><strong>Phase:</strong> implementation r1.</li>
 </ul>
 <h2 id="2-last-commit-landed">§2. Last commit landed</h2>
-<p><strong>HEAD <code>b313a5e</code></strong> —
+<p><strong>HEAD <code>873aab4</code></strong> —
+<code>docs(§11.4.19 + §11.4.90): atomic HRD-139..142 Issues→Fixed + Obsolete graduation of 3 legacy NON-COMPLIANT tests</code>.
+Fixed.md r17 records HRD-139/140/141/142 (Wave 8 Track B) as Fixed;
+Issues.md r36 marks 3 legacy tests Obsolete per §11.4.90 with full
+Obsolete-Details + triple-check evidence per §11.4.6. <strong>Prior
+<code>5aece5d</code></strong> —
+<code>feat(§11.4.100): propagate Video color + visual-quality fidelity mandate (non-applicable-but-cite for Herald)</code>.
+Constitution sync c640947→3244bf4; §11.4.100 propagated to all 4 root
+docs; inheritance gate 15/0. <strong>Prior <code>c0903bc</code></strong>
+—
+<code>fix(anti-bluff): purge bin/qaherald 32MB binary + close .gitignore gap</code>.
+§107.y working-tree quiescence fix — purged JetBrains-IDE-Auto-committed
+32MB compiled binary from index + sealed the gitignore gap.
+<strong>Prior <code>b313a5e</code></strong> —
 <code>docs(qa): Wave 8 Track B live evidence — E135/E136/E137 all PASS LIVE under §11.4.98</code>.
 Wave 8 Track B (MTProto user-account harness for §11.4.98
 full-automation) CLOSED end-to-end: HRD-139 MTProto Client +
@@ -422,28 +482,29 @@ HRDs (HRD-133/134/135/136/137/138) Issues→Fixed. Deterministic across
 Full tgram suite <strong>26/26 PASS, 0 SKIP</strong> (was 24/24 with
 chaos SKIPped). All 4 mirrors synced.</p>
 <h2 id="3-active-work">§3. Active work</h2>
-<p><strong>No active work in flight.</strong> Wave 8 Track B closed;
-v0.6.0 tag cut and pushed to all 4 mirrors. Host machine going to
-power-off per operator end-of-day request. Pickup tomorrow: (a) §11.4.19
-atomic Issues→Fixed migration for HRD-139/140/141/142 (currently tracked
-only in TaskList — need Issues.md+Fixed.md rows + summary updates), (b)
-§11.4.90 Obsolete graduation of the 3 legacy NON-COMPLIANT tests
-(<code>TestSubscribe_LiveBotAPI</code>,
-<code>tests/test_wave6_live_loop.sh</code>, lifecycle
-<code>--manual</code> mode) with Obsolete-Details citing
-superseded-by-later-mandate §11.4.98 / §108.m, (c) v1.0.0 Batch C
-carry-over (none — all closed this session per Tasks #195-#204) so next
-unit is Batch E HRD-115..121 status review (already Completed per Tasks
-#206-#212) → confirm Issues.md / Fixed.md migration, (d) then continue
-with §43 §43 catalogue stragglers + GAP-4 docs/qa back-fill +
-comprehensive docs audit task #147. MTProto creds remain in
-<code>.env</code> (operator-supplied + session cached at
-<code>~/.config/herald/mtproto.session</code> for next-session reuse).
-All hermetic gates green: tgram suite 26/26 PASS / 0 SKIP, chaos test
-deterministic <code>-race -count=3</code>. Wave 8 Track B live tests
-PASSING on every rerun — fully autonomous past the single one-time
-OOB-code paste at MTProto login (which Telegram fundamentally
-requires).</p>
+<p><strong>Background e2e_bluff_hunt running</strong>
+(<code>qa-results/e2e_bluff_hunt_20260529T0001Z.log</code>) to validate
+state post-§11.4.100 propagation + HRD-139..142 migration + 3-test
+Obsolete graduation. <strong>Push of 873aab4 to all 4 mirrors
+COMPLETE</strong> per §11.4.88 background-push (per-mirror flock, push
+detached after commit-lock release; all 4 mirrors confirmed at HEAD
+<code>873aab4</code>). <strong>No other active work in flight.</strong>
+Operator's next-priority pickup options: (a) v1.0.0 Batch C/D/E status
+confirm — Tasks #195-#212 mark all Batch C+D+Wave-7-T6-T12 complete; the
+Issues.md <code>in_progress</code> HRD-019..025 + HRD-029..056 +
+HRD-085..090 + HRD-115..121 rows need their Fixed→Obsolete graduation
+audit per §11.4.90; (b) <strong>DOCS task #147</strong> comprehensive
+documentation audit + per-flavor operator guides (nano-detail per
+<code>feedback_nano_detail_docs</code> memory — blocks v1.0.0
+production-ready readiness per
+<code>feedback_production_ready_mandate</code>); (c)
+<code>feedback_no_concurrent_mutation_gates</code> is ENFORCED via
+<code>scripts/mutation_residue_audit.sh</code> +
+<code>.git/MUTATION_IN_PROGRESS</code> lockfile + check_quiescence() —
+no carryover; (d) MTProto creds remain in <code>.env</code> + session
+cached for next-session reuse; (e) HRD-131 §11.4.93 SQLite SSoT remains
+OPEN-deferred (constitution-repo migration binary still unimplemented
+per the §11.4.74 catalogue-first constraint).</p>
 <h2 id="4-next-concrete-steps">§4. Next concrete steps</h2>
 <ol type="1">
 <li><strong>Live evidence — Telegram + Claude Code closed-loop</strong>
