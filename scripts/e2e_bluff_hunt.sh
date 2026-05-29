@@ -2420,7 +2420,16 @@ check "E137 TestMTProto_Wave65_LifecycleAutonomous — Wave 6.5 fast-path lifecy
 # own throwaway password; SKIP-with-reason when :24100 is unreachable.
 echo ""
 echo "== E138: HRD-090 dead-letter handling (real-PG round-trip + stress/chaos) =="
-if nc -z 127.0.0.1 24100 2>/dev/null; then
+if (command -v docker >/dev/null 2>&1 || command -v podman >/dev/null 2>&1) \
+   && nc -z 127.0.0.1 24100 2>/dev/null; then
+    # Dev-container password normalization (same as E14-E17): the HRD-090
+    # integration + stress/chaos tests hardcode HERALD_DB_PASSWORD=
+    # "test-postgres-password-DO-NOT-USE-IN-PROD" via bootRepo's t.Setenv, which
+    # is un-overridable from outside the test process. Earlier PG blocks in this
+    # suite (e.g. E7-E12 pherald serve = "herald_dev") leave the SHARED container
+    # role password normalized to a different value, so reconcile it back here
+    # before the test's authenticated pgx connect.
+    pg_self_heal "test-postgres-password-DO-NOT-USE-IN-PROD"
     check "E138 HRD-090 MoveToDeadLetter real-PG round-trip + §11.4.85 stress/chaos (3 sinks; 50 concurrent race-clean; atomic under emit-failure + ctx-cancel)" \
         "go test -tags=integration -race -count=1 -timeout 8m -run 'TestRepoMoveToDeadLetter|TestMoveToDeadLetter_StressChaos' ./commons_infra/..."
 else
