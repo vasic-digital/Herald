@@ -113,14 +113,14 @@ func TestBindings_Stress_ConcurrentBreaches(t *testing.T) {
 	}
 
 	// Count delivered breaches via a REAL subscriber with an atomic counter.
-	// We deliberately do NOT trust bus.Metrics().PublishedByType here: that
-	// counter is maintained by a check-then-act sync.Map LoadOrStore in
-	// MemoryBus.Publish (eventbus.go:127-133) which races under concurrency and
-	// can under-count by 1 on the first-publish window (observed 1199/1200).
-	// The subscriber-side atomic count is race-free and is the STRONGER
-	// anti-bluff measure — it proves events were actually delivered, not merely
-	// that an internal publish counter incremented. (Latent eventbus bug noted
-	// for the conductor; eventbus.go is out of this unit's edit scope.)
+	// We use the subscriber-side atomic count rather than
+	// bus.Metrics().PublishedByType because it is the STRONGER anti-bluff
+	// measure — it proves events were actually DELIVERED to a subscriber, not
+	// merely that an internal publish counter incremented. (The publish
+	// counter's earlier check-then-act window — observed under-counting
+	// 1199/1200 under concurrency — was fixed in f5d1367 via LoadOrStore +
+	// *atomic.Int64 at eventbus.go:127-133; it is now race-free, but
+	// delivery-side counting remains the more meaningful assertion.)
 	sub, err := bus.Subscribe(constitution.EventNamespace + "." + constitution.ClassRepoSafetyBreach)
 	if err != nil {
 		t.Fatalf("Subscribe: %v", err)
