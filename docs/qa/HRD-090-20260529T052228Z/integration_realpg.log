@@ -1,0 +1,4 @@
+=== RUN   TestRepoMoveToDeadLetter_RoundTripAndEmit
+--- PASS: TestRepoMoveToDeadLetter_RoundTripAndEmit (2.36s)
+PASS
+ok  	github.com/vasic-digital/herald/commons_infra	3.121s

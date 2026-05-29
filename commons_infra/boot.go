@@ -236,6 +236,16 @@ func (b *QuickstartBoot) Up(ctx context.Context) error {
 		// is project-specific — migration 000009 in commons_storage).
 		queueLogger := logrus.New()
 		queueLogger.SetLevel(logrus.WarnLevel) // suppress per-task INFO/DEBUG noise in tests
+		// HRD-090: the repository accepts an optional constitution.EventEmitter
+		// (newPgxTaskRepositoryWithEmitter) that publishes a .queue.dead_letter
+		// event on every MoveToDeadLetter. We deliberately use the nil-emitter
+		// constructor HERE: the Foundation boot plane has no governance EventBus
+		// + subscriber, so wiring an emitter would publish into an unconsumed
+		// bus (a §107 emit-into-the-void bluff). Production wiring into the
+		// governance plane (a durable subscriber draining .queue.dead_letter
+		// into the constitution_audit sink) is the follow-up; the emitter path
+		// itself is proven end-to-end against a real bus+subscriber in
+		// task_repository_integration_test.go (TestRepoMoveToDeadLetter_*).
 		b.queue = bg.NewPostgresTaskQueue(newPgxTaskRepository(pool), queueLogger)
 	}
 

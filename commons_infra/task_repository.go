@@ -42,6 +42,7 @@ import (
 	db "digital.vasic.database/pkg/database"
 	"digital.vasic.models"
 	"github.com/google/uuid"
+	constitution "github.com/vasic-digital/herald/commons_constitution"
 )
 
 // ErrUnsupported is returned by stub repository methods that have not
@@ -61,12 +62,28 @@ var ErrUnsupported = errors.New("commons_infra: TaskRepository method not yet im
 // is the load-bearing positive evidence per §11.4.68).
 type pgxTaskRepository struct {
 	database db.Database
+	// emitter is the OPTIONAL governance-event sink. When non-nil,
+	// MoveToDeadLetter publishes a .queue.dead_letter event after the durable
+	// move (HRD-090). Nil-tolerant: the bare newPgxTaskRepository construction
+	// (and every existing call site) keeps working with no emitter — the move
+	// still happens, the event is simply not published.
+	emitter constitution.EventEmitter
 }
 
 // newPgxTaskRepository constructs a repository backed by an open
-// Herald-spec database (commons_storage.Open's return value).
+// Herald-spec database (commons_storage.Open's return value). No event
+// emitter is wired — use newPgxTaskRepositoryWithEmitter to publish
+// .queue.dead_letter events on dead-letter moves.
 func newPgxTaskRepository(database db.Database) *pgxTaskRepository {
 	return &pgxTaskRepository{database: database}
+}
+
+// newPgxTaskRepositoryWithEmitter constructs a repository that also publishes
+// the .queue.dead_letter governance event (HRD-090) via emitter whenever a
+// task is moved to the dead-letter table. emitter may be nil (equivalent to
+// newPgxTaskRepository).
+func newPgxTaskRepositoryWithEmitter(database db.Database, emitter constitution.EventEmitter) *pgxTaskRepository {
+	return &pgxTaskRepository{database: database, emitter: emitter}
 }
 
 // Create inserts a new task row. Called by PostgresTaskQueue.Enqueue.
@@ -789,16 +806,100 @@ func (r *pgxTaskRepository) GetResourceSnapshots(ctx context.Context, taskID str
 	return out, nil
 }
 
-// --- HRD-090 — failure path. Still open (out of Batch D scope). ---
+// --- HRD-090 — failure-terminal path. ---
 
-// MoveToDeadLetter — failure path. HRD-090. Intentionally still
-// ErrUnsupported: the dead-letter table (and its retention/reprocess
-// semantics per models.DeadLetterTask) is a separate migration + design
-// effort tracked under HRD-090, NOT part of v1.0.0 Batch D (HRD-085..089).
-// Returning ErrUnsupported keeps the gap loud per §107 rather than
-// silently no-op'ing a failed task into oblivion.
+// MoveToDeadLetter atomically moves a task into the dead-letter table after it
+// has exhausted retries or failed a §107 invariant. The move is a single
+// transaction: a full JSONB snapshot of the task is INSERTed into
+// dead_letter_tasks (migration 000014) and the live row is marked
+// status='dead_letter' (a terminal state per models.TaskStatus.IsTerminal) so
+// the dispatch hot path stops scheduling it. The snapshot preserves the
+// original row for later reprocessing (models.DeadLetterTask).
+//
+// We mark-terminal rather than hard-DELETE the source row (mirroring Delete's
+// soft-delete rationale): a hard DELETE would CASCADE-drop the
+// background_task_events + task_resource_snapshots audit children, and the
+// dead_letter_tasks FK references background_tasks(id), so the source row must
+// survive for the FK to hold.
+//
+// After the durable move commits, a .queue.dead_letter governance event is
+// published (HRD-090) when an emitter is wired. The emit is best-effort: a
+// failed emit does NOT undo the move (the task IS dead-lettered) but is
+// surfaced as an error rather than silently swallowed (§107 / §11.4).
 func (r *pgxTaskRepository) MoveToDeadLetter(ctx context.Context, taskID, reason string) error {
-	return fmt.Errorf("MoveToDeadLetter: %w (HRD-090)", ErrUnsupported)
+	if taskID == "" {
+		return errors.New("commons_infra.MoveToDeadLetter: empty taskID")
+	}
+	// Snapshot the live row first (GetByID excludes soft-deleted rows).
+	task, err := r.GetByID(ctx, taskID)
+	if err != nil {
+		return fmt.Errorf("commons_infra.MoveToDeadLetter: load: %w", err)
+	}
+	if task == nil {
+		return fmt.Errorf("commons_infra.MoveToDeadLetter: no task with id %q (not found)", taskID)
+	}
+	snapshot, err := json.Marshal(task)
+	if err != nil {
+		return fmt.Errorf("commons_infra.MoveToDeadLetter: marshal snapshot: %w", err)
+	}
+
+	tx, err := r.database.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("commons_infra.MoveToDeadLetter: begin: %w", err)
+	}
+	committed := false
+	defer func() {
+		if !committed {
+			_ = tx.Rollback(ctx)
+		}
+	}()
+
+	const insertSQL = `
+		INSERT INTO dead_letter_tasks (
+			id, original_task_id, task_data, failure_reason,
+			failure_count, moved_at, reprocess_after, reprocessed
+		) VALUES ($1, $2, $3, $4, $5, now(), NULL, false)`
+	// task_data is JSONB → pass string(snapshot), NOT []byte (pgx-v5 sends a
+	// typed []byte as bytea → PG rejects with SQLSTATE 22P02; same rule as
+	// Create/Update/LogEvent).
+	if _, err := tx.Exec(ctx, insertSQL,
+		uuid.NewString(), task.ID, string(snapshot), reason, task.RetryCount,
+	); err != nil {
+		return fmt.Errorf("commons_infra.MoveToDeadLetter: insert dlq: %w", err)
+	}
+
+	const markSQL = `
+		UPDATE background_tasks
+		SET status = 'dead_letter',
+		    last_error = $2,
+		    completed_at = COALESCE(completed_at, now()),
+		    updated_at = now()
+		WHERE id = $1 AND deleted_at IS NULL`
+	res, err := tx.Exec(ctx, markSQL, taskID, reason)
+	if err != nil {
+		return fmt.Errorf("commons_infra.MoveToDeadLetter: mark terminal: %w", err)
+	}
+	if n, aerr := res.RowsAffected(); aerr == nil && n == 0 {
+		return fmt.Errorf("commons_infra.MoveToDeadLetter: task %q vanished mid-move (not found)", taskID)
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("commons_infra.MoveToDeadLetter: commit: %w", err)
+	}
+	committed = true
+
+	if r.emitter != nil {
+		if err := r.emitter.DeadLetter(ctx, constitution.QueueEvent{
+			RuleID:        "§42.1",
+			Severity:      constitution.SeverityHigh,
+			TaskID:        taskID,
+			FailureReason: reason,
+			FailureCount:  task.RetryCount,
+		}); err != nil {
+			return fmt.Errorf("commons_infra.MoveToDeadLetter: task %q dead-lettered but event emission failed: %w", taskID, err)
+		}
+	}
+	return nil
 }
 
 // errIfNoRows converts a zero-RowsAffected Exec result into an explicit

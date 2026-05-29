@@ -27,6 +27,7 @@ import (
 
 	db "digital.vasic.database/pkg/database"
 	"digital.vasic.models"
+	constitution "github.com/vasic-digital/herald/commons_constitution"
 )
 
 // --- recording fake db.Database (unit-test only) ---
@@ -67,13 +68,40 @@ type recordingDB struct {
 	queryRows []recordedCall
 	execResult fakeResult
 	rowScanErr error
+	tx         *recordingTx
+}
+
+// recordingTx records every Exec issued inside a transaction plus the
+// Commit/Rollback disposition, so the MoveToDeadLetter tx path can be
+// asserted without a live Postgres. Unit-test only (see file header).
+type recordingTx struct {
+	execs      []recordedCall
+	execResult fakeResult
+	committed  bool
+	rolledBack bool
+}
+
+func (tx *recordingTx) Commit(ctx context.Context) error   { tx.committed = true; return nil }
+func (tx *recordingTx) Rollback(ctx context.Context) error { tx.rolledBack = true; return nil }
+func (tx *recordingTx) Exec(ctx context.Context, query string, args ...any) (db.Result, error) {
+	tx.execs = append(tx.execs, recordedCall{sql: query, args: args})
+	return tx.execResult, nil
+}
+func (tx *recordingTx) Query(ctx context.Context, query string, args ...any) (db.Rows, error) {
+	return &fakeRows{}, nil
+}
+func (tx *recordingTx) QueryRow(ctx context.Context, query string, args ...any) db.Row {
+	return fakeRow{}
 }
 
 func (d *recordingDB) Connect(ctx context.Context) error { return nil }
 func (d *recordingDB) Close() error                       { return nil }
 func (d *recordingDB) HealthCheck(ctx context.Context) error { return nil }
 func (d *recordingDB) Begin(ctx context.Context) (db.Tx, error) {
-	return nil, nil
+	if d.tx == nil {
+		d.tx = &recordingTx{execResult: fakeResult{affected: 1}}
+	}
+	return d.tx, nil
 }
 func (d *recordingDB) Exec(ctx context.Context, query string, args ...any) (db.Result, error) {
 	d.execs = append(d.execs, recordedCall{sql: query, args: args})
@@ -452,16 +480,95 @@ func TestGetResourceSnapshots_ReverseChronological(t *testing.T) {
 	}
 }
 
-// --- HRD-090 (still unsupported by design) ---
+// --- HRD-090 — dead-letter move (SQL shape + emit) ---
 
-func TestMoveToDeadLetter_StillUnsupported(t *testing.T) {
+// recordingEmitter captures DeadLetter emits so the unit test can prove the
+// move publishes a .queue.dead_letter event. Embeds the EventEmitter
+// interface (nil) and overrides only DeadLetter — the same pattern the flavor
+// faultEmitters use; MoveToDeadLetter calls no other emitter method.
+type recordingEmitter struct {
+	constitution.EventEmitter
+	deadLetters []constitution.QueueEvent
+	err         error
+}
+
+func (e *recordingEmitter) DeadLetter(ctx context.Context, ev constitution.QueueEvent) error {
+	e.deadLetters = append(e.deadLetters, ev)
+	return e.err
+}
+
+func TestMoveToDeadLetter_EmptyTaskIDErrors(t *testing.T) {
 	repo, _ := newRecRepo()
-	err := repo.MoveToDeadLetter(context.Background(), "id", "reason")
-	if err == nil {
-		t.Fatal("MoveToDeadLetter must still return ErrUnsupported (HRD-090 out of Batch D scope)")
+	if err := repo.MoveToDeadLetter(context.Background(), "", "reason"); err == nil {
+		t.Fatal("MoveToDeadLetter with empty taskID must error")
 	}
-	if !strings.Contains(err.Error(), "HRD-090") {
-		t.Fatalf("MoveToDeadLetter error must cite HRD-090, got: %v", err)
+}
+
+func TestMoveToDeadLetter_AtomicMoveSQLAndEmit(t *testing.T) {
+	rec := &recordingDB{execResult: fakeResult{affected: 1}}
+	em := &recordingEmitter{}
+	repo := newPgxTaskRepositoryWithEmitter(rec, em)
+
+	if err := repo.MoveToDeadLetter(context.Background(), "task-7", "exhausted retries"); err != nil {
+		t.Fatalf("MoveToDeadLetter: %v", err)
+	}
+
+	// The move MUST happen inside a committed transaction.
+	if rec.tx == nil {
+		t.Fatal("MoveToDeadLetter did not open a transaction")
+	}
+	if !rec.tx.committed {
+		t.Error("transaction was not committed")
+	}
+	if len(rec.tx.execs) != 2 {
+		t.Fatalf("want 2 tx Execs (INSERT dlq + UPDATE task), got %d", len(rec.tx.execs))
+	}
+	insert, update := rec.tx.execs[0], rec.tx.execs[1]
+	if !strings.Contains(insert.sql, "INSERT INTO dead_letter_tasks") {
+		t.Errorf("first tx Exec must INSERT INTO dead_letter_tasks; got: %s", insert.sql)
+	}
+	// task_data is JSONB → MUST be passed as string, never []byte (r23 / 22P02).
+	foundStringSnapshot := false
+	for _, a := range insert.args {
+		if _, ok := a.([]byte); ok {
+			t.Errorf("dead_letter_tasks INSERT passed a []byte arg (will 22P02 on JSONB); args=%v", insert.args)
+		}
+		if s, ok := a.(string); ok && strings.Contains(s, "{") {
+			foundStringSnapshot = true
+		}
+	}
+	if !foundStringSnapshot {
+		t.Errorf("INSERT must carry the task snapshot as a JSON string arg; got args=%v", insert.args)
+	}
+	if !strings.Contains(update.sql, "dead_letter") || !strings.Contains(update.sql, "UPDATE background_tasks") {
+		t.Errorf("second tx Exec must UPDATE background_tasks status to dead_letter; got: %s", update.sql)
+	}
+
+	// The move MUST publish exactly one .queue.dead_letter event carrying the
+	// task id + failure reason (anti-bluff: a dead-lettered task is never
+	// silent).
+	if len(em.deadLetters) != 1 {
+		t.Fatalf("want exactly 1 DeadLetter emit, got %d", len(em.deadLetters))
+	}
+	ev := em.deadLetters[0]
+	if ev.TaskID != "task-7" {
+		t.Errorf("emit TaskID = %q; want task-7", ev.TaskID)
+	}
+	if ev.FailureReason != "exhausted retries" {
+		t.Errorf("emit FailureReason = %q; want %q", ev.FailureReason, "exhausted retries")
+	}
+}
+
+// A nil emitter (the default newPgxTaskRepository construction) must NOT panic
+// — the move still happens; the event is simply not published.
+func TestMoveToDeadLetter_NilEmitterStillMoves(t *testing.T) {
+	rec := &recordingDB{execResult: fakeResult{affected: 1}}
+	repo := newPgxTaskRepository(rec) // no emitter
+	if err := repo.MoveToDeadLetter(context.Background(), "task-9", "boom"); err != nil {
+		t.Fatalf("MoveToDeadLetter with nil emitter: %v", err)
+	}
+	if rec.tx == nil || !rec.tx.committed {
+		t.Fatal("move must still commit even without an emitter")
 	}
 }
 

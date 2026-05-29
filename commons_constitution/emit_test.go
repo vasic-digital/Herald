@@ -34,9 +34,10 @@ func TestNewEmitter_RejectsBadConfig(t *testing.T) {
 	}
 }
 
-// TestAll12ClassesEmitOnCorrectType is the anti-bluff backbone of the emit
-// suite: every helper MUST actually publish on its declared CloudEvents type.
-func TestAll12ClassesEmitOnCorrectType(t *testing.T) {
+// TestAll13ClassesEmitOnCorrectType is the anti-bluff backbone of the emit
+// suite: every helper MUST actually publish on its declared CloudEvents type
+// (12 governance classes per §42.2 + 1 operational queue.dead_letter per HRD-090).
+func TestAll13ClassesEmitOnCorrectType(t *testing.T) {
 	bus := NewMemoryBus(MemoryBusConfig{})
 	defer bus.Close()
 	em := newTestEmitter(t, bus)
@@ -89,6 +90,9 @@ func TestAll12ClassesEmitOnCorrectType(t *testing.T) {
 		{ClassCatalogueMiss, func() error {
 			return em.CatalogueMiss(ctx, CatalogueEvent{TenantID: tenant, RuleID: "§11.4.74", Bundle: bundle, MissingRef: "<ancestor>/constitution/Constitution.md"})
 		}},
+		{ClassQueueDeadLetter, func() error {
+			return em.DeadLetter(ctx, QueueEvent{TenantID: tenant, RuleID: "§42.1", Severity: SeverityHigh, Bundle: bundle, Transition: tr, TaskID: "task-1", FailureReason: "exhausted retries", FailureCount: 5})
+		}},
 	}
 
 	for _, c := range cases {
@@ -97,15 +101,15 @@ func TestAll12ClassesEmitOnCorrectType(t *testing.T) {
 		}
 	}
 
-	// Anti-bluff: drain bus and assert exactly 12 events with the right types.
+	// Anti-bluff: drain bus and assert exactly 13 events with the right types.
 	deadline := time.After(time.Second)
-	got := make(map[string]int, 12)
-	for len(got) < 12 {
+	got := make(map[string]int, 13)
+	for len(got) < 13 {
 		select {
 		case e := <-sub.Channel:
 			got[e.Type]++
 		case <-deadline:
-			t.Fatalf("did not receive 12 events; got %d: %v", len(got), got)
+			t.Fatalf("did not receive 13 events; got %d: %v", len(got), got)
 		}
 	}
 

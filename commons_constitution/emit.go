@@ -121,6 +121,23 @@ type CatalogueEvent struct {
 	TraceParent string
 }
 
+// QueueEvent carries data for .queue.dead_letter — the operational event
+// emitted when a background task is moved to the dead-letter table (HRD-090).
+// Distinct from the governance events above: it reports a queue-subsystem
+// failure-terminal transition, not a constitution-rule decision.
+type QueueEvent struct {
+	TenantID      uuid.UUID
+	RuleID        string
+	Severity      Severity
+	TaskID        string // the dead-lettered background task's id
+	FailureReason string // why it was dead-lettered ("exhausted retries" / ...)
+	FailureCount  int    // retry/attempt count at move-time
+	Bundle        BundleHash
+	Transition    Transition
+	TraceParent   string
+	EvidenceURI   string
+}
+
 // EventEmitter is the typed emit surface — every class has a method.
 // Tests assert "emitter received exactly N events of class X" rather than
 // inspecting raw bus events.
@@ -137,6 +154,7 @@ type EventEmitter interface {
 	ReleaseGateBlocked(ctx context.Context, e ReleaseEvent) error
 	SpecRevisionDrift(ctx context.Context, e DriftEvent) error
 	CatalogueMiss(ctx context.Context, e CatalogueEvent) error
+	DeadLetter(ctx context.Context, e QueueEvent) error
 }
 
 // IDEmitter is the optional capability that lets the Runner capture the
@@ -258,6 +276,11 @@ func (b *busEmitter) SpecRevisionDrift(ctx context.Context, e DriftEvent) error 
 
 func (b *busEmitter) CatalogueMiss(ctx context.Context, e CatalogueEvent) error {
 	_, err := b.emit(ctx, ClassCatalogueMiss, e.TenantID, e.RuleID, e.Severity, e.Bundle, Transition{}, e.TraceParent, "", "catalogue:"+e.MissingRef, e)
+	return err
+}
+
+func (b *busEmitter) DeadLetter(ctx context.Context, e QueueEvent) error {
+	_, err := b.emit(ctx, ClassQueueDeadLetter, e.TenantID, e.RuleID, e.Severity, e.Bundle, e.Transition, e.TraceParent, e.EvidenceURI, "task:"+e.TaskID, e)
 	return err
 }
 

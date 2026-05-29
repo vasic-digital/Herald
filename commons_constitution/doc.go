@@ -29,11 +29,22 @@ const (
 	ClassReleaseGateBlocked = "release.gate.blocked"
 	ClassSpecRevisionDrift  = "spec.revision.drift"
 	ClassCatalogueMiss      = "catalogue.miss"
+
+	// ClassQueueDeadLetter is the one OPERATIONAL event class (the 12 above
+	// are governance classes per spec §42.2). It is emitted via §42.1 when a
+	// background task is moved to the dead-letter table after exhausting
+	// retries or failing a §107 invariant (HRD-090). Added by operator
+	// decision 2026-05-29; spec §42.2's governance enumeration is unchanged —
+	// this class lives alongside it as the queue subsystem's failure-terminal
+	// signal.
+	ClassQueueDeadLetter = "queue.dead_letter"
 )
 
-// AllClasses returns the closed set of the 12 event classes in declaration
-// order. Useful for boot-time validation, metrics-label-cardinality bounds,
-// and tests that must prove the package emits exactly these and no others.
+// AllClasses returns the closed set of event classes in declaration order:
+// the 12 governance classes (spec §42.2) plus the 1 operational dead-letter
+// class (HRD-090) — 13 total. Useful for boot-time validation,
+// metrics-label-cardinality bounds, and tests that must prove the package
+// emits exactly these and no others.
 func AllClasses() []string {
 	return []string{
 		ClassGateFailed,
@@ -48,5 +59,6 @@ func AllClasses() []string {
 		ClassReleaseGateBlocked,
 		ClassSpecRevisionDrift,
 		ClassCatalogueMiss,
+		ClassQueueDeadLetter,
 	}
 }

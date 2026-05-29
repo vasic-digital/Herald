@@ -177,8 +177,8 @@ func TestDecision_String(t *testing.T) {
 
 func TestAllClassesCardinality(t *testing.T) {
 	got := AllClasses()
-	if len(got) != 12 {
-		t.Errorf("AllClasses() returned %d entries; want 12 (per spec §42.2)", len(got))
+	if len(got) != 13 {
+		t.Errorf("AllClasses() returned %d entries; want 13 (12 governance per spec §42.2 + 1 operational queue.dead_letter per HRD-090)", len(got))
 	}
 	seen := make(map[string]bool, len(got))
 	for _, c := range got {
