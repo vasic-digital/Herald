@@ -63,6 +63,7 @@ func main() {
 	root.AddCommand(newMigrateCmd())       // real impl (HRD-010) — unchanged
 	root.AddCommand(newWizardCmd())        // real impl (HRD-011/012 setup) — unchanged
 	root.AddCommand(newListenCmd())        // Wave 6 T6: inbound getUpdates long-poll + CC dispatch
+	root.AddCommand(newWatchCmd())         // HRD-153 (WS-2/WS-7): workable-items SSoT watcher → diff → notify
 	registerGitOps(root)                   // v1.0.0 Batch C: §43 project-lifecycle command bodies (HRD-029/030/043/044/049/053)
 
 	if err := root.Execute(); err != nil {
