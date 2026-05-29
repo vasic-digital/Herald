@@ -12,6 +12,7 @@ require (
 	github.com/vasic-digital/herald/commons v0.0.0
 	github.com/vasic-digital/herald/commons_constitution v0.0.0
 	github.com/vasic-digital/herald/commons_messaging v0.0.0
+	github.com/vasic-digital/herald/commons_workable v0.0.0
 )
 
 require (
@@ -57,6 +58,7 @@ replace (
 	github.com/vasic-digital/herald/commons_messaging => ../commons_messaging
 	github.com/vasic-digital/herald/commons_prefix => ../commons_prefix
 	github.com/vasic-digital/herald/commons_storage => ../commons_storage
+	github.com/vasic-digital/herald/commons_workable => ../commons_workable
 )
 
 replace digital.vasic.middleware => ../submodules/middleware
