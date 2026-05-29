@@ -1,0 +1,97 @@
+// Package workable mirrors ATMOSphere's workable-items SQLite SSoT so
+// that Herald and ATMOSphere can share one database file. It exposes a
+// Store (schema-applying connection holder), a CRUD repo over the
+// `items` table, a per-property change feed, and a tolerant parser for
+// ATMOSphere's real Markdown tracker format.
+package workable
+
+import (
+	"database/sql"
+	"fmt"
+
+	_ "modernc.org/sqlite" // pure-Go SQLite driver, registered as "sqlite"
+)
+
+// schemaDDL is the canonical ATMOSphere workable-items schema, mirrored
+// verbatim so a DB created by either project is interchangeable. Every
+// statement is idempotent (CREATE TABLE IF NOT EXISTS).
+const schemaDDL = `
+CREATE TABLE IF NOT EXISTS items (
+    atm_id           TEXT NOT NULL,
+    type             TEXT CHECK (type IN ('Bug','Feature','Task')),
+    status           TEXT,
+    severity         TEXT,
+    title            TEXT,
+    description      TEXT,
+    forensic_anchor  TEXT,
+    closure_criteria TEXT,
+    composes_with    TEXT,
+    current_location TEXT CHECK (current_location IN ('Issues','Fixed')) DEFAULT 'Issues',
+    body_md          TEXT,
+    created_at       TEXT,
+    last_modified    TEXT,
+    PRIMARY KEY (atm_id, current_location)
+);
+
+CREATE TABLE IF NOT EXISTS item_history (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    atm_id        TEXT,
+    event_type    TEXT CHECK (event_type IN ('Opened','Updated','Reopened','Fixed','Implemented','Completed','Obsolete')),
+    by            TEXT CHECK (by IN ('AI','User')),
+    on_date       TEXT,
+    reason        TEXT,
+    evidence_path TEXT,
+    created_at    TEXT
+);
+
+CREATE TABLE IF NOT EXISTS meta (
+    key           TEXT PRIMARY KEY,
+    value         TEXT,
+    last_modified TEXT
+);
+`
+
+// Store holds an open connection to the workable-items SQLite DB with
+// the canonical schema applied and the mandated PRAGMAs (WAL +
+// foreign_keys=ON) active.
+type Store struct {
+	db *sql.DB
+}
+
+// Open opens (creating if absent) the SQLite DB at path, enables WAL +
+// foreign keys, and applies the canonical schema idempotently.
+func Open(path string) (*Store, error) {
+	db, err := sql.Open("sqlite", path)
+	if err != nil {
+		return nil, fmt.Errorf("workable: open %q: %w", path, err)
+	}
+
+	// modernc.org/sqlite multiplexes a pool; pin to a single connection
+	// so connection-scoped PRAGMAs (journal_mode/foreign_keys) hold for
+	// every query the Store issues.
+	db.SetMaxOpenConns(1)
+
+	for _, pragma := range []string{
+		`PRAGMA journal_mode=WAL`,
+		`PRAGMA foreign_keys=ON`,
+	} {
+		if _, err := db.Exec(pragma); err != nil {
+			_ = db.Close()
+			return nil, fmt.Errorf("workable: %s: %w", pragma, err)
+		}
+	}
+
+	if _, err := db.Exec(schemaDDL); err != nil {
+		_ = db.Close()
+		return nil, fmt.Errorf("workable: apply schema: %w", err)
+	}
+
+	return &Store{db: db}, nil
+}
+
+// DB exposes the underlying *sql.DB for callers that need raw access
+// (history inserts, meta reads, tests).
+func (s *Store) DB() *sql.DB { return s.db }
+
+// Close releases the underlying connection pool.
+func (s *Store) Close() error { return s.db.Close() }
