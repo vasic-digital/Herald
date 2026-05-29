@@ -12,12 +12,17 @@ import (
 // SubscriberResolver is Stage 5 — reads subscribers + aliases under
 // the resolved tenant and emits commons.Recipient entries.
 //
-// Wave 3b implementation: ALL subscribers in the tenant receive ALL
-// events. Per-event preference filtering (CategoryPref / WorkflowPref /
-// QuietHours per spec §7.2-§7.3) is a follow-up HRD; for now this
-// stage's contract is "tenant-scoped fan-out to every registered
-// recipient" — adequate for the consumer-project integration use case
-// where one tenant maps to one Telegram chat.
+// HRD-154 (ATMOSphere integration WS-3): Stage 5 now enforces
+// per-subscriber preference + quiet-hours routing via
+// filterByPreferences (prefs.go). A subscriber with NO PreferenceSet
+// preserves the pre-HRD-154 "resolve all aliases" behaviour so existing
+// single-tenant→single-chat callers do not regress; a subscriber WITH a
+// PreferenceSet is filtered by mute > quiet-hours > workflow opt-in >
+// category opt-in (see prefs.go for the full precedence contract).
+//
+// Quiet-hours evaluation is timezone-aware and clock-injected: the
+// Clock field (defaulting to commons.RealClock) supplies "now" so tests
+// inject a deterministic instant. Stage 5 never calls time.Now().
 //
 // Per §107: returning zero recipients on an empty tenant is NOT an
 // error — empty fan-out is a valid (and common) outcome. The
@@ -25,6 +30,9 @@ import (
 // is deduped on replay.
 type SubscriberResolver struct {
 	Subscribers subscribersStore
+	// Clock supplies the current instant for quiet-hours evaluation.
+	// Nil ⇒ commons.RealClock{} (production default).
+	Clock commons.Clock
 }
 
 // subscribersStore is the subset of PG access this stage uses. The
@@ -44,7 +52,36 @@ type subscriberRow struct {
 	TenantID    uuid.UUID
 	Handle      string
 	DisplayName string
+	// Timezone is the subscriber's IANA TZ (e.g. "Europe/Belgrade"),
+	// used by HRD-154 quiet-hours evaluation when QuietHours.TZ is empty.
+	Timezone string
+	// Preferences is the per-subscriber PreferenceSet (HRD-154). Nil ⇒
+	// the subscriber has no configured preferences ⇒ resolve all aliases
+	// (pre-HRD-154 behaviour preserved). The T9 PG adapter decodes this
+	// from subscribers.metadata.preferences (spec §7.2 / §11.0).
+	Preferences *commons.PreferenceSet
 	Aliases     []subscriberAliasRow
+}
+
+// toSubscriber projects a PG-shaped subscriberRow into the canonical
+// commons.Subscriber that filterByPreferences (prefs.go) operates on.
+func (row subscriberRow) toSubscriber() commons.Subscriber {
+	aliases := make([]commons.SubscriberAlias, 0, len(row.Aliases))
+	for _, a := range row.Aliases {
+		aliases = append(aliases, commons.SubscriberAlias{
+			Channel:       a.Channel,
+			ChannelUserID: a.ChannelUserID,
+		})
+	}
+	return commons.Subscriber{
+		ID:          row.ID,
+		TenantID:    row.TenantID,
+		Handle:      row.Handle,
+		DisplayName: row.DisplayName,
+		Timezone:    row.Timezone,
+		Preferences: row.Preferences,
+		Aliases:     aliases,
+	}
 }
 
 // subscriberAliasRow mirrors the PG `subscriber_aliases` table row
@@ -63,16 +100,14 @@ func (r *SubscriberResolver) Process(ctx context.Context, rc *RunCtx) error {
 	if err != nil {
 		return fmt.Errorf("subscriber_resolver: list: %w", err)
 	}
-	var recips []commons.Recipient
+	subs := make([]commons.Subscriber, 0, len(rows))
 	for _, row := range rows {
-		for _, alias := range row.Aliases {
-			recips = append(recips, commons.Recipient{
-				Channel:       alias.Channel,
-				ChannelUserID: alias.ChannelUserID,
-				DisplayName:   row.DisplayName,
-			})
-		}
+		subs = append(subs, row.toSubscriber())
 	}
-	rc.Recipients = recips
+	clk := r.Clock
+	if clk == nil {
+		clk = commons.RealClock{}
+	}
+	rc.Recipients = filterByPreferences(subs, rc.Event, clk.Now())
 	return nil
 }
