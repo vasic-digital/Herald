@@ -112,7 +112,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>21</td>
+<td>22</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -128,7 +128,41 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>2026-05-29 — Session-resume sweep: constitution sync
+<td><strong>r22 (2026-05-29 day-4) — ATMOSphere↔︎Herald workable-items
+integration DELIVERED end-to-end across 3 repos (Herald
+<code>2412512</code> / HelixConstitution <code>8ec2b38</code> /
+ATMOSphere <code>5462a38</code>; all synced).</strong> Phase 1 plan
+<code>~/Documents/ATMOSphere_Herald_Integration_Plan.md</code>
+(+PDF/HTML/DOCX) from 5 parallel verified-source analysis agents. Phase
+2 Herald build (all <code>-race</code> anti-bluff-tested, pushed to 4
+mirrors, commits <code>92f0136</code>→<code>a541acc</code>): HRD-148
+<code>commons_workable</code> (pure-Go SQLite SSoT
+store+CRUD+ATMOSphere-<code>## §… [ATM-NNN]</code>-parser+per-property
+diff change-feed), HRD-149 <code>commons_watch</code>
+(fsnotify+WAL-poll+debounce), HRD-151
+<code>pherald/internal/workflow</code> change→CloudEvent→Runner bridge +
+Jira/ClickUp diff formatter, HRD-152 inbound
+<code>item.update</code>/<code>item.delete</code>/<code>investigation.start</code>
++ <code>ItemMutator</code> + act-with-confirmation CONFIRM flow (wired
+into <code>pherald listen --db</code>), HRD-153
+<code>pherald watch</code> end-to-end daemon
+(real-SQLite+fsnotify+diff+dispatch e2e), HRD-154 preference/quiet-hours
+routing (TZ-aware), e2e invariant <strong>E139</strong>, operator guide
+<code>docs/guides/WORKABLE_ITEMS_INTEGRATION.md</code>. Phase 3
+deployment: HelixConstitution workable-items parser extended for
+ATMOSphere format backward-compatibly (<code>995bd2f</code>, 4
+upstreams) + anti-bluff covenant QWEN.md leading-clause for cross-file
+consistency (<code>8ec2b38</code>, 4 upstreams); on the ATMOSphere host
+<code>docs/workable_items.db</code> SSoT MATERIALIZED (58 items,
+validate OK, byte-identical round-trip, §11.4.95 version-controlled,
+<code>d41dda5</code>) + <code>tools/herald</code> registered as a PROPER
+submodule @ Herald main <code>80cb734</code> replacing the broken orphan
+gitlink (<code>3368645</code>) + constitution pointer bumps
+(<code>ecdec56</code>/<code>5462a38</code>) — pushed to
+github(ATMOSphere1234321)+vasic-digital-mirror (gitlab is a structural
+split-archive mirror, left to operator split-tooling per §11.4.41).
+Issues.md r39→r42; HRD-148..158 filed/advanced. Prior r21 (still valid
+history):** <strong>2026-05-29 — Session-resume sweep: constitution sync
 c640947→3244bf4 + §11.4.100 propagation + 3 cleanup commits (HEAD
 <code>873aab4</code>; constitution at <code>3244bf4</code>; all 4
 mirrors synced).</strong> Resumed work after operator power-off. (a)
@@ -255,16 +289,57 @@ HRD-133..HRD-138</td>
 </tr>
 <tr>
 <td>Continuation</td>
-<td><strong>Resume — live-evidence collection for tgram (HEAD
-<code>77da6eb</code>):</strong> The tgram-completeness wave is COMPLETE
-in code + tests + docs (HRD-133..138 Fixed). Hermetic coverage is full
-(tgram suite 26/26 PASS, 0 SKIP; chaos test deterministic). What remains
-is the LIVE-EVIDENCE layer — currently SKIP-with-reason in
-<code>scripts/e2e_bluff_hunt.sh</code> for E17/E18 (live Telegram send +
-roundtrip), E34 (live Claude Code session resolution), E63-E70 (Wave 6
-closed-loop with real Telegram + Claude Code), E71-E80 (Wave 6.5 ticket
-lifecycle wire-byte). <strong>Operator-action required:</strong> export
-real credentials in the conductor's session via
+<td><strong>▶▶ RESUME TOMORROW (2026-05-30) — ATMOSphere integration:
+LIVE EVIDENCE + DAEMON LAUNCH.</strong> STATE: code is DEPLOYED
+end-to-end (Herald <code>2412512</code> / HelixConstitution
+<code>8ec2b38</code> / ATMOSphere <code>5462a38</code>); the SQLite SSoT
+is materialized (58 items at <code>docs/workable_items.db</code> on the
+nezha host
+<code>milosvasic@10.6.100.146:/run/media/milosvasic/DATA4TB/Projects/Android_15</code>);
+<code>tools/herald</code> submodule is live. Every Herald module + both
+flows (watch→diff→notify, inbound→CRUD) are hermetically
+anti-bluff-tested; what's NOT yet proven is the LIVE Telegram round-trip
++ a running daemon. <strong>NEXT STEPS (dependency-ordered):</strong>
+<strong>(1) HRD-156 LIVE evidence</strong> — operator runs
+<code>qaherald mtproto login</code> ONCE (enter the 5-digit Telegram OOB
+code; the one step Telegram can't automate). Then conductor drives the
+live tests: mutate the ATMOSphere SSoT → assert a REAL Telegram message
+reaches a subscriber (T-A); operator message → real SSoT row mutation
+(T-B); exact per-property-diff payload byte-assert (T-C); §11.4.85
+stress/chaos (T-D/T-E); paired §1.1 mutation gate (T-F). Capture under
+<code>docs/qa/HRD-156-LIVE-&lt;TS&gt;/</code> (HRD-133 sanitizer
+guarantees no token leak), flip the SKIP-with-reason invariants to PASS.
+<strong>(2) Launch the daemon on the ATMOSphere host</strong> —
+<code>pherald watch --db docs/workable_items.db</code> (outbound
+SSoT→notify) + <code>pherald listen --db docs/workable_items.db</code>
+(inbound→CRUD), wired as a host-side runner mirroring
+<code>tools/oom-protect</code>'s install pattern; seed Subscribers + the
+main-group alias. <strong>(3) gitlab ATMOSphere mirror</strong> —
+<code>vasic-digital/ATMOSphere-Android-15</code> gitlab is a STRUCTURAL
+split-archive mirror (1497-commit divergence + a
+<code>Split-archive batch</code> commit) — needs the operator's
+split-push tooling, NOT a force-push (§11.4.41). <strong>(4)
+Follow-ups:</strong> Fixed.md item-structuring (currently
+raw-preserved/lossless but 0 structured items — extend the constitution
+tool's <code>parseFixed</code>); per-submodule QWEN.md leading-clause
+cascade across the 25 ATMOSphere submodules (the covenant CORE +
+operative rule are ALREADY everywhere — only the one leading clause; low
+priority); HRD-150/regenerator productionization; HRD-154 PG-adapter
+decode of <code>subscribers.metadata.preferences</code> (deferred to
+HRD-156). All integration HRDs (148-158) tracked in
+<code>Issues.md</code> r42; master plan
+<code>~/Documents/ATMOSphere_Herald_Integration_Plan.md</code>. ────
+(prior continuation history below) ──── <strong>Resume — live-evidence
+collection for tgram (HEAD <code>77da6eb</code>):</strong> The
+tgram-completeness wave is COMPLETE in code + tests + docs (HRD-133..138
+Fixed). Hermetic coverage is full (tgram suite 26/26 PASS, 0 SKIP; chaos
+test deterministic). What remains is the LIVE-EVIDENCE layer — currently
+SKIP-with-reason in <code>scripts/e2e_bluff_hunt.sh</code> for E17/E18
+(live Telegram send + roundtrip), E34 (live Claude Code session
+resolution), E63-E70 (Wave 6 closed-loop with real Telegram + Claude
+Code), E71-E80 (Wave 6.5 ticket lifecycle wire-byte).
+<strong>Operator-action required:</strong> export real credentials in
+the conductor's session via
 <code>! export HERALD_TGRAM_BOT_TOKEN=&lt;token&gt; HERALD_TGRAM_CHAT_ID=&lt;chat-id&gt; HERALD_TGRAM_BOT_USERNAME=&lt;username&gt; HERALD_CLAUDE_BIN=&lt;path-or-omit-for-PATH&gt;</code>.
 Per §107.x: ALL live evidence lands under
 <code>docs/qa/HRD-NNN-LIVE-&lt;TS&gt;/</code> with the HRD-133 sanitizer
