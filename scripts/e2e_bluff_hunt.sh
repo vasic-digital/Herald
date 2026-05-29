@@ -2437,6 +2437,19 @@ else
 fi
 sc_anchor "E138 stress/chaos" "docs/qa/HRD-090-stress-chaos-20260529T054500Z/stress_chaos/stress_chaos.log" "PASS: TestMoveToDeadLetter_StressChaos/Stress_ConcurrentDistinctTasks"
 
+# ---- E139: HRD-156 watch→notify daemon (hermetic, NOT PG-gated) ----
+# The watch→notify e2e (TestRunWatch_EndToEndOutbound) drives the full
+# workable-items SSoT pipeline against a REAL temp SQLite DB + REAL
+# commons_watch.Watcher (fsnotify + WAL-poll) + REAL commons_workable.Diff +
+# REAL workflow.Notifier over the REAL runner.ChannelDispatcher into a
+# recording channel — proving a real DB mutation (create / status-change /
+# delete) produces a real rendered diff message dispatched through the real
+# fan-out. commons_workable is in-process SQLite, so this runs UNCONDITIONALLY
+# (no Postgres gate). §107 anchor: PASS here means the user-visible
+# watch→notify behaviour works, not merely that the process boots.
+check "E139 HRD-156 pherald watch→notify daemon — real SQLite + real fsnotify + real Diff + real fan-out → recording channel (create/status/delete; -race, hermetic, NOT PG-gated)" \
+    "go test -race -count=1 -run 'TestRunWatch_EndToEndOutbound' ./pherald/cmd/pherald/..."
+
 # ----------------------------------------------------------------------
 echo ""
 echo "===================================================="

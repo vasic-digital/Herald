@@ -1,0 +1,4 @@
+=== RUN   TestRunWatch_EndToEndOutbound
+--- PASS: TestRunWatch_EndToEndOutbound (0.19s)
+PASS
+ok  	github.com/vasic-digital/herald/pherald/cmd/pherald	1.963s

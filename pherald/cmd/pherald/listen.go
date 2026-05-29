@@ -74,6 +74,7 @@ import (
 	_ "github.com/vasic-digital/herald/commons_messaging/channels/slack"
 	_ "github.com/vasic-digital/herald/commons_messaging/channels/tgram"
 	"github.com/vasic-digital/herald/commons_messaging/dispatch/claude_code"
+	workable "github.com/vasic-digital/herald/commons_workable"
 	"github.com/vasic-digital/herald/pherald/internal/inbound"
 )
 
@@ -130,6 +131,20 @@ signal.NotifyContext.`,
 			if err := wireDocsAndCommands(&cfg); err != nil {
 				return err
 			}
+			// HRD-152 production wiring: open the workable-items SQLite SSoT
+			// (mirrors `pherald watch`'s --db pattern) and back the
+			// item.update / item.delete / confirmed-investigation actions with
+			// a real RepoMutator. Empty/unset path → Items stays nil → those
+			// actions return the dispatcher's explicit "no ItemMutator
+			// configured" error (graceful preserved behaviour).
+			dbPath, _ := cmd.Flags().GetString("db")
+			closeDB, err := wireItemMutator(&cfg, dbPath)
+			if err != nil {
+				return err
+			}
+			if closeDB != nil {
+				defer closeDB()
+			}
 			ctx, cancel := signal.NotifyContext(cmd.Context(), syscall.SIGINT, syscall.SIGTERM)
 			defer cancel()
 			fmt.Fprintln(cmd.OutOrStdout(), "pherald listen: starting Telegram getUpdates long-poll loop")
@@ -138,6 +153,11 @@ signal.NotifyContext.`,
 			}
 			fmt.Fprintf(cmd.OutOrStdout(), "pherald listen: docs dir %s; %d operator(s) authorised for Done:/Reopen:\n",
 				cfg.DocsDir, len(cfg.OperatorIDs))
+			if cfg.Items != nil {
+				fmt.Fprintln(cmd.OutOrStdout(), "pherald listen: workable-item mutation enabled (item.update/item.delete/confirmed-investigation)")
+			} else {
+				fmt.Fprintln(cmd.OutOrStdout(), "pherald listen: workable-item mutation DISABLED (no DB) — item.update/item.delete/investigation actions will error")
+			}
 			return runListen(ctx, cfg)
 		},
 	}
@@ -145,7 +165,47 @@ signal.NotifyContext.`,
 		"If set, journal inbound/CC/outbound events to <dir>/transcript.jsonl + copy attachments to <dir>/attachments/<sha256>.<ext> (Wave 6 T10a §107.x evidence)")
 	cmd.Flags().String("docs-dir", "docs",
 		"Docs root containing Issues.md / Fixed.md / Status.md / CONTINUATION.md / Help.md. Issues.md MUST exist (Wave 6.5 T7).")
+	cmd.Flags().String("db", "",
+		"Workable-items SQLite DB path backing item.update/item.delete/confirmed-investigation actions (default $HERALD_WORKABLE_DB or docs/workable_items.db; HRD-152). Empty path with no env → those actions return an explicit \"no ItemMutator configured\" error.")
 	return cmd
+}
+
+// wireItemMutator resolves the workable-items DB path (HRD-152 production
+// wiring) and, when it resolves to a non-empty path, opens the SQLite SSoT
+// and stamps a real inbound.RepoMutator into cfg.Items — mirroring
+// `pherald watch`'s --db open pattern (commons_workable.Open + NewRepo).
+//
+// Resolution order (matches watch.go): the explicit dbPath flag value first;
+// then $HERALD_WORKABLE_DB; then the canonical default "docs/workable_items.db".
+// A flag/env value of "" with the env unset still resolves to the default,
+// so the production path always wires Items unless the operator explicitly
+// passes --db "" AND unsets the env — in which case Items stays nil and the
+// item.update/item.delete/investigation actions return the dispatcher's
+// explicit "no ItemMutator configured" error (graceful preserved behaviour;
+// never a silent drop, §107 fail-loud).
+//
+// Returns a close func (the caller defers it to release the DB handle on
+// shutdown) or nil when no DB was opened.
+func wireItemMutator(cfg *listenConfig, dbPath string) (func(), error) {
+	if dbPath == "" {
+		if env := os.Getenv("HERALD_WORKABLE_DB"); env != "" {
+			dbPath = env
+		} else {
+			dbPath = "docs/workable_items.db"
+		}
+	}
+	if dbPath == "" {
+		// Operator explicitly disabled the DB (passed --db "" with the env
+		// also empty would already have defaulted above; this guards a future
+		// caller that sets dbPath="" intentionally). Leave Items nil.
+		return nil, nil
+	}
+	store, err := workable.Open(dbPath)
+	if err != nil {
+		return nil, fmt.Errorf("pherald listen: open workable DB %q: %w", dbPath, err)
+	}
+	cfg.Items = inbound.NewRepoMutator(workable.NewRepo(store))
+	return func() { _ = store.Close() }, nil
 }
 
 // listenConfig carries the resolved dependencies for runListen. The
@@ -201,6 +261,14 @@ type listenConfig struct {
 	// for the recipient's channel (so a tgram event replies via tgram, a
 	// slack event via slack). Test: a recordingReplier.
 	Replier inbound.Replier
+	// Items is the workable-item CRUD boundary (WS-4 / HRD-152, production
+	// wiring HRD-152). Non-nil when --db / HERALD_WORKABLE_DB resolves to a
+	// path: it backs the item.update / item.delete / confirmed-investigation
+	// mutation actions, mirroring `pherald watch`'s DB-open pattern. When nil
+	// (DB path empty/unset), those actions return the dispatcher's explicit
+	// "no ItemMutator configured" error — graceful preserved behaviour, never
+	// a silent drop (§107 fail-loud). Hermetic listen_test leaves it nil.
+	Items inbound.ItemMutator
 }
 
 // loadListenConfigFromEnv resolves env into listenConfig + constructs the
@@ -417,6 +485,7 @@ func runListen(ctx context.Context, cfg listenConfig) error {
 		Issues:      cfg.IssueOpener,
 		Events:      cfg.EventEmitter,
 		Commands:    cfg.Commands,
+		Items:       cfg.Items,
 	})
 	if err != nil {
 		return fmt.Errorf("pherald listen: build inbound dispatcher: %w", err)
