@@ -47,7 +47,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>17</td>
+<td>18</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -63,14 +63,29 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>r17 atomically lands (§11.4.19) the completed Wave 8 Track B
+<td><strong>r18 atomically lands (§11.4.19) HRD-090 dead-letter handling
+Completed→Fixed —
+<code>commons_infra.pgxTaskRepository.MoveToDeadLetter</code> (was the
+last Batch-D <code>ErrUnsupported</code> stub): migration
+<code>000014_dead_letter_tasks</code> + tx-atomic JSONB-snapshot move +
+terminal-mark; new 13th OPERATIONAL constitution event class
+<code>ClassQueueDeadLetter</code> + <code>QueueEvent</code> +
+<code>DeadLetter()</code> emit (wired nil-tolerantly; governance §42.2
+set unchanged). Four-layer closure: 3 unit + real-PG integration (3
+sinks) + §11.4.85 stress/chaos (50 concurrent race-clean, atomic under
+fault) + paired §1.1 mutation gate (4/0) + e2e E138; commits
+<code>549261d</code>+<code>9c765f6</code>; evidence
+<code>docs/qa/HRD-090-20260529T052228Z/</code> +
+<code>docs/qa/HRD-090-stress-chaos-20260529T054500Z/</code>.
+Governance-plane subscriber follow-up = HRD-147 (Issues.md).</strong>
+Prior r17 atomically lands (§11.4.19) the completed Wave 8 Track B
 (MTProto user-account harness for §11.4.98 full-automation testing) —
 HRD-139 (MTProto Client live wiring + qaherald mtproto CLI), HRD-140
 (Subscribe roundtrip), HRD-141 (Wave 6 closed loop), HRD-142 (Wave 6.5
 lifecycle) all New→Fixed (these HRDs were tracked directly in the
 TaskList rather than Issues.md and graduate directly into Fixed.md per
-§11.4.19 the moment closure landed).</strong> Wave 8 Track B closure
-proves §11.4.98 (full-automation anti-bluff mandate) end-to-end: 3
+§11.4.19 the moment closure landed).** Wave 8 Track B closure proves
+§11.4.98 (full-automation anti-bluff mandate) end-to-end: 3
 MTProto-driven live tests (E135 Subscribe / E136 Wave 6 closed loop /
 E137 Wave 6.5 lifecycle) all PASSING LIVE under §11.4.98-pure
 interpretation, captured under
@@ -169,18 +184,18 @@ Issues→Fixed atomic migration recorded in the prior r15.</td>
 <tr>
 <td>Issues summary</td>
 <td>HRD-008/-015 + HRD-019..HRD-025 + HRD-029..HRD-056 + HRD-081 +
-HRD-085..HRD-090 + HRD-115..HRD-121 + HRD-131 still open (31
-items).</td>
+HRD-085..HRD-089 + HRD-115..HRD-121 + HRD-131 + HRD-146 + HRD-147 still
+open (32 items; HRD-090 closed r18).</td>
 </tr>
 <tr>
 <td>Fixed</td>
 <td>HRD-001..HRD-007, HRD-009, HRD-009b, HRD-010, HRD-011, HRD-012,
 HRD-013, HRD-014, HRD-016, HRD-017, HRD-018, HRD-026, HRD-027, HRD-028,
-HRD-080, HRD-092, HRD-093, HRD-094, HRD-095, HRD-096, HRD-097, HRD-098,
-HRD-099, HRD-100, HRD-110, HRD-111, HRD-112, HRD-113, HRD-114, HRD-122,
-HRD-123, HRD-124, HRD-125, HRD-126, HRD-127, HRD-128, HRD-129, HRD-130,
-HRD-132, HRD-133, HRD-134, HRD-135, HRD-136, HRD-137, HRD-138, HRD-139,
-HRD-140, HRD-141, HRD-142</td>
+HRD-080, HRD-090, HRD-092, HRD-093, HRD-094, HRD-095, HRD-096, HRD-097,
+HRD-098, HRD-099, HRD-100, HRD-110, HRD-111, HRD-112, HRD-113, HRD-114,
+HRD-122, HRD-123, HRD-124, HRD-125, HRD-126, HRD-127, HRD-128, HRD-129,
+HRD-130, HRD-132, HRD-133, HRD-134, HRD-135, HRD-136, HRD-137, HRD-138,
+HRD-139, HRD-140, HRD-141, HRD-142</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
@@ -225,6 +240,51 @@ closed atomically.</td>
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>HRD-090</td>
+<td>task</td>
+<td>middle</td>
+<td>Dead-letter handling on <code>commons_infra.pgxTaskRepository</code>
+— <code>MoveToDeadLetter</code> (was the last
+<code>ErrUnsupported</code> Batch-D stub). Migration
+<code>000014_dead_letter_tasks</code> (.up/.down, FK→background_tasks ON
+DELETE CASCADE, no tenant/RLS — queue infra). Tx-atomic move: INSERT a
+full JSONB task snapshot into <code>dead_letter_tasks</code> +
+terminal-mark <code>background_tasks.status='dead_letter'</code>
+(soft-mark, NOT hard-DELETE, to preserve the events/snapshots FK
+children); JSONB passed as <code>string()</code> per the r23
+SQLSTATE-22P02 lesson. New 13th OPERATIONAL constitution event class
+<code>ClassQueueDeadLetter</code> ("queue.dead_letter") +
+<code>QueueEvent</code> payload + <code>DeadLetter()</code> emit method
+(governance set §42.2's 12 classes unchanged; count tests 12→13); wired
+nil-tolerantly into the repo via
+<code>newPgxTaskRepositoryWithEmitter</code> (boot.go keeps the
+nil-emitter — the Foundation plane has no governance bus+subscriber;
+emitting there would be an emit-into-the-void §107 bluff;
+governance-plane subscriber is HRD-147 follow-up). Best-effort emit
+AFTER the durable commit — surfaced as an error, never swallowed.
+<strong>Four-layer closure (CONST-048):</strong> 3 hermetic unit tests +
+real-PG integration
+(<code>TestRepoMoveToDeadLetter_RoundTripAndEmit</code>, 3 independent
+sinks: source terminal-state + dlq snapshot + real-bus
+<code>.queue.dead_letter</code> delivery) + §11.4.85 stress/chaos (50
+concurrent moves race-clean, emit-failure-atomic,
+cancelled-ctx-no-orphan) + paired §1.1 mutation gate
+(<code>tests/test_hrd090_mutation_meta.sh</code>, 4/0) + e2e E138. All
+<code>-race</code> green.</td>
+<td>2026-05-29</td>
+<td><code>549261d</code> (impl + event class) + <code>9c765f6</code>
+(stress/chaos + mutation gate + e2e E138)</td>
+<td>spec V3 §44 + §42.1; upstream <code>background.TaskRepository</code>
+(<code>submodules/background/interfaces.go</code>); Universal §11.4.85 +
+§1.1 + CONST-048 (inherited per §11.4.35); evidence
+<code>docs/qa/HRD-090-20260529T052228Z/</code> (real-PG round-trip) +
+<code>docs/qa/HRD-090-stress-chaos-20260529T054500Z/stress_chaos/</code>
+(QA-ANCHOR HRD-090-STRESS-CHAOS-20260529); follow-up HRD-147
+(governance-plane subscriber); Catalogue-Check: extend
+<code>digital.vasic.background.TaskRepository@2d46dd6</code>
+(failure-terminal surface).</td>
+</tr>
 <tr>
 <td>HRD-133</td>
 <td>task</td>

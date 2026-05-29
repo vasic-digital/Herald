@@ -47,7 +47,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>36</td>
+<td>39</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -63,12 +63,34 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>r36 (§11.4.90 Obsolete graduation of 3 legacy NON-COMPLIANT
-live tests + Wave 8 Track B closure recorded against Fixed.md).</strong>
-Three legacy live tests that fundamentally required manual operator
-action during execution graduate to <code>Obsolete</code> status per
-Universal §11.4.90 + Herald §108.e, with full
-<strong>Obsolete-Details</strong> lines (Since /
+<td><strong>r39 (§11.4.19 atomic migration: HRD-090 dead-letter handling
+Completed→<code>Fixed.md</code> — all four closure layers met: code +
+unit + real-PG integration + §11.4.85 stress/chaos + paired §1.1
+mutation gate (4/0) + e2e E138; HRD-147 filed for the governance-plane
+subscriber follow-up). Issues count steady at 32 (−HRD-090
++HRD-147).</strong> Prior r38 (HRD-146 filed —
+<code>pherald listen</code> dispatch hardening, from the 2026-05-29
+"worker OOM" Phase-1 investigation that found the OOM premise did NOT
+match committed reality; the real latent risk is unbounded per-message
+dispatch growth —
+<code>docs/research/oom-investigation-2026-05-29.md</code>).** Prior r37
+(HRD-090 dead-letter handling — code + unit + real-PG integration
+landed; stays in_progress pending §11.4.85 stress+chaos + paired §1.1
+mutation gate + e2e invariant).** <code>MoveToDeadLetter</code>
+implemented (migration <code>000014_dead_letter_tasks</code>, tx-atomic
+JSONB-snapshot move + terminal-mark, new 13th operational event class
+<code>ClassQueueDeadLetter</code>/<code>QueueEvent</code>/<code>DeadLetter()</code>
+wired nil-tolerantly into <code>pgxTaskRepository</code>); 3 hermetic
+unit tests + <code>TestRepoMoveToDeadLetter_RoundTripAndEmit</code>
+real-PG integration (3 independent sinks: source terminal-state + dlq
+snapshot + real-bus event delivery) <code>-race</code> green; evidence
+<code>docs/qa/HRD-090-20260529T052228Z/</code>. NOT migrated to Fixed —
+closure bar (CONST-048 four-layer) not yet met. Prior r36 (§11.4.90
+Obsolete graduation of 3 legacy NON-COMPLIANT live tests + Wave 8 Track
+B closure recorded against Fixed.md).** Three legacy live tests that
+fundamentally required manual operator action during execution graduate
+to <code>Obsolete</code> status per Universal §11.4.90 + Herald §108.e,
+with full <strong>Obsolete-Details</strong> lines (Since /
 Reason=superseded-by-later-mandate §11.4.98 / Superseding-item +
 triple-check evidence per §11.4.6 no-guessing): HRD-143 supersedes
 <code>TestSubscribe_LiveBotAPI</code> via HRD-140; HRD-144 supersedes
@@ -313,11 +335,11 @@ inbound-runtime extension note
 <tr>
 <td>Issues</td>
 <td>HRD-008, HRD-015, HRD-019..HRD-025, HRD-029..HRD-056, HRD-081,
-HRD-085..HRD-090, HRD-115..HRD-121, HRD-131</td>
+HRD-085..HRD-089, HRD-115..HRD-121, HRD-131, HRD-146, HRD-147</td>
 </tr>
 <tr>
 <td>Issues summary</td>
-<td>31 open / in-progress workable items. r35 (Tgram-completeness wave
+<td>32 open / in-progress workable items. r35 (Tgram-completeness wave
 COMPLETE) atomically migrated HRD-133/134/135/136/137/138 Issues→Fixed
 per §11.4.19 — see <code>Fixed.md</code>. r34..r17 (v1.0.0 Batch A):
 HRD-018 (commons_constitution package —
@@ -1316,29 +1338,30 @@ extend
 not stream-only).</td>
 </tr>
 <tr>
-<td>HRD-090</td>
+<td>HRD-147</td>
 <td>task</td>
 <td>open</td>
-<td>middle</td>
-<td>Implement dead-letter handling on
-<code>commons_infra.pgxTaskRepository</code> —
-<code>MoveToDeadLetter</code>. Required failure path when a task
-exhausts retries or fails a §107 invariant. Currently returns
-<code>ErrUnsupported (HRD-090)</code>. Scope: atomically move the
-BackgroundTask row to a <code>dead_letter_tasks</code> table with the
-failure-reason string + original-row JSONB snapshot; emit a
-<code>.queue.dead_letter</code> event via
-<code>commons_constitution</code> per §42.1. Schema target: a
-<code>dead_letter_tasks</code> table not yet in the §9.6 migration set —
-adding it is part of this HRD.</td>
-<td>2026-05-20</td>
-<td>2026-05-20</td>
-<td>spec V3 §44 + upstream interface <code>TaskRepository</code> in
-<code>submodules/background/interfaces.go</code>; Catalogue-Check:
-extend
-<code>digital.vasic.background.TaskRepository@2d46dd60b2ffcb9d3b584b029b711a6fbc71b296</code>
-(failure-terminal surface — composes with HRD-085 GetByID + HRD-018
-cherald event emission).</td>
+<td>low</td>
+<td>Governance-plane subscriber for <code>.queue.dead_letter</code> —
+wire a durable PRODUCTION consumer that drains the HRD-090 dead-letter
+events into the <code>constitution_audit</code> sink (or equivalent
+durable store) so dead-letter moves are auditable beyond the in-process
+emit. HRD-090 emits the event + proves fan-out to a REAL bus subscriber
+in its integration test; this follow-up adds the production subscriber +
+persistence and wires the emitter into the production
+<code>pgxTaskRepository</code> construction (boot.go currently uses the
+nil-emitter — the Foundation plane has no governance bus; this HRD
+decides where the bus + subscriber live: the cherald binding plane vs a
+dedicated consumer).</td>
+<td>2026-05-29</td>
+<td>2026-05-29</td>
+<td>follow-up from HRD-090 (now in <code>Fixed.md</code>); spec V3 §42.1
++ §44; source <code>commons_infra/boot.go</code> +
+<code>commons_infra/task_repository.go</code>
+(<code>newPgxTaskRepositoryWithEmitter</code>) +
+<code>commons_constitution</code> audit sink (HRD-018); Catalogue-Check:
+reuse <code>commons_constitution</code> EventBus +
+<code>constitution_audit</code> (2026-05-29).</td>
 </tr>
 <tr>
 <td>HRD-115</td>
@@ -1582,15 +1605,61 @@ covers Phase 1 (this row) + Phase 2 adoption ONLY.</strong> Phases 3-6
 (md→db sync, db→md byte-identical regeneration, generator shims,
 text-direct-edit prohibition) are follow-on work-items to be opened as
 Phase 2 completes, so the §106 spec-change / §107.x evidence invariants
-are never broken mid-migration.</td>
+are never broken mid-migration. <strong>2026-05-29
+re-assessment:</strong> Phase 2 remains EXTERNALLY BLOCKED —
+<code>constitution/scripts/workable-items/</code> is still a
+non-functional scaffold (0/7 subcommands implemented,
+<code>go build</code> succeeds but every command exits 2 "not yet
+implemented"; full assessment
+<code>docs/research/workable-items-phase2-assessment-2026-05-27.md</code>).
+Herald cannot proceed beyond Phase 1 without reimplementing the binary,
+which §11.4.74 forbids. The <code>docs/.workable_items.db</code> →
+canonical <code>docs/workable_items.db</code> path reconciliation is
+DEFERRED BY DESIGN per CLAUDE.md §11.4.95 ("reconcile to the canonical
+path when the DB is implemented") — reconciling now would churn 4
+governance docs (inheritance-gate risk) for a file that does not yet
+exist and could create a new dot/no-dot split.</td>
 <td>2026-05-27</td>
-<td>2026-05-27</td>
+<td>2026-05-29</td>
 <td>Universal §11.4.93 + Herald §108.h
 <code>docs/guides/HERALD_CONSTITUTION.md</code>; migration binary
 <code>constitution/scripts/workable-items/</code> (§11.4.74 reference,
 never reimplement); operator mandate 2026-05-27 (version-controlled DB);
 Catalogue-Check: reuse <code>constitution/scripts/workable-items/</code>
 (constitution-submodule tool, 2026-05-27).</td>
+</tr>
+<tr>
+<td>HRD-146</td>
+<td>task</td>
+<td>open</td>
+<td>middle</td>
+<td><code>pherald listen</code> dispatch hardening — bound per-message
+resource use in the inbound→<code>claude_code.Dispatch</code> path.
+Latent unbounded-growth risk surfaced by the 2026-05-29 "worker OOM"
+Phase-1 investigation
+(<code>docs/research/oom-investigation-2026-05-29.md</code>):
+<code>dispatch.go</code> uses <code>cmd.Output()</code> (full
+child-stdout buffering in memory) with NO per-message timeout beyond the
+Subscribe-lifetime ctx; <code>subscribe.go</code> runs handlers on
+telebot dispatch goroutines. Under a hung/slow <code>claude</code> child
++ sustained inbound load, goroutines + stdout buffers could accumulate
+for the process lifetime. <strong>Hypothesis-grade (NOT a confirmed
+defect)</strong> — untested under real hung-child load (in-repo stress
+tests use stub dispatchers). Scope: add a per-message
+<code>context.WithTimeout</code> around dispatch + cap/stream child
+stdout (<code>cmd.Output()</code>→bounded reader), then a §11.4.85
+stress/chaos test driving a deliberately-slow fake <code>claude</code>
+to prove bounded memory + goroutine count. NOTE: the originating "hourly
+OOM + telemetry-drop + 5-path triage + heap profile" premise did NOT
+match committed reality (no hourly worker, no OTel telemetry, no heap
+profile in-repo).</td>
+<td>2026-05-29</td>
+<td>2026-05-29</td>
+<td><code>docs/research/oom-investigation-2026-05-29.md</code>; source
+<code>commons_messaging/dispatch/claude_code/dispatch.go</code> +
+<code>commons_messaging/channels/tgram/subscribe.go</code>;
+Catalogue-Check: no-match (Herald-specific dispatch path,
+2026-05-29).</td>
 </tr>
 </tbody>
 </table>
