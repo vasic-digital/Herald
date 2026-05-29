@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 
 	"github.com/vasic-digital/herald/commons"
 )
@@ -110,7 +111,20 @@ type Config struct {
 	Issues      IssueOpener
 	Events      EventEmitter
 	Commands    *CommandsConfig
-	Fake        bool // listen_test.go opt-in; production callers leave false
+
+	// Items is the workable-item CRUD boundary (WS-4 / HRD-152). When
+	// non-nil it backs the item.update / item.delete actions and the
+	// confirmed-investigation execution path. When nil, those actions
+	// return an explicit error (no silent drop).
+	Items ItemMutator
+
+	// ConfirmToken mints the confirmation token for a deferred
+	// investigation proposal. Injectable so tests are deterministic;
+	// production leaves it nil and a UUIDv7-derived default is used.
+	// The argument is the inbound event id (stable per message).
+	ConfirmToken func(eventID string) string
+
+	Fake bool // listen_test.go opt-in; production callers leave false
 }
 
 // Dispatcher is pherald's production InboundHandler.
@@ -121,6 +135,32 @@ type Dispatcher struct {
 	opener      IssueOpener
 	emit        EventEmitter
 	commands    *CommandsConfig
+	items       ItemMutator
+	confirmTok  func(string) string
+	pending     *pendingStore
+
+	// actions is the action→handler registry (WS-4 / HRD-152). The
+	// Wave 6 switch is refactored into this map so new actions are
+	// added by registration, not by growing a switch. Each handler
+	// receives the dispatch context — the routed Reply plus the
+	// originating event — and is responsible for its own sink call +
+	// §107 log line.
+	actions map[string]actionHandler
+}
+
+// actionHandler routes one parsed Reply action to its sink. It returns
+// an error verbatim to Handle (success or failure both terminate the
+// dispatch). dctx bundles the event + reply so handlers share one
+// signature regardless of which fields they consume.
+type actionHandler func(ctx context.Context, dctx dispatchCtx) error
+
+// dispatchCtx is the per-message routing context passed to every
+// actionHandler — the originating event, the parsed reply, and the
+// pre-computed reply-to id (so handlers don't each re-extract it).
+type dispatchCtx struct {
+	ev        commons.InboundEvent
+	reply     *Reply
+	replyToID string
 }
 
 // NewDispatcher validates cfg and returns a ready Dispatcher. cfg.Code and
@@ -137,14 +177,44 @@ func NewDispatcher(cfg Config) (*Dispatcher, error) {
 	if cfg.Reply == nil {
 		return nil, errors.New("inbound.NewDispatcher: cfg.Reply is required")
 	}
-	return &Dispatcher{
+	confirmTok := cfg.ConfirmToken
+	if confirmTok == nil {
+		confirmTok = defaultConfirmToken
+	}
+	d := &Dispatcher{
 		projectName: cfg.ProjectName,
 		code:        cfg.Code,
 		reply:       cfg.Reply,
 		opener:      cfg.Issues,
 		emit:        cfg.Events,
 		commands:    cfg.Commands,
-	}, nil
+		items:       cfg.Items,
+		confirmTok:  confirmTok,
+		pending:     newPendingStore(),
+	}
+	d.actions = map[string]actionHandler{
+		"reply":               d.actReply,
+		"issue.open":          d.actIssueOpen,
+		"event.emit":          d.actEventEmit,
+		"item.update":         d.actItemUpdate,
+		"item.delete":         d.actItemDelete,
+		"investigation.start": d.actInvestigationStart,
+	}
+	return d, nil
+}
+
+// defaultConfirmToken derives a confirmation token from the event id.
+// Production callers leave Config.ConfirmToken nil; tests inject a
+// deterministic stub. The event id is already a UUIDv7-style stable id,
+// so a short prefix is sufficient to disambiguate concurrent proposals.
+func defaultConfirmToken(eventID string) string {
+	if eventID == "" {
+		return "CONFIRM"
+	}
+	if len(eventID) > 8 {
+		return eventID[:8]
+	}
+	return eventID
 }
 
 // Handle implements commons.InboundHandler.
@@ -164,6 +234,14 @@ func NewDispatcher(cfg Config) (*Dispatcher, error) {
 // ("inbound dispatched: <action>") so listen_test.go can confirm the
 // production handler was wired (not silently swallowed).
 func (d *Dispatcher) Handle(ctx context.Context, ev commons.InboundEvent) error {
+	// CONFIRM fast-path (WS-4 / HRD-152): "CONFIRM <token>" executes a
+	// pending investigation-proposed mutation WITHOUT a CC round-trip.
+	// Checked before classification so the confirm flow is deterministic
+	// (a confirm message is never reinterpreted as a query).
+	if tok, ok := parseConfirm(ev.Body.Plain); ok {
+		return d.handleConfirm(ctx, ev, tok)
+	}
+
 	classification := Classify(ev.Body.Plain)
 
 	// Fast-path: §32.6 command-prefix types are handled locally without a
@@ -194,49 +272,188 @@ func (d *Dispatcher) Handle(ctx context.Context, ev commons.InboundEvent) error 
 		return fmt.Errorf("inbound: parse reply: %w", err)
 	}
 
-	switch reply.Action {
-	case "reply":
-		replyToID, _ := extractReplyToMessageID(ev.Raw)
-		rt := ""
-		if replyToID > 0 {
-			rt = strconv.Itoa(replyToID)
-		}
-		rcpt := commons.Recipient{Channel: ev.Sender.Channel, ChannelUserID: ev.Sender.ChannelUserID}
-		if _, err := d.reply.SendReply(ctx, rcpt, reply.Text, rt, nil); err != nil {
-			return fmt.Errorf("inbound: send reply: %w", err)
-		}
-		log.Printf("inbound dispatched: reply (event=%s channel=%s user=%s replyTo=%s)", ev.EventID, ev.Sender.Channel, ev.Sender.ChannelUserID, rt)
-		return nil
-
-	case "issue.open":
-		if d.opener == nil {
-			return errors.New("inbound: action=issue.open but no IssueOpener configured")
-		}
-		if reply.Issue == nil {
-			return errors.New("inbound: action=issue.open but reply.Issue is nil")
-		}
-		if err := d.opener.OpenIssue(ctx, *reply.Issue); err != nil {
-			return fmt.Errorf("inbound: open issue: %w", err)
-		}
-		log.Printf("inbound dispatched: issue.open (event=%s title=%q)", ev.EventID, reply.Issue.Title)
-		return nil
-
-	case "event.emit":
-		if d.emit == nil {
-			return errors.New("inbound: action=event.emit but no EventEmitter configured")
-		}
-		if reply.Event == nil {
-			return errors.New("inbound: action=event.emit but reply.Event is nil")
-		}
-		if err := d.emit.Emit(ctx, *reply.Event); err != nil {
-			return fmt.Errorf("inbound: emit event: %w", err)
-		}
-		log.Printf("inbound dispatched: event.emit (event=%s type=%s)", ev.EventID, reply.Event.CloudEventType)
-		return nil
-
-	default:
+	handler, ok := d.actions[reply.Action]
+	if !ok {
 		return fmt.Errorf("inbound: unknown action %q", reply.Action)
 	}
+	replyToID, _ := extractReplyToMessageID(ev.Raw)
+	rt := ""
+	if replyToID > 0 {
+		rt = strconv.Itoa(replyToID)
+	}
+	return handler(ctx, dispatchCtx{ev: ev, reply: reply, replyToID: rt})
+}
+
+// recipientOf builds the reply recipient from the originating event.
+func recipientOf(ev commons.InboundEvent) commons.Recipient {
+	return commons.Recipient{Channel: ev.Sender.Channel, ChannelUserID: ev.Sender.ChannelUserID}
+}
+
+// actReply routes action=reply to the Replier. Default action; behaviour
+// identical to the Wave 6 switch case.
+func (d *Dispatcher) actReply(ctx context.Context, dc dispatchCtx) error {
+	rcpt := recipientOf(dc.ev)
+	if _, err := d.reply.SendReply(ctx, rcpt, dc.reply.Text, dc.replyToID, nil); err != nil {
+		return fmt.Errorf("inbound: send reply: %w", err)
+	}
+	log.Printf("inbound dispatched: reply (event=%s channel=%s user=%s replyTo=%s)", dc.ev.EventID, dc.ev.Sender.Channel, dc.ev.Sender.ChannelUserID, dc.replyToID)
+	return nil
+}
+
+// actIssueOpen routes action=issue.open to the IssueOpener. Behaviour
+// identical to the Wave 6 switch case.
+func (d *Dispatcher) actIssueOpen(ctx context.Context, dc dispatchCtx) error {
+	if d.opener == nil {
+		return errors.New("inbound: action=issue.open but no IssueOpener configured")
+	}
+	if dc.reply.Issue == nil {
+		return errors.New("inbound: action=issue.open but reply.Issue is nil")
+	}
+	if err := d.opener.OpenIssue(ctx, *dc.reply.Issue); err != nil {
+		return fmt.Errorf("inbound: open issue: %w", err)
+	}
+	log.Printf("inbound dispatched: issue.open (event=%s title=%q)", dc.ev.EventID, dc.reply.Issue.Title)
+	return nil
+}
+
+// actEventEmit routes action=event.emit to the EventEmitter. Behaviour
+// identical to the Wave 6 switch case.
+func (d *Dispatcher) actEventEmit(ctx context.Context, dc dispatchCtx) error {
+	if d.emit == nil {
+		return errors.New("inbound: action=event.emit but no EventEmitter configured")
+	}
+	if dc.reply.Event == nil {
+		return errors.New("inbound: action=event.emit but reply.Event is nil")
+	}
+	if err := d.emit.Emit(ctx, *dc.reply.Event); err != nil {
+		return fmt.Errorf("inbound: emit event: %w", err)
+	}
+	log.Printf("inbound dispatched: event.emit (event=%s type=%s)", dc.ev.EventID, dc.reply.Event.CloudEventType)
+	return nil
+}
+
+// actItemUpdate routes action=item.update to the ItemMutator. A nil
+// mutator or nil payload is an explicit error (no silent drop).
+func (d *Dispatcher) actItemUpdate(ctx context.Context, dc dispatchCtx) error {
+	if d.items == nil {
+		return errors.New("inbound: action=item.update but no ItemMutator configured")
+	}
+	if dc.reply.ItemUpdate == nil {
+		return errors.New("inbound: action=item.update but reply.ItemUpdate is nil")
+	}
+	p := dc.reply.ItemUpdate
+	if err := d.items.Update(ctx, p.AtmID, p.Location, p.Fields); err != nil {
+		return fmt.Errorf("inbound: item.update %s/%s: %w", p.AtmID, p.Location, err)
+	}
+	log.Printf("inbound dispatched: item.update (event=%s atm=%s location=%s fields=%d)", dc.ev.EventID, p.AtmID, p.Location, len(p.Fields))
+	return nil
+}
+
+// actItemDelete routes action=item.delete to the ItemMutator.
+func (d *Dispatcher) actItemDelete(ctx context.Context, dc dispatchCtx) error {
+	if d.items == nil {
+		return errors.New("inbound: action=item.delete but no ItemMutator configured")
+	}
+	if dc.reply.ItemDelete == nil {
+		return errors.New("inbound: action=item.delete but reply.ItemDelete is nil")
+	}
+	p := dc.reply.ItemDelete
+	if err := d.items.Delete(ctx, p.AtmID, p.Location); err != nil {
+		return fmt.Errorf("inbound: item.delete %s/%s: %w", p.AtmID, p.Location, err)
+	}
+	log.Printf("inbound dispatched: item.delete (event=%s atm=%s location=%s)", dc.ev.EventID, p.AtmID, p.Location)
+	return nil
+}
+
+// actInvestigationStart implements ACT-WITH-CONFIRMATION (operator
+// decision 2026-05-29). The investigation report is returned to the
+// requester. Any machine-executable proposed mutation is NOT executed
+// immediately — it is recorded as pending under a (test-injectable)
+// token and the reply carries a "Reply CONFIRM <token> to apply: …"
+// prompt. The mutation runs only when a subsequent "CONFIRM <token>"
+// message arrives (see handleConfirm).
+//
+// §107 anchor: the mutator is NOT called on this path — the
+// TestInvestigationProposedMutationDeferred test asserts zero mutator
+// calls here, and TestInvestigationConfirmExecutesPendingMutation
+// asserts the call happens only after confirm.
+func (d *Dispatcher) actInvestigationStart(ctx context.Context, dc dispatchCtx) error {
+	if dc.reply.Investigation == nil {
+		return errors.New("inbound: action=investigation.start but reply.Investigation is nil")
+	}
+	inv := dc.reply.Investigation
+	rcpt := recipientOf(dc.ev)
+
+	var report strings.Builder
+	fmt.Fprintf(&report, "Investigation: %s\n", inv.Topic)
+	for _, a := range inv.ProposedActions {
+		fmt.Fprintf(&report, "  - %s\n", a)
+	}
+
+	if inv.ProposedAction != nil {
+		if d.items == nil {
+			return errors.New("inbound: investigation proposes a mutation but no ItemMutator configured")
+		}
+		token := d.confirmTok(dc.ev.EventID)
+		d.pending.put(token, *inv.ProposedAction)
+		fmt.Fprintf(&report, "\nReply CONFIRM %s to apply: %s %s/%s",
+			token, inv.ProposedAction.Kind, inv.ProposedAction.AtmID, inv.ProposedAction.Location)
+	}
+
+	if _, err := d.reply.SendReply(ctx, rcpt, report.String(), dc.replyToID, nil); err != nil {
+		return fmt.Errorf("inbound: investigation reply: %w", err)
+	}
+	log.Printf("inbound dispatched: investigation.start (event=%s topic=%q pending=%v)", dc.ev.EventID, inv.Topic, inv.ProposedAction != nil)
+	return nil
+}
+
+// parseConfirm recognises a "CONFIRM <token>" message and returns the
+// token. Case-insensitive on the CONFIRM keyword; the token is the
+// next whitespace-delimited field verbatim.
+func parseConfirm(body string) (string, bool) {
+	fields := strings.Fields(strings.TrimSpace(body))
+	if len(fields) == 2 && strings.EqualFold(fields[0], "CONFIRM") {
+		return fields[1], true
+	}
+	return "", false
+}
+
+// handleConfirm looks up the pending proposal for token and executes it
+// via the ItemMutator. An unknown token is an explicit error (no
+// fabricated success); the entry is consumed on lookup so a replayed
+// CONFIRM cannot double-apply.
+func (d *Dispatcher) handleConfirm(ctx context.Context, ev commons.InboundEvent, token string) error {
+	if d.items == nil {
+		return errors.New("inbound: CONFIRM received but no ItemMutator configured")
+	}
+	a, err := d.pending.take(token)
+	if err != nil {
+		return fmt.Errorf("inbound: CONFIRM %s: %w", token, err)
+	}
+	replyToID, _ := extractReplyToMessageID(ev.Raw)
+	rt := ""
+	if replyToID > 0 {
+		rt = strconv.Itoa(replyToID)
+	}
+	var execErr error
+	switch a.Kind {
+	case "update":
+		execErr = d.items.Update(ctx, a.AtmID, a.Location, a.Fields)
+	case "delete":
+		execErr = d.items.Delete(ctx, a.AtmID, a.Location)
+	default:
+		return fmt.Errorf("inbound: CONFIRM %s: unknown pending kind %q", token, a.Kind)
+	}
+	if execErr != nil {
+		return fmt.Errorf("inbound: CONFIRM %s execute %s: %w", token, a.Kind, execErr)
+	}
+	rcpt := recipientOf(ev)
+	confirmMsg := fmt.Sprintf("Applied: %s %s/%s", a.Kind, a.AtmID, a.Location)
+	if _, err := d.reply.SendReply(ctx, rcpt, confirmMsg, rt, nil); err != nil {
+		return fmt.Errorf("inbound: CONFIRM %s reply: %w", token, err)
+	}
+	log.Printf("inbound dispatched: confirm (event=%s token=%s kind=%s atm=%s location=%s)", ev.EventID, token, a.Kind, a.AtmID, a.Location)
+	return nil
 }
 
 // fastPath inspects classification.Type and, for the §32.6 command-prefix

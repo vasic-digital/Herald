@@ -22,10 +22,58 @@ import (
 // this is set inside ParseReply, not at decode-time, so callers can
 // distinguish "missing action → defaulted" from "explicit action".
 type Reply struct {
-	Action string        `json:"action"` // "reply" (default) | "issue.open" | "event.emit"
+	Action string        `json:"action"` // "reply" (default) | "issue.open" | "event.emit" | "item.update" | "item.delete" | "investigation.start"
 	Text   string        `json:"text"`   // body for action=reply
 	Issue  *IssuePayload `json:"issue,omitempty"`
 	Event  *EventPayload `json:"event,omitempty"`
+
+	// WS-4 (HRD-152) workable-item CRUD + investigation payloads.
+	ItemUpdate    *ItemUpdatePayload   `json:"item_update,omitempty"`
+	ItemDelete    *ItemDeletePayload   `json:"item_delete,omitempty"`
+	Investigation *InvestigationPayload `json:"investigation,omitempty"`
+}
+
+// ItemUpdatePayload is the action=item.update payload. Fields holds the
+// column→new-value pairs to apply to the (AtmID, Location) workable item.
+type ItemUpdatePayload struct {
+	AtmID    string            `json:"atm_id"`
+	Location string            `json:"location"`
+	Fields   map[string]string `json:"fields"`
+}
+
+// ItemDeletePayload is the action=item.delete payload — the composite
+// key of the workable item to remove.
+type ItemDeletePayload struct {
+	AtmID    string `json:"atm_id"`
+	Location string `json:"location"`
+}
+
+// ProposedAction is a single mutating action an investigation may
+// propose. It is NOT executed immediately — investigation.start is
+// ACT-WITH-CONFIRMATION (operator decision 2026-05-29): the dispatcher
+// records it as pending and emits a confirmation prompt; a subsequent
+// CONFIRM <token> message executes it.
+//
+// Kind is "update" or "delete". For "update", Fields carries the
+// column→value pairs; for "delete", Fields is ignored.
+type ProposedAction struct {
+	Kind     string            `json:"kind"` // "update" | "delete"
+	AtmID    string            `json:"atm_id"`
+	Location string            `json:"location"`
+	Fields   map[string]string `json:"fields,omitempty"`
+}
+
+// InvestigationPayload is the action=investigation.start payload. Topic
+// is the investigation subject (returned to the requester in the
+// report). ProposedActions is the human-readable list of suggestions
+// surfaced in the report. ProposedAction (singular) is the ONE machine-
+// executable mutation the investigation wants applied — deferred behind
+// a confirmation prompt. When nil, the investigation is report-only (no
+// confirmation prompt, no pending action).
+type InvestigationPayload struct {
+	Topic           string          `json:"topic"`
+	ProposedActions []string        `json:"proposed_actions,omitempty"`
+	ProposedAction  *ProposedAction `json:"proposed_action,omitempty"`
 }
 
 // IssuePayload is the action=issue.open payload per spec §32 issue triggers.
