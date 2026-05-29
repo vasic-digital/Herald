@@ -2411,6 +2411,23 @@ check "E136 TestMTProto_Wave6_AutonomousClosedLoop — full pherald→CC→reply
 check "E137 TestMTProto_Wave65_LifecycleAutonomous — Wave 6.5 fast-path lifecycle scenarios via MTProto (HRD-142; §11.4.98 NON-COMPLIANT → COMPLIANT, replaces lifecycle --manual mode)" \
     "go test -tags=integration_mtproto -count=1 -short -timeout=300s -run 'TestMTProto_Wave65_LifecycleAutonomous' ./qaherald/internal/lifecycle/..."
 
+# ---- E138: HRD-090 dead-letter move + .queue.dead_letter emit (real-PG) ----
+# PG-gated per §11.4.3. When herald-postgres :24100 is reachable, run the
+# real-PG round-trip (3 independent sinks: source terminal-state + dlq snapshot
+# + real-bus .queue.dead_letter delivery) AND the §11.4.85 stress/chaos suite
+# (50 concurrent moves race-clean + emit-failure-atomic + cancelled-ctx-no-
+# orphan). The tests boot/reuse the container via QuickstartBoot and set their
+# own throwaway password; SKIP-with-reason when :24100 is unreachable.
+echo ""
+echo "== E138: HRD-090 dead-letter handling (real-PG round-trip + stress/chaos) =="
+if nc -z 127.0.0.1 24100 2>/dev/null; then
+    check "E138 HRD-090 MoveToDeadLetter real-PG round-trip + §11.4.85 stress/chaos (3 sinks; 50 concurrent race-clean; atomic under emit-failure + ctx-cancel)" \
+        "go test -tags=integration -race -count=1 -timeout 8m -run 'TestRepoMoveToDeadLetter|TestMoveToDeadLetter_StressChaos' ./commons_infra/..."
+else
+    echo "SKIP  E138 — Postgres on :24100 unreachable (closed-set reason: hardware_not_present; §11.4.3 explicit SKIP-with-reason)"
+fi
+sc_anchor "E138 stress/chaos" "docs/qa/HRD-090-stress-chaos-20260529T054500Z/stress_chaos/stress_chaos.log" "PASS: TestMoveToDeadLetter_StressChaos/Stress_ConcurrentDistinctTasks"
+
 # ----------------------------------------------------------------------
 echo ""
 echo "===================================================="

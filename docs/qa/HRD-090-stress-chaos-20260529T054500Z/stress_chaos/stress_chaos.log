@@ -1,0 +1,11 @@
+=== RUN   TestMoveToDeadLetter_StressChaos
+=== RUN   TestMoveToDeadLetter_StressChaos/Stress_ConcurrentDistinctTasks
+    dead_letter_stress_chaos_integration_test.go:46: stress: 50 concurrent moves, 0 errors, 851 moves/s, p99=58.57ms
+=== RUN   TestMoveToDeadLetter_StressChaos/Chaos_EmitFailureStillMovesAtomically
+=== RUN   TestMoveToDeadLetter_StressChaos/Chaos_CancelledContextNoOrphan
+--- PASS: TestMoveToDeadLetter_StressChaos (2.06s)
+    --- PASS: TestMoveToDeadLetter_StressChaos/Stress_ConcurrentDistinctTasks (0.09s)
+    --- PASS: TestMoveToDeadLetter_StressChaos/Chaos_EmitFailureStillMovesAtomically (0.00s)
+    --- PASS: TestMoveToDeadLetter_StressChaos/Chaos_CancelledContextNoOrphan (0.00s)
+PASS
+ok  	github.com/vasic-digital/herald/commons_infra	3.491s
