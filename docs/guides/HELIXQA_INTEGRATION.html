@@ -340,10 +340,33 @@ valid-token 202 + Receipt, idempotency replay 200 +
 <td>10</td>
 <td>All 8 flavor binaries' <code>version --json</code> canonical shape +
 human DisplayName line; <code>pherald --help</code> subcommand
-discoverability; unknown-subcommand fail-loud.</td>
+discoverability; unknown-subcommand fail-loud. Uses self-asserting
+<code>shell:</code> actions (see below) so HelixQA REALLY runs each
+compiled binary.</td>
 </tr>
 </tbody>
 </table>
+<p><strong><code>shell:</code> actions = real execution (not
+crash-absence).</strong> Every <code>herald-cli-flavors.yaml</code> step
+uses <code>action: "shell: &lt;cmd&gt;"</code>. HelixQA's desktop
+challenge path (<code>executeDesktopShellSteps</code>) runs each via
+<code>sh -c</code>, captures the real exit code + combined output, and
+scores PASS only when the step exits 0. The command itself encodes the
+assertion — it pipes the binary's stdout through <code>grep</code>
+(<code>"binary":"pherald"</code>, the flavor code, the DisplayName, the
+named subcommands), so a wrong field or branding regression forces a
+non-zero exit → FAIL. A prose (non-<code>shell:</code>) action would
+instead SKIP honestly with a "convert to
+<code>action: \"shell: &lt;cmd&gt;\"</code>" reason — and the aggregator
+will NEVER promote a desktop skip to PASSED on crash-absence (desktop
+has no persistent app, so crash-absence is not CLI evidence; the
+<code>promoteSkippedToPassed</code> desktop guard in helixqa enforces
+this). Net: a desktop PASS is earned only by genuine execution, and the
+captured command + exit code is rendered into <code>qa-report.md</code>
+under "### Recorded evidence" as the auditable §107.x proof.
+Mutation-proven: corrupting one case's assertion flips it PASSED→FAILED.
+See <code>docs/qa/HRD-QA-CLI-FLAVORS-&lt;run-id&gt;/</code> for a
+captured run.</p>
 <p><strong>API-bank wiring follow-up (known gap).</strong> The
 <code>herald-api-v1.yaml</code> bank declares
 <code>platforms: [api]</code>, but <code>helixqa run --platform</code>

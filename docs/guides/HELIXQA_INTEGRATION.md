@@ -152,7 +152,24 @@ step `name` / `action` / `expected`) / `tags[]` / `documentation_refs[]`.
 | Bank | Platforms | Cases | Coverage |
 |---|---|---|---|
 | `herald-api-v1.yaml` | `api` | 11 | Real pherald `/v1/*` routes: `healthz`, `readyz`, `metrics`, and `POST /v1/events` (no-token 401, forged-token 401, valid-token 202 + Receipt, idempotency replay 200 + `X-Herald-Replay`, malformed body 400 `event_parser:`, missing-tenant-claim 401, 404 boundary, `/v1/compliance` not-served-by-pherald). |
-| `herald-cli-flavors.yaml` | `desktop` | 10 | All 8 flavor binaries' `version --json` canonical shape + human DisplayName line; `pherald --help` subcommand discoverability; unknown-subcommand fail-loud. |
+| `herald-cli-flavors.yaml` | `desktop` | 10 | All 8 flavor binaries' `version --json` canonical shape + human DisplayName line; `pherald --help` subcommand discoverability; unknown-subcommand fail-loud. Uses self-asserting `shell:` actions (see below) so HelixQA REALLY runs each compiled binary. |
+
+**`shell:` actions = real execution (not crash-absence).** Every
+`herald-cli-flavors.yaml` step uses `action: "shell: <cmd>"`. HelixQA's
+desktop challenge path (`executeDesktopShellSteps`) runs each via `sh -c`,
+captures the real exit code + combined output, and scores PASS only when the
+step exits 0. The command itself encodes the assertion — it pipes the
+binary's stdout through `grep` (`"binary":"pherald"`, the flavor code, the
+DisplayName, the named subcommands), so a wrong field or branding regression
+forces a non-zero exit → FAIL. A prose (non-`shell:`) action would instead
+SKIP honestly with a "convert to `action: \"shell: <cmd>\"`" reason — and the
+aggregator will NEVER promote a desktop skip to PASSED on crash-absence
+(desktop has no persistent app, so crash-absence is not CLI evidence; the
+`promoteSkippedToPassed` desktop guard in helixqa enforces this). Net: a
+desktop PASS is earned only by genuine execution, and the captured command +
+exit code is rendered into `qa-report.md` under "### Recorded evidence" as the
+auditable §107.x proof. Mutation-proven: corrupting one case's assertion flips
+it PASSED→FAILED. See `docs/qa/HRD-QA-CLI-FLAVORS-<run-id>/` for a captured run.
 
 **API-bank wiring follow-up (known gap).** The `herald-api-v1.yaml` bank
 declares `platforms: [api]`, but `helixqa run --platform` accepts only

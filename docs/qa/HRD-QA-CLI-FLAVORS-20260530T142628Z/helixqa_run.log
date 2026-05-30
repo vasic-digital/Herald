@@ -1,0 +1,10 @@
+[90m19:26:38[0m [[34mINFO [0m] Starting HelixQA run
+[90m19:26:38[0m [[34mINFO [0m] Loaded 10 challenge definitions from 1 sources
+[90m19:26:38[0m [[34mINFO [0m] Testing platform: desktop
+[90m19:26:38[0m [[34mINFO [0m] Platform desktop: wired runner with 10 bridged definitions (10 executable bank cases) — HXC-011
+[90m19:26:44[0m [[34mINFO [0m] HelixQA run complete: 10/10 passed, 0 crashes, 0 ANRs, report at /Users/milosvasic/Projects/Herald/qa-results/helixqa/20260530T142628Z/qa-report.md
+
+PASSED - All 10 challenges passed, no crashes
+Report: /Users/milosvasic/Projects/Herald/qa-results/helixqa/20260530T142628Z/qa-report.md
+Duration: 6.62967625s
+Tickets: /Users/milosvasic/Projects/Herald/qa-results/helixqa/20260530T142628Z/tickets/
