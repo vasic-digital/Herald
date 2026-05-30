@@ -113,7 +113,7 @@ Integration (Operator Guide)</h1>
 <tbody>
 <tr>
 <td>Revision</td>
-<td>1</td>
+<td>2</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -129,18 +129,28 @@ Integration (Operator Guide)</h1>
 </tr>
 <tr>
 <td>Status summary</td>
-<td>Operator-facing guide for running autonomous anti-bluff QA against
-Herald with the HelixQA framework. Documents what HelixQA is, the
-<code>~/Projects</code> sibling layout (CONST-051 flat-layout, no nested
-submodule chains), the LLM/Vision bridge (<code>claude</code> on PATH
-wrapped as a <code>BridgedCLIProvider</code>), the two Herald test banks
-under <code>challenges/helixqa-banks/</code> (the pherald
-<code>/v1/*</code> API bank + the eight-flavor CLI bank), the
-<code>scripts/helixqa_run.sh</code> launcher (build → boot real PG +
-pherald serve → run banks → preserve evidence), the bank YAML structure,
-the evidence layout under
-<code>qa-results/helixqa/&lt;run-id&gt;/</code>, and where HelixQA fits
-as Herald's autonomous-QA single-source-of-truth.</td>
+<td><strong>r2: closed the api-bank wiring gap.</strong>
+<code>challenges/helixqa-banks/herald-api-v1.yaml</code> was rewritten
+from prose <code>action:</code> strings (which parse as
+<code>ActionTypeDescription</code> and never execute, and which
+<code>helixqa run --platform</code> could never select since it accepts
+only android/web/desktop/all, not api) to typed <code>shell:</code> curl
+actions that GENUINELY EXECUTE on the <code>desktop</code> orchestrator
+path with assertions that BITE (exact-match
+<code>[ "$code" = "401" ]</code>, <code>python3 assert</code> on JSON
+bodies, <code>grep -q</code> on the metrics gauge /
+<code>event_parser:</code> tag / <code>X-Herald-Replay</code> header).
+Cases now declare <code>platforms: [api, desktop]</code>. The launcher
+(<code>scripts/helixqa_run.sh</code>) exports
+<code>HELIXQA_HTTP_BASE_URL</code> when the live serve is up and runs
+<code>--platform desktop</code> (not <code>all</code>, which added
+phantom UI-platform skips). Self-validated against a self-signed-HTTPS
+stub: 11/11 PASS (good responses) vs 10/11 FAIL (wrong responses) — bite
+proof under <code>qa-results/api-bank-rewrite-validation/</code>.
+HTTP-executor TLS-verify limitation documented (no
+<code>InsecureSkipVerify</code> → <code>http:</code> action unusable for
+the self-signed listener → <code>shell:</code> + <code>curl -k</code> is
+the fit). Prior r1: initial operator-facing guide.</td>
 </tr>
 <tr>
 <td>Issues</td>
@@ -152,7 +162,9 @@ as Herald's autonomous-QA single-source-of-truth.</td>
 </tr>
 <tr>
 <td>Fixed</td>
-<td>(n/a — new guide)</td>
+<td>api-bank wiring gap closed — prose <code>action:</code> strings →
+typed <code>shell:</code> curl actions that genuinely execute with
+biting assertions (r2)</td>
 </tr>
 <tr>
 <td>Continuation</td>
@@ -198,10 +210,13 @@ report with evidence.</p>
 <p>For Herald, HelixQA validates two surfaces:</p>
 <ol type="1">
 <li><strong>The pherald HTTP API</strong>
-(<code>platforms: [api]</code>) — the live Gin <code>/v1/*</code> plane:
-the JWT-gated <code>POST /v1/events</code> ingestion route plus the
-<code>healthz</code> / <code>readyz</code> / <code>metrics</code>
-built-ins.</li>
+(<code>platforms: [api, desktop]</code>) — the live Gin
+<code>/v1/*</code> plane: the JWT-gated <code>POST /v1/events</code>
+ingestion route plus the <code>healthz</code> / <code>readyz</code> /
+<code>metrics</code> built-ins. The cases declare BOTH <code>api</code>
+(the semantic surface tag) and <code>desktop</code> (the platform whose
+orchestrator path genuinely executes their <code>shell:</code> curl
+actions — see the "API-bank execution model" note below).</li>
 <li><strong>The eight flavor binaries</strong>
 (<code>platforms: [desktop]</code>) — <code>pherald</code>,
 <code>sherald</code>, <code>cherald</code>, <code>bherald</code>,
@@ -275,23 +290,21 @@ Postgres is reachable on <code>:24100</code>, start
 <code>HERALD_AUTH_HMAC_SECRET</code>, wait for the
 <strong>HTTPS</strong> listener (Wave 4a — probe with
 <code>curl -k</code>), and capture a live <code>healthz</code> body as
-evidence. When PG is unreachable, the live serve is <strong>SKIPPED with
+evidence. On success the launcher <strong>exports
+<code>HELIXQA_HTTP_BASE_URL=https://127.0.0.1:${HERALD_HTTP_PORT}</code></strong>
+so the API bank's <code>shell:</code> curl steps target the real
+listener. When PG is unreachable, the live serve is <strong>SKIPPED with
 a recorded reason</strong> (§11.4.3) and the API bank is left out of the
 run so no API coverage is claimed that was not exercised.</li>
 <li><strong>Run the banks</strong> —
-<code>helixqa run --banks &lt;cli[,api]&gt; --platform desktop</code>
+<code>helixqa run --banks &lt;api,cli&gt; --platform desktop</code>
 writing report + evidence under
-<code>qa-results/helixqa/&lt;run-id&gt;/</code>. The CLI bank is
-<code>[desktop]</code>; the launcher pins
-<code>--platform desktop</code> rather than <code>--platform all</code>
-because <code>all</code> spreads the desktop cases across
-<code>android</code>/<code>androidtv</code>/<code>web</code> targets
-where they SKIP as noise. (The API bank's <code>[api]</code> platform is
-<strong>not</strong> one of <code>helixqa run</code>'s platforms —
-<code>android | web | desktop | all</code> — so the API plane is driven
-by the live <code>pherald serve</code> boot in step 4 and asserted
-there; see the api-bank wiring follow-up under <a
-href="#the-test-banks">The test banks</a>.)</li>
+<code>qa-results/helixqa/&lt;run-id&gt;/</code>. <code>desktop</code> is
+the platform whose orchestrator path genuinely executes
+<code>shell:</code> actions (both banks declare only desktop-executable
+steps); <code>--platform all</code> would add phantom SKIP rows on the
+<code>android</code> / <code>androidtv</code> / <code>web</code>
+platforms and mask the real desktop verdicts.</li>
 <li><strong>(Optional) autonomous session</strong> — set
 <code>HELIXQA_AUTONOMOUS=1</code> to also run
 <code>helixqa autonomous --project &lt;repo&gt; --platforms api,desktop</code>.</li>
@@ -324,12 +337,12 @@ the HelixQA YAML schema: top-level <code>version</code> /
 <tbody>
 <tr>
 <td><code>herald-api-v1.yaml</code></td>
-<td><code>api</code></td>
+<td><code>api, desktop</code></td>
 <td>11</td>
-<td>Real pherald <code>/v1/*</code> routes: <code>healthz</code>,
-<code>readyz</code>, <code>metrics</code>, and
-<code>POST /v1/events</code> (no-token 401, forged-token 401,
-valid-token 202 + Receipt, idempotency replay 200 +
+<td>Real pherald <code>/v1/*</code> routes via typed <code>shell:</code>
+curl actions: <code>healthz</code>, <code>readyz</code>,
+<code>metrics</code>, and <code>POST /v1/events</code> (no-token 401,
+forged-token 401, valid-token 202 + Receipt, idempotency replay 200 +
 <code>X-Herald-Replay</code>, malformed body 400
 <code>event_parser:</code>, missing-tenant-claim 401, 404 boundary,
 <code>/v1/compliance</code> not-served-by-pherald).</td>
@@ -340,16 +353,18 @@ valid-token 202 + Receipt, idempotency replay 200 +
 <td>10</td>
 <td>All 8 flavor binaries' <code>version --json</code> canonical shape +
 human DisplayName line; <code>pherald --help</code> subcommand
-discoverability; unknown-subcommand fail-loud. Uses self-asserting
-<code>shell:</code> actions (see below) so HelixQA REALLY runs each
-compiled binary.</td>
+discoverability; unknown-subcommand fail-loud. Self-asserting
+<code>shell:</code> actions (see below).</td>
 </tr>
 </tbody>
 </table>
-<p><strong><code>shell:</code> actions = real execution (not
-crash-absence).</strong> Every <code>herald-cli-flavors.yaml</code> step
-uses <code>action: "shell: &lt;cmd&gt;"</code>. HelixQA's desktop
-challenge path (<code>executeDesktopShellSteps</code>) runs each via
+<h3
+id="cli-bank-execution-model--shell-actions--real-execution-not-crash-absence">CLI-bank
+execution model — <code>shell:</code> actions = real execution (not
+crash-absence)</h3>
+<p>Every <code>herald-cli-flavors.yaml</code> step uses
+<code>action: "shell: &lt;cmd&gt;"</code>. HelixQA's desktop challenge
+path (<code>executeDesktopShellSteps</code>) runs each via
 <code>sh -c</code>, captures the real exit code + combined output, and
 scores PASS only when the step exits 0. The command itself encodes the
 assertion — it pipes the binary's stdout through <code>grep</code>
@@ -367,27 +382,77 @@ under "### Recorded evidence" as the auditable §107.x proof.
 Mutation-proven: corrupting one case's assertion flips it PASSED→FAILED.
 See <code>docs/qa/HRD-QA-CLI-FLAVORS-&lt;run-id&gt;/</code> for a
 captured run.</p>
-<p><strong>API-bank wiring follow-up (known gap).</strong> The
-<code>herald-api-v1.yaml</code> bank declares
-<code>platforms: [api]</code>, but <code>helixqa run --platform</code>
-accepts only <code>android | web | desktop | all</code> —
-<code>api</code> is a HelixQA <em>config</em> platform constant, not a
-<code>run</code> selector. As a result the bank's cases do not match any
-<code>run</code> platform and are not driven by <code>helixqa run</code>
-itself. Today the API surface is instead exercised directly by the
-launcher's step-4 live <code>pherald serve</code> boot (real HTTPS
-listener + real Postgres + captured <code>healthz</code> body), which is
-the genuine anti-bluff API evidence. Closing the gap so
-<code>helixqa run</code> drives the <code>[api]</code> bank natively
-(either by teaching <code>run</code> an <code>api</code> platform that
-targets an HTTP base-URL, or by mapping the bank onto
-<code>desktop</code> <code>curl</code> steps against the live listener)
-is tracked as the <strong>api-bank wiring</strong> follow-up. Until then
-the table's <code>api</code> row documents <em>intended</em> coverage
-delivered via the launcher's live serve, not via
-<code>helixqa run</code> step execution — stated explicitly here so the
-row is not read as a coverage claim it does not yet meet (§107
-anti-bluff).</p>
+<h3 id="api-bank-execution-model-why-shell-curl-not-http">API-bank
+execution model (why <code>shell:</code> curl, not
+<code>http:</code>)</h3>
+<p>The original API bank declared <code>platforms: [api]</code> with
+prose <code>action: "GET https://… (curl -k)"</code> strings. Those were
+a <strong>known wiring gap</strong>: the HelixQA <code>run</code>
+orchestrator only EXECUTES <code>shell:</code> action steps, and only on
+the <code>desktop</code> platform path
+(<code>pkg/orchestrator/definition_challenge.go</code> →
+<code>executeDesktopShellSteps</code>, <code>os/exec</code>, PASS only
+when every step exits 0). Prose strings parse as
+<code>ActionTypeDescription</code> and never run — and
+<code>helixqa run --platform</code> itself only accepts
+<code>android|web|desktop|all</code> (no <code>api</code>), so an
+<code>api</code>-only case was never even selected. The cases looked
+covered but exercised nothing.</p>
+<p>The gap is now <strong>closed</strong>. Each case uses a typed
+<code>action: "shell: &lt;curl … assertion&gt;"</code> step that
+genuinely runs:</p>
+<ul>
+<li><strong>HTTPS / self-signed cert</strong> — <code>curl -k</code>
+(the executor has no TLS skip-verify knob; see the limitation below).
+HelixQA's <code>http:</code> action type / <code>HTTPExecutor</code> is
+therefore <strong>not usable</strong> for Herald's listener: it (a) only
+runs in the <em>autonomous</em> StructuredTestExecutor, not the
+banks-driven <code>run</code> path the launcher uses, and (b) builds a
+default <code>*http.Client</code> with <strong>no
+<code>InsecureSkipVerify</code></strong>, so it cannot reach a
+self-signed-HTTPS endpoint. <code>shell:</code> + <code>curl -k</code>
+is the correct fit.</li>
+<li><strong>Status assertions bite</strong> —
+<code>curl -k -sS -o /dev/null -w '%{http_code}'</code> captured into a
+variable, then an exact-match <code>[ "$code" = "401" ]</code>. A wrong
+status exits non-zero → the shell step exits non-zero → the case
+FAILS.</li>
+<li><strong>Body / header assertions bite</strong> —
+<code>python3 -c '…assert…'</code> on the JSON body
+(health/ready/receipt) and <code>grep -q</code> for the
+<code>pherald_build_info</code> gauge line, the
+<code>event_parser:</code> error tag, and the
+<code>X-Herald-Replay: true</code> response header (captured via
+<code>curl -D -</code>).</li>
+<li><strong>JWT-gated cases</strong> mint a real HS256 token inline with
+<code>python3</code>
+(<code>hmac</code>/<code>hashlib</code>/<code>base64</code>), matching
+<code>scripts/e2e_bluff_hunt.sh</code>'s proven minting pattern, signed
+with <code>HERALD_AUTH_HMAC_SECRET</code>. Case 009 mints a
+signature-valid token that <strong>omits</strong> the
+<code>tenant</code> claim to drive the 401 path.</li>
+</ul>
+<p>The cases keep <code>api</code> in <code>platforms[]</code> as the
+semantic surface tag and add <code>desktop</code> so the orchestrator
+actually executes them. The base URL comes from
+<code>HELIXQA_HTTP_BASE_URL</code> (exported by the launcher when the
+live serve is up), falling back to
+<code>https://127.0.0.1:${HERALD_HTTP_PORT}</code>.</p>
+<blockquote>
+<p><strong>HTTP-executor limitation (TLS verify).</strong> HelixQA's
+<code>HTTPExecutor</code> (<code>pkg/autonomous/http_executor.go</code>)
+uses the Go default transport with no <code>InsecureSkipVerify</code>
+option. Herald's <code>pherald serve</code> listener is self-signed
+HTTPS (Wave 4a), so the <code>http:</code> action type cannot reach it.
+This is the documented reason the API bank uses <code>shell:</code> +
+<code>curl -k</code> rather than <code>http:</code>. If HelixQA later
+adds a skip-verify knob (e.g. an
+<code>HELIXQA_HTTP_INSECURE_SKIPVERIFY</code> env or a per-bank flag)
+AND wires the <code>http:</code> type into the <code>run</code> path,
+the bank can migrate to <code>http:</code> actions with
+<code>expect_status</code> / <code>expect_body_contains</code> /
+<code>expect_json_path</code> fields.</p>
+</blockquote>
 <p><strong>Anti-bluff anchor.</strong> Every case asserts on the actual
 response <strong>body</strong> or <strong>stdout</strong> —
 <code>status:ok</code> + <code>build.version</code>,

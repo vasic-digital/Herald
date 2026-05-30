@@ -1,0 +1,10 @@
+[90m19:51:57[0m [[34mINFO [0m] Starting HelixQA run
+[90m19:51:57[0m [[34mINFO [0m] Loaded 11 challenge definitions from 1 sources
+[90m19:51:57[0m [[34mINFO [0m] Testing platform: desktop
+[90m19:51:57[0m [[34mINFO [0m] Platform desktop: wired runner with 11 bridged definitions (11 executable bank cases) — HXC-011
+[90m19:51:59[0m [[34mINFO [0m] HelixQA run complete: 11/11 passed, 0 crashes, 0 ANRs, report at qa-results/api-bank-rewrite-validation/20260530T145127Z/out_good/qa-report.json
+
+PASSED - All 11 challenges passed, no crashes
+Report: qa-results/api-bank-rewrite-validation/20260530T145127Z/out_good/qa-report.json
+Duration: 2.0228285s
+Tickets: qa-results/api-bank-rewrite-validation/20260530T145127Z/out_good/tickets/

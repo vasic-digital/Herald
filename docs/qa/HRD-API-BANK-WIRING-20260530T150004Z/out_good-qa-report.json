@@ -1,0 +1,521 @@
+{
+  "title": "HelixQA Test Report",
+  "generated_at": "2026-05-30T19:51:59.522644+05:00",
+  "platform_results": [
+    {
+      "platform": "desktop",
+      "challenge_results": [
+        {
+          "challenge_id": "HRD-QA-API-001",
+          "challenge_name": "Health endpoint reports ok with build version",
+          "status": "passed",
+          "start_time": "2026-05-30T19:51:57.503816+05:00",
+          "end_time": "2026-05-30T19:51:57.58242+05:00",
+          "duration": 78603834,
+          "assertions": [
+            {
+              "type": "shell-exit-zero",
+              "target": "step[0].exit_code",
+              "expected": "0",
+              "actual": "0",
+              "passed": true,
+              "message": "desktop shell action \"set -eu; B=\\\"${HELIXQA_HTTP_BASE_URL:-https://127.0.0.1:${HERALD_HTTP_PORT}}\\\"; body=\\\"$(curl -k -fsS \\\"$B/v1/healthz\\\")\\\"; echo \\\"$body\\\"; echo \\\"$body\\\" | python3 -c 'import sys,json; d=json.load(sys.stdin); assert d[\\\"status\\\"]==\\\"ok\\\", d; assert d[\\\"flavor\\\"]==\\\"pherald\\\", d; assert isinstance(d[\\\"build\\\"][\\\"version\\\"], str) and d[\\\"build\\\"][\\\"version\\\"]!=\\\"\\\", d'\" exited 0"
+            }
+          ],
+          "metrics": null,
+          "outputs": null,
+          "logs": {
+            "challenge_log": "qa-results/api-bank-rewrite-validation/20260530T145127Z/out_good/results/desktop/HRD-QA-API-001/logs/challenge.log",
+            "output_log": "qa-results/api-bank-rewrite-validation/20260530T145127Z/out_good/results/desktop/HRD-QA-API-001/logs/output.log",
+            "api_requests": "",
+            "api_responses": ""
+          },
+          "recorded_actions": [
+            "shell-step[0]: set -eu; B=\"${HELIXQA_HTTP_BASE_URL:-https://127.0.0.1:${HERALD_HTTP_PORT}}\"; body=\"$(curl -k -fsS \"$B/v1/healthz\")\"; echo \"$body\"; echo \"$body\" | python3 -c 'import sys,json; d=json.load(sys.stdin); assert d[\"status\"]==\"ok\", d; assert d[\"flavor\"]==\"pherald\", d; assert isinstance(d[\"build\"][\"version\"], str) and d[\"build\"][\"version\"]!=\"\", d'",
+            "shell-step[0]: exit=0 output=\"{\\\"status\\\": \\\"ok\\\", \\\"flavor\\\": \\\"pherald\\\", \\\"build\\\": {\\\"version\\\": \\\"0.0.0-test\\\", \\\"commit\\\": \\\"abc\\\", \\\"go_version\\\": \\\"go1.26\\\"}}\""
+          ]
+        },
+        {
+          "challenge_id": "HRD-QA-API-002",
+          "challenge_name": "Readiness endpoint reports ready",
+          "status": "passed",
+          "start_time": "2026-05-30T19:51:57.683149+05:00",
+          "end_time": "2026-05-30T19:51:57.752592+05:00",
+          "duration": 69443042,
+          "assertions": [
+            {
+              "type": "shell-exit-zero",
+              "target": "step[0].exit_code",
+              "expected": "0",
+              "actual": "0",
+              "passed": true,
+              "message": "desktop shell action \"set -eu; B=\\\"${HELIXQA_HTTP_BASE_URL:-https://127.0.0.1:${HERALD_HTTP_PORT}}\\\"; body=\\\"$(curl -k -fsS \\\"$B/v1/readyz\\\")\\\"; echo \\\"$body\\\"; echo \\\"$body\\\" | python3 -c 'import sys,json; d=json.load(sys.stdin); assert d[\\\"status\\\"]==\\\"ready\\\", d; assert d[\\\"flavor\\\"]==\\\"pherald\\\", d'\" exited 0"
+            }
+          ],
+          "metrics": null,
+          "outputs": null,
+          "logs": {
+            "challenge_log": "qa-results/api-bank-rewrite-validation/20260530T145127Z/out_good/results/desktop/HRD-QA-API-002/logs/challenge.log",
+            "output_log": "qa-results/api-bank-rewrite-validation/20260530T145127Z/out_good/results/desktop/HRD-QA-API-002/logs/output.log",
+            "api_requests": "",
+            "api_responses": ""
+          },
+          "recorded_actions": [
+            "shell-step[0]: set -eu; B=\"${HELIXQA_HTTP_BASE_URL:-https://127.0.0.1:${HERALD_HTTP_PORT}}\"; body=\"$(curl -k -fsS \"$B/v1/readyz\")\"; echo \"$body\"; echo \"$body\" | python3 -c 'import sys,json; d=json.load(sys.stdin); assert d[\"status\"]==\"ready\", d; assert d[\"flavor\"]==\"pherald\", d'",
+            "shell-step[0]: exit=0 output=\"{\\\"status\\\": \\\"ready\\\", \\\"flavor\\\": \\\"pherald\\\"}\""
+          ]
+        },
+        {
+          "challenge_id": "HRD-QA-API-004",
+          "challenge_name": "Event ingestion rejects requests with no bearer token",
+          "status": "passed",
+          "start_time": "2026-05-30T19:51:57.853698+05:00",
+          "end_time": "2026-05-30T19:51:57.878102+05:00",
+          "duration": 24404208,
+          "assertions": [
+            {
+              "type": "shell-exit-zero",
+              "target": "step[0].exit_code",
+              "expected": "0",
+              "actual": "0",
+              "passed": true,
+              "message": "desktop shell action \"set -eu; B=\\\"${HELIXQA_HTTP_BASE_URL:-https://127.0.0.1:${HERALD_HTTP_PORT}}\\\"; code=\\\"$(curl -k -sS -o /dev/null -w '%{http_code}' -X POST -H 'Content-Type: application/cloudevents+json' --data '{}' \\\"$B/v1/events\\\")\\\"; echo \\\"http_code=$code\\\"; [ \\\"$code\\\" = \\\"401\\\" ]\" exited 0"
+            }
+          ],
+          "metrics": null,
+          "outputs": null,
+          "logs": {
+            "challenge_log": "qa-results/api-bank-rewrite-validation/20260530T145127Z/out_good/results/desktop/HRD-QA-API-004/logs/challenge.log",
+            "output_log": "qa-results/api-bank-rewrite-validation/20260530T145127Z/out_good/results/desktop/HRD-QA-API-004/logs/output.log",
+            "api_requests": "",
+            "api_responses": ""
+          },
+          "recorded_actions": [
+            "shell-step[0]: set -eu; B=\"${HELIXQA_HTTP_BASE_URL:-https://127.0.0.1:${HERALD_HTTP_PORT}}\"; code=\"$(curl -k -sS -o /dev/null -w '%{http_code}' -X POST -H 'Content-Type: application/cloudevents+json' --data '{}' \"$B/v1/events\")\"; echo \"http_code=$code\"; [ \"$code\" = \"401\" ]",
+            "shell-step[0]: exit=0 output=\"http_code=401\""
+          ]
+        },
+        {
+          "challenge_id": "HRD-QA-API-005",
+          "challenge_name": "Event ingestion rejects a forged or malformed bearer token",
+          "status": "passed",
+          "start_time": "2026-05-30T19:51:57.979197+05:00",
+          "end_time": "2026-05-30T19:51:58.013887+05:00",
+          "duration": 34689625,
+          "assertions": [
+            {
+              "type": "shell-exit-zero",
+              "target": "step[0].exit_code",
+              "expected": "0",
+              "actual": "0",
+              "passed": true,
+              "message": "desktop shell action \"set -eu; B=\\\"${HELIXQA_HTTP_BASE_URL:-https://127.0.0.1:${HERALD_HTTP_PORT}}\\\"; code=\\\"$(curl -k -sS -o /dev/null -w '%{http_code}' -X POST -H 'Authorization: Bearer not-a-real-jwt' -H 'Content-Type: application/cloudevents+json' --data '{\\\"specversion\\\":\\\"1.0\\\",\\\"id\\\":\\\"forged-1\\\",\\\"source\\\":\\\"qa\\\",\\\"type\\\":\\\"qa.test\\\"}' \\\"$B/v1/events\\\")\\\"; echo \\\"http_code=$code\\\"; [ \\\"$code\\\" = \\\"401\\\" ]\" exited 0"
+            }
+          ],
+          "metrics": null,
+          "outputs": null,
+          "logs": {
+            "challenge_log": "qa-results/api-bank-rewrite-validation/20260530T145127Z/out_good/results/desktop/HRD-QA-API-005/logs/challenge.log",
+            "output_log": "qa-results/api-bank-rewrite-validation/20260530T145127Z/out_good/results/desktop/HRD-QA-API-005/logs/output.log",
+            "api_requests": "",
+            "api_responses": ""
+          },
+          "recorded_actions": [
+            "shell-step[0]: set -eu; B=\"${HELIXQA_HTTP_BASE_URL:-https://127.0.0.1:${HERALD_HTTP_PORT}}\"; code=\"$(curl -k -sS -o /dev/null -w '%{http_code}' -X POST -H 'Authorization: Bearer not-a-real-jwt' -H 'Content-Type: application/cloudevents+json' --data '{\"specversion\":\"1.0\",\"id\":\"forged-1\",\"source\":\"qa\",\"type\":\"qa.test\"}' \"$B/v1/events\")\"; echo \"http_code=$code\"; [ \"$code\" = \"401\" ]",
+            "shell-step[0]: exit=0 output=\"http_code=401\""
+          ]
+        },
+        {
+          "challenge_id": "HRD-QA-API-006",
+          "challenge_name": "Event ingestion accepts a valid CloudEvent and returns a receipt",
+          "status": "passed",
+          "start_time": "2026-05-30T19:51:58.114772+05:00",
+          "end_time": "2026-05-30T19:51:58.303539+05:00",
+          "duration": 188766417,
+          "assertions": [
+            {
+              "type": "shell-exit-zero",
+              "target": "step[0].exit_code",
+              "expected": "0",
+              "actual": "0",
+              "passed": true,
+              "message": "desktop shell action \"set -eu; B=\\\"${HELIXQA_HTTP_BASE_URL:-https://127.0.0.1:${HERALD_HTTP_PORT}}\\\"; : \\\"${HERALD_AUTH_HMAC_SECRET:?HERALD_AUTH_HMAC_SECRET must be exported by the launcher}\\\"; TOKEN=\\\"$(python3 -c 'import hmac,hashlib,base64,json,time,os; s=os.environ[\\\"HERALD_AUTH_HMAC_SECRET\\\"].encode(); h=base64.urlsafe_b64encode(b\\\"{\\\\\\\"alg\\\\\\\":\\\\\\\"HS256\\\\\\\",\\\\\\\"typ\\\\\\\":\\\\\\\"JWT\\\\\\\"}\\\").rstrip(b\\\"=\\\"); p=base64.urlsafe_b64encode(json.dumps({\\\"tenant\\\":\\\"550e8400-e29b-41d4-a716-446655440000\\\",\\\"sub\\\":\\\"qa-006\\\",\\\"exp\\\":int(time.time())+300}).encode()).rstrip(b\\\"=\\\"); sig=base64.urlsafe_b64encode(hmac.new(s,h+b\\\".\\\"+p,hashlib.sha256).digest()).rstrip(b\\\"=\\\"); print((h+b\\\".\\\"+p+b\\\".\\\"+sig).decode())')\\\"; EVID=\\\"qa-api-006-$(date +%s)-$$\\\"; code=\\\"$(curl -k -sS -o /tmp/herald_qa_006.$$ -w '%{http_code}' -X POST -H \\\"Authorization: Bearer $TOKEN\\\" -H 'Content-Type: application/cloudevents+json' --data \\\"{\\\\\\\"specversion\\\\\\\":\\\\\\\"1.0\\\\\\\",\\\\\\\"id\\\\\\\":\\\\\\\"$EVID\\\\\\\",\\\\\\\"source\\\\\\\":\\\\\\\"qa\\\\\\\",\\\\\\\"type\\\\\\\":\\\\\\\"qa.test\\\\\\\",\\\\\\\"data\\\\\\\":{\\\\\\\"msg\\\\\\\":\\\\\\\"hello\\\\\\\"}}\\\" \\\"$B/v1/events\\\")\\\"; echo \\\"http_code=$code\\\"; cat /tmp/herald_qa_006.$$; echo; [ \\\"$code\\\" = \\\"202\\\" ]; python3 -c 'import sys,json; d=json.load(open(\\\"/tmp/herald_qa_006.'$$'\\\")); assert isinstance(d,dict) and len(d)\u003e0, d'; rm -f /tmp/herald_qa_006.$$\" exited 0"
+            }
+          ],
+          "metrics": null,
+          "outputs": null,
+          "logs": {
+            "challenge_log": "qa-results/api-bank-rewrite-validation/20260530T145127Z/out_good/results/desktop/HRD-QA-API-006/logs/challenge.log",
+            "output_log": "qa-results/api-bank-rewrite-validation/20260530T145127Z/out_good/results/desktop/HRD-QA-API-006/logs/output.log",
+            "api_requests": "",
+            "api_responses": ""
+          },
+          "recorded_actions": [
+            "shell-step[0]: set -eu; B=\"${HELIXQA_HTTP_BASE_URL:-https://127.0.0.1:${HERALD_HTTP_PORT}}\"; : \"${HERALD_AUTH_HMAC_SECRET:?HERALD_AUTH_HMAC_SECRET must be exported by the launcher}\"; TOKEN=\"$(python3 -c 'import hmac,hashlib,base64,json,time,os; s=os.environ[\"HERALD_AUTH_HMAC_SECRET\"].encode(); h=base64.urlsafe_b64encode(b\"{\\\"alg\\\":\\\"HS256\\\",\\\"typ\\\":\\\"JWT\\\"}\").rstrip(b\"=\"); p=base64.urlsafe_b64encode(json.dumps({\"tenant\":\"550e8400-e29b-41d4-a716-446655440000\",\"sub\":\"qa-006\",\"exp\":int(time.time())+300}).encode()).rstrip(b\"=\"); sig=base64.urlsafe_b64encode(hmac.new(s,h+b\".\"+p,hashlib.sha256).digest()).rstrip(b\"=\"); print((h+b\".\"+p+b\".\"+sig).decode())')\"; EVID=\"qa-api-006-$(date +%s)-$$\"; code=\"$(curl -k -sS -o /tmp/herald_qa_006.$$ -w '%{http_code}' -X POST -H \"Authorization: Bearer $TOKEN\" -H 'Content-Type: application/cloudevents+json' --data \"{\\\"specversion\\\":\\\"1.0\\\",\\\"id\\\":\\\"$EVID\\\",\\\"source\\\":\\\"qa\\\",\\\"type\\\":\\\"qa.test\\\",\\\"data\\\":{\\\"msg\\\":\\\"hello\\\"}}\" \"$B/v1/events\")\"; echo \"http_code=$code\"; cat /tmp/herald_qa_006.$$; echo; [ \"$code\" = \"202\" ]; python3 -c 'import sys,json; d=json.load(open(\"/tmp/herald_qa_006.'$$'\")); assert isinstance(d,dict) and len(d)\u003e0, d'; rm -f /tmp/herald_qa_006.$$",
+            "shell-step[0]: exit=0 output=\"http_code=202\\n{\\\"event_id\\\": \\\"qa-api-006-1780152718-54847\\\", \\\"accepted\\\": true}\""
+          ]
+        },
+        {
+          "challenge_id": "HRD-QA-API-008",
+          "challenge_name": "Malformed event body returns a tagged bad-request error",
+          "status": "passed",
+          "start_time": "2026-05-30T19:51:58.404628+05:00",
+          "end_time": "2026-05-30T19:51:58.496289+05:00",
+          "duration": 91660542,
+          "assertions": [
+            {
+              "type": "shell-exit-zero",
+              "target": "step[0].exit_code",
+              "expected": "0",
+              "actual": "0",
+              "passed": true,
+              "message": "desktop shell action \"set -eu; B=\\\"${HELIXQA_HTTP_BASE_URL:-https://127.0.0.1:${HERALD_HTTP_PORT}}\\\"; : \\\"${HERALD_AUTH_HMAC_SECRET:?HERALD_AUTH_HMAC_SECRET must be exported by the launcher}\\\"; TOKEN=\\\"$(python3 -c 'import hmac,hashlib,base64,json,time,os; s=os.environ[\\\"HERALD_AUTH_HMAC_SECRET\\\"].encode(); h=base64.urlsafe_b64encode(b\\\"{\\\\\\\"alg\\\\\\\":\\\\\\\"HS256\\\\\\\",\\\\\\\"typ\\\\\\\":\\\\\\\"JWT\\\\\\\"}\\\").rstrip(b\\\"=\\\"); p=base64.urlsafe_b64encode(json.dumps({\\\"tenant\\\":\\\"550e8400-e29b-41d4-a716-446655440000\\\",\\\"sub\\\":\\\"qa-008\\\",\\\"exp\\\":int(time.time())+300}).encode()).rstrip(b\\\"=\\\"); sig=base64.urlsafe_b64encode(hmac.new(s,h+b\\\".\\\"+p,hashlib.sha256).digest()).rstrip(b\\\"=\\\"); print((h+b\\\".\\\"+p+b\\\".\\\"+sig).decode())')\\\"; code=\\\"$(curl -k -sS -o /tmp/herald_qa_008.$$ -w '%{http_code}' -X POST -H \\\"Authorization: Bearer $TOKEN\\\" -H 'Content-Type: application/cloudevents+json' --data 'not valid json{' \\\"$B/v1/events\\\")\\\"; echo \\\"http_code=$code\\\"; cat /tmp/herald_qa_008.$$; echo; [ \\\"$code\\\" = \\\"400\\\" ]; grep -q 'event_parser:' /tmp/herald_qa_008.$$; rm -f /tmp/herald_qa_008.$$\" exited 0"
+            }
+          ],
+          "metrics": null,
+          "outputs": null,
+          "logs": {
+            "challenge_log": "qa-results/api-bank-rewrite-validation/20260530T145127Z/out_good/results/desktop/HRD-QA-API-008/logs/challenge.log",
+            "output_log": "qa-results/api-bank-rewrite-validation/20260530T145127Z/out_good/results/desktop/HRD-QA-API-008/logs/output.log",
+            "api_requests": "",
+            "api_responses": ""
+          },
+          "recorded_actions": [
+            "shell-step[0]: set -eu; B=\"${HELIXQA_HTTP_BASE_URL:-https://127.0.0.1:${HERALD_HTTP_PORT}}\"; : \"${HERALD_AUTH_HMAC_SECRET:?HERALD_AUTH_HMAC_SECRET must be exported by the launcher}\"; TOKEN=\"$(python3 -c 'import hmac,hashlib,base64,json,time,os; s=os.environ[\"HERALD_AUTH_HMAC_SECRET\"].encode(); h=base64.urlsafe_b64encode(b\"{\\\"alg\\\":\\\"HS256\\\",\\\"typ\\\":\\\"JWT\\\"}\").rstrip(b\"=\"); p=base64.urlsafe_b64encode(json.dumps({\"tenant\":\"550e8400-e29b-41d4-a716-446655440000\",\"sub\":\"qa-008\",\"exp\":int(time.time())+300}).encode()).rstrip(b\"=\"); sig=base64.urlsafe_b64encode(hmac.new(s,h+b\".\"+p,hashlib.sha256).digest()).rstrip(b\"=\"); print((h+b\".\"+p+b\".\"+sig).decode())')\"; code=\"$(curl -k -sS -o /tmp/herald_qa_008.$$ -w '%{http_code}' -X POST -H \"Authorization: Bearer $TOKEN\" -H 'Content-Type: application/cloudevents+json' --data 'not valid json{' \"$B/v1/events\")\"; echo \"http_code=$code\"; cat /tmp/herald_qa_008.$$; echo; [ \"$code\" = \"400\" ]; grep -q 'event_parser:' /tmp/herald_qa_008.$$; rm -f /tmp/herald_qa_008.$$",
+            "shell-step[0]: exit=0 output=\"http_code=400\\n{\\\"error\\\": \\\"event_parser: malformed JSON\\\"}\""
+          ]
+        },
+        {
+          "challenge_id": "HRD-QA-API-009",
+          "challenge_name": "Token missing the tenant claim is rejected as unauthorized",
+          "status": "passed",
+          "start_time": "2026-05-30T19:51:58.597378+05:00",
+          "end_time": "2026-05-30T19:51:58.699598+05:00",
+          "duration": 102219459,
+          "assertions": [
+            {
+              "type": "shell-exit-zero",
+              "target": "step[0].exit_code",
+              "expected": "0",
+              "actual": "0",
+              "passed": true,
+              "message": "desktop shell action \"set -eu; B=\\\"${HELIXQA_HTTP_BASE_URL:-https://127.0.0.1:${HERALD_HTTP_PORT}}\\\"; : \\\"${HERALD_AUTH_HMAC_SECRET:?HERALD_AUTH_HMAC_SECRET must be exported by the launcher}\\\"; TOKEN=\\\"$(python3 -c 'import hmac,hashlib,base64,json,time,os; s=os.environ[\\\"HERALD_AUTH_HMAC_SECRET\\\"].encode(); h=base64.urlsafe_b64encode(b\\\"{\\\\\\\"alg\\\\\\\":\\\\\\\"HS256\\\\\\\",\\\\\\\"typ\\\\\\\":\\\\\\\"JWT\\\\\\\"}\\\").rstrip(b\\\"=\\\"); p=base64.urlsafe_b64encode(json.dumps({\\\"sub\\\":\\\"qa-009-no-tenant\\\",\\\"exp\\\":int(time.time())+300}).encode()).rstrip(b\\\"=\\\"); sig=base64.urlsafe_b64encode(hmac.new(s,h+b\\\".\\\"+p,hashlib.sha256).digest()).rstrip(b\\\"=\\\"); print((h+b\\\".\\\"+p+b\\\".\\\"+sig).decode())')\\\"; code=\\\"$(curl -k -sS -o /dev/null -w '%{http_code}' -X POST -H \\\"Authorization: Bearer $TOKEN\\\" -H 'Content-Type: application/cloudevents+json' --data '{\\\"specversion\\\":\\\"1.0\\\",\\\"id\\\":\\\"qa-009\\\",\\\"source\\\":\\\"qa\\\",\\\"type\\\":\\\"qa.test\\\"}' \\\"$B/v1/events\\\")\\\"; echo \\\"http_code=$code\\\"; [ \\\"$code\\\" = \\\"401\\\" ]\" exited 0"
+            }
+          ],
+          "metrics": null,
+          "outputs": null,
+          "logs": {
+            "challenge_log": "qa-results/api-bank-rewrite-validation/20260530T145127Z/out_good/results/desktop/HRD-QA-API-009/logs/challenge.log",
+            "output_log": "qa-results/api-bank-rewrite-validation/20260530T145127Z/out_good/results/desktop/HRD-QA-API-009/logs/output.log",
+            "api_requests": "",
+            "api_responses": ""
+          },
+          "recorded_actions": [
+            "shell-step[0]: set -eu; B=\"${HELIXQA_HTTP_BASE_URL:-https://127.0.0.1:${HERALD_HTTP_PORT}}\"; : \"${HERALD_AUTH_HMAC_SECRET:?HERALD_AUTH_HMAC_SECRET must be exported by the launcher}\"; TOKEN=\"$(python3 -c 'import hmac,hashlib,base64,json,time,os; s=os.environ[\"HERALD_AUTH_HMAC_SECRET\"].encode(); h=base64.urlsafe_b64encode(b\"{\\\"alg\\\":\\\"HS256\\\",\\\"typ\\\":\\\"JWT\\\"}\").rstrip(b\"=\"); p=base64.urlsafe_b64encode(json.dumps({\"sub\":\"qa-009-no-tenant\",\"exp\":int(time.time())+300}).encode()).rstrip(b\"=\"); sig=base64.urlsafe_b64encode(hmac.new(s,h+b\".\"+p,hashlib.sha256).digest()).rstrip(b\"=\"); print((h+b\".\"+p+b\".\"+sig).decode())')\"; code=\"$(curl -k -sS -o /dev/null -w '%{http_code}' -X POST -H \"Authorization: Bearer $TOKEN\" -H 'Content-Type: application/cloudevents+json' --data '{\"specversion\":\"1.0\",\"id\":\"qa-009\",\"source\":\"qa\",\"type\":\"qa.test\"}' \"$B/v1/events\")\"; echo \"http_code=$code\"; [ \"$code\" = \"401\" ]",
+            "shell-step[0]: exit=0 output=\"http_code=401\""
+          ]
+        },
+        {
+          "challenge_id": "HRD-QA-API-011",
+          "challenge_name": "Compliance route is not served by pherald",
+          "status": "passed",
+          "start_time": "2026-05-30T19:51:58.800681+05:00",
+          "end_time": "2026-05-30T19:51:58.844081+05:00",
+          "duration": 43399542,
+          "assertions": [
+            {
+              "type": "shell-exit-zero",
+              "target": "step[0].exit_code",
+              "expected": "0",
+              "actual": "0",
+              "passed": true,
+              "message": "desktop shell action \"set -eu; B=\\\"${HELIXQA_HTTP_BASE_URL:-https://127.0.0.1:${HERALD_HTTP_PORT}}\\\"; code=\\\"$(curl -k -sS -o /dev/null -w '%{http_code}' \\\"$B/v1/compliance\\\")\\\"; echo \\\"http_code=$code\\\"; [ \\\"$code\\\" = \\\"404\\\" ]\" exited 0"
+            }
+          ],
+          "metrics": null,
+          "outputs": null,
+          "logs": {
+            "challenge_log": "qa-results/api-bank-rewrite-validation/20260530T145127Z/out_good/results/desktop/HRD-QA-API-011/logs/challenge.log",
+            "output_log": "qa-results/api-bank-rewrite-validation/20260530T145127Z/out_good/results/desktop/HRD-QA-API-011/logs/output.log",
+            "api_requests": "",
+            "api_responses": ""
+          },
+          "recorded_actions": [
+            "shell-step[0]: set -eu; B=\"${HELIXQA_HTTP_BASE_URL:-https://127.0.0.1:${HERALD_HTTP_PORT}}\"; code=\"$(curl -k -sS -o /dev/null -w '%{http_code}' \"$B/v1/compliance\")\"; echo \"http_code=$code\"; [ \"$code\" = \"404\" ]",
+            "shell-step[0]: exit=0 output=\"http_code=404\""
+          ]
+        },
+        {
+          "challenge_id": "HRD-QA-API-003",
+          "challenge_name": "Metrics endpoint exposes Prometheus build_info gauge",
+          "status": "passed",
+          "start_time": "2026-05-30T19:51:58.945155+05:00",
+          "end_time": "2026-05-30T19:51:59.02051+05:00",
+          "duration": 75354833,
+          "assertions": [
+            {
+              "type": "shell-exit-zero",
+              "target": "step[0].exit_code",
+              "expected": "0",
+              "actual": "0",
+              "passed": true,
+              "message": "desktop shell action \"set -eu; B=\\\"${HELIXQA_HTTP_BASE_URL:-https://127.0.0.1:${HERALD_HTTP_PORT}}\\\"; ct=\\\"$(curl -k -fsS -o /tmp/herald_qa_metrics.$$ -w '%{content_type}' \\\"$B/metrics\\\")\\\"; echo \\\"content-type=$ct\\\"; cat /tmp/herald_qa_metrics.$$; echo \\\"$ct\\\" | grep -q 'text/plain'; grep -Eq '^pherald_build_info\\\\{[^}]*version=' /tmp/herald_qa_metrics.$$; grep -q 'go_version=' /tmp/herald_qa_metrics.$$; rm -f /tmp/herald_qa_metrics.$$\" exited 0"
+            }
+          ],
+          "metrics": null,
+          "outputs": null,
+          "logs": {
+            "challenge_log": "qa-results/api-bank-rewrite-validation/20260530T145127Z/out_good/results/desktop/HRD-QA-API-003/logs/challenge.log",
+            "output_log": "qa-results/api-bank-rewrite-validation/20260530T145127Z/out_good/results/desktop/HRD-QA-API-003/logs/output.log",
+            "api_requests": "",
+            "api_responses": ""
+          },
+          "recorded_actions": [
+            "shell-step[0]: set -eu; B=\"${HELIXQA_HTTP_BASE_URL:-https://127.0.0.1:${HERALD_HTTP_PORT}}\"; ct=\"$(curl -k -fsS -o /tmp/herald_qa_metrics.$$ -w '%{content_type}' \"$B/metrics\")\"; echo \"content-type=$ct\"; cat /tmp/herald_qa_metrics.$$; echo \"$ct\" | grep -q 'text/plain'; grep -Eq '^pherald_build_info\\{[^}]*version=' /tmp/herald_qa_metrics.$$; grep -q 'go_version=' /tmp/herald_qa_metrics.$$; rm -f /tmp/herald_qa_metrics.$$",
+            "shell-step[0]: exit=0 output=\"content-type=text/plain; version=0.0.4; charset=utf-8\\n# HELP pherald_build_info Build information.\\n# TYPE pherald_build_info gauge\\npherald_build_info{version=\\\"0.0.0-test\\\",commit=\\\"abc\\\",go_version=\\\"go1.26\\\"} 1\""
+          ]
+        },
+        {
+          "challenge_id": "HRD-QA-API-007",
+          "challenge_name": "Duplicate event is acknowledged as an idempotency replay",
+          "status": "passed",
+          "start_time": "2026-05-30T19:51:59.121626+05:00",
+          "end_time": "2026-05-30T19:51:59.27384+05:00",
+          "duration": 152213292,
+          "assertions": [
+            {
+              "type": "shell-exit-zero",
+              "target": "step[0].exit_code",
+              "expected": "0",
+              "actual": "0",
+              "passed": true,
+              "message": "desktop shell action \"set -eu; B=\\\"${HELIXQA_HTTP_BASE_URL:-https://127.0.0.1:${HERALD_HTTP_PORT}}\\\"; : \\\"${HERALD_AUTH_HMAC_SECRET:?HERALD_AUTH_HMAC_SECRET must be exported by the launcher}\\\"; TOKEN=\\\"$(python3 -c 'import hmac,hashlib,base64,json,time,os; s=os.environ[\\\"HERALD_AUTH_HMAC_SECRET\\\"].encode(); h=base64.urlsafe_b64encode(b\\\"{\\\\\\\"alg\\\\\\\":\\\\\\\"HS256\\\\\\\",\\\\\\\"typ\\\\\\\":\\\\\\\"JWT\\\\\\\"}\\\").rstrip(b\\\"=\\\"); p=base64.urlsafe_b64encode(json.dumps({\\\"tenant\\\":\\\"550e8400-e29b-41d4-a716-446655440000\\\",\\\"sub\\\":\\\"qa-007\\\",\\\"exp\\\":int(time.time())+300}).encode()).rstrip(b\\\"=\\\"); sig=base64.urlsafe_b64encode(hmac.new(s,h+b\\\".\\\"+p,hashlib.sha256).digest()).rstrip(b\\\"=\\\"); print((h+b\\\".\\\"+p+b\\\".\\\"+sig).decode())')\\\"; EVID=\\\"qa-api-007-$(date +%s)-$$\\\"; BODY=\\\"{\\\\\\\"specversion\\\\\\\":\\\\\\\"1.0\\\\\\\",\\\\\\\"id\\\\\\\":\\\\\\\"$EVID\\\\\\\",\\\\\\\"source\\\\\\\":\\\\\\\"qa\\\\\\\",\\\\\\\"type\\\\\\\":\\\\\\\"qa.test\\\\\\\",\\\\\\\"data\\\\\\\":{\\\\\\\"msg\\\\\\\":\\\\\\\"dedup\\\\\\\"}}\\\"; c1=\\\"$(curl -k -sS -o /dev/null -w '%{http_code}' -X POST -H \\\"Authorization: Bearer $TOKEN\\\" -H 'Content-Type: application/cloudevents+json' --data \\\"$BODY\\\" \\\"$B/v1/events\\\")\\\"; echo \\\"first=$c1\\\"; [ \\\"$c1\\\" = \\\"202\\\" ]; hdrs=\\\"$(curl -k -sS -D - -o /dev/null -w '\\\\nHTTP_CODE:%{http_code}\\\\n' -X POST -H \\\"Authorization: Bearer $TOKEN\\\" -H 'Content-Type: application/cloudevents+json' --data \\\"$BODY\\\" \\\"$B/v1/events\\\")\\\"; echo \\\"$hdrs\\\"; echo \\\"$hdrs\\\" | grep -q 'HTTP_CODE:200'; echo \\\"$hdrs\\\" | grep -iq '^X-Herald-Replay:[[:space:]]*true'\" exited 0"
+            }
+          ],
+          "metrics": null,
+          "outputs": null,
+          "logs": {
+            "challenge_log": "qa-results/api-bank-rewrite-validation/20260530T145127Z/out_good/results/desktop/HRD-QA-API-007/logs/challenge.log",
+            "output_log": "qa-results/api-bank-rewrite-validation/20260530T145127Z/out_good/results/desktop/HRD-QA-API-007/logs/output.log",
+            "api_requests": "",
+            "api_responses": ""
+          },
+          "recorded_actions": [
+            "shell-step[0]: set -eu; B=\"${HELIXQA_HTTP_BASE_URL:-https://127.0.0.1:${HERALD_HTTP_PORT}}\"; : \"${HERALD_AUTH_HMAC_SECRET:?HERALD_AUTH_HMAC_SECRET must be exported by the launcher}\"; TOKEN=\"$(python3 -c 'import hmac,hashlib,base64,json,time,os; s=os.environ[\"HERALD_AUTH_HMAC_SECRET\"].encode(); h=base64.urlsafe_b64encode(b\"{\\\"alg\\\":\\\"HS256\\\",\\\"typ\\\":\\\"JWT\\\"}\").rstrip(b\"=\"); p=base64.urlsafe_b64encode(json.dumps({\"tenant\":\"550e8400-e29b-41d4-a716-446655440000\",\"sub\":\"qa-007\",\"exp\":int(time.time())+300}).encode()).rstrip(b\"=\"); sig=base64.urlsafe_b64encode(hmac.new(s,h+b\".\"+p,hashlib.sha256).digest()).rstrip(b\"=\"); print((h+b\".\"+p+b\".\"+sig).decode())')\"; EVID=\"qa-api-007-$(date +%s)-$$\"; BODY=\"{\\\"specversion\\\":\\\"1.0\\\",\\\"id\\\":\\\"$EVID\\\",\\\"source\\\":\\\"qa\\\",\\\"type\\\":\\\"qa.test\\\",\\\"data\\\":{\\\"msg\\\":\\\"dedup\\\"}}\"; c1=\"$(curl -k -sS -o /dev/null -w '%{http_code}' -X POST -H \"Authorization: Bearer $TOKEN\" -H 'Content-Type: application/cloudevents+json' --data \"$BODY\" \"$B/v1/events\")\"; echo \"first=$c1\"; [ \"$c1\" = \"202\" ]; hdrs=\"$(curl -k -sS -D - -o /dev/null -w '\\nHTTP_CODE:%{http_code}\\n' -X POST -H \"Authorization: Bearer $TOKEN\" -H 'Content-Type: application/cloudevents+json' --data \"$BODY\" \"$B/v1/events\")\"; echo \"$hdrs\"; echo \"$hdrs\" | grep -q 'HTTP_CODE:200'; echo \"$hdrs\" | grep -iq '^X-Herald-Replay:[[:space:]]*true'",
+            "shell-step[0]: exit=0 output=\"first=202\\nHTTP/1.0 200 OK\\r\\nServer: BaseHTTP/0.6 Python/3.9.25\\r\\nDate: Sat, 30 May 2026 14:51:59 GMT\\r\\nContent-Type: application/json\\r\\nX-Herald-Replay: true\\r\\n\\r\\n\\nHTTP_CODE:200\""
+          ]
+        },
+        {
+          "challenge_id": "HRD-QA-API-010",
+          "challenge_name": "Unknown route under the API surface returns 404",
+          "status": "passed",
+          "start_time": "2026-05-30T19:51:59.374963+05:00",
+          "end_time": "2026-05-30T19:51:59.42156+05:00",
+          "duration": 46597666,
+          "assertions": [
+            {
+              "type": "shell-exit-zero",
+              "target": "step[0].exit_code",
+              "expected": "0",
+              "actual": "0",
+              "passed": true,
+              "message": "desktop shell action \"set -eu; B=\\\"${HELIXQA_HTTP_BASE_URL:-https://127.0.0.1:${HERALD_HTTP_PORT}}\\\"; code=\\\"$(curl -k -sS -o /dev/null -w '%{http_code}' \\\"$B/v1/does-not-exist\\\")\\\"; echo \\\"http_code=$code\\\"; [ \\\"$code\\\" = \\\"404\\\" ]\" exited 0"
+            }
+          ],
+          "metrics": null,
+          "outputs": null,
+          "logs": {
+            "challenge_log": "qa-results/api-bank-rewrite-validation/20260530T145127Z/out_good/results/desktop/HRD-QA-API-010/logs/challenge.log",
+            "output_log": "qa-results/api-bank-rewrite-validation/20260530T145127Z/out_good/results/desktop/HRD-QA-API-010/logs/output.log",
+            "api_requests": "",
+            "api_responses": ""
+          },
+          "recorded_actions": [
+            "shell-step[0]: set -eu; B=\"${HELIXQA_HTTP_BASE_URL:-https://127.0.0.1:${HERALD_HTTP_PORT}}\"; code=\"$(curl -k -sS -o /dev/null -w '%{http_code}' \"$B/v1/does-not-exist\")\"; echo \"http_code=$code\"; [ \"$code\" = \"404\" ]",
+            "shell-step[0]: exit=0 output=\"http_code=404\""
+          ]
+        }
+      ],
+      "step_results": [
+        {
+          "step_name": "HRD-QA-API-001",
+          "status": "passed",
+          "platform": "desktop",
+          "detection": {
+            "platform": "desktop",
+            "has_crash": false,
+            "has_anr": false,
+            "process_alive": true,
+            "timestamp": "2026-05-30T19:51:57.582428+05:00"
+          },
+          "start_time": "2026-05-30T19:51:57.582425+05:00",
+          "end_time": "2026-05-30T19:51:57.582428+05:00",
+          "duration": 3083
+        },
+        {
+          "step_name": "HRD-QA-API-002",
+          "status": "passed",
+          "platform": "desktop",
+          "detection": {
+            "platform": "desktop",
+            "has_crash": false,
+            "has_anr": false,
+            "process_alive": true,
+            "timestamp": "2026-05-30T19:51:57.752606+05:00"
+          },
+          "start_time": "2026-05-30T19:51:57.752603+05:00",
+          "end_time": "2026-05-30T19:51:57.752608+05:00",
+          "duration": 5416
+        },
+        {
+          "step_name": "HRD-QA-API-004",
+          "status": "passed",
+          "platform": "desktop",
+          "detection": {
+            "platform": "desktop",
+            "has_crash": false,
+            "has_anr": false,
+            "process_alive": true,
+            "timestamp": "2026-05-30T19:51:57.878108+05:00"
+          },
+          "start_time": "2026-05-30T19:51:57.878107+05:00",
+          "end_time": "2026-05-30T19:51:57.878111+05:00",
+          "duration": 4542
+        },
+        {
+          "step_name": "HRD-QA-API-005",
+          "status": "passed",
+          "platform": "desktop",
+          "detection": {
+            "platform": "desktop",
+            "has_crash": false,
+            "has_anr": false,
+            "process_alive": true,
+            "timestamp": "2026-05-30T19:51:58.013896+05:00"
+          },
+          "start_time": "2026-05-30T19:51:58.013894+05:00",
+          "end_time": "2026-05-30T19:51:58.013898+05:00",
+          "duration": 4167
+        },
+        {
+          "step_name": "HRD-QA-API-006",
+          "status": "passed",
+          "platform": "desktop",
+          "detection": {
+            "platform": "desktop",
+            "has_crash": false,
+            "has_anr": false,
+            "process_alive": true,
+            "timestamp": "2026-05-30T19:51:58.303547+05:00"
+          },
+          "start_time": "2026-05-30T19:51:58.303545+05:00",
+          "end_time": "2026-05-30T19:51:58.303549+05:00",
+          "duration": 3875
+        },
+        {
+          "step_name": "HRD-QA-API-008",
+          "status": "passed",
+          "platform": "desktop",
+          "detection": {
+            "platform": "desktop",
+            "has_crash": false,
+            "has_anr": false,
+            "process_alive": true,
+            "timestamp": "2026-05-30T19:51:58.496304+05:00"
+          },
+          "start_time": "2026-05-30T19:51:58.496303+05:00",
+          "end_time": "2026-05-30T19:51:58.496307+05:00",
+          "duration": 4458
+        },
+        {
+          "step_name": "HRD-QA-API-009",
+          "status": "passed",
+          "platform": "desktop",
+          "detection": {
+            "platform": "desktop",
+            "has_crash": false,
+            "has_anr": false,
+            "process_alive": true,
+            "timestamp": "2026-05-30T19:51:58.699611+05:00"
+          },
+          "start_time": "2026-05-30T19:51:58.699607+05:00",
+          "end_time": "2026-05-30T19:51:58.699615+05:00",
+          "duration": 8583
+        },
+        {
+          "step_name": "HRD-QA-API-011",
+          "status": "passed",
+          "platform": "desktop",
+          "detection": {
+            "platform": "desktop",
+            "has_crash": false,
+            "has_anr": false,
+            "process_alive": true,
+            "timestamp": "2026-05-30T19:51:58.844086+05:00"
+          },
+          "start_time": "2026-05-30T19:51:58.844084+05:00",
+          "end_time": "2026-05-30T19:51:58.844087+05:00",
+          "duration": 2500
+        },
+        {
+          "step_name": "HRD-QA-API-003",
+          "status": "passed",
+          "platform": "desktop",
+          "detection": {
+            "platform": "desktop",
+            "has_crash": false,
+            "has_anr": false,
+            "process_alive": true,
+            "timestamp": "2026-05-30T19:51:59.020528+05:00"
+          },
+          "start_time": "2026-05-30T19:51:59.020521+05:00",
+          "end_time": "2026-05-30T19:51:59.02053+05:00",
+          "duration": 8208
+        },
+        {
+          "step_name": "HRD-QA-API-007",
+          "status": "passed",
+          "platform": "desktop",
+          "detection": {
+            "platform": "desktop",
+            "has_crash": false,
+            "has_anr": false,
+            "process_alive": true,
+            "timestamp": "2026-05-30T19:51:59.273851+05:00"
+          },
+          "start_time": "2026-05-30T19:51:59.273847+05:00",
+          "end_time": "2026-05-30T19:51:59.273856+05:00",
+          "duration": 9000
+        },
+        {
+          "step_name": "HRD-QA-API-010",
+          "status": "passed",
+          "platform": "desktop",
+          "detection": {
+            "platform": "desktop",
+            "has_crash": false,
+            "has_anr": false,
+            "process_alive": true,
+            "timestamp": "2026-05-30T19:51:59.421571+05:00"
+          },
+          "start_time": "2026-05-30T19:51:59.421569+05:00",
+          "end_time": "2026-05-30T19:51:59.421573+05:00",
+          "duration": 4375
+        }
+      ],
+      "start_time": "2026-05-30T19:51:57.503696+05:00",
+      "end_time": "2026-05-30T19:51:59.522637+05:00",
+      "duration": 2018935042,
+      "crash_count": 0,
+      "anr_count": 0,
+      "evidence_dir": "qa-results/api-bank-rewrite-validation/20260530T145127Z/out_good/evidence/desktop"
+    }
+  ],
+  "total_challenges": 11,
+  "passed_challenges": 11,
+  "failed_challenges": 0,
+  "total_crashes": 0,
+  "total_anrs": 0,
+  "total_duration": 2018935042,
+  "output_dir": "qa-results/api-bank-rewrite-validation/20260530T145127Z/out_good"
+}

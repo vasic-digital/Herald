@@ -6,31 +6,61 @@ description: >-
   pherald/internal/http/routes.go + the commons/cli ServeCmd built-ins
   (commons/cli/routes.go): the flavor-specific JWT-gated POST /v1/events
   (Wave 3b live — drives the §32 7-stage Runner pipeline) plus the
-  healthz / readyz / metrics built-ins. Cases assert on the actual
-  response BODY fields and headers (status:ok, build.version,
-  status:ready, pherald_build_info gauge, the error envelope of a
-  rejected event, the X-Herald-Replay replay header) — never bare
-  absence-of-error. The serve listener is HTTPS (Wave 4a dual TCP/HTTPS +
-  UDP/HTTP3); probe with curl -k. serve REQUIRES HERALD_PG_DSN and a
-  usable JWT verifier (HERALD_AUTH_MODE=hmac + HERALD_AUTH_HMAC_SECRET);
-  scripts/helixqa_run.sh boots both before this bank runs.
+  healthz / readyz / metrics built-ins.
+
+  EXECUTION MODEL (2026-05-30 rewrite — closes the api-bank wiring gap):
+  the HelixQA `run` orchestrator genuinely EXECUTES only `shell:` steps,
+  and it runs them on the `desktop` platform path
+  (pkg/orchestrator/definition_challenge.go executeDesktopShellSteps —
+  os/exec, PASS only when every step exits 0). The `http:` action type is
+  executed solely by the autonomous StructuredTestExecutor, NOT by the
+  banks-driven `run` path; furthermore HelixQA's HTTPExecutor uses the Go
+  default *http.Client with NO InsecureSkipVerify option, so it cannot
+  reach Herald's self-signed-HTTPS listener. Both facts force this bank to
+  use typed `shell:` curl actions (curl -k for the self-signed cert) rather
+  than `http:`. These are GENUINELY-EXECUTING typed actions — NOT prose —
+  and every assertion BITES: a wrong status or a missing body/header string
+  makes curl/grep exit non-zero, which makes the shell step exit non-zero,
+  which makes the case FAIL. There are no prose-only steps that silently
+  skip.
+
+  Platforms are `[api, desktop]`: `api` preserves the semantic surface tag
+  (these cases exercise the REST API); `desktop` is the platform whose
+  orchestrator path actually runs the `shell:` actions. The launcher
+  (scripts/helixqa_run.sh) runs `--platform all` (which includes desktop)
+  and exports HELIXQA_HTTP_BASE_URL + HERALD_HTTP_PORT + the HMAC secret so
+  these curl gates target the live listener.
+
+  The serve listener is HTTPS (Wave 4a dual TCP/HTTPS + UDP/HTTP3); probe
+  with curl -k. serve REQUIRES HERALD_PG_DSN and a usable JWT verifier
+  (HERALD_AUTH_MODE=hmac + HERALD_AUTH_HMAC_SECRET); scripts/helixqa_run.sh
+  boots both before this bank runs and only adds this bank to the run set
+  when the live serve actually came up (API_READY=1) — so a case here is
+  never claimed as covered unless a real listener answered.
 metadata:
   author: vasic-digital
   app: Herald
   flavor: pherald
   source: pherald/internal/http/routes.go + commons/cli/routes.go
+  execution: shell-curl
+  base_url_env: HELIXQA_HTTP_BASE_URL
 test_cases:
   - id: HRD-QA-API-001
     name: Health endpoint reports ok with build version
     category: functional
     priority: critical
-    platforms: [api]
+    platforms: [api, desktop]
     steps:
-      - name: Request the liveness probe
-        action: GET https://127.0.0.1:${HERALD_HTTP_PORT}/v1/healthz (curl -k)
+      - name: GET /v1/healthz and assert ok + flavor + populated build.version
+        action: >-
+          shell: set -eu; B="${HELIXQA_HTTP_BASE_URL:-https://127.0.0.1:${HERALD_HTTP_PORT}}";
+          body="$(curl -k -fsS "$B/v1/healthz")"; echo "$body";
+          echo "$body" | python3 -c 'import sys,json; d=json.load(sys.stdin); assert d["status"]=="ok", d; assert d["flavor"]=="pherald", d; assert isinstance(d["build"]["version"], str) and d["build"]["version"]!="", d'
         expected: >-
-          200 OK with JSON body where status == "ok", flavor == "pherald",
-          and build.version is a non-empty string (commons/cli HealthzHandler)
+          200 OK (curl -fsS exits non-zero on any 4xx/5xx) with JSON body
+          where status == "ok", flavor == "pherald", and build.version is a
+          non-empty string (commons/cli HealthzHandler). The python assert
+          bites: a missing/blank version or wrong flavor exits non-zero → FAIL.
     tags: [health, healthz, liveness, build-info, happy-path]
     estimated_duration: 5s
     documentation_refs:
@@ -46,13 +76,17 @@ test_cases:
     name: Readiness endpoint reports ready
     category: functional
     priority: critical
-    platforms: [api]
+    platforms: [api, desktop]
     steps:
-      - name: Request the readiness probe
-        action: GET https://127.0.0.1:${HERALD_HTTP_PORT}/v1/readyz (curl -k)
+      - name: GET /v1/readyz and assert status ready + flavor pherald
+        action: >-
+          shell: set -eu; B="${HELIXQA_HTTP_BASE_URL:-https://127.0.0.1:${HERALD_HTTP_PORT}}";
+          body="$(curl -k -fsS "$B/v1/readyz")"; echo "$body";
+          echo "$body" | python3 -c 'import sys,json; d=json.load(sys.stdin); assert d["status"]=="ready", d; assert d["flavor"]=="pherald", d'
         expected: >-
-          200 OK with JSON body where status == "ready" and flavor == "pherald"
-          (commons/cli ReadyzHandler)
+          200 OK with JSON body where status == "ready" and flavor ==
+          "pherald" (commons/cli ReadyzHandler). A wrong status string exits
+          non-zero → FAIL.
     tags: [health, readyz, readiness, happy-path]
     estimated_duration: 5s
     documentation_refs:
@@ -67,14 +101,22 @@ test_cases:
     name: Metrics endpoint exposes Prometheus build_info gauge
     category: functional
     priority: high
-    platforms: [api]
+    platforms: [api, desktop]
     steps:
-      - name: Request the Prometheus metrics surface
-        action: GET https://127.0.0.1:${HERALD_HTTP_PORT}/metrics (curl -k)
+      - name: GET /metrics and assert content-type + pherald_build_info gauge line
+        action: >-
+          shell: set -eu; B="${HELIXQA_HTTP_BASE_URL:-https://127.0.0.1:${HERALD_HTTP_PORT}}";
+          ct="$(curl -k -fsS -o /tmp/herald_qa_metrics.$$ -w '%{content_type}' "$B/metrics")";
+          echo "content-type=$ct"; cat /tmp/herald_qa_metrics.$$;
+          echo "$ct" | grep -q 'text/plain';
+          grep -Eq '^pherald_build_info\{[^}]*version=' /tmp/herald_qa_metrics.$$;
+          grep -q 'go_version=' /tmp/herald_qa_metrics.$$;
+          rm -f /tmp/herald_qa_metrics.$$
         expected: >-
-          200 OK with Content-Type text/plain; version=0.0.4 and a body line
-          beginning with pherald_build_info{ carrying version, commit and
-          go_version labels (commons/cli MetricsHandler)
+          200 OK with Content-Type text/plain (version=0.0.4) and a body
+          line beginning with pherald_build_info{ carrying version + commit +
+          go_version labels (commons/cli MetricsHandler). Each grep -q bites:
+          a missing gauge line or label exits non-zero → FAIL.
     tags: [metrics, prometheus, monitoring, build-info]
     estimated_duration: 5s
     documentation_refs:
@@ -90,16 +132,18 @@ test_cases:
     name: Event ingestion rejects requests with no bearer token
     category: security
     priority: critical
-    platforms: [api]
+    platforms: [api, desktop]
     steps:
-      - name: POST a CloudEvent with no Authorization header
+      - name: POST /v1/events with no Authorization header → assert 401
         action: >-
-          POST https://127.0.0.1:${HERALD_HTTP_PORT}/v1/events with header
-          Content-Type: application/cloudevents+json and body {} (no Bearer token)
+          shell: set -eu; B="${HELIXQA_HTTP_BASE_URL:-https://127.0.0.1:${HERALD_HTTP_PORT}}";
+          code="$(curl -k -sS -o /dev/null -w '%{http_code}' -X POST -H 'Content-Type: application/cloudevents+json' --data '{}' "$B/v1/events")";
+          echo "http_code=$code"; [ "$code" = "401" ]
         expected: >-
           401 Unauthorized — commons_auth.GinMiddleware short-circuits before
-          the EventsHandler runs; response body is a JSON error envelope
-          (no event is processed)
+          EventsHandler runs (no event processed). The exact-match
+          [ "$code" = "401" ] bites: a 202/200/500 makes the test exit
+          non-zero → FAIL.
     tags: [events, auth, no-token, jwt-gated, security, negative]
     estimated_duration: 5s
     documentation_refs:
@@ -114,16 +158,17 @@ test_cases:
     name: Event ingestion rejects a forged or malformed bearer token
     category: security
     priority: critical
-    platforms: [api]
+    platforms: [api, desktop]
     steps:
-      - name: POST a CloudEvent with a junk bearer token
+      - name: POST /v1/events with a junk bearer token → assert 401
         action: >-
-          POST https://127.0.0.1:${HERALD_HTTP_PORT}/v1/events with header
-          Authorization: Bearer not-a-real-jwt and a CloudEvent body
+          shell: set -eu; B="${HELIXQA_HTTP_BASE_URL:-https://127.0.0.1:${HERALD_HTTP_PORT}}";
+          code="$(curl -k -sS -o /dev/null -w '%{http_code}' -X POST -H 'Authorization: Bearer not-a-real-jwt' -H 'Content-Type: application/cloudevents+json' --data '{"specversion":"1.0","id":"forged-1","source":"qa","type":"qa.test"}' "$B/v1/events")";
+          echo "http_code=$code"; [ "$code" = "401" ]
         expected: >-
-          401 Unauthorized — the HMAC verifier (commons_auth/hmac.go) fails to
-          verify the HS256 signature and the middleware returns a 401 error
-          envelope; the body is NOT processed
+          401 Unauthorized — the HMAC verifier (commons_auth/hmac.go) fails
+          to verify the HS256 signature; the body is NOT processed. The
+          exact-match status check bites.
     tags: [events, auth, forged-token, invalid-signature, security, negative]
     estimated_duration: 5s
     documentation_refs:
@@ -135,22 +180,25 @@ test_cases:
     name: Event ingestion accepts a valid CloudEvent and returns a receipt
     category: functional
     priority: critical
-    platforms: [api]
+    platforms: [api, desktop]
     steps:
-      - name: Mint a valid HS256 JWT with tenant and sub claims
+      - name: Mint a valid HS256 JWT, POST a well-formed CloudEvent, assert 202 + Receipt
         action: >-
-          Sign a JWT with HERALD_AUTH_HMAC_SECRET carrying a "tenant" claim
-          (a UUID string) and a "sub" claim (commons_auth required claims)
-        expected: A bearer token the HMAC verifier will accept
-      - name: POST a well-formed CloudEvent
-        action: >-
-          POST https://127.0.0.1:${HERALD_HTTP_PORT}/v1/events with
-          Authorization: Bearer <token>, Content-Type: application/cloudevents+json
-          and a valid CloudEvent envelope (specversion, id, source, type, data)
+          shell: set -eu; B="${HELIXQA_HTTP_BASE_URL:-https://127.0.0.1:${HERALD_HTTP_PORT}}";
+          : "${HERALD_AUTH_HMAC_SECRET:?HERALD_AUTH_HMAC_SECRET must be exported by the launcher}";
+          TOKEN="$(python3 -c 'import hmac,hashlib,base64,json,time,os; s=os.environ["HERALD_AUTH_HMAC_SECRET"].encode(); h=base64.urlsafe_b64encode(b"{\"alg\":\"HS256\",\"typ\":\"JWT\"}").rstrip(b"="); p=base64.urlsafe_b64encode(json.dumps({"tenant":"550e8400-e29b-41d4-a716-446655440000","sub":"qa-006","exp":int(time.time())+300}).encode()).rstrip(b"="); sig=base64.urlsafe_b64encode(hmac.new(s,h+b"."+p,hashlib.sha256).digest()).rstrip(b"="); print((h+b"."+p+b"."+sig).decode())')";
+          EVID="qa-api-006-$(date +%s)-$$";
+          code="$(curl -k -sS -o /tmp/herald_qa_006.$$ -w '%{http_code}' -X POST -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/cloudevents+json' --data "{\"specversion\":\"1.0\",\"id\":\"$EVID\",\"source\":\"qa\",\"type\":\"qa.test\",\"data\":{\"msg\":\"hello\"}}" "$B/v1/events")";
+          echo "http_code=$code"; cat /tmp/herald_qa_006.$$; echo;
+          [ "$code" = "202" ];
+          python3 -c 'import sys,json; d=json.load(open("/tmp/herald_qa_006.'$$'")); assert isinstance(d,dict) and len(d)>0, d';
+          rm -f /tmp/herald_qa_006.$$
         expected: >-
           202 Accepted with a JSON Receipt body produced by the §32 Runner
-          (event_parser -> idempotency -> tenant -> policy -> subscribers ->
-          dispatch -> outcome); the receipt carries the event acknowledgement
+          (event_parser → idempotency → tenant → policy → subscribers →
+          dispatch → outcome). The status check AND the JSON-object check
+          bite: a 401/400/500, or a non-JSON / empty body, exits non-zero →
+          FAIL.
     tags: [events, ingestion, cloudevent, runner, receipt, happy-path]
     estimated_duration: 10s
     documentation_refs:
@@ -166,18 +214,26 @@ test_cases:
     name: Duplicate event is acknowledged as an idempotency replay
     category: functional
     priority: high
-    platforms: [api]
+    platforms: [api, desktop]
     steps:
-      - name: POST a CloudEvent once
+      - name: POST the same CloudEvent twice → first 202, second 200 + X-Herald-Replay header
         action: >-
-          POST a valid CloudEvent (fixed id) to /v1/events with a valid bearer token
-        expected: 202 Accepted with a fresh Receipt
-      - name: POST the identical CloudEvent again
-        action: >-
-          Re-POST the byte-identical CloudEvent (same id) to /v1/events
+          shell: set -eu; B="${HELIXQA_HTTP_BASE_URL:-https://127.0.0.1:${HERALD_HTTP_PORT}}";
+          : "${HERALD_AUTH_HMAC_SECRET:?HERALD_AUTH_HMAC_SECRET must be exported by the launcher}";
+          TOKEN="$(python3 -c 'import hmac,hashlib,base64,json,time,os; s=os.environ["HERALD_AUTH_HMAC_SECRET"].encode(); h=base64.urlsafe_b64encode(b"{\"alg\":\"HS256\",\"typ\":\"JWT\"}").rstrip(b"="); p=base64.urlsafe_b64encode(json.dumps({"tenant":"550e8400-e29b-41d4-a716-446655440000","sub":"qa-007","exp":int(time.time())+300}).encode()).rstrip(b"="); sig=base64.urlsafe_b64encode(hmac.new(s,h+b"."+p,hashlib.sha256).digest()).rstrip(b"="); print((h+b"."+p+b"."+sig).decode())')";
+          EVID="qa-api-007-$(date +%s)-$$";
+          BODY="{\"specversion\":\"1.0\",\"id\":\"$EVID\",\"source\":\"qa\",\"type\":\"qa.test\",\"data\":{\"msg\":\"dedup\"}}";
+          c1="$(curl -k -sS -o /dev/null -w '%{http_code}' -X POST -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/cloudevents+json' --data "$BODY" "$B/v1/events")";
+          echo "first=$c1"; [ "$c1" = "202" ];
+          hdrs="$(curl -k -sS -D - -o /dev/null -w '\nHTTP_CODE:%{http_code}\n' -X POST -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/cloudevents+json' --data "$BODY" "$B/v1/events")";
+          echo "$hdrs";
+          echo "$hdrs" | grep -q 'HTTP_CODE:200';
+          echo "$hdrs" | grep -iq '^X-Herald-Replay:[[:space:]]*true'
         expected: >-
-          200 OK with the X-Herald-Replay: true response header set and a Receipt
-          whose WasReplay marker is true (stage-2 idempotency hit, not a 202)
+          First POST 202 Accepted; byte-identical re-POST 200 OK with the
+          X-Herald-Replay: true response header (stage-2 idempotency hit, not
+          a fresh 202). All three gates bite: a non-202 first, a non-200
+          second, or a missing/false replay header exits non-zero → FAIL.
     tags: [events, idempotency, replay, dedup]
     estimated_duration: 15s
     documentation_refs:
@@ -190,17 +246,23 @@ test_cases:
     name: Malformed event body returns a tagged bad-request error
     category: functional
     priority: high
-    platforms: [api]
+    platforms: [api, desktop]
     steps:
-      - name: POST a body that is not a valid CloudEvent
+      - name: POST an unparseable body with a valid token → assert 400 + event_parser-tagged error
         action: >-
-          POST https://127.0.0.1:${HERALD_HTTP_PORT}/v1/events with a valid
-          bearer token but a body of "not valid json{" (Content-Type
-          application/cloudevents+json)
+          shell: set -eu; B="${HELIXQA_HTTP_BASE_URL:-https://127.0.0.1:${HERALD_HTTP_PORT}}";
+          : "${HERALD_AUTH_HMAC_SECRET:?HERALD_AUTH_HMAC_SECRET must be exported by the launcher}";
+          TOKEN="$(python3 -c 'import hmac,hashlib,base64,json,time,os; s=os.environ["HERALD_AUTH_HMAC_SECRET"].encode(); h=base64.urlsafe_b64encode(b"{\"alg\":\"HS256\",\"typ\":\"JWT\"}").rstrip(b"="); p=base64.urlsafe_b64encode(json.dumps({"tenant":"550e8400-e29b-41d4-a716-446655440000","sub":"qa-008","exp":int(time.time())+300}).encode()).rstrip(b"="); sig=base64.urlsafe_b64encode(hmac.new(s,h+b"."+p,hashlib.sha256).digest()).rstrip(b"="); print((h+b"."+p+b"."+sig).decode())')";
+          code="$(curl -k -sS -o /tmp/herald_qa_008.$$ -w '%{http_code}' -X POST -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/cloudevents+json' --data 'not valid json{' "$B/v1/events")";
+          echo "http_code=$code"; cat /tmp/herald_qa_008.$$; echo;
+          [ "$code" = "400" ];
+          grep -q 'event_parser:' /tmp/herald_qa_008.$$;
+          rm -f /tmp/herald_qa_008.$$
         expected: >-
           400 Bad Request with a JSON error envelope whose error string is
-          stage-tagged with the "event_parser:" prefix (mapErrorToStatus) —
-          the operator can tell parsing failed, not a downstream stage
+          stage-tagged with the "event_parser:" prefix (mapErrorToStatus) so
+          the operator can tell parsing failed, not a downstream stage. Both
+          the status check and the event_parser: grep bite.
     tags: [events, malformed, event-parser, validation, negative]
     estimated_duration: 5s
     documentation_refs:
@@ -213,18 +275,20 @@ test_cases:
     name: Token missing the tenant claim is rejected as unauthorized
     category: security
     priority: high
-    platforms: [api]
+    platforms: [api, desktop]
     steps:
-      - name: Mint a JWT with sub but no tenant claim
+      - name: Mint a signature-valid JWT WITHOUT a tenant claim, POST → assert 401
         action: >-
-          Sign a valid HS256 token carrying "sub" but omitting the required
-          "tenant" claim
-        expected: A signature-valid but claim-incomplete token
-      - name: POST a CloudEvent with that token
-        action: POST /v1/events with the tenant-less bearer token and a valid body
+          shell: set -eu; B="${HELIXQA_HTTP_BASE_URL:-https://127.0.0.1:${HERALD_HTTP_PORT}}";
+          : "${HERALD_AUTH_HMAC_SECRET:?HERALD_AUTH_HMAC_SECRET must be exported by the launcher}";
+          TOKEN="$(python3 -c 'import hmac,hashlib,base64,json,time,os; s=os.environ["HERALD_AUTH_HMAC_SECRET"].encode(); h=base64.urlsafe_b64encode(b"{\"alg\":\"HS256\",\"typ\":\"JWT\"}").rstrip(b"="); p=base64.urlsafe_b64encode(json.dumps({"sub":"qa-009-no-tenant","exp":int(time.time())+300}).encode()).rstrip(b"="); sig=base64.urlsafe_b64encode(hmac.new(s,h+b"."+p,hashlib.sha256).digest()).rstrip(b"="); print((h+b"."+p+b"."+sig).decode())')";
+          code="$(curl -k -sS -o /dev/null -w '%{http_code}' -X POST -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/cloudevents+json' --data '{"specversion":"1.0","id":"qa-009","source":"qa","type":"qa.test"}' "$B/v1/events")";
+          echo "http_code=$code"; [ "$code" = "401" ]
         expected: >-
-          401 Unauthorized — TenantFromClaims (commons_auth/claims.go) fails and
-          mapErrorToStatus maps "runner: claims missing 'tenant'" to 401
+          401 Unauthorized — TenantFromClaims (commons_auth/claims.go) /
+          Runner fails and mapErrorToStatus maps "runner: claims missing
+          'tenant'" to 401. The exact-match status check bites: a 202/400
+          would expose a missing tenant-claim gate → FAIL.
     tags: [events, auth, missing-claim, tenant, rbac, negative]
     estimated_duration: 10s
     documentation_refs:
@@ -237,14 +301,17 @@ test_cases:
     name: Unknown route under the API surface returns 404
     category: functional
     priority: medium
-    platforms: [api]
+    platforms: [api, desktop]
     steps:
-      - name: Request a route that pherald does not register
-        action: GET https://127.0.0.1:${HERALD_HTTP_PORT}/v1/does-not-exist (curl -k)
+      - name: GET an unregistered route → assert 404
+        action: >-
+          shell: set -eu; B="${HELIXQA_HTTP_BASE_URL:-https://127.0.0.1:${HERALD_HTTP_PORT}}";
+          code="$(curl -k -sS -o /dev/null -w '%{http_code}' "$B/v1/does-not-exist")";
+          echo "http_code=$code"; [ "$code" = "404" ]
         expected: >-
           404 Not Found — pherald only registers /v1/events plus the
-          healthz/readyz/metrics built-ins; /v1/compliance was deliberately
-          removed from pherald (it is a cherald-owned route)
+          healthz/readyz/metrics built-ins. The exact-match check bites: a
+          200/401 would mean an unexpected route is registered → FAIL.
     tags: [routing, not-found, boundary, negative]
     estimated_duration: 5s
     documentation_refs:
@@ -256,14 +323,19 @@ test_cases:
     name: Compliance route is not served by pherald
     category: functional
     priority: medium
-    platforms: [api]
+    platforms: [api, desktop]
     steps:
-      - name: Request the cherald-owned compliance route against pherald
-        action: GET https://127.0.0.1:${HERALD_HTTP_PORT}/v1/compliance (curl -k)
+      - name: GET /v1/compliance against pherald → assert 404 (cherald owns it)
+        action: >-
+          shell: set -eu; B="${HELIXQA_HTTP_BASE_URL:-https://127.0.0.1:${HERALD_HTTP_PORT}}";
+          code="$(curl -k -sS -o /dev/null -w '%{http_code}' "$B/v1/compliance")";
+          echo "http_code=$code"; [ "$code" = "404" ]
         expected: >-
-          404 Not Found — Wave 3b Task 10 removed /v1/compliance from pherald's
-          route list to keep the binary boundary honest (pherald ingests
-          events; cherald serves the constitution state-pull surface)
+          404 Not Found — Wave 3b Task 10 removed /v1/compliance from
+          pherald's route list to keep the binary boundary honest (pherald
+          ingests events; cherald serves the constitution state-pull
+          surface). A 401 here would mean the route is still registered
+          (JWT-gated) on pherald → FAIL; the exact-match 404 check bites.
     tags: [routing, boundary, compliance, binary-boundary]
     estimated_duration: 5s
     documentation_refs:

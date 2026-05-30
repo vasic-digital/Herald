@@ -144,6 +144,13 @@ if command -v nc >/dev/null 2>&1 && nc -z 127.0.0.1 "${HERALD_PG_PORT}" 2>/dev/n
         # Capture a live healthz body as positive runtime evidence.
         curl -k -fsS "https://127.0.0.1:${HERALD_HTTP_PORT}/v1/healthz" \
             >"${OUT_DIR}/healthz_evidence.json" 2>/dev/null || true
+        # Point the api bank's shell:curl steps at the REAL listener. The api
+        # bank reads HELIXQA_HTTP_BASE_URL as its base URL (falling back to
+        # https://127.0.0.1:${HERALD_HTTP_PORT}); exporting it here is the
+        # single source of truth so the curl gates hit the live self-signed
+        # HTTPS listener.
+        export HELIXQA_HTTP_BASE_URL="https://127.0.0.1:${HERALD_HTTP_PORT}"
+        log "exported HELIXQA_HTTP_BASE_URL=${HELIXQA_HTTP_BASE_URL}"
     else
         log "SKIP api-serve: pherald serve never accepted HTTPS within 10s (see pherald_serve.log)"
     fi
