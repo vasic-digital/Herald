@@ -126,6 +126,19 @@ func (n *Notifier) Notify(ctx context.Context, changes []workable.Change) error 
 		if err := n.dispatcher.Process(ctx, rc); err != nil {
 			return fmt.Errorf("workflow: dispatch change %d (%s %s): %w", i, c.AtmID, c.Kind, err)
 		}
+		// §107 anti-bluff (C1): ChannelDispatcher.Process records each
+		// per-recipient failure (unregistered channel / Channel.Send error)
+		// into rc.Receipts with Evidence=Unknown + Error and returns nil — the
+		// FULL Runner persists those at Stage 7 (OutcomeRecorder) for the audit
+		// trail. The Notifier has NO Stage 7, so it MUST inspect the receipts
+		// itself: a failed delivery is a real undelivered notification the
+		// operator would otherwise silently miss. Fail loud on the first one.
+		for _, r := range rc.Receipts {
+			if r.Error != "" || r.Evidence == commons.DeliveryUnknown {
+				return fmt.Errorf("workflow: change %d (%s %s) NOT delivered to %s/%s: evidence=%s error=%q",
+					i, c.AtmID, c.Kind, r.ChannelID, r.ChannelUserID, r.Evidence, r.Error)
+			}
+		}
 	}
 	return nil
 }

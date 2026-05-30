@@ -3,7 +3,9 @@ package workflow
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"log/slog"
+	"strings"
 	"sync"
 	"testing"
 
@@ -162,5 +164,60 @@ func TestNotifier_FeedsRealDispatcher(t *testing.T) {
 		if got[i] != want[i] {
 			t.Errorf("dispatched message[%d] = %q, want %q", i, got[i], want[i])
 		}
+	}
+}
+
+// faultingChannel is a real commons.Channel whose Send always fails — proves
+// the Notifier surfaces a transport failure (C1 / §107) rather than silently
+// swallowing it (the watch path has no Stage-7 OutcomeRecorder to persist the
+// failure receipt, so the Notifier itself must fail loud).
+type faultingChannel struct{ err error }
+
+func (c *faultingChannel) Name() string                       { return string(commons.ChannelNull) }
+func (c *faultingChannel) Capabilities() commons.Capabilities { return commons.Capabilities{Text: true} }
+func (c *faultingChannel) HealthCheck(ctx context.Context) error {
+	return nil
+}
+func (c *faultingChannel) Subscribe(ctx context.Context, h commons.InboundHandler) error {
+	<-ctx.Done()
+	return ctx.Err()
+}
+func (c *faultingChannel) Send(ctx context.Context, msg commons.OutboundMessage) (commons.Receipt, error) {
+	return commons.Receipt{}, c.err
+}
+
+func TestNotifier_SurfacesSendFailure(t *testing.T) {
+	t.Parallel()
+	fault := &faultingChannel{err: errors.New("telegram 502 bad gateway")}
+	dispatcher := &runner.ChannelDispatcher{
+		Channels: map[commons.ChannelID]commons.Channel{commons.ChannelNull: fault},
+		Logger:   slog.Default(),
+	}
+	recipients := []commons.Recipient{{Channel: string(commons.ChannelNull), ChannelUserID: "chat-1"}}
+	notifier := NewNotifier(dispatcher, recipients)
+
+	err := notifier.Notify(context.Background(), []workable.Change{{AtmID: "ATM-7", Kind: workable.KindCreated}})
+	if err == nil {
+		t.Fatal("Notify swallowed a real Send failure — §107 distribution-layer bluff (C1): the operator would silently miss the workable-item notification")
+	}
+	if !strings.Contains(err.Error(), "ATM-7") {
+		t.Errorf("Notify error should identify the undelivered change (ATM-7); got: %v", err)
+	}
+}
+
+func TestNotifier_SurfacesUnregisteredChannel(t *testing.T) {
+	t.Parallel()
+	// A recipient whose channel isn't registered MUST surface as an error,
+	// not a silent drop (the dispatcher records Evidence=Unknown; the Notifier
+	// must escalate it since there is no Stage-7 to persist it).
+	dispatcher := &runner.ChannelDispatcher{
+		Channels: map[commons.ChannelID]commons.Channel{},
+		Logger:   slog.Default(),
+	}
+	recipients := []commons.Recipient{{Channel: "tgram", ChannelUserID: "chat-1"}}
+	notifier := NewNotifier(dispatcher, recipients)
+
+	if err := notifier.Notify(context.Background(), []workable.Change{{AtmID: "ATM-8", Kind: workable.KindCreated}}); err == nil {
+		t.Fatal("Notify swallowed an unregistered-channel recipient — §107 bluff")
 	}
 }
