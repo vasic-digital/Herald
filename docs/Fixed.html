@@ -47,7 +47,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>18</td>
+<td>19</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -55,7 +55,7 @@
 </tr>
 <tr>
 <td>Last modified</td>
-<td>2026-05-29</td>
+<td>2026-05-30</td>
 </tr>
 <tr>
 <td>Status</td>
@@ -63,9 +63,39 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>r18 atomically lands (§11.4.19) HRD-090 dead-letter handling
-Completed→Fixed —
-<code>commons_infra.pgxTaskRepository.MoveToDeadLetter</code> (was the
+<td><strong>r19 (v1.0.0 closure-migration) atomically lands (§11.4.19)
+51 code-verified HRDs Issues→Fixed after a re-verification audit
+(grep/read the impl + run the test + confirm the matching e2e invariant
++ confirm the <code>docs/qa/&lt;run-id&gt;/</code> dir; nothing migrated
+on self-reported status alone). The 51:</strong> the 7 flavor
+constitution bindings HRD-019..025
+(<code>&lt;flavor&gt;/internal/bindings</code> Pipelines; 7/7 bindings
+test suites PASS <code>-race</code>; e2e E90-E96; per-HRD
+<code>docs/qa/</code>); the entire §43 command catalogue HRD-029..056
+(30 commands wired into Cobra roots via
+<code>registerGitOps</code>/<code>registerSysOps</code>/etc., cmd-test
+suites PASS, e2e E97-E122, per-HRD <code>docs/qa/</code>); the Batch-D
+<code>commons_infra.pgxTaskRepository</code> ops HRD-085..089 (all 15
+methods real impls not <code>ErrUnsupported</code>, migration
+<code>000013_task_resource_snapshots</code>, e2e E123,
+<code>docs/qa/HRD-085-089-*</code>); Wave 7 HRD-116/118/119/120/121
+(qaherald Slack <code>MessengerClient</code> + e2e E124-E131 + paired
+§1.1 gate <code>tests/test_wave7_mutation_meta.sh</code> + multi-channel
+§11.4.85 stress/chaos + <code>MESSENGER_CHANNELS.md</code> guide; all
+hermetic tests PASS); ATMOSphere features HRD-148/149/151/152/153/154
+(<code>commons_workable</code>+<code>commons_watch</code> build+test
+PASS, change→CloudEvent→Runner bridge + inbound action registry +
+<code>pherald watch</code> daemon + quiet-hours resolver, e2e E139
+<code>TestRunWatch_EndToEndOutbound</code> PASS hermetic). <strong>NOT
+migrated (evidence-gated, left in Issues.md):</strong> HRD-115 (Slack
+channel adapter — operator-gated on LIVE
+<code>docs/qa/HRD-115-LIVE-*/</code> round-trip evidence per §107.x;
+only hermetic transcript exists, E127 LIVE-Slack SKIP-with-reason —
+closing now would be a §107 PASS-bluff); HRD-117 (spec V3 doc-only —
+§106); HRD-131/150/155/156/157/158 (externally gated);
+HRD-146/147/081/008/015 (not-started/upstream/operator). Prior r18
+atomically lands (§11.4.19) HRD-090 dead-letter handling Completed→Fixed
+— <code>commons_infra.pgxTaskRepository.MoveToDeadLetter</code> (was the
 last Batch-D <code>ErrUnsupported</code> stub): migration
 <code>000014_dead_letter_tasks</code> + tx-atomic JSONB-snapshot move +
 terminal-mark; new 13th OPERATIONAL constitution event class
@@ -77,21 +107,20 @@ fault) + paired §1.1 mutation gate (4/0) + e2e E138; commits
 <code>549261d</code>+<code>9c765f6</code>; evidence
 <code>docs/qa/HRD-090-20260529T052228Z/</code> +
 <code>docs/qa/HRD-090-stress-chaos-20260529T054500Z/</code>.
-Governance-plane subscriber follow-up = HRD-147 (Issues.md).</strong>
-Prior r17 atomically lands (§11.4.19) the completed Wave 8 Track B
-(MTProto user-account harness for §11.4.98 full-automation testing) —
-HRD-139 (MTProto Client live wiring + qaherald mtproto CLI), HRD-140
-(Subscribe roundtrip), HRD-141 (Wave 6 closed loop), HRD-142 (Wave 6.5
-lifecycle) all New→Fixed (these HRDs were tracked directly in the
-TaskList rather than Issues.md and graduate directly into Fixed.md per
-§11.4.19 the moment closure landed).** Wave 8 Track B closure proves
-§11.4.98 (full-automation anti-bluff mandate) end-to-end: 3
-MTProto-driven live tests (E135 Subscribe / E136 Wave 6 closed loop /
-E137 Wave 6.5 lifecycle) all PASSING LIVE under §11.4.98-pure
-interpretation, captured under
-<code>docs/qa/HRD-LIVE-MTPROTO-20260528T125321Z/</code>. Three legacy
-NON-COMPLIANT tests graduate to §11.4.90 Obsolete in Issues.md r36 with
-Obsolete-Details cite of §11.4.98 + §108.m superseding-mandate:
+Governance-plane subscriber follow-up = HRD-147 (Issues.md).** Prior r17
+atomically lands (§11.4.19) the completed Wave 8 Track B (MTProto
+user-account harness for §11.4.98 full-automation testing) — HRD-139
+(MTProto Client live wiring + qaherald mtproto CLI), HRD-140 (Subscribe
+roundtrip), HRD-141 (Wave 6 closed loop), HRD-142 (Wave 6.5 lifecycle)
+all New→Fixed (these HRDs were tracked directly in the TaskList rather
+than Issues.md and graduate directly into Fixed.md per §11.4.19 the
+moment closure landed).** Wave 8 Track B closure proves §11.4.98
+(full-automation anti-bluff mandate) end-to-end: 3 MTProto-driven live
+tests (E135 Subscribe / E136 Wave 6 closed loop / E137 Wave 6.5
+lifecycle) all PASSING LIVE under §11.4.98-pure interpretation, captured
+under <code>docs/qa/HRD-LIVE-MTPROTO-20260528T125321Z/</code>. Three
+legacy NON-COMPLIANT tests graduate to §11.4.90 Obsolete in Issues.md
+r36 with Obsolete-Details cite of §11.4.98 + §108.m superseding-mandate:
 <code>TestSubscribe_LiveBotAPI</code>,
 <code>tests/test_wave6_live_loop.sh</code>, lifecycle
 <code>--manual</code> mode. v0.6.0 tag (<code>844f340</code> annotated)
@@ -176,43 +205,55 @@ closed HRD-016 (Wave 3b pherald Runner live). r10 closed HRD-011
 </tr>
 <tr>
 <td>Issues</td>
-<td>see <code>Issues.md</code> — r35 (Issues.md) captures the
-HRD-133/134/135/136/137/138 Issues→Fixed atomic migration recorded in
-this r16; prior r16 (Issues.md) captured the HRD-122..HRD-130 + HRD-132
-Issues→Fixed atomic migration recorded in the prior r15.</td>
+<td>see <code>Issues.md</code> — r43 (Issues.md) captures this r19
+§11.4.19 atomic migration of 51 code-verified HRDs (flavor bindings
+HRD-019..025, §43 catalogue HRD-029..056, Batch-D pgx HRD-085..089, Wave
+7 HRD-116/118/119/120/121, ATMOSphere features
+HRD-148/149/151/152/153/154); 17 items remain open in Issues.md.</td>
 </tr>
 <tr>
 <td>Issues summary</td>
-<td>HRD-008/-015 + HRD-019..HRD-025 + HRD-029..HRD-056 + HRD-081 +
-HRD-085..HRD-089 + HRD-115..HRD-121 + HRD-131 + HRD-146 + HRD-147 still
-open (32 items; HRD-090 closed r18).</td>
+<td>17 still open in <code>Issues.md</code>: HRD-008, HRD-015, HRD-081
+(operator/upstream); HRD-115 (Slack adapter — operator-gated on LIVE
+round-trip evidence per §107.x); HRD-117 (spec doc-only); HRD-131,
+HRD-150, HRD-155, HRD-156, HRD-157, HRD-158 (ATMOSphere/SSoT externally
+gated); HRD-146, HRD-147 (dispatch-hardening / governance-subscriber
+follow-ups); HRD-143/144/145 (Obsolete).</td>
 </tr>
 <tr>
 <td>Fixed</td>
 <td>HRD-001..HRD-007, HRD-009, HRD-009b, HRD-010, HRD-011, HRD-012,
-HRD-013, HRD-014, HRD-016, HRD-017, HRD-018, HRD-026, HRD-027, HRD-028,
-HRD-080, HRD-090, HRD-092, HRD-093, HRD-094, HRD-095, HRD-096, HRD-097,
-HRD-098, HRD-099, HRD-100, HRD-110, HRD-111, HRD-112, HRD-113, HRD-114,
-HRD-122, HRD-123, HRD-124, HRD-125, HRD-126, HRD-127, HRD-128, HRD-129,
-HRD-130, HRD-132, HRD-133, HRD-134, HRD-135, HRD-136, HRD-137, HRD-138,
-HRD-139, HRD-140, HRD-141, HRD-142</td>
+HRD-013, HRD-014, HRD-016, HRD-017, HRD-018, HRD-019..HRD-025, HRD-026,
+HRD-027, HRD-028, HRD-029..HRD-056, HRD-080, HRD-085..HRD-089, HRD-090,
+HRD-092, HRD-093, HRD-094, HRD-095, HRD-096, HRD-097, HRD-098, HRD-099,
+HRD-100, HRD-110, HRD-111, HRD-112, HRD-113, HRD-114, HRD-116, HRD-118,
+HRD-119, HRD-120, HRD-121, HRD-122, HRD-123, HRD-124, HRD-125, HRD-126,
+HRD-127, HRD-128, HRD-129, HRD-130, HRD-132, HRD-133, HRD-134, HRD-135,
+HRD-136, HRD-137, HRD-138, HRD-139, HRD-140, HRD-141, HRD-142, HRD-148,
+HRD-149, HRD-151, HRD-152, HRD-153, HRD-154</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
-<td>Wave 8 Track B (HRD-139/140/141/142 — MTProto user-account harness
-proves §11.4.98 full-automation end-to-end with 3 live MTProto-driven
-tests PASSING LIVE 2026-05-28; v0.6.0 tag covers the closure);
-Tgram-completeness wave (HRD-133/134/135/136/137/138 — 6 HRDs across 3
-sub-waves A/B/C, full tgram suite 26/26 PASS 0 SKIP); GAP-3 §11.4.85
-stress+chaos suite (HRD-122..HRD-130 Completed) + HRD-132 Runner
-idempotency-window fix (claim-before-dispatch, exactly-once dispatch
-<code>sends==1</code>); spec V1→V3 r9; Go module foundation + Foundation
-M1/M2/M3; HRD-010 commons_storage live wiring; HRD-011 Telegram live
-(live <code>message_id=5</code> evidence 2026-05-22); HRD-012 Claude
-Code dispatcher live; HRD-016 pherald <code>/v1/events</code> Runner
-wiring (Wave 3b live — 7-stage pipeline + e2e E37-E42); universal
-§11.4.73 + §11.4.74 mandates propagated; I6 gate refined; Wave 2 flavor
-scaffolds (HRD-092..097) closed atomically; Wave 3a substrate (HRD-099
+<td>v1.0.0 closure-migration (r19 — 51 HRDs: flavor constitution
+bindings HRD-019..025, §43 command catalogue HRD-029..056, Batch-D
+pgxTaskRepository ops HRD-085..089, Wave 7 multi-channel
+HRD-116/118/119/120/121, ATMOSphere workable-items features
+HRD-148/149/151/152/153/154 — each re-verified against committed code +
+passing tests + e2e invariant + docs/qa before migration). Wave 8 Track
+B (HRD-139/140/141/142 — MTProto user-account harness proves §11.4.98
+full-automation end-to-end with 3 live MTProto-driven tests PASSING LIVE
+2026-05-28; v0.6.0 tag covers the closure); Tgram-completeness wave
+(HRD-133/134/135/136/137/138 — 6 HRDs across 3 sub-waves A/B/C, full
+tgram suite 26/26 PASS 0 SKIP); GAP-3 §11.4.85 stress+chaos suite
+(HRD-122..HRD-130 Completed) + HRD-132 Runner idempotency-window fix
+(claim-before-dispatch, exactly-once dispatch <code>sends==1</code>);
+spec V1→V3 r9; Go module foundation + Foundation M1/M2/M3; HRD-010
+commons_storage live wiring; HRD-011 Telegram live (live
+<code>message_id=5</code> evidence 2026-05-22); HRD-012 Claude Code
+dispatcher live; HRD-016 pherald <code>/v1/events</code> Runner wiring
+(Wave 3b live — 7-stage pipeline + e2e E37-E42); universal §11.4.73 +
+§11.4.74 mandates propagated; I6 gate refined; Wave 2 flavor scaffolds
+(HRD-092..097) closed atomically; Wave 3a substrate (HRD-099
 commons_auth JWT verifier) + 2 live REST routes (HRD-028, HRD-098)
 closed atomically.</td>
 </tr>
@@ -240,6 +281,1017 @@ closed atomically.</td>
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>HRD-019</td>
+<td>task</td>
+<td>high</td>
+<td><code>cherald</code> constitution bindings —
+<code>cherald/internal/bindings</code> Pipeline registers the 32
+cherald-owned §42.3 rules as concrete
+<code>commons_constitution.Evaluator</code> impls routed through 5 event
+classes
+(<code>.policy.violation</code>/<code>.gate.failed</code>/<code>.gate.recovered</code>/<code>.credential.leak</code>/<code>.spec.revision_drift</code>/<code>.catalogue.miss</code>)
+over the Batch-A emit+persist+audit foundation;
+<code>POST /v1/compliance/evaluate</code> write surface drives
+detect→emit→persist→audit, visible on the existing
+<code>GET /v1/compliance</code> pull surface. Vertical-slice bespoke
+detectors landed (§11.4.29 naming, §11.4.10/.10.A credentials, §11.4.44
+doc-revision-header, §11.4.18 script-docs, §11.4.73 spec-drift, §11.4.74
+catalogue-miss); remaining 25 rules use the shared marker-check
+mechanism (verdict decided upstream by the §43 catalogue command /
+sweep) with the full emit-routing framework in place — deepening each
+remaining bespoke detector is per-rule follow-up.</td>
+<td>2026-05-30</td>
+<td><code>f33b5e4</code> (v1.0.0 Batch B)</td>
+<td>spec V3 §42.3 cherald rows + §42.5 step 2; Catalogue-Check: no-match
+(bindings are bespoke Helix-governance Evaluator impls;
+emit/persist/audit path is 100% Batch-A wiring per §11.4.74). Evidence:
+docs/qa/HRD-019-20260527T200036Z/ (REST round-trip transcript +
+stress_chaos/). e2e: E90 proposed.</td>
+</tr>
+<tr>
+<td>HRD-020</td>
+<td>task</td>
+<td>high</td>
+<td><code>sherald</code> host-safety + repo-safety constitution bindings
+— <code>sherald/internal/bindings</code> Pipeline registers the 15
+sherald-owned §42.3 host/repo-safety rules (§2, §9.1/.2/.3,
+§11.4.24/.26/.32/.36/.41/.47/.71, §12.1/.2/.3/.6) as concrete
+<code>commons_constitution.Evaluator</code> impls routed through 6
+SAFETY event classes
+(<code>.host.safety.breach</code>/<code>.repo.safety.breach</code>/<code>.gate.recovered</code>/<code>.gate.failed</code>/<code>.bundle.updated</code>/<code>.policy.violation</code>)
+over the Batch-A emit+persist+audit foundation, mirroring the proven
+HRD-019 cherald Pipeline pattern. The 3 named DETECTION hooks landed as
+REAL pure classifiers — destructive-op detector (§9.1:
+rm/git-reset/clean without backup → <code>.repo.safety.breach</code>),
+force-push interceptor (§11.4.41/§9.2: force-push without merge-first OR
+session-auth → <code>.repo.safety.breach</code>), mem-budget watcher
+(§12.6: reported used_fraction &gt; 60% →
+<code>.host.safety.breach</code>) — plus forbidden-host-op (§12.1) +
+prereq-marker detectors for the remaining rows. CRITICAL §12-safety:
+every detector DETECTS+REPORTS from a Subject string description; NONE
+performs the destructive op, force-pushes, suspends the host, or
+allocates memory (the mem-budget watcher reads a fabricated fraction —
+no real exhaustion). The §43 command bodies (HRD-033/046/056) supply the
+live op-interception feeding these detectors.</td>
+<td>2026-05-30</td>
+<td><code>5ebad4f</code> (v1.0.0 Batch B)</td>
+<td>spec V3 §42.3 sherald rows + §42.5 step 3; Catalogue-Check: no-match
+(bindings are bespoke Helix-governance Evaluator impls;
+emit/persist/audit path is 100% Batch-A wiring + reuses the existing
+<code>commons_constitution.SafetyEvent</code>/<code>HostSafetyBreach</code>/<code>RepoSafetyBreach</code>
+emitter surface per §11.4.74). Evidence:
+docs/qa/HRD-020-20260527T201932Z/ (detect→emit→persist→audit round-trip
+transcript for §9.1/§11.4.41/§12.6/§12.1 + §11.4.85 stress_chaos/).
+§11.4.92 5-pass — Pass-1: TDD RED (no-impl build-fail) → GREEN,
+<code>go test -race -count=3 ./sherald/internal/bindings/...</code>
+deterministic 15/15 PASS ×3. Pass-2 blast-radius: new pkg
+<code>sherald/internal/bindings</code> only; sherald/go.mod gains
+commons_constitution + transitive replace block; existing sherald
+main/routes/safety untouched (Pipeline not yet wired into serve — REST
+<code>/v1/safety/*</code> surface is follow-up). Pass-3 cross-feature:
+independent of the existing in-memory safety.Aggregator + GET
+/v1/safety_state (Wave 3b); no shared state; the §32 Runner pipeline is
+unaffected (sherald owns a separate Pipeline like cherald). Pass-5
+anti-bluff: real MemoryBus+store+ladder+audit round-trip with captured
+emitted wire-event payloads (NOT metadata-only); §12-safe —
+TestDetectors_NeverPerformOps + structural witness confirm no real
+destructive op performed. e2e: E91 proposed (conductor to wire — asserts
+a sherald §9.1 destructive-op Subject → <code>.repo.safety.breach</code>
+detected+persisted+audited via the bindings Pipeline). NOTE: surfaced a
+latent race in <code>commons_constitution/eventbus.go</code> Publish
+PublishedByType sync.Map check-then-act (under-counts by 1 under load) —
+out of this unit's edit scope, flagged for conductor.</td>
+</tr>
+<tr>
+<td>HRD-021</td>
+<td>task</td>
+<td>middle</td>
+<td><code>bherald</code> CI/test bindings —
+<code>bherald/internal/bindings</code> Pipeline registers the 22
+bherald-owned §42.3 CI/test gate-result rules (§1, §1.1,
+§11.4.2/.3/.4/.5/.7/.9/.13/.14/.24/.27/.30/.39/.43/.46/.48–.52/.67) as
+concrete <code>commons_constitution.Evaluator</code> impls routed
+through 3 event classes
+(<code>.gate.failed</code>/<code>.gate.recovered</code> via the
+build/test gate-result class + <code>.policy.violation</code> +
+<code>.repo.safety.breach</code> for the shared §11.4.30 build-artifact
+row) over the Batch-A emit+persist+audit foundation, mirroring the
+proven HRD-019/020 Pipeline pattern. bherald is the BUILD/CI flavor; it
+emits CI/test gate-result constitution events that integrate with the
+consuming project's CI workflow. 3 bespoke pure detectors landed:
+gate-result classification (§1/§11.4.50 — PASS/FAIL/flaky from a
+recorded gate outcome →
+<code>.gate.failed</code>/<code>.gate.recovered</code>),
+test-tier-verify (§11.4.27/§40.2 — the 8-tier test matrix; a missing
+tier FAILs), anti-bluff-PASS detection (§11.4.2/.5 — a gate that PASSes
+WITHOUT a captured-evidence artefact is a §11.4 PASS-bluff → FAIL).
+Remaining rows use the shared marker-check mechanism (verdict decided
+upstream by the §43 command/CI gate) with the full emit-routing
+framework in place.</td>
+<td>2026-05-30</td>
+<td><code>3fb753a</code> (v1.0.0 Batch B)</td>
+<td>spec V3 §42.3 bherald rows + §42.5 step 4; Catalogue-Check: no-match
+(bindings are bespoke Helix-governance Evaluator impls;
+emit/persist/audit path is 100% Batch-A
+<code>commons_constitution</code> wiring + reuses the existing
+<code>GateEvent</code>/<code>GateFailed</code>/<code>GateRecovered</code>
+emitter surface per §11.4.74). v1.0.0 Batch B unit 3. Evidence:
+docs/qa/HRD-021-<run-id>/ (gate-fail→detect→emit
+<code>.gate.failed</code>→persist→audit→query round-trip transcript +
+§11.4.85 stress_chaos/). §11.4.92 5-pass — Pass-1: TDD RED→GREEN,
+<code>go test -race -count=3 ./bherald/internal/bindings/...</code>
+deterministic PASS ×3. Pass-2 blast-radius: new pkg
+<code>bherald/internal/bindings</code> only; bherald/go.mod gains
+commons_constitution + transitive replace block; existing bherald
+main/stubs untouched. Pass-3 cross-feature: mirrors HRD-019/020
+emit-class routing; no shared state with cherald/sherald (each flavor
+owns a separate Pipeline). Pass-5 anti-bluff: real
+MemoryBus+store+ladder+audit round-trip with captured emitted wire-event
+payloads (NOT metadata-only). e2e: E92 proposed (conductor to wire —
+asserts a bherald gate-result FAIL Subject → <code>.gate.failed</code>
+detected+persisted+audited via the bindings Pipeline).</td>
+</tr>
+<tr>
+<td>HRD-022</td>
+<td>task</td>
+<td>middle</td>
+<td><code>rherald</code> release constitution bindings —
+<code>rherald/internal/bindings</code> Pipeline registers the 4
+rherald-owned §42.3 release-lifecycle rules (§4 tag mirroring, §5
+changelog + multi-format export [shared with cherald], §11.4.38
+installable-asset evidence, §11.4.40 full-suite retest before release
+tag) as concrete <code>commons_constitution.Evaluator</code> impls
+routed through 2 event classes (<code>.release.gate.blocked</code> via
+the existing <code>ReleaseEvent</code>/<code>ReleaseGateBlocked</code>
+emitter surface for §4/§11.4.38/§11.4.40 +
+<code>.policy.violation</code> for the shared §5 changelog row; a
+release recovery maps to the shared <code>.gate.recovered</code>
+companion since the release class family has no distinct "recovered"
+leaf) over the Batch-A emit+persist+audit foundation, mirroring the
+proven HRD-019/020/021 Pipeline pattern. rherald is the RELEASE flavor.
+4 bespoke PURE detectors landed: tag-mirror-parity (§4 — tag present on
+parent but missing on any owned mirror,
+<code>with_tag&lt;mirrors</code>, → <code>.release.gate.blocked</code>),
+changelog-conformance (§5 — non-Conventional-Commits changelog OR stale
+multi-format export → <code>.policy.violation</code>),
+pre-tag-retest-gate (§11.4.40 CRITICAL — tag attempted without a green
+all-8-§40.2-tier retest → <code>.release.gate.blocked</code>),
+installable-asset-evidence (§11.4.38 — release asset fails its install
+check → <code>.release.gate.blocked</code>). CRITICAL §12-safety: every
+detector CLASSIFIES a recorded release-op outcome string; NONE tags,
+pushes, force-pushes, runs git, downloads, or installs — the live
+release-op interception is scope-locked to the §43 follow-ups
+(HRD-031/032/045).</td>
+<td>2026-05-30</td>
+<td><code>3fb753a</code> (v1.0.0 Batch B)</td>
+<td>spec V3 §42.3 rherald rows + §42.5 step 5; Catalogue-Check: no-match
+(bindings are bespoke Helix-governance Evaluator impls;
+emit/persist/audit path is 100% Batch-A
+<code>commons_constitution</code> wiring + reuses the existing
+<code>ReleaseEvent</code>/<code>ReleaseGateBlocked</code> emitter
+surface per §11.4.74). v1.0.0 Batch B unit 4. Evidence:
+docs/qa/HRD-022-20260528T015202Z/ (release-gate-blocked detect→emit
+<code>.release.gate.blocked</code>→persist→audit→query round-trip
+transcript for §4/§5/§11.4.38/§11.4.40 + §11.4.85 stress_chaos/ — 1200
+concurrent release-blocks 0 errors, 1200 emits + 1200 audit rows,
+bus-drop chaos 800/800 faults surface 0 swallowed). §11.4.92 5-pass —
+Pass-1: TDD RED (injected always-pass bluff into §11.4.40 retest
+detector → 4 sub-cases FAIL) → reverted → GREEN,
+<code>go test -race -count=3 ./rherald/internal/bindings/...</code>
+deterministic 14/14 PASS ×3. Pass-2 blast-radius: new pkg
+<code>rherald/internal/bindings</code> only; rherald/go.mod gains
+commons_constitution + google/uuid + transitive replace block (database
+submodule); existing rherald main/stubs untouched (Pipeline not yet
+wired into a serve plane — rherald is CLI-only, DefaultPort=0; the §43
+<code>rherald tag mirror</code>/<code>changelog generate</code>/<code>gate retest</code>
+command bodies are HRD-031/032/045 follow-ups). Pass-3 cross-feature:
+mirrors HRD-019/020/021 emit-class routing; no shared state with
+cherald/sherald/bherald (each flavor owns a separate Pipeline); the
+shared §5 row is registered independently in both rherald
+(conformance/export-staleness facet) and cherald packages. Pass-5
+anti-bluff: real MemoryBus+store+ladder+audit round-trip with captured
+emitted wire-event payloads (NOT metadata-only); §12-safe — no real
+tag/push/git/install performed. e2e: E93 proposed (conductor to wire —
+asserts a rherald §11.4.40 tag-without-retest Subject →
+<code>.release.gate.blocked</code> detected+persisted+audited via the
+bindings Pipeline).</td>
+</tr>
+<tr>
+<td>HRD-023</td>
+<td>task</td>
+<td>middle</td>
+<td><code>pherald</code> project bindings (§2 commit+push, §3 submodule
+propagation, §11.4.11/.15/.21/.22/.34/.37/.42/.55/.66/.71/.74) — Batch
+B: <code>pherald/internal/bindings/</code> Pipeline + §42.3-owned rule
+set + 5 bespoke PURE detectors (commit-push-discipline /
+submodule-propagation-order / pre-push-fetch-guard / fetch-before-edit)
+wired through the commons_constitution Evaluator+audit foundation; -race
+-count=3 green, e2e E94. Live op-interception deferred to §43
+HRD-029/030/043/044/049/053.</td>
+<td>2026-05-30</td>
+<td><code>3fb753a</code> (v1.0.0 Batch B)</td>
+<td>spec V3 §42.3 pherald rows + §42.5 step 6; evidence
+<code>docs/qa/HRD-023-20260527T210354Z/</code>; Catalogue-Check: reuse
+commons_constitution (Batch-A)</td>
+</tr>
+<tr>
+<td>HRD-024</td>
+<td>task</td>
+<td>middle</td>
+<td><code>iherald</code> constitution-rule escalation bindings
+(§11.4.10/.10.A credential-leak page-out, §11.4.21 + §11.4.66
+operator-blocked escalation) — Batch B:
+<code>iherald/internal/bindings/</code> Pipeline routing
+<code>.credential.leak</code> (forced-critical) +
+<code>.policy.violation</code> + 5 bespoke detectors wired through
+commons_constitution Evaluator+audit; -race -count=3 green, e2e E95,
+no-real-secret attestation. Live paging deferred to §43 /
+HRD-024-paging.</td>
+<td>2026-05-30</td>
+<td><code>3fb753a</code> (v1.0.0 Batch B)</td>
+<td>spec V3 §42.3 iherald rows + §42.5 step 7; evidence
+<code>docs/qa/HRD-024-20260527T210714Z/</code>; Catalogue-Check: reuse
+commons_constitution (Batch-A)</td>
+</tr>
+<tr>
+<td>HRD-025</td>
+<td>task</td>
+<td>low</td>
+<td><code>scherald</code> scheduled-audit bindings (§11.4.45 periodic
+Status.md sweep + daily/weekly/monthly compliance digest) — Batch B:
+<code>scherald/internal/bindings/</code> Pipeline routing
+<code>.policy.violation</code> + 3 bespoke detectors (status-sweep /
+digest-cadence / stale-item) wired through commons_constitution
+Evaluator+audit; -race -count=3 green, e2e E96. Live cron/scheduler
+deferred to §43 HRD-047.</td>
+<td>2026-05-30</td>
+<td><code>3fb753a</code> (v1.0.0 Batch B)</td>
+<td>spec V3 §42.3 scherald rows + §42.5 step 8; evidence
+<code>docs/qa/HRD-025-20260528-hrd025-batchb-u7/</code>;
+Catalogue-Check: reuse commons_constitution (Batch-A)</td>
+</tr>
+<tr>
+<td>HRD-029</td>
+<td>task</td>
+<td>middle</td>
+<td>§2 <code>pherald commit-push</code> — single-entrypoint locked
+commit + multi-mirror push — Batch C: implemented as gitops command
+(§11.4.74 wrap of git binary); --emit feeds HRD-023 binding; hermetic
+temp-repo tests -race green</td>
+<td>2026-05-30</td>
+<td><code>502ebf6</code> (Batch C C1)</td>
+<td>spec §43.2 / §2; Catalogue-Check: TBD (likely existing as
+constitution-submodule script); evidence
+<code>docs/qa/HRD-029-20260527T213201Z/</code></td>
+</tr>
+<tr>
+<td>HRD-030</td>
+<td>task</td>
+<td>middle</td>
+<td>§3 <code>pherald submodule propagate</code> — owned-submodule walk
+in propagation order — Batch C: implemented as gitops command (§11.4.74
+wrap of git binary); --emit feeds HRD-023 binding; hermetic temp-repo
+tests -race green</td>
+<td>2026-05-30</td>
+<td><code>502ebf6</code> (Batch C C1)</td>
+<td>spec §43.2 / §3; Catalogue-Check: TBD; evidence
+<code>docs/qa/HRD-030-20260527T213201Z/</code></td>
+</tr>
+<tr>
+<td>HRD-031</td>
+<td>task</td>
+<td>middle</td>
+<td>§4 <code>rherald tag mirror</code> — assert tag exists on every
+owned submodule — Batch C: implemented as rherald §43 release command
+(<code>rherald/cmd/rherald/release_cmds.go</code>) feeding the HRD-022
+rherald binding; reuses shared <code>commons/gitops</code>; hermetic
+-race green</td>
+<td>2026-05-30</td>
+<td><code>130ec19</code> (Batch C C4)</td>
+<td>spec §43.2 / §4; Catalogue-Check: TBD;
+docs/qa/HRD-031-20260528T040000Z/</td>
+</tr>
+<tr>
+<td>HRD-032</td>
+<td>task</td>
+<td>low</td>
+<td>§5 <code>rherald changelog generate</code> — Conventional Commits →
+<code>docs/changelogs/&lt;v&gt;.md</code> + multi-format export — Batch
+C: implemented as rherald §43 release command
+(<code>rherald/cmd/rherald/release_cmds.go</code>) feeding the HRD-022
+rherald binding; reuses shared <code>commons/gitops</code>; hermetic
+-race green</td>
+<td>2026-05-30</td>
+<td><code>130ec19</code> (Batch C C4)</td>
+<td>spec §43.2 / §5 / §36; Catalogue-Check: TBD;
+docs/qa/HRD-032-20260528T040000Z/</td>
+</tr>
+<tr>
+<td>HRD-033</td>
+<td>task</td>
+<td>high</td>
+<td>§9.1 <code>sherald destructive guard &lt;op&gt;</code> — wrap
+rm/git-reset/git-push-force with prerequisite checks — Batch C:
+implemented as sherald §43 command
+(<code>sherald/cmd/sherald/sysops_cmds.go</code>) feeding the HRD-020
+sherald binding; PRE-FLIGHT GATE (detects+classifies+exits-nonzero,
+never performs the op); hermetic -race green; §107 lazy-verifier fix so
+the CLI runs without a JWT secret</td>
+<td>2026-05-30</td>
+<td><code>ed6c675</code> (Batch C C2)</td>
+<td>spec §43.2 / §9.1; Catalogue-Check: TBD;
+docs/qa/HRD-033-20260528T030000Z/</td>
+</tr>
+<tr>
+<td>HRD-034</td>
+<td>task</td>
+<td>middle</td>
+<td>§9.3 <code>sherald backup-snapshot &lt;target&gt;</code> —
+hardlinked snapshot helper — Batch C straggler: implemented in
+<code>sherald/cmd/sherald/sysops_cmds.go</code> (os.Link hardlinks,
+refuses overwrite, classifies §9.3 SubjectBackup →
+<code>.gate.recovered</code>); hermetic inode-equality -race green</td>
+<td>2026-05-30</td>
+<td><code>ba27a0e</code> (Batch C straggler)</td>
+<td>spec §43.2 / §9.3; Catalogue-Check: TBD; evidence
+<code>docs/qa/HRD-034-20260528T060000Z/</code></td>
+</tr>
+<tr>
+<td>HRD-035</td>
+<td>task</td>
+<td>middle</td>
+<td>§11.4.2 <code>bherald evidence capture &lt;test_id&gt;</code> —
+captured-evidence recorder — Batch C: implemented as bherald §43
+build/CI command (<code>bherald/cmd/bherald/build_cmds.go</code>)
+feeding the HRD-021 bherald binding; hermetic -race green</td>
+<td>2026-05-30</td>
+<td><code>130ec19</code> (Batch C C5)</td>
+<td>spec §43.2 / §11.4.2 + §11.4.5; Catalogue-Check: TBD;
+docs/qa/HRD-035-20260528T040000Z/</td>
+</tr>
+<tr>
+<td>HRD-036</td>
+<td>task</td>
+<td>high</td>
+<td>§11.4.10 <code>cherald creds scan</code> — gitleaks/trufflehog
+integration, emits <code>.credential.leak</code> — Batch C: implemented
+as cherald §43 verify/check command
+(<code>cherald/cmd/cherald/checkops_cmds.go</code>) feeding the HRD-019
+cherald binding; detect-only; hermetic -race green (routed to §11.4.10
+credential-leak; findings REDACTED — no secret value printed)</td>
+<td>2026-05-30</td>
+<td><code>aef0207</code> (Batch C C3)</td>
+<td>spec §43.2 / §11.4.10; Catalogue-Check: TBD — likely an existing OSS
+scanner; docs/qa/HRD-036-20260528T050000Z/</td>
+</tr>
+<tr>
+<td>HRD-037</td>
+<td>task</td>
+<td>low</td>
+<td>§11.4.12 <code>cherald docs sync</code> — regen Issues_Summary /
+Fixed_Summary / Status_Summary — Batch C: implemented as cherald §43
+docs-pipeline command (<code>cherald/cmd/cherald/docops_cmds.go</code>)
+feeding the HRD-019 cherald binding; detect-by-default +
+<code>--apply</code> to regenerate; ships the §107 lazy-verifier fix so
+the CLI runs without a JWT secret; hermetic -race green</td>
+<td>2026-05-30</td>
+<td><code>aef0207</code> (Batch C C3)</td>
+<td>spec §43.2 / §11.4.12; Catalogue-Check: TBD (likely existing
+constitution-submodule script); docs/qa/HRD-037-20260528T050000Z/</td>
+</tr>
+<tr>
+<td>HRD-038</td>
+<td>task</td>
+<td>low</td>
+<td>§11.4.18 <code>cherald script-docs check</code> — assert sibling .md
+for every scripts/**/*.sh — Batch C: implemented as cherald §43
+verify/check command (<code>cherald/cmd/cherald/checkops_cmds.go</code>)
+feeding the HRD-019 cherald binding; detect-only; hermetic -race green
+(routed to §11.4.60 — §11.4.62 has no cherald rule)</td>
+<td>2026-05-30</td>
+<td><code>aef0207</code> (Batch C C3)</td>
+<td>spec §43.2 / §11.4.18; Catalogue-Check: TBD;
+docs/qa/HRD-038-20260528T050000Z/</td>
+</tr>
+<tr>
+<td>HRD-039</td>
+<td>task</td>
+<td>low</td>
+<td>§11.4.19 / .23 <code>cherald fixed align</code> +
+<code>cherald colorize</code> — Issues/Fixed format + HTML colorizer —
+Batch C: implemented as cherald §43 docs-pipeline command
+(<code>cherald/cmd/cherald/docops_cmds.go</code>) feeding the HRD-019
+cherald binding; detect-by-default + <code>--apply</code> to regenerate;
+ships the §107 lazy-verifier fix so the CLI runs without a JWT secret;
+hermetic -race green</td>
+<td>2026-05-30</td>
+<td><code>aef0207</code> (Batch C C3)</td>
+<td>spec §43.2 / §11.4.19 + §11.4.23; Catalogue-Check: TBD;
+docs/qa/HRD-039-20260528T050000Z/</td>
+</tr>
+<tr>
+<td>HRD-040</td>
+<td>task</td>
+<td>high</td>
+<td>§11.4.26 <code>sherald constitution pull</code> — wrap fetch +
+rebase + validation gate, emits <code>.bundle.updated</code> — Batch C:
+implemented as sherald §43 command
+(<code>sherald/cmd/sherald/sysops_cmds.go</code>) feeding the HRD-020
+sherald binding; PRE-FLIGHT GATE (detects+classifies+exits-nonzero,
+never performs the op); hermetic -race green; §107 lazy-verifier fix so
+the CLI runs without a JWT secret</td>
+<td>2026-05-30</td>
+<td><code>ed6c675</code> (Batch C C2)</td>
+<td>spec §43.2 / §11.4.26 + §11.4.32; Catalogue-Check: TBD;
+docs/qa/HRD-040-20260528T030000Z/</td>
+</tr>
+<tr>
+<td>HRD-041</td>
+<td>task</td>
+<td>middle</td>
+<td>§11.4.27 <code>bherald test-tier verify</code> — 8-tier matrix
+verification — Batch C: implemented as bherald §43 build/CI command
+(<code>bherald/cmd/bherald/build_cmds.go</code>) feeding the HRD-021
+bherald binding; hermetic -race green</td>
+<td>2026-05-30</td>
+<td><code>130ec19</code> (Batch C C5)</td>
+<td>spec §43.2 / §11.4.27 + §40.2; Catalogue-Check: TBD;
+docs/qa/HRD-041-20260528T040000Z/</td>
+</tr>
+<tr>
+<td>HRD-042</td>
+<td>task</td>
+<td>low</td>
+<td>§11.4.31 <code>cherald submanifest verify</code> —
+Submodule-Dependency-Manifest gate — Batch C: implemented as cherald §43
+verify/check command (<code>cherald/cmd/cherald/checkops_cmds.go</code>)
+feeding the HRD-019 cherald binding; detect-only; hermetic -race
+green</td>
+<td>2026-05-30</td>
+<td><code>aef0207</code> (Batch C C3)</td>
+<td>spec §43.2 / §11.4.31; Catalogue-Check: TBD;
+docs/qa/HRD-042-20260528T050000Z/</td>
+</tr>
+<tr>
+<td>HRD-043</td>
+<td>task</td>
+<td>high</td>
+<td>§11.4.36 <code>pherald install-upstreams</code> — install_upstreams
+wrapper — Batch C: implemented as gitops command (§11.4.74
+FindScript-resolved constitution script); --emit feeds HRD-023 binding;
+hermetic temp-repo tests -race green</td>
+<td>2026-05-30</td>
+<td><code>502ebf6</code> (Batch C C1)</td>
+<td>spec §43.2 / §11.4.36; Catalogue-Check: extend constitution
+submodule's install_upstreams.sh; evidence
+<code>docs/qa/HRD-043-20260527T213201Z/</code></td>
+</tr>
+<tr>
+<td>HRD-044</td>
+<td>task</td>
+<td>middle</td>
+<td>§11.4.37 <code>pherald fetch-guard</code> — pre-edit fetch + rebase
+enforcement — Batch C: implemented as gitops command (§11.4.74 wrap of
+git binary); --emit feeds HRD-023 binding; hermetic temp-repo tests
+-race green</td>
+<td>2026-05-30</td>
+<td><code>502ebf6</code> (Batch C C1)</td>
+<td>spec §43.2 / §11.4.37; Catalogue-Check: TBD; evidence
+<code>docs/qa/HRD-044-20260527T213201Z/</code></td>
+</tr>
+<tr>
+<td>HRD-045</td>
+<td>task</td>
+<td>high</td>
+<td>§11.4.40 <code>rherald gate retest</code> — pre-tag full-suite
+retest gate — Batch C: implemented as rherald §43 release command
+(<code>rherald/cmd/rherald/release_cmds.go</code>) feeding the HRD-022
+rherald binding; reuses shared <code>commons/gitops</code>; hermetic
+-race green</td>
+<td>2026-05-30</td>
+<td><code>130ec19</code> (Batch C C4)</td>
+<td>spec §43.2 / §11.4.40; Catalogue-Check: TBD;
+docs/qa/HRD-045-20260528T040000Z/</td>
+</tr>
+<tr>
+<td>HRD-046</td>
+<td>task</td>
+<td>high</td>
+<td>§11.4.41 <code>sherald force-push gate</code> — merge-first +
+per-session-auth enforcement — Batch C: implemented as sherald §43
+command (<code>sherald/cmd/sherald/sysops_cmds.go</code>) feeding the
+HRD-020 sherald binding; PRE-FLIGHT GATE
+(detects+classifies+exits-nonzero, never performs the op); hermetic
+-race green; §107 lazy-verifier fix so the CLI runs without a JWT
+secret</td>
+<td>2026-05-30</td>
+<td><code>ed6c675</code> (Batch C C2)</td>
+<td>spec §43.2 / §11.4.41 + §9.2; Catalogue-Check: TBD;
+docs/qa/HRD-046-20260528T030000Z/</td>
+</tr>
+<tr>
+<td>HRD-047</td>
+<td>task</td>
+<td>middle</td>
+<td>§11.4.45 / .56 <code>scherald status-digest</code> — periodic
+Status.md sweep + Status_Summary regen — Batch C straggler: implemented
+in <code>scherald/cmd/scherald/digest_cmds.go</code> feeding the HRD-025
+scherald binding (§11.4.45 status-sweep; detect/report +
+<code>--apply</code> regenerates Status_Summary); hermetic -race
+green</td>
+<td>2026-05-30</td>
+<td><code>ba27a0e</code> (Batch C straggler)</td>
+<td>spec §43.2 / §11.4.45 + §11.4.56; Catalogue-Check: TBD; evidence
+<code>docs/qa/HRD-047-20260528T060000Z/</code></td>
+</tr>
+<tr>
+<td>HRD-048</td>
+<td>task</td>
+<td>low</td>
+<td>§11.4.53 <code>cherald fixed-summary sync</code> — standalone
+Fixed_Summary backfill — Batch C: implemented as cherald §43
+docs-pipeline command (<code>cherald/cmd/cherald/docops_cmds.go</code>)
+feeding the HRD-019 cherald binding; detect-by-default +
+<code>--apply</code> to regenerate; ships the §107 lazy-verifier fix so
+the CLI runs without a JWT secret; hermetic -race green</td>
+<td>2026-05-30</td>
+<td><code>aef0207</code> (Batch C C3)</td>
+<td>spec §43.2 / §11.4.53; Catalogue-Check: TBD (likely existing
+script); docs/qa/HRD-048-20260528T050000Z/</td>
+</tr>
+<tr>
+<td>HRD-049</td>
+<td>task</td>
+<td>middle</td>
+<td>§11.4.55 <code>pherald reopen &lt;HRD-NNN&gt;</code> — Issues→Fixed
+reversal + Reopens history — Batch C: implemented as gitops command (the
+Wave 6.5 inbound Fixed→Issues migration); --emit feeds HRD-023 binding;
+hermetic temp-repo tests -race green</td>
+<td>2026-05-30</td>
+<td><code>502ebf6</code> (Batch C C1)</td>
+<td>spec §43.2 / §11.4.55; Catalogue-Check: no-match (Herald-specific
+HRD flow); evidence <code>docs/qa/HRD-049-20260527T213201Z/</code></td>
+</tr>
+<tr>
+<td>HRD-050</td>
+<td>task</td>
+<td>middle</td>
+<td>§11.4.59 <code>cherald readme sync</code> — README doc-link regen +
+multi-format re-export — Batch C: implemented as cherald §43
+docs-pipeline command (<code>cherald/cmd/cherald/docops_cmds.go</code>)
+feeding the HRD-019 cherald binding; detect-by-default +
+<code>--apply</code> to regenerate; ships the §107 lazy-verifier fix so
+the CLI runs without a JWT secret; hermetic -race green</td>
+<td>2026-05-30</td>
+<td><code>aef0207</code> (Batch C C3)</td>
+<td>spec §43.2 / §11.4.57 + §11.4.59; Catalogue-Check: TBD;
+docs/qa/HRD-050-20260528T050000Z/</td>
+</tr>
+<tr>
+<td>HRD-051</td>
+<td>task</td>
+<td>high</td>
+<td>§11.4.60 <code>cherald composite-gate</code> — canonical
+implementation of CM-DOCS-COMPOSITE-SYNC — Batch C: implemented as
+cherald §43 verify/check command
+(<code>cherald/cmd/cherald/checkops_cmds.go</code>) feeding the HRD-019
+cherald binding; detect-only; hermetic -race green</td>
+<td>2026-05-30</td>
+<td><code>aef0207</code> (Batch C C3)</td>
+<td>spec §43.2 / §11.4.60; Catalogue-Check: TBD;
+docs/qa/HRD-051-20260528T050000Z/</td>
+</tr>
+<tr>
+<td>HRD-052</td>
+<td>task</td>
+<td>middle</td>
+<td>§11.4.65 <code>cherald export</code> — bulk Markdown export wrapper
+(md/html/pdf/docx) — Batch C: implemented as cherald §43 docs-pipeline
+command (<code>cherald/cmd/cherald/docops_cmds.go</code>) feeding the
+HRD-019 cherald binding; detect-by-default + <code>--apply</code> to
+regenerate; ships the §107 lazy-verifier fix so the CLI runs without a
+JWT secret; hermetic -race green</td>
+<td>2026-05-30</td>
+<td><code>aef0207</code> (Batch C C3)</td>
+<td>spec §43.2 / §11.4.65 + §36; Catalogue-Check: extend (built atop
+Pandoc + WeasyPrint); docs/qa/HRD-052-20260528T050000Z/</td>
+</tr>
+<tr>
+<td>HRD-053</td>
+<td>task</td>
+<td>high</td>
+<td>§11.4.71 <code>pherald pre-push</code> — fetch + investigate +
+integrate hook — Batch C: implemented as gitops command (§11.4.74 wrap
+of git binary); --emit feeds HRD-023 binding; hermetic temp-repo tests
+-race green</td>
+<td>2026-05-30</td>
+<td><code>502ebf6</code> (Batch C C1)</td>
+<td>spec §43.2 / §11.4.71; Catalogue-Check: TBD; evidence
+<code>docs/qa/HRD-053-20260527T213201Z/</code></td>
+</tr>
+<tr>
+<td>HRD-054</td>
+<td>task</td>
+<td>middle</td>
+<td>§11.4.73 <code>cherald spec-version check</code> — Revision-vs-edits
+drift detection — Batch C: implemented as cherald §43 verify/check
+command (<code>cherald/cmd/cherald/checkops_cmds.go</code>) feeding the
+HRD-019 cherald binding; detect-only; hermetic -race green</td>
+<td>2026-05-30</td>
+<td><code>aef0207</code> (Batch C C3)</td>
+<td>spec §43.2 / §11.4.73; Catalogue-Check: no-match (very-new mandate);
+docs/qa/HRD-054-20260528T050000Z/</td>
+</tr>
+<tr>
+<td>HRD-055</td>
+<td>task</td>
+<td>middle</td>
+<td>§11.4.74 <code>cherald catalogue-check &lt;pr&gt;</code> — scan PR
+for Catalogue-Check + survey runner over vasic-digital +
+HelixDevelopment — Batch C: implemented as cherald §43 verify/check
+command (<code>cherald/cmd/cherald/checkops_cmds.go</code>) feeding the
+HRD-019 cherald binding; detect-only; hermetic -race green</td>
+<td>2026-05-30</td>
+<td><code>aef0207</code> (Batch C C3)</td>
+<td>spec §43.2 / §11.4.74; Catalogue-Check: no-match (very-new mandate);
+docs/qa/HRD-055-20260528T050000Z/</td>
+</tr>
+<tr>
+<td>HRD-056</td>
+<td>task</td>
+<td>high</td>
+<td>§12.6 <code>sherald mem-budget watch</code> — daemon-mode 60%
+threshold watcher emitting <code>.host.safety_breach</code> — Batch C:
+implemented as sherald §43 command
+(<code>sherald/cmd/sherald/sysops_cmds.go</code>) feeding the HRD-020
+sherald binding; PRE-FLIGHT GATE (detects+classifies+exits-nonzero,
+never performs the op); hermetic -race green; §107 lazy-verifier fix so
+the CLI runs without a JWT secret</td>
+<td>2026-05-30</td>
+<td><code>ed6c675</code> (Batch C C2)</td>
+<td>spec §43.2 / §12.6; Catalogue-Check: TBD;
+docs/qa/HRD-056-20260528T030000Z/</td>
+</tr>
+<tr>
+<td>HRD-085</td>
+<td>task</td>
+<td>middle</td>
+<td>Implement single-task admin operations on
+<code>commons_infra.pgxTaskRepository</code> — <code>GetByID</code>,
+<code>Update</code>, <code>Delete</code>. Required for Requeue +
+MoveToDeadLetter call chains and operator tooling. Currently all three
+return <code>ErrUnsupported (HRD-085)</code>. Scope: read one
+BackgroundTask row by ID; full-row Update including JSONB columns; soft-
+or hard-Delete decision per §107.</td>
+<td>2026-05-30</td>
+<td><code>5899623</code> (v1.0.0 Batch D)</td>
+<td>spec V3 §44 + upstream interface <code>TaskRepository</code> in
+<code>submodules/background/interfaces.go</code>; Catalogue-Check:
+extend
+<code>digital.vasic.background.TaskRepository@2d46dd60b2ffcb9d3b584b029b711a6fbc71b296</code>
+(Herald already implements Enqueue/Dequeue/LogEvent on the same
+interface; these three rows finish the single-task surface).</td>
+</tr>
+<tr>
+<td>HRD-086</td>
+<td>task</td>
+<td>middle</td>
+<td>Implement worker-side running-task state mutations on
+<code>commons_infra.pgxTaskRepository</code> —
+<code>UpdateStatus</code>, <code>UpdateProgress</code>,
+<code>UpdateHeartbeat</code>, <code>SaveCheckpoint</code>. Required by
+River workers + the stuck-detector reaper. Currently all four return
+<code>ErrUnsupported (HRD-086)</code>. Scope: status transitions guarded
+by valid-state-machine check; progress as
+<code>(float64, message)</code>; heartbeat as
+<code>updated_at = now()</code> writeback; checkpoint as opaque
+<code>[]byte</code> blob persisted alongside the task row.</td>
+<td>2026-05-30</td>
+<td><code>5899623</code> (v1.0.0 Batch D)</td>
+<td>spec V3 §44 + upstream interface <code>TaskRepository</code> in
+<code>submodules/background/interfaces.go</code>; Catalogue-Check:
+extend
+<code>digital.vasic.background.TaskRepository@2d46dd60b2ffcb9d3b584b029b711a6fbc71b296</code>
+(worker-side write surface — the hot path for long-running task progress
+reporting).</td>
+</tr>
+<tr>
+<td>HRD-087</td>
+<td>task</td>
+<td>low</td>
+<td>Implement admin / stats / audit reads on
+<code>commons_infra.pgxTaskRepository</code> — <code>GetByStatus</code>,
+<code>GetPendingTasks</code>, <code>CountByStatus</code>,
+<code>GetTaskHistory</code>. Drives the <code>/v1/queue/*</code>
+introspection endpoints + Peek delegate. Currently all four return
+<code>ErrUnsupported (HRD-087)</code>. Scope: status-filtered paginated
+reads; pending-task slice for Peek; status-bucketed counts; per-task
+execution-history rows from the <code>task_execution_history</code>
+table.</td>
+<td>2026-05-30</td>
+<td><code>5899623</code> (v1.0.0 Batch D)</td>
+<td>spec V3 §44 + upstream interface <code>TaskRepository</code> in
+<code>submodules/background/interfaces.go</code>; Catalogue-Check:
+extend
+<code>digital.vasic.background.TaskRepository@2d46dd60b2ffcb9d3b584b029b711a6fbc71b296</code>
+(read-only introspection — composes with HRD-016
+<code>/v1/queue/*</code> Gin handlers).</td>
+</tr>
+<tr>
+<td>HRD-088</td>
+<td>task</td>
+<td>middle</td>
+<td>Implement queue-recovery reads on
+<code>commons_infra.pgxTaskRepository</code> —
+<code>GetStaleTasks</code>, <code>GetByWorkerID</code>. Drives the
+stuck-task reaper + worker-crash recovery loop. Currently both return
+<code>ErrUnsupported (HRD-088)</code>. Scope: stale-threshold filter
+against <code>updated_at</code>; per-worker assignment lookup for
+re-dispatch after a worker disappears.</td>
+<td>2026-05-30</td>
+<td><code>5899623</code> (v1.0.0 Batch D)</td>
+<td>spec V3 §44 + upstream interface <code>TaskRepository</code> in
+<code>submodules/background/interfaces.go</code>; Catalogue-Check:
+extend
+<code>digital.vasic.background.TaskRepository@2d46dd60b2ffcb9d3b584b029b711a6fbc71b296</code>
+(recovery-loop surface — required before any worker is allowed to crash
+without operator intervention).</td>
+</tr>
+<tr>
+<td>HRD-089</td>
+<td>task</td>
+<td>low</td>
+<td>Implement resource-monitor I/O on
+<code>commons_infra.pgxTaskRepository</code> —
+<code>SaveResourceSnapshot</code>, <code>GetResourceSnapshots</code>.
+Persists per-task CPU/memory/IO samples for capacity-planning +
+post-mortem. Currently both return
+<code>ErrUnsupported (HRD-089)</code>. Scope: append-only insert keyed
+by <code>(task_id, captured_at)</code>; per-task paginated read in
+reverse-chronological order. Schema target: a
+<code>task_resource_snapshots</code> table not yet in the §9.6 migration
+set — adding it is part of this HRD.</td>
+<td>2026-05-30</td>
+<td><code>5899623</code> (v1.0.0 Batch D)</td>
+<td>spec V3 §44 + upstream interface <code>TaskRepository</code> in
+<code>submodules/background/interfaces.go</code>; Catalogue-Check:
+extend
+<code>digital.vasic.background.TaskRepository@2d46dd60b2ffcb9d3b584b029b711a6fbc71b296</code>
+(resource telemetry — composes with
+<code>digital.vasic.observability</code> OTel pipeline but is durable,
+not stream-only).</td>
+</tr>
+<tr>
+<td>HRD-116</td>
+<td>task</td>
+<td>middle</td>
+<td>Wave 7 T7 — qaherald Slack <code>MessengerClient</code> +
+channel-keyed builder
+(<code>qaherald/internal/messenger/{slack.go,builder.go}</code>):
+raw-HTTP client implementing all 11 <code>MessengerClient</code> methods
+(Me/Send/SendPhoto/SendDocument/SendVoice/GetUpdates/WaitForReply/Download/Preflight/GetChatMember/Close);
+<code>GetUpdates</code> via
+<code>conversations.history</code>+<code>oldest=&lt;ts&gt;</code>
+watermark (Slack has no <code>getUpdates</code>); <code>MessageID</code>
+= dotted-float ts string; channel-keyed <code>Build(BuildConfig)</code>
+(tgram/slack/unknown→error). Token NEVER in errors —
+<code>sanitizeError()</code> defense +
+<code>TestSlack_Send_ErrorDoesNotLeakToken</code> pins it with a planted
+<code>xoxb-SUPERSECRET-must-not-leak-7777</code>. 30 hermetic httptest
+tests <code>-race</code> green; compile-time pin
+<code>var _ MessengerClient = (*SlackClient)(nil)</code>.
+KNOWN-FUTURE-CLEANUP: ships <code>files.upload</code> V1 (deprecated by
+Slack 2025-Q1 in favor of two-step V2) — functionally equivalent for the
+httptest seam, swappable without API breakage; documented in
+<code>slack.go</code> header.</td>
+<td>2026-05-30</td>
+<td><code>6811114</code> (Wave 7 T7)</td>
+<td>docs/superpowers/plans/2026-05-27-wave7-generic-messenger.md §T7;
+mirrors <code>qaherald/internal/messenger/telegram.go</code>; evidence
+<code>docs/qa/HRD-116-20260528T090000Z/</code>; Catalogue-Check: reuse
+Slack Web API endpoints via raw HTTP (NOT slack-go SDK — different layer
+from HRD-115; offset bookkeeping is qaherald-controlled;
+2026-05-28).</td>
+</tr>
+<tr>
+<td>HRD-118</td>
+<td>task</td>
+<td>high</td>
+<td>Wave 7 T9 — e2e_bluff_hunt.sh E124-E131 multi-channel invariants:
+E124 channels registry resolution, E125 tgram self-filter post-Wave-7
+(pure-refactor invariant), E126 slack adapter (interface satisfied +
+auth.test + chat.postMessage wire bytes + registry wiring), <strong>E127
+LIVE Slack</strong> (env-gated
+<code>HERALD_SLACK_BOT_TOKEN</code>+<code>HERALD_SLACK_CHANNEL_ID</code>+<code>TestSlack_Live_Send</code>
+triple-guard to prevent silent "no tests to run" PASS-bluff), E128
+per-channel inbox isolation, E129 generalized IsSelfEcho
+(Username+UserID+empty-self), E130 multi-channel pherald listen wiring,
+E131 qaherald messenger.Build dispatch. sc_anchor on the T6+T7 committed
+transcripts.</td>
+<td>2026-05-30</td>
+<td><code>17ecd0b</code> (Wave 7 T9)</td>
+<td>spec V3 r13 §11.4;
+docs/superpowers/plans/2026-05-27-wave7-generic-messenger.md §T9;
+Catalogue-Check: n/a (e2e wiring against shipped tests).</td>
+</tr>
+<tr>
+<td>HRD-119</td>
+<td>task</td>
+<td>high</td>
+<td>Wave 7 T10 — paired §1.1 mutation gate
+<code>tests/test_wave7_mutation_meta.sh</code> (4 PASS / 0 FAIL):
+<strong>M1</strong> blank <code>IsSelfEcho</code> →
+<code>TestIsSelfEchoUsername</code> FAILs (echo-loop hazard caught) →
+restored → PASS; <strong>M2</strong> drop slack
+<code>channels.Register</code> in <code>init()</code> → new
+<code>TestSlackRegisteredViaInit</code> FAILs → restored → PASS;
+<strong>M3</strong> drop slack <code>thread_ts</code> append in
+<code>send.go</code> → <code>TestSlackSendReplyUsesThreadTS</code> FAILs
+→ restored → PASS; <strong>+ quiescence</strong> assertion (no
+<code>MUTATED W7-</code> residue in 3 production target files
+post-restore). Reuses Wave 6 canonical
+<code>.git/MUTATION_IN_PROGRESS</code> lockfile + trap-on-EXIT +
+pre-flight dirty-tree-and-residue guard + byte-for-byte
+<code>assert_restored</code>. FOREGROUND-ONLY (§107.y /
+no-concurrent-mutation operator mandate).</td>
+<td>2026-05-30</td>
+<td><code>6737040</code> (Wave 7 T10)</td>
+<td>spec V3 §11.4 + §1.1 + §107.y;
+docs/superpowers/plans/2026-05-27-wave7-generic-messenger.md §T10;
+canonical precedent <code>tests/test_wave6_mutation_meta.sh</code>;
+evidence <code>docs/qa/HRD-119-20260528T100000Z/transcript.txt</code>
+(anchor <code>QA-ANCHOR: HRD-119-WAVE7-MUTATION-GATE-20260528</code>);
+Catalogue-Check: n/a (gate).</td>
+</tr>
+<tr>
+<td>HRD-120</td>
+<td>task</td>
+<td>high</td>
+<td>Wave 7 T11 — §11.4.85 multi-channel stress + chaos. Extended
+HRD-126's <code>pherald/cmd/pherald/listen_stress_chaos_test.go</code>
+(NOT duplicated to a new file):
+<code>TestListen_MultiChannel_StressBurst</code> (2 channels × 200
+concurrent events through ONE runListen — pins no-loss/no-double +
+<strong>per-channel attribution</strong> via
+<code>perChannelCountingReplier</code> keyed on
+<code>rcpt.Channel</code> proving the channelRouter does NOT cross-wire;
+throughput ~9-19k ev/s under -race; clean shutdown &lt;3s + no goroutine
+leak) +
+<code>TestListen_MultiChannel_ChaosOneChannelDies_OtherKeepsGoing</code>
+(tgram fires 1 event then errors; slack ticks 50 events at 2ms — pins
+<strong>concurrency-of-fan-in under fault</strong> via conjunction: ≥5
+slack dispatches landed BEFORE fail-loud teardown AND tgram error
+surfaces tagged <code>channel="tgram-stub"</code> +
+<code>subscribe</code>). 12/12 PASS over <code>-race -count=3</code> (3
+iterations × 2 new + 2 sibling HRD-126); race-detector clean. runListen
+contract found: <strong>fail-loud-tears-down-siblings</strong>
+(per-channel supervised restart is a deferred Wave 8 design, doc-comment
+warns against silent change). Evidence anchors:
+<code>multichannel_no_drop_under_burst=1</code> (stress) +
+<code>multichannel_concurrency_proven=1</code> +
+<code>multichannel_one_channel_death_surfaced=1</code> (chaos).</td>
+<td>2026-05-30</td>
+<td><code>86dfa1e</code> (Wave 7 T11)</td>
+<td>spec V3 §11.4.85;
+docs/superpowers/plans/2026-05-27-wave7-generic-messenger.md §T11;
+canonical precedent HRD-126 + commons/stresschaos; evidence
+<code>docs/qa/HRD-120-20260528T110000Z/stress_chaos/transcript.txt</code>
+(anchor
+<code>QA-ANCHOR: HRD-120-WAVE7-MULTICHANNEL-STRESS-CHAOS-20260528</code>);
+Catalogue-Check: extend commons/stresschaos + HRD-126
+burstSubscriber.</td>
+</tr>
+<tr>
+<td>HRD-121</td>
+<td>task</td>
+<td>low</td>
+<td>Wave 7 T12 — <code>docs/guides/MESSENGER_CHANNELS.md</code> operator
+guide (610 lines, 11 §-sections + 3 siblings .html/.pdf/.docx): §1
+architecture (commons.Channel outbound vs
+commons_messaging/channels.Channel inbound + registry + IsSelfEcho +
+per-channel inbox; ASCII fan-in diagram), §2
+<code>HERALD_CHANNELS</code> selector (fail-loud on unknown name), §3
+Telegram live setup (BotFather → token → chat-id), §4 Slack live setup
+(api.slack.com/apps → Socket Mode + scopes +
+<code>xoxb-</code>/<code>xapp-</code> tokens; §107 token-redaction
+sanitization note citing
+<code>TestSlack_Send_ErrorDoesNotLeakToken</code>), §5 inbox isolation
+under
+<code>${HERALD_INBOX_DIR}/&lt;channel&gt;/&lt;sha256&gt;.&lt;ext&gt;</code>,
+§6 anti-echo-loop self-filter (cross-the-wire-then-cache contract), §7
+URL schemes for both adapters, §8 14-item "add a new channel"
+implementer checklist + companion "what you do NOT touch" list
+(framework hot paths come for free), §9 10-entry troubleshooting
+cookbook (echo-loop / channel_not_found / invalid_auth / wrong inbox /
+HERALD_CHANNELS=unknown), §10 6-checklist operator pre-deploy audit
+mirroring OPERATOR_CREDENTIALS.md style, §11 references (cross-links
+spec V3 §11/§32.2/§43 + Wave 7 plan + adapter source paths + every
+HRD-110..121). Generated via
+<code>REGEN_ALL=1 bash scripts/export_docs.sh</code> (new-guide
+bootstrap).</td>
+<td>2026-05-30</td>
+<td><code>a541acc</code>/Wave 7 T12</td>
+<td>docs/superpowers/plans/2026-05-27-wave7-generic-messenger.md §T12;
+evidence <code>docs/qa/HRD-121-20260528T120000Z/transcript.txt</code>
+(anchor
+<code>QA-ANCHOR: HRD-121-WAVE7-T12-MESSENGER-CHANNELS-DOC-20260528</code>);
+Catalogue-Check: n/a (operator doc).</td>
+</tr>
+<tr>
+<td>HRD-148</td>
+<td>feature</td>
+<td>high</td>
+<td><strong>ATMOSphere integration WS-1 — <code>commons_workable</code>
+SQLite SSoT foundation (LANDED + tested 2026-05-29).</strong> New L1
+module: SQLite store (pure-Go <code>modernc.org/sqlite</code>, no CGO)
+mirroring the workable-items schema v2 (<code>items</code> PK
+<code>(atm_id,current_location)</code> + <code>item_history</code> +
+<code>meta</code>, WAL, 10-value status closed set); full CRUD repo
+(Create/GetByID/Update/Delete/List, loud not-found, closed-set status
+validation); per-property <code>Diff(prev,curr)</code> change-feed
+emitting
+<code>item.created</code>/<code>item.deleted</code>/<code>item.status.changed</code>/<code>item.field.changed</code>/<code>item.content.updated</code>
+with exact old→new; <code>ParseTracker</code> matching ATMOSphere's REAL
+<code>## §… [ATM-NNN]</code> +
+<code>**Status:**</code>/<code>**Type:**</code>/<code>**Severity:**</code>
+format. 18 real-SQLite tests <code>-race -count=3</code> green. Keystone
+for R1/R3/R6.</td>
+<td>2026-05-30</td>
+<td><code>92f0136</code> (WS-1)</td>
+<td>Plan <code>~/Documents/ATMOSphere_Herald_Integration_Plan.md</code>
+§4 (HRD-W1/W2); Catalogue-Check: reuse <code>modernc.org/sqlite</code>,
+schema mirrors
+<code>constitution/scripts/workable-items/schema.sql</code>
+(2026-05-29).</td>
+</tr>
+<tr>
+<td>HRD-149</td>
+<td>feature</td>
+<td>high</td>
+<td><strong>ATMOSphere integration WS-2 — <code>commons_watch</code>
+file/DB watcher (LANDED + tested 2026-05-29).</strong> New L1 module:
+fsnotify watcher (direct dep) over the <code>.db</code> SSoT + MD
+trackers, debounce-coalesce + SQLite-WAL polling fallback (WAL writes
+hit the <code>-wal</code> sidecar + may not raise reliable fsnotify
+Write on the main <code>.db</code>); graceful ctx-cancel, leak-free. 4
+real-fsnotify tests <code>-race</code> green. Feeds R1/R2.</td>
+<td>2026-05-30</td>
+<td><code>92f0136</code> (WS-2)</td>
+<td>Plan §4 (HRD-W3); Catalogue-Check: reuse
+<code>github.com/fsnotify/fsnotify</code> (2026-05-29).</td>
+</tr>
+<tr>
+<td>HRD-151</td>
+<td>feature</td>
+<td>high</td>
+<td>ATMOSphere integration WS-3 — change→CloudEvent→Runner bridge +
+Jira/ClickUp-style per-property-diff message formatter (reuse the
+existing <code>pherald/internal/runner</code> 7-stage fan-out; add only
+the workable-event producer + formatter).</td>
+<td>2026-05-30</td>
+<td><code>02e9fea</code> (WS-3)</td>
+<td>Plan §3.1 + §4 (HRD-W5); Catalogue-Check: reuse
+<code>pherald/internal/runner</code>.</td>
+</tr>
+<tr>
+<td>HRD-152</td>
+<td>feature</td>
+<td>high</td>
+<td>ATMOSphere integration WS-4 — inbound action registry +
+<code>item.update</code>/<code>item.delete</code>/<code>investigation.start</code>
++ <code>ItemMutator</code> (writes <code>commons_workable</code>) +
+investigation orchestrator (<strong>act-with-confirmation</strong> per
+operator 2026-05-29).</td>
+<td>2026-05-30</td>
+<td><code>2fae8c9</code> (WS-4)</td>
+<td>Plan §3.2 + §4 (HRD-W6); Catalogue-Check: extend
+<code>pherald/internal/inbound</code> action router.</td>
+</tr>
+<tr>
+<td>HRD-153</td>
+<td>feature</td>
+<td>middle</td>
+<td>ATMOSphere integration WS-2 — watcher daemon entrypoint
+(<code>pherald watch</code> running the watch→diff→notify loop; promote
+to a <code>wherald</code> flavor if it grows).</td>
+<td>2026-05-30</td>
+<td><code>561080d</code> (WS-2/WS-7)</td>
+<td>Plan §3.3 + §4 (HRD-W7); Catalogue-Check: extend
+<code>pherald</code> CLI.</td>
+</tr>
+<tr>
+<td>HRD-154</td>
+<td>task</td>
+<td>middle</td>
+<td>ATMOSphere integration WS-3 — enforce preference/quiet-hours routing
+(<code>PreferenceSet</code>/<code>QuietHours</code> types exist but the
+resolver ignores them).</td>
+<td>2026-05-30</td>
+<td><code>a541acc</code> (WS-3)</td>
+<td>Plan §4 (HRD-W10); Catalogue-Check: extend
+<code>pherald/internal/runner/subscriber.go</code>.</td>
+</tr>
 <tr>
 <td>HRD-090</td>
 <td>task</td>
