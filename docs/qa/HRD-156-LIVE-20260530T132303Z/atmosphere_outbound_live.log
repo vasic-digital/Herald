@@ -1,0 +1,11 @@
+=== RUN   TestMTProto_ATMOSphere_SSoTChangeNotifiesGroup
+    mtproto_atmosphere_test.go:108: pherald built at /tmp/claude-501/TestMTProto_ATMOSphere_SSoTChangeNotifiesGroup134097170/001/pherald
+    mtproto_atmosphere_test.go:138: unique atm_id nonce for this run: ATM-QALIVE-40681337
+    mtproto_atmosphere_test.go:166: pherald watch PID=25119 (db=/tmp/claude-501/TestMTProto_ATMOSphere_SSoTChangeNotifiesGroup134097170/001/workable_items.db, channels=tgram, log=/tmp/claude-501/TestMTProto_ATMOSphere_SSoTChangeNotifiesGroup134097170/001/pherald-watch.log)
+    mtproto_atmosphere_test.go:193: ✓ pherald watch is ready (readiness line observed)
+    mtproto_atmosphere_test.go:216: MTProto user active: @milos85vasic (user_id=2057253161)
+    mtproto_atmosphere_test.go:232: SSoT mutated: created ATM-QALIVE-40681337 in Issues — awaiting bot notification in chat -4946584787
+    mtproto_atmosphere_test.go:252: PASS: ATMOSphere↔Herald outbound proven END-TO-END — bot message_id=211575 from user_id=8823384001 text="🆕 ATM-QALIVE-40681337 created"
+--- PASS: TestMTProto_ATMOSphere_SSoTChangeNotifiesGroup (8.18s)
+PASS
+ok  	github.com/vasic-digital/herald/qaherald/internal/lifecycle	8.809s
