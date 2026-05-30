@@ -63,3 +63,7 @@ bin/
 *.test
 herald-*.exe
 herald-*.bin
+
+# HelixQA autonomous-session artifacts (tickets + replay state) — keep out of the tracked tree
+/HelixQA/
+docs/issues/
