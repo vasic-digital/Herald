@@ -47,7 +47,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>44</td>
+<td>45</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -63,14 +63,17 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>r44: migrated the now-complete HRD-146
-(<code>pherald listen</code> dispatch hardening, <code>a975d8b</code>) +
-HRD-147 (governance dead-letter subscriber, <code>9ef4be9</code>)
-Issues→Fixed — 15 open.</strong> Prior <strong>r43 (v1.0.0
-closure-migration — §11.4.19 atomic Issues→Fixed of 51 code-verified
-HRDs). Re-audited each candidate against committed reality (grep/read
-the impl + run the test + confirm the e2e invariant + confirm the
-<code>docs/qa/&lt;run-id&gt;/</code> dir) BEFORE migrating; nothing
+<td><strong>r45: closed HRD-015 Obsolete (§11.4.90) — its "Go-scaffold
+I8 invariant" was superseded by design change (the I8 gate slot was
+repurposed for the §107 covenant I8a/b/c; the scaffold is verified by
+the broader test suite). Prior <strong>r44: migrated the now-complete
+HRD-146 (<code>pherald listen</code> dispatch hardening,
+<code>a975d8b</code>) + HRD-147 (governance dead-letter subscriber,
+<code>9ef4be9</code>) Issues→Fixed — 15 open.</strong> Prior <strong>r43
+(v1.0.0 closure-migration — §11.4.19 atomic Issues→Fixed of 51
+code-verified HRDs). Re-audited each candidate against committed reality
+(grep/read the impl + run the test + confirm the e2e invariant + confirm
+the <code>docs/qa/&lt;run-id&gt;/</code> dir) BEFORE migrating; nothing
 trusted on self-reported status alone.</strong> Migrated to
 <code>Fixed.md</code>: the 7 flavor constitution bindings HRD-019..025
 (bindings tests 7/7 PASS <code>-race</code>; e2e E90-E96 present;
@@ -103,12 +106,12 @@ constitution-tool upstream, MTProto live creds, cross-repo push);
 HRD-131 (SQLite SSoT migration Phase 2 externally blocked);
 HRD-146/147/081/008/015 (not-started / upstream / operator-validation);
 HRD-143/144/145 (already Obsolete). Prior r42 (ATMOSphere↔︎Herald
-integration DEPLOYED across all repos). Cross-repo push complete:** (1)
-HRD-155 — HelixConstitution workable-items parser extended for
-ATMOSphere's <code>## §… [ATM-NNN]</code> format, backward-compatible,
-byte-identical round-trip, pushed to 4 upstreams (<code>995bd2f</code>);
-(2) ATMOSphere <code>constitution</code> pointer bumped
-(<code>ecdec56</code>); (3) HRD-150/SSoT —
+integration DEPLOYED across all repos). Cross-repo push
+complete:</strong> (1) HRD-155 — HelixConstitution workable-items parser
+extended for ATMOSphere's <code>## §… [ATM-NNN]</code> format,
+backward-compatible, byte-identical round-trip, pushed to 4 upstreams
+(<code>995bd2f</code>); (2) ATMOSphere <code>constitution</code> pointer
+bumped (<code>ecdec56</code>); (3) HRD-150/SSoT —
 <code>docs/workable_items.db</code> materialized on the ATMOSphere host
 (58 items, validate OK, lossless), committed version-controlled per
 §11.4.95 (<code>d41dda5</code>); (4) HRD-157 — Herald registered as a
@@ -609,14 +612,36 @@ Catalogue-Check: n/a (Obsolete classification, not new code)</td>
 <tr>
 <td>HRD-015</td>
 <td>task</td>
-<td>open</td>
+<td>Obsolete</td>
 <td>low</td>
 <td>Inheritance gate I8 invariants for Go scaffold (go.work +
-commons/types.go + null adapter test passes)</td>
+commons/types.go + null adapter test passes) — superseded by design
+change. <strong>Obsolete-Details:</strong> Since 2026-05-30;
+Reason=superseded-by-design-change; Superseding-item=the
+inheritance-gate <code>I8</code> slot was repurposed for the §107
+end-user-usability covenant
+(<code>I8a</code>/<code>I8b</code>/<code>I8c</code> in
+<code>tests/test_constitution_inheritance.sh:133-137</code>), and the
+Go-scaffold verification HRD-015 requested is now covered by the broader
+anti-bluff test suite rather than a dedicated gate invariant;
+Triple-check evidence: (a)
+<code>grep -nE 'I8[abc]' tests/test_constitution_inheritance.sh</code>
+shows the three I8a/b/c checks assert the §107 covenant anchors in
+CLAUDE.md/AGENTS.md/HERALD_CONSTITUTION.md — NOT the Go-scaffold (the
+<code>I8</code> number was reassigned), (b) the null adapter is a full
+tested adapter (<code>commons_messaging/channels/null/</code> per
+CLAUDE.md) and <code>go.work</code> + <code>commons/types.go</code>
+exist and build green — the 2026-05-30 green-baseline reported 18/18 Go
+modules <code>ok</code> + inheritance gate 15 PASS / 0 FAIL, (c)
+runtime: HRD-015's intent (verify the Go scaffold passes) is
+continuously satisfied by <code>go test ./...</code> +
+<code>scripts/e2e_bluff_hunt.sh</code>, so a separate I8 scaffold
+invariant is redundant. Action: closed Obsolete; no code change.</td>
 <td>2026-05-20</td>
-<td>2026-05-20</td>
-<td>spec V3 §40 + gate I7 pattern; Catalogue-Check: no-match
-(2026-05-20)</td>
+<td>2026-05-30</td>
+<td>spec V3 §40 + gate I7 pattern; superseded by the §107 I8a/b/c gate +
+the broader test suite; Catalogue-Check: n/a (Obsolete classification,
+not new code)</td>
 </tr>
 <tr>
 <td>HRD-081</td>
