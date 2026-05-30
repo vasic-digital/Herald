@@ -555,12 +555,16 @@ echo ""
 echo "== E25-E30 + E32: Serving flavors bind healthz/route + sherald SIGTERM =="
 # Wave 3a close-out: sherald /v1/safety_state + cherald /v1/compliance
 # went LIVE — E28/E29 now assert the route is JWT-gated (no-auth → 401)
-# instead of the Wave 2 "501 stub + HRD pointer" check. iherald
-# /v1/webhooks/page stays 501 until HRD-024 lands. The "200 + body" path
-# is covered by E43-E47 below.
+# instead of the Wave 2 "501 stub + HRD pointer" check. HRD-024 close-out:
+# iherald POST /v1/webhooks/page is now LIVE too (the
+# PagerDuty/Opsgenie-compatible inbound escalation surface driving the
+# bindings.Pipeline) — E30 now asserts the route is JWT-gated (no-auth → 401)
+# rather than the Wave 2 501-stub. The "202 + Receipt" path (real bus emit +
+# persisted constitution_state row) is covered by the iherald/internal/page
+# handler tests.
 serve_idx=25
 route_idx=28
-for entry in "sherald:24993:HRD-098:safety_state:GET:401" "cherald:24992:HRD-028:compliance:GET:401" "iherald:24994:HRD-024:webhooks/page:POST:501"; do
+for entry in "sherald:24993:HRD-098:safety_state:GET:401" "cherald:24992:HRD-028:compliance:GET:401" "iherald:24994:HRD-024:webhooks/page:POST:401"; do
     flavor="${entry%%:*}"
     rest="${entry#*:}"
     port="${rest%%:*}"
