@@ -85,6 +85,8 @@ func RenderChange(c workable.Change) string {
 		return "✏️ " + c.AtmID + " " + c.Field + ": " + c.Old + " → " + c.New
 	case workable.KindContentUpdated:
 		return "📝 " + c.AtmID + " content updated"
+	case workable.KindRelocated:
+		return "📦 " + c.AtmID + " moved: " + c.Old + " → " + c.New
 	default:
 		return c.AtmID + " " + c.Kind
 	}

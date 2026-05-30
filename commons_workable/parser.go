@@ -39,9 +39,21 @@ func ParseTracker(markdown, location string) ([]Item, error) {
 	}
 	var blocks []block
 	var cur *block
+	inFence := false
 
 	for _, ln := range lines {
-		if strings.HasPrefix(ln, "## ") {
+		// Toggle fenced-code state on ``` or ~~~ fence delimiters. While
+		// inside a fence, `## ` lines are code samples, not H2 headings.
+		trimmed := strings.TrimSpace(ln)
+		if strings.HasPrefix(trimmed, "```") || strings.HasPrefix(trimmed, "~~~") {
+			inFence = !inFence
+			if cur != nil {
+				cur.body = append(cur.body, ln)
+			}
+			continue
+		}
+
+		if !inFence && strings.HasPrefix(ln, "## ") {
 			blocks = append(blocks, block{heading: strings.TrimSpace(ln[3:])})
 			cur = &blocks[len(blocks)-1]
 			continue
@@ -86,8 +98,19 @@ func ParseTracker(markdown, location string) ([]Item, error) {
 // scanMeta extracts Status/Type/Severity from a body block's metadata
 // lines. Returns empty strings for fields not present.
 func scanMeta(body []string) (status, typ, sev string) {
+	inFence := false
 	for _, ln := range body {
-		m := metaRe.FindStringSubmatch(strings.TrimSpace(ln))
+		trimmed := strings.TrimSpace(ln)
+		// Skip metadata that lives inside a fenced code sample — it is
+		// documentation, not the enclosing item's real metadata.
+		if strings.HasPrefix(trimmed, "```") || strings.HasPrefix(trimmed, "~~~") {
+			inFence = !inFence
+			continue
+		}
+		if inFence {
+			continue
+		}
+		m := metaRe.FindStringSubmatch(trimmed)
 		if m == nil {
 			continue
 		}

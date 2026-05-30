@@ -160,6 +160,71 @@ func TestParseTracker_ItemCount(t *testing.T) {
 	}
 }
 
+// fencedCodeTracker embeds a fenced code block whose sample contains a
+// `## ` line and a **Status:** line. Neither must be parsed as a real
+// item — they live inside ``` ... ``` and are documentation, not headings.
+const fencedCodeTracker = "# Issues\n" +
+	"\n" +
+	"## SYS — [ATM-700] Real item outside the fence\n" +
+	"\n" +
+	"**Status:** In progress\n" +
+	"**Type:** Bug\n" +
+	"**Severity:** High\n" +
+	"\n" +
+	"Here is an example tracker entry an operator might paste:\n" +
+	"\n" +
+	"```\n" +
+	"## §FAKE — [ATM-999] This is only a code sample\n" +
+	"\n" +
+	"**Status:** Queued\n" +
+	"**Type:** Task\n" +
+	"**Severity:** Low\n" +
+	"```\n" +
+	"\n" +
+	"More prose after the fence.\n"
+
+func TestParseTracker_FencedCodeNotParsedAsItem(t *testing.T) {
+	items, err := ParseTracker(fencedCodeTracker, "Issues")
+	if err != nil {
+		t.Fatalf("ParseTracker() error = %v", err)
+	}
+
+	// The fenced ATM-999 sample MUST NOT become an item.
+	for _, it := range items {
+		if it.AtmID == "ATM-999" {
+			t.Fatalf("phantom item parsed from inside fenced code block: %+v", it)
+		}
+		if strings.Contains(it.Title, "only a code sample") {
+			t.Fatalf("fenced heading parsed as item title: %+v", it)
+		}
+	}
+
+	// The real item outside the fence MUST still parse — and its own
+	// metadata must NOT be corrupted by the fenced sample's **Status:** /
+	// **Severity:** lines that fall inside its captured body.
+	var found bool
+	for _, it := range items {
+		if it.AtmID == "ATM-700" {
+			found = true
+			if it.Status != "In progress" {
+				t.Fatalf("ATM-700 status = %q, want In progress (fenced metadata leaked)", it.Status)
+			}
+			if it.Severity != "High" {
+				t.Fatalf("ATM-700 severity = %q, want High (fenced metadata leaked)", it.Severity)
+			}
+			if it.Type != "Bug" {
+				t.Fatalf("ATM-700 type = %q, want Bug (fenced metadata leaked)", it.Type)
+			}
+		}
+	}
+	if !found {
+		t.Fatalf("real item ATM-700 not parsed; ids %v", idsOf(items))
+	}
+	if len(items) != 1 {
+		t.Fatalf("parsed %d items, want exactly 1 (ATM-700): %v", len(items), idsOf(items))
+	}
+}
+
 func keys(m map[string]Item) []string {
 	out := make([]string, 0, len(m))
 	for k := range m {

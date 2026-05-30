@@ -102,3 +102,69 @@ func TestDiff_NoChange(t *testing.T) {
 		t.Fatalf("Diff(no change) = %+v, want empty", got)
 	}
 }
+
+// itemAt builds an Item like item() but at an explicit location.
+func itemAt(id, status, location string) Item {
+	it := item(id, status, "t", "Low", "Bug", "b", "d")
+	it.CurrentLocation = location
+	return it
+}
+
+// TestDiff_Relocated_IssuesToFixed asserts the most important lifecycle
+// event — an item moving Issues -> Fixed (it "got Fixed") — emits exactly
+// ONE item.relocated Change carrying the from/to locations, and does NOT
+// degrade into a spurious item.deleted (Issues) + item.created (Fixed).
+func TestDiff_Relocated_IssuesToFixed(t *testing.T) {
+	prev := []Item{itemAt("ATM-X", "In progress", "Issues")}
+	curr := []Item{itemAt("ATM-X", "Fixed (→ Fixed.md)", "Fixed")}
+	got := Diff(prev, curr)
+
+	// No spurious delete/create for the relocated atm_id.
+	for _, c := range got {
+		if c.AtmID == "ATM-X" && (c.Kind == KindDeleted || c.Kind == KindCreated) {
+			t.Fatalf("relocation emitted spurious %s for ATM-X: %+v", c.Kind, got)
+		}
+	}
+
+	var relocations []Change
+	for _, c := range got {
+		if c.Kind == KindRelocated {
+			relocations = append(relocations, c)
+		}
+	}
+	if len(relocations) != 1 {
+		t.Fatalf("expected exactly 1 item.relocated, got %d: %+v", len(relocations), got)
+	}
+	r := relocations[0]
+	if r.AtmID != "ATM-X" {
+		t.Fatalf("relocation AtmID = %q, want ATM-X", r.AtmID)
+	}
+	if r.Field != "current_location" {
+		t.Fatalf("relocation Field = %q, want current_location", r.Field)
+	}
+	if r.Old != "Issues" || r.New != "Fixed" {
+		t.Fatalf("relocation Old/New = %q/%q, want Issues/Fixed", r.Old, r.New)
+	}
+}
+
+// TestDiff_Relocated_AlsoSurfacesStatusChange asserts that when an item
+// relocates AND its status differs, the status change is surfaced too
+// (alongside the single relocation), so subscribers learn the new status.
+func TestDiff_Relocated_AlsoSurfacesStatusChange(t *testing.T) {
+	prev := []Item{itemAt("ATM-X", "In progress", "Issues")}
+	curr := []Item{itemAt("ATM-X", "Fixed (→ Fixed.md)", "Fixed")}
+	got := Diff(prev, curr)
+
+	var sawStatus bool
+	for _, c := range got {
+		if c.Kind == KindStatusChanged {
+			sawStatus = true
+			if c.Old != "In progress" || c.New != "Fixed (→ Fixed.md)" {
+				t.Fatalf("status change Old/New = %q/%q", c.Old, c.New)
+			}
+		}
+	}
+	if !sawStatus {
+		t.Fatalf("relocation with status delta did not surface status.changed: %+v", got)
+	}
+}
