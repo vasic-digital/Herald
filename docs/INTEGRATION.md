@@ -437,6 +437,7 @@ For consumers who **only need read access**, any single mirror works — clone f
 - **Per-messenger guides**: `docs/guides/messengers/{TELEGRAM,SLACK,EMAIL,MAX,DISCORD,TEAMS,LARK,WHATSAPP,VIBER}.md` (some are stubs for not-yet-implemented channels — code-complete: Telegram).
 - **Per-dispatcher guides**: `docs/guides/dispatchers/{CLAUDE_CODE,ANTHROPIC,OPENCODE,AIDER,GEMINI,CURSOR}.md` (code-complete: CLAUDE_CODE).
 - **Per-flavor operator guides**: `docs/guides/{PHERALD,SHERALD,CHERALD,BHERALD,RHERALD,IHERALD,SCHERALD,QAHERALD}.md` — one nano-detail, anti-bluff reference per flavor binary, documenting every subcommand the built binary surfaces, the env/credentials each needs, real example invocations, and live-vs-not-yet-implemented status. Cross-linked per-row in the §10 flavor table above.
+- **ATMOSphere host-daemon deploy**: `docs/guides/ATMOSPHERE_DAEMON_DEPLOY.md` + `deploy/atmosphere-herald/` — the operator runbook + systemd/launchd units + `install.sh`/`uninstall.sh`/`seed-subscribers.sh` for running the `pherald watch` (outbound SSoT→notify) and `pherald listen` (inbound→CRUD) daemons on the ATMOSphere host (HRD-157).
 - **Herald Constitution**: `docs/guides/HERALD_CONSTITUTION.md` — project-specific constitutional extensions on top of the inherited Helix Constitution.
 - **Parent-discovery details**: `docs/guides/CONSTITUTION_INHERITANCE.md`.
 - **Spec V3** (the source of truth for the API + data model): `docs/specs/mvp/specification.V3.md`.
