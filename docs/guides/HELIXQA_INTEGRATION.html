@@ -279,9 +279,19 @@ evidence. When PG is unreachable, the live serve is <strong>SKIPPED with
 a recorded reason</strong> (§11.4.3) and the API bank is left out of the
 run so no API coverage is claimed that was not exercised.</li>
 <li><strong>Run the banks</strong> —
-<code>helixqa run --banks &lt;api,cli&gt; --platform all</code> writing
-report + evidence under
-<code>qa-results/helixqa/&lt;run-id&gt;/</code>.</li>
+<code>helixqa run --banks &lt;cli[,api]&gt; --platform desktop</code>
+writing report + evidence under
+<code>qa-results/helixqa/&lt;run-id&gt;/</code>. The CLI bank is
+<code>[desktop]</code>; the launcher pins
+<code>--platform desktop</code> rather than <code>--platform all</code>
+because <code>all</code> spreads the desktop cases across
+<code>android</code>/<code>androidtv</code>/<code>web</code> targets
+where they SKIP as noise. (The API bank's <code>[api]</code> platform is
+<strong>not</strong> one of <code>helixqa run</code>'s platforms —
+<code>android | web | desktop | all</code> — so the API plane is driven
+by the live <code>pherald serve</code> boot in step 4 and asserted
+there; see the api-bank wiring follow-up under <a
+href="#the-test-banks">The test banks</a>.)</li>
 <li><strong>(Optional) autonomous session</strong> — set
 <code>HELIXQA_AUTONOMOUS=1</code> to also run
 <code>helixqa autonomous --project &lt;repo&gt; --platforms api,desktop</code>.</li>
@@ -334,6 +344,27 @@ discoverability; unknown-subcommand fail-loud.</td>
 </tr>
 </tbody>
 </table>
+<p><strong>API-bank wiring follow-up (known gap).</strong> The
+<code>herald-api-v1.yaml</code> bank declares
+<code>platforms: [api]</code>, but <code>helixqa run --platform</code>
+accepts only <code>android | web | desktop | all</code> —
+<code>api</code> is a HelixQA <em>config</em> platform constant, not a
+<code>run</code> selector. As a result the bank's cases do not match any
+<code>run</code> platform and are not driven by <code>helixqa run</code>
+itself. Today the API surface is instead exercised directly by the
+launcher's step-4 live <code>pherald serve</code> boot (real HTTPS
+listener + real Postgres + captured <code>healthz</code> body), which is
+the genuine anti-bluff API evidence. Closing the gap so
+<code>helixqa run</code> drives the <code>[api]</code> bank natively
+(either by teaching <code>run</code> an <code>api</code> platform that
+targets an HTTP base-URL, or by mapping the bank onto
+<code>desktop</code> <code>curl</code> steps against the live listener)
+is tracked as the <strong>api-bank wiring</strong> follow-up. Until then
+the table's <code>api</code> row documents <em>intended</em> coverage
+delivered via the launcher's live serve, not via
+<code>helixqa run</code> step execution — stated explicitly here so the
+row is not read as a coverage claim it does not yet meet (§107
+anti-bluff).</p>
 <p><strong>Anti-bluff anchor.</strong> Every case asserts on the actual
 response <strong>body</strong> or <strong>stdout</strong> —
 <code>status:ok</code> + <code>build.version</code>,

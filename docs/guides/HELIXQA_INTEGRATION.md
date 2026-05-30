@@ -123,8 +123,15 @@ What the launcher does, in order:
    `healthz` body as evidence. When PG is unreachable, the live serve is
    **SKIPPED with a recorded reason** (§11.4.3) and the API bank is left
    out of the run so no API coverage is claimed that was not exercised.
-5. **Run the banks** — `helixqa run --banks <api,cli> --platform all`
-   writing report + evidence under `qa-results/helixqa/<run-id>/`.
+5. **Run the banks** — `helixqa run --banks <cli[,api]> --platform desktop`
+   writing report + evidence under `qa-results/helixqa/<run-id>/`. The CLI
+   bank is `[desktop]`; the launcher pins `--platform desktop` rather than
+   `--platform all` because `all` spreads the desktop cases across
+   `android`/`androidtv`/`web` targets where they SKIP as noise. (The API
+   bank's `[api]` platform is **not** one of `helixqa run`'s platforms —
+   `android | web | desktop | all` — so the API plane is driven by the live
+   `pherald serve` boot in step 4 and asserted there; see the api-bank
+   wiring follow-up under [The test banks](#the-test-banks).)
 6. **(Optional) autonomous session** — set `HELIXQA_AUTONOMOUS=1` to also
    run `helixqa autonomous --project <repo> --platforms api,desktop`.
 7. **Graceful teardown** — the `pherald serve` process is SIGTERM'd on
@@ -146,6 +153,22 @@ step `name` / `action` / `expected`) / `tags[]` / `documentation_refs[]`.
 |---|---|---|---|
 | `herald-api-v1.yaml` | `api` | 11 | Real pherald `/v1/*` routes: `healthz`, `readyz`, `metrics`, and `POST /v1/events` (no-token 401, forged-token 401, valid-token 202 + Receipt, idempotency replay 200 + `X-Herald-Replay`, malformed body 400 `event_parser:`, missing-tenant-claim 401, 404 boundary, `/v1/compliance` not-served-by-pherald). |
 | `herald-cli-flavors.yaml` | `desktop` | 10 | All 8 flavor binaries' `version --json` canonical shape + human DisplayName line; `pherald --help` subcommand discoverability; unknown-subcommand fail-loud. |
+
+**API-bank wiring follow-up (known gap).** The `herald-api-v1.yaml` bank
+declares `platforms: [api]`, but `helixqa run --platform` accepts only
+`android | web | desktop | all` — `api` is a HelixQA *config* platform
+constant, not a `run` selector. As a result the bank's cases do not match
+any `run` platform and are not driven by `helixqa run` itself. Today the
+API surface is instead exercised directly by the launcher's step-4 live
+`pherald serve` boot (real HTTPS listener + real Postgres + captured
+`healthz` body), which is the genuine anti-bluff API evidence. Closing the
+gap so `helixqa run` drives the `[api]` bank natively (either by teaching
+`run` an `api` platform that targets an HTTP base-URL, or by mapping the
+bank onto `desktop` `curl` steps against the live listener) is tracked as
+the **api-bank wiring** follow-up. Until then the table's `api` row
+documents *intended* coverage delivered via the launcher's live serve, not
+via `helixqa run` step execution — stated explicitly here so the row is
+not read as a coverage claim it does not yet meet (§107 anti-bluff).
 
 **Anti-bluff anchor.** Every case asserts on the actual response **body**
 or **stdout** — `status:ok` + `build.version`, `status:ready`, the
