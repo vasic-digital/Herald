@@ -46,6 +46,7 @@ import (
 	"digital.vasic.containers/pkg/logging"
 	"digital.vasic.database/pkg/database"
 	"github.com/sirupsen/logrus"
+	constitution "github.com/vasic-digital/herald/commons_constitution"
 	storage "github.com/vasic-digital/herald/commons_storage"
 )
 
@@ -72,6 +73,18 @@ type QuickstartBoot struct {
 	pool  database.Database
 	queue TaskQueue
 	redis *redis.Client
+
+	// HRD-147 governance dead-letter plane. Populated by Up() WHEN the
+	// Postgres pool is opened (the queue only exists alongside the pool):
+	//   - dlqBus is the in-process EventBus the queue's emitter publishes
+	//     .queue.dead_letter events onto.
+	//   - dlqSink is the durable record sink the subscriber drains into.
+	//   - dlqSubscriber owns the drain goroutine; Close()d by Down().
+	// All three are nil when no pool is booted (Redis-only boots, or before
+	// Up()), keeping the no-pool path emitter-free.
+	dlqBus        constitution.EventBus
+	dlqSink       DeadLetterSink
+	dlqSubscriber *DeadLetterSubscriber
 }
 
 // Config configures NewQuickstartBoot. Zero values pick Herald defaults.
@@ -236,17 +249,54 @@ func (b *QuickstartBoot) Up(ctx context.Context) error {
 		// is project-specific — migration 000009 in commons_storage).
 		queueLogger := logrus.New()
 		queueLogger.SetLevel(logrus.WarnLevel) // suppress per-task INFO/DEBUG noise in tests
-		// HRD-090: the repository accepts an optional constitution.EventEmitter
-		// (newPgxTaskRepositoryWithEmitter) that publishes a .queue.dead_letter
-		// event on every MoveToDeadLetter. We deliberately use the nil-emitter
-		// constructor HERE: the Foundation boot plane has no governance EventBus
-		// + subscriber, so wiring an emitter would publish into an unconsumed
-		// bus (a §107 emit-into-the-void bluff). Production wiring into the
-		// governance plane (a durable subscriber draining .queue.dead_letter
-		// into the constitution_audit sink) is the follow-up; the emitter path
-		// itself is proven end-to-end against a real bus+subscriber in
-		// task_repository_integration_test.go (TestRepoMoveToDeadLetter_*).
-		b.queue = bg.NewPostgresTaskQueue(newPgxTaskRepository(pool), queueLogger)
+		// HRD-147: wire the REAL governance dead-letter plane. The repository's
+		// MoveToDeadLetter publishes a .queue.dead_letter CloudEvent on every
+		// dead-letter move (HRD-090); previously the boot plane used the
+		// nil-emitter constructor because no subscriber consumed that class —
+		// publishing into an unconsumed bus is a §107 emit-into-the-void bluff.
+		//
+		// Now we stand up the full closed loop on the boot plane:
+		//   1. an in-process MemoryBus,
+		//   2. a durable DeadLetterSubscriber draining .queue.dead_letter into
+		//      a MemoryDeadLetterSink (the M1 sink; a Postgres-backed sink is
+		//      the M2 swap behind the same DeadLetterSink interface), and
+		//   3. a constitution.Emitter over the bus handed to the repository via
+		//      newPgxTaskRepositoryWithEmitter.
+		// The emitter is therefore wired to a REAL consumer, not the void.
+		//
+		// Guard: if the emitter cannot be constructed we fall back to the
+		// nil-emitter repository (the move still happens; the event is simply
+		// not published) rather than failing the whole boot — a dead-letter
+		// audit gap must not take down the queue.
+		var dlqEmitter constitution.EventEmitter
+		bus := constitution.NewMemoryBus(constitution.MemoryBusConfig{})
+		sink := NewMemoryDeadLetterSink()
+		subscriber, subErr := StartDeadLetterSubscriber(bus, sink)
+		if subErr == nil {
+			em, emErr := constitution.NewEmitter(bus, constitution.EmitterConfig{
+				Source: "digital.vasic.herald/commons_infra",
+			})
+			if emErr == nil {
+				dlqEmitter = em
+				b.dlqBus = bus
+				b.dlqSink = sink
+				b.dlqSubscriber = subscriber
+			} else {
+				// Emitter construction failed — tear the half-built plane down.
+				subscriber.Close()
+				_ = bus.Close()
+			}
+		} else {
+			_ = bus.Close()
+		}
+
+		var repo *pgxTaskRepository
+		if dlqEmitter != nil {
+			repo = newPgxTaskRepositoryWithEmitter(pool, dlqEmitter)
+		} else {
+			repo = newPgxTaskRepository(pool)
+		}
+		b.queue = bg.NewPostgresTaskQueue(repo, queueLogger)
 	}
 
 	// HRD-010 Task 4: open the Redis client against the booted Redis
@@ -273,6 +323,11 @@ func (b *QuickstartBoot) Up(ctx context.Context) error {
 				_ = pool.Close()
 				b.pool = nil
 				b.queue = nil // symmetry with Down() lifecycle contract: queue was constructed atop the now-closed pool
+				// HRD-147: the dead-letter plane was stood up alongside the
+				// pool/queue above; tear it down on this partial-boot rollback
+				// so a retry's idempotency guard does not leak a live drain
+				// goroutine + bus.
+				b.shutdownDeadLetterPlane()
 			}
 			return fmt.Errorf("commons_infra.Up: redis healthcheck: %w", err)
 		}
@@ -327,11 +382,45 @@ func (b *QuickstartBoot) Down(ctx context.Context) error {
 		// would 500 — that's the §107 PASS-bluff this nil-out prevents).
 		b.queue = nil
 	}
+	// HRD-147: stop the dead-letter drain goroutine + close the bus before
+	// compose-down. Ordered after the queue nil-out: the emitter the queue's
+	// repository held is now unreachable, so no new events can be published
+	// into the bus we are about to close.
+	b.shutdownDeadLetterPlane()
 
 	if err := b.orch.Down(ctx, b.project); err != nil {
 		return fmt.Errorf("infra: compose down: %w", err)
 	}
 	return nil
+}
+
+// shutdownDeadLetterPlane stops the dead-letter drain goroutine and closes
+// the bus, then clears all three fields. Idempotent: a nil subscriber/bus is
+// a no-op, so calling it on a Redis-only boot (no pool ⇒ no plane) or twice
+// is safe. The sink is retained-then-cleared: its recorded rows are durable
+// state the caller may have already read via DeadLetterSink(); we drop the
+// reference so a follow-up Up() starts with a fresh sink.
+func (b *QuickstartBoot) shutdownDeadLetterPlane() {
+	if b.dlqSubscriber != nil {
+		b.dlqSubscriber.Close() // cancels the subscription + joins the goroutine
+		b.dlqSubscriber = nil
+	}
+	if b.dlqBus != nil {
+		_ = b.dlqBus.Close()
+		b.dlqBus = nil
+	}
+	b.dlqSink = nil
+}
+
+// DeadLetterSink returns the durable dead-letter record sink wired by Up(),
+// or ErrNotBooted if the boot did not open a Postgres pool (the plane is
+// stood up only alongside the pool/queue). Callers use it to inspect recorded
+// .queue.dead_letter occurrences — the durable audit trail HRD-147 closes.
+func (b *QuickstartBoot) DeadLetterSink() (DeadLetterSink, error) {
+	if b.dlqSink == nil {
+		return nil, ErrNotBooted
+	}
+	return b.dlqSink, nil
 }
 
 // Status returns per-service status as reported by `compose ps`. Used by
