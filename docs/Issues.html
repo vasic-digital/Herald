@@ -47,7 +47,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>43</td>
+<td>44</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -63,11 +63,15 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>r43 (v1.0.0 closure-migration — §11.4.19 atomic Issues→Fixed
-of 51 code-verified HRDs). Re-audited each candidate against committed
-reality (grep/read the impl + run the test + confirm the e2e invariant +
-confirm the <code>docs/qa/&lt;run-id&gt;/</code> dir) BEFORE migrating;
-nothing trusted on self-reported status alone.</strong> Migrated to
+<td><strong>r44: migrated the now-complete HRD-146
+(<code>pherald listen</code> dispatch hardening, <code>a975d8b</code>) +
+HRD-147 (governance dead-letter subscriber, <code>9ef4be9</code>)
+Issues→Fixed — 15 open.</strong> Prior <strong>r43 (v1.0.0
+closure-migration — §11.4.19 atomic Issues→Fixed of 51 code-verified
+HRDs). Re-audited each candidate against committed reality (grep/read
+the impl + run the test + confirm the e2e invariant + confirm the
+<code>docs/qa/&lt;run-id&gt;/</code> dir) BEFORE migrating; nothing
+trusted on self-reported status alone.</strong> Migrated to
 <code>Fixed.md</code>: the 7 flavor constitution bindings HRD-019..025
 (bindings tests 7/7 PASS <code>-race</code>; e2e E90-E96 present;
 per-HRD <code>docs/qa/</code> dirs); the entire §43 command catalogue
@@ -87,28 +91,29 @@ ATMOSphere features HRD-148/149/151/152/153/154
 build+test PASS, workflow bridge + inbound action registry +
 <code>pherald watch</code> daemon + quiet-hours resolver all wired, e2e
 E139 <code>TestRunWatch_EndToEndOutbound</code> PASS hermetic). Issues
-count 43→17. <strong>DELIBERATELY LEFT OPEN (evidence-gated, NOT
-migrated):</strong> HRD-115 (Slack channel adapter — user-visible
-external-service feature whose closure is operator-gated on LIVE
-<code>docs/qa/HRD-115-LIVE-*/</code> round-trip evidence per §107.x;
-only hermetic httptest transcript exists, E127 LIVE-Slack is
-SKIP-with-reason — closing it would be a §107 PASS-bluff); HRD-117 (spec
-V3 doc-only — §106 spec-change discipline, not a code-closure);
-HRD-150/155/156/157/158 (ATMOSphere externally-gated: constitution-tool
-upstream, MTProto live creds, cross-repo push); HRD-131 (SQLite SSoT
-migration Phase 2 externally blocked); HRD-146/147/081/008/015
-(not-started / upstream / operator-validation); HRD-143/144/145 (already
-Obsolete). Prior r42 (ATMOSphere↔︎Herald integration DEPLOYED across all
-repos). Cross-repo push complete:** (1) HRD-155 — HelixConstitution
-workable-items parser extended for ATMOSphere's
-<code>## §… [ATM-NNN]</code> format, backward-compatible, byte-identical
-round-trip, pushed to 4 upstreams (<code>995bd2f</code>); (2) ATMOSphere
-<code>constitution</code> pointer bumped (<code>ecdec56</code>); (3)
-HRD-150/SSoT — <code>docs/workable_items.db</code> materialized on the
-ATMOSphere host (58 items, validate OK, lossless), committed
-version-controlled per §11.4.95 (<code>d41dda5</code>); (4) HRD-157 —
-Herald registered as a proper <code>tools/herald</code> submodule @
-Herald main <code>80cb734</code> (replaced the broken orphan gitlink)
+count 43→17→15 (HRD-146/147 also closed in r44). <strong>DELIBERATELY
+LEFT OPEN (evidence-gated, NOT migrated):</strong> HRD-115 (Slack
+channel adapter — user-visible external-service feature whose closure is
+operator-gated on LIVE <code>docs/qa/HRD-115-LIVE-*/</code> round-trip
+evidence per §107.x; only hermetic httptest transcript exists, E127
+LIVE-Slack is SKIP-with-reason — closing it would be a §107 PASS-bluff);
+HRD-117 (spec V3 doc-only — §106 spec-change discipline, not a
+code-closure); HRD-150/155/156/157/158 (ATMOSphere externally-gated:
+constitution-tool upstream, MTProto live creds, cross-repo push);
+HRD-131 (SQLite SSoT migration Phase 2 externally blocked);
+HRD-146/147/081/008/015 (not-started / upstream / operator-validation);
+HRD-143/144/145 (already Obsolete). Prior r42 (ATMOSphere↔︎Herald
+integration DEPLOYED across all repos). Cross-repo push complete:** (1)
+HRD-155 — HelixConstitution workable-items parser extended for
+ATMOSphere's <code>## §… [ATM-NNN]</code> format, backward-compatible,
+byte-identical round-trip, pushed to 4 upstreams (<code>995bd2f</code>);
+(2) ATMOSphere <code>constitution</code> pointer bumped
+(<code>ecdec56</code>); (3) HRD-150/SSoT —
+<code>docs/workable_items.db</code> materialized on the ATMOSphere host
+(58 items, validate OK, lossless), committed version-controlled per
+§11.4.95 (<code>d41dda5</code>); (4) HRD-157 — Herald registered as a
+proper <code>tools/herald</code> submodule @ Herald main
+<code>80cb734</code> (replaced the broken orphan gitlink)
 (<code>3368645</code>); (5) HRD-158 — anti-bluff covenant leading clause
 added to HelixConstitution QWEN.md (cross-file consistency) + cascaded
 to ATMOSphere (<code>8ec2b38</code>/<code>5462a38</code>). ATMOSphere
@@ -635,32 +640,6 @@ reimplement.</td>
 TCP-probe used for healthcheck).</td>
 </tr>
 <tr>
-<td>HRD-147</td>
-<td>task</td>
-<td>open</td>
-<td>low</td>
-<td>Governance-plane subscriber for <code>.queue.dead_letter</code> —
-wire a durable PRODUCTION consumer that drains the HRD-090 dead-letter
-events into the <code>constitution_audit</code> sink (or equivalent
-durable store) so dead-letter moves are auditable beyond the in-process
-emit. HRD-090 emits the event + proves fan-out to a REAL bus subscriber
-in its integration test; this follow-up adds the production subscriber +
-persistence and wires the emitter into the production
-<code>pgxTaskRepository</code> construction (boot.go currently uses the
-nil-emitter — the Foundation plane has no governance bus; this HRD
-decides where the bus + subscriber live: the cherald binding plane vs a
-dedicated consumer).</td>
-<td>2026-05-29</td>
-<td>2026-05-29</td>
-<td>follow-up from HRD-090 (now in <code>Fixed.md</code>); spec V3 §42.1
-+ §44; source <code>commons_infra/boot.go</code> +
-<code>commons_infra/task_repository.go</code>
-(<code>newPgxTaskRepositoryWithEmitter</code>) +
-<code>commons_constitution</code> audit sink (HRD-018); Catalogue-Check:
-reuse <code>commons_constitution</code> EventBus +
-<code>constitution_audit</code> (2026-05-29).</td>
-</tr>
-<tr>
 <td>HRD-115</td>
 <td>task</td>
 <td>in_progress</td>
@@ -763,39 +742,6 @@ exist and could create a new dot/no-dot split.</td>
 never reimplement); operator mandate 2026-05-27 (version-controlled DB);
 Catalogue-Check: reuse <code>constitution/scripts/workable-items/</code>
 (constitution-submodule tool, 2026-05-27).</td>
-</tr>
-<tr>
-<td>HRD-146</td>
-<td>task</td>
-<td>open</td>
-<td>middle</td>
-<td><code>pherald listen</code> dispatch hardening — bound per-message
-resource use in the inbound→<code>claude_code.Dispatch</code> path.
-Latent unbounded-growth risk surfaced by the 2026-05-29 "worker OOM"
-Phase-1 investigation
-(<code>docs/research/oom-investigation-2026-05-29.md</code>):
-<code>dispatch.go</code> uses <code>cmd.Output()</code> (full
-child-stdout buffering in memory) with NO per-message timeout beyond the
-Subscribe-lifetime ctx; <code>subscribe.go</code> runs handlers on
-telebot dispatch goroutines. Under a hung/slow <code>claude</code> child
-+ sustained inbound load, goroutines + stdout buffers could accumulate
-for the process lifetime. <strong>Hypothesis-grade (NOT a confirmed
-defect)</strong> — untested under real hung-child load (in-repo stress
-tests use stub dispatchers). Scope: add a per-message
-<code>context.WithTimeout</code> around dispatch + cap/stream child
-stdout (<code>cmd.Output()</code>→bounded reader), then a §11.4.85
-stress/chaos test driving a deliberately-slow fake <code>claude</code>
-to prove bounded memory + goroutine count. NOTE: the originating "hourly
-OOM + telemetry-drop + 5-path triage + heap profile" premise did NOT
-match committed reality (no hourly worker, no OTel telemetry, no heap
-profile in-repo).</td>
-<td>2026-05-29</td>
-<td>2026-05-29</td>
-<td><code>docs/research/oom-investigation-2026-05-29.md</code>; source
-<code>commons_messaging/dispatch/claude_code/dispatch.go</code> +
-<code>commons_messaging/channels/tgram/subscribe.go</code>;
-Catalogue-Check: no-match (Herald-specific dispatch path,
-2026-05-29).</td>
 </tr>
 <tr>
 <td>HRD-150</td>

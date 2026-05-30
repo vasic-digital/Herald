@@ -47,7 +47,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>19</td>
+<td>20</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -63,16 +63,21 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>r19 (v1.0.0 closure-migration) atomically lands (§11.4.19)
-51 code-verified HRDs Issues→Fixed after a re-verification audit
-(grep/read the impl + run the test + confirm the matching e2e invariant
-+ confirm the <code>docs/qa/&lt;run-id&gt;/</code> dir; nothing migrated
-on self-reported status alone). The 51:</strong> the 7 flavor
-constitution bindings HRD-019..025
-(<code>&lt;flavor&gt;/internal/bindings</code> Pipelines; 7/7 bindings
-test suites PASS <code>-race</code>; e2e E90-E96; per-HRD
-<code>docs/qa/</code>); the entire §43 command catalogue HRD-029..056
-(30 commands wired into Cobra roots via
+<td><strong>r20: lands HRD-146 (<code>pherald listen</code> dispatch
+hardening — 120s timeout + process-group kill on the claude_code
+dispatcher, <code>a975d8b</code>) + HRD-147 (governance dead-letter
+subscriber + <code>DeadLetterSink</code> + real emitter wiring in
+boot.go, <code>9ef4be9</code>) Issues→Fixed — both completed this
+session with <code>-race</code> tests.</strong> Prior <strong>r19
+(v1.0.0 closure-migration) atomically lands (§11.4.19) 51 code-verified
+HRDs Issues→Fixed after a re-verification audit (grep/read the impl +
+run the test + confirm the matching e2e invariant + confirm the
+<code>docs/qa/&lt;run-id&gt;/</code> dir; nothing migrated on
+self-reported status alone). The 51:</strong> the 7 flavor constitution
+bindings HRD-019..025 (<code>&lt;flavor&gt;/internal/bindings</code>
+Pipelines; 7/7 bindings test suites PASS <code>-race</code>; e2e
+E90-E96; per-HRD <code>docs/qa/</code>); the entire §43 command
+catalogue HRD-029..056 (30 commands wired into Cobra roots via
 <code>registerGitOps</code>/<code>registerSysOps</code>/etc., cmd-test
 suites PASS, e2e E97-E122, per-HRD <code>docs/qa/</code>); the Batch-D
 <code>commons_infra.pgxTaskRepository</code> ops HRD-085..089 (all 15
@@ -229,8 +234,8 @@ HRD-092, HRD-093, HRD-094, HRD-095, HRD-096, HRD-097, HRD-098, HRD-099,
 HRD-100, HRD-110, HRD-111, HRD-112, HRD-113, HRD-114, HRD-116, HRD-118,
 HRD-119, HRD-120, HRD-121, HRD-122, HRD-123, HRD-124, HRD-125, HRD-126,
 HRD-127, HRD-128, HRD-129, HRD-130, HRD-132, HRD-133, HRD-134, HRD-135,
-HRD-136, HRD-137, HRD-138, HRD-139, HRD-140, HRD-141, HRD-142, HRD-148,
-HRD-149, HRD-151, HRD-152, HRD-153, HRD-154</td>
+HRD-136, HRD-137, HRD-138, HRD-139, HRD-140, HRD-141, HRD-142, HRD-146,
+HRD-147, HRD-148, HRD-149, HRD-151, HRD-152, HRD-153, HRD-154</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
@@ -281,6 +286,58 @@ closed atomically.</td>
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>HRD-147</td>
+<td>task</td>
+<td>low</td>
+<td>Governance-plane dead-letter subscriber — durable consumer draining
+<code>.queue.dead_letter</code> events into a
+<code>DeadLetterSink</code> (<code>MemoryDeadLetterSink</code> M1; a
+<code>PostgresDeadLetterSink</code> is a drop-in behind the interface).
+<code>commons_infra/boot.go</code> now wires the REAL emitter into
+<code>newPgxTaskRepositoryWithEmitter</code> (was the nil-emitter) +
+stands up a <code>DeadLetterSubscriber</code> drain goroutine
+(Close-able, decode-error-counted), guarded to build only alongside the
+Postgres pool and to fall back to the nil-emitter if emitter
+construction fails (a dead-letter move must never fail because the audit
+bus is down). Mirrors the <code>commons_constitution.AuditStore</code>
+append-only pattern (§11.4.74). 8 new tests (move→emit→subscribe→sink
+end-to-end, failure-count propagation, 50-concurrent <code>-race</code>,
+idempotent Close) + the 3 existing MoveToDeadLetter tests PASS. M2
+<code>PostgresDeadLetterSink</code> behind the interface is the
+documented follow-up.</td>
+<td>2026-05-30</td>
+<td><code>9ef4be9</code></td>
+<td>follow-up from HRD-090 (Fixed); spec V3 §42.1 + §44; source
+<code>commons_infra/dead_letter_subscriber.go</code> +
+<code>boot.go</code>.</td>
+</tr>
+<tr>
+<td>HRD-146</td>
+<td>task</td>
+<td>middle</td>
+<td><code>pherald listen</code> dispatch hardening — bounded per-message
+resource use in the inbound→<code>claude_code.Dispatch</code> path. The
+production path threaded an UNBOUNDED ctx (<code>pherald listen</code>
+gctx → subscriber goroutine → <code>cmd.Output()</code>), so a hung
+<code>claude</code> child could block the subscriber indefinitely
+(HRD-146 confirmed reachable, not redundant). Added
+<code>DefaultDispatchTimeout=120s</code> +
+<code>HERALD_CLAUDE_DISPATCH_TIMEOUT</code> env knob +
+<code>SetDispatchTimeout()</code>; <code>Dispatch</code> wraps the
+caller ctx in <code>min(caller-deadline, budget)</code> (a tighter
+caller still wins; cancellation is not swallowed);
+<code>setProcessGroup</code> (Setpgid +
+<code>Cmd.Cancel</code>→<code>kill(-pgid)</code> + WaitDelay) so a
+pipe-holding child can't wedge <code>Output()</code> past the deadline.
+§11.4.85 evidence: a real <code>exec sleep 30</code> shim is KILLED in
+702ms (vs 30s) with the timeout-named error; caller-cancel returns in
+402ms; happy-path 26ms. <code>-race -count=3</code> green.</td>
+<td>2026-05-30</td>
+<td><code>a975d8b</code></td>
+<td><code>docs/research/oom-investigation-2026-05-29.md</code>; source
+<code>commons_messaging/dispatch/claude_code/{dispatch,claude_code,bootstrap,procgroup_unix,procgroup_other}.go</code>.</td>
+</tr>
 <tr>
 <td>HRD-019</td>
 <td>task</td>
