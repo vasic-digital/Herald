@@ -74,6 +74,10 @@ func (d *Dispatcher) bootstrapSession(ctx context.Context, anchor string) (uuid.
 		"--print", bootstrapPrompt,
 	)
 	cmd.Dir = d.workingDir
+	// HRD-146: process-group kill on ctx-cancel here too, so a bootstrap
+	// `claude` that spawns helpers can't wedge cmd.Output() past the
+	// bootstrap deadline.
+	setProcessGroup(cmd)
 
 	out, err := cmd.Output()
 	if err != nil {

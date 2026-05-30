@@ -43,6 +43,26 @@ import (
 // budgets would mask the more-common "claude binary hangs on auth" case.
 const DefaultBootstrapTimeout = 60 * time.Second
 
+// DefaultDispatchTimeout caps the wall-clock cost of a single live
+// `claude --resume <UUID> --print "<envelope>"` invocation (HRD-146).
+//
+// The production caller — pherald listen → Dispatcher.Handle → Dispatch
+// — passes the long-poll runtime ctx, which has NO per-message deadline.
+// Without a bound, a hung `claude` invocation blocks the inbound
+// subscriber goroutine indefinitely (a §11.4 / §107 resilience bluff: the
+// runtime claims to process messages but silently wedges on the first
+// hang). Dispatch therefore imposes this bound itself, derived as
+// min(caller-ctx-deadline, DispatchTimeout) so a tighter caller deadline
+// still wins. 120s is generous for a real Opus reply yet short enough that
+// an auth/network hang is surfaced promptly rather than wedging the loop.
+const DefaultDispatchTimeout = 120 * time.Second
+
+// DispatchTimeoutEnv overrides DefaultDispatchTimeout at construction time
+// via a Go duration string (e.g. "90s", "3m"). An empty/unset/invalid
+// value falls back to DefaultDispatchTimeout. Resolution lives in New so
+// the bound is fixed once per Dispatcher, not re-parsed per message.
+const DispatchTimeoutEnv = "HERALD_CLAUDE_DISPATCH_TIMEOUT"
+
 // HeraldSystemTenant is a fixed UUID that scopes Herald's internal
 // (operator-shared, non-customer-tenant) data. Sessions, configs, and
 // other infra-level state live under this tenant.
@@ -60,6 +80,44 @@ type Dispatcher struct {
 	projectName      string        // e.g. "ATMOSphere"
 	pool             db.Database   // optional; nil = persistence disabled (Dispatch-only)
 	bootstrapTimeout time.Duration // §33.2 step-4 budget; default DefaultBootstrapTimeout
+	dispatchTimeout  time.Duration // HRD-146 per-message live-dispatch budget; default DefaultDispatchTimeout
+}
+
+// SetDispatchTimeout overrides the per-message live-dispatch subprocess
+// timeout (HRD-146). A non-positive value resets to DefaultDispatchTimeout.
+// Exposed so the inbound runtime + tests can tighten or stretch the budget
+// without rebuilding the binary or setting the env var.
+func (d *Dispatcher) SetDispatchTimeout(t time.Duration) {
+	if t <= 0 {
+		d.dispatchTimeout = DefaultDispatchTimeout
+		return
+	}
+	d.dispatchTimeout = t
+}
+
+// dispatchTimeoutOrDefault returns the active per-message dispatch budget.
+func (d *Dispatcher) dispatchTimeoutOrDefault() time.Duration {
+	if d.dispatchTimeout <= 0 {
+		return DefaultDispatchTimeout
+	}
+	return d.dispatchTimeout
+}
+
+// resolveDispatchTimeout reads DispatchTimeoutEnv and parses it as a Go
+// duration, falling back to DefaultDispatchTimeout when unset/empty/invalid.
+// Invalid values fall back silently to the default rather than failing
+// construction — a malformed env var must never wedge the runtime, and the
+// default is a safe bound. Kept as a free function so New stays readable.
+func resolveDispatchTimeout() time.Duration {
+	raw := strings.TrimSpace(os.Getenv(DispatchTimeoutEnv))
+	if raw == "" {
+		return DefaultDispatchTimeout
+	}
+	d, err := time.ParseDuration(raw)
+	if err != nil || d <= 0 {
+		return DefaultDispatchTimeout
+	}
+	return d
 }
 
 // SetBootstrapTimeout overrides the default bootstrap subprocess timeout.
@@ -98,6 +156,7 @@ func New(binaryPath, workingDir, projectName string) (*Dispatcher, error) {
 		workingDir:       workingDir,
 		projectName:      projectName,
 		bootstrapTimeout: DefaultBootstrapTimeout,
+		dispatchTimeout:  resolveDispatchTimeout(),
 	}, nil
 }
 

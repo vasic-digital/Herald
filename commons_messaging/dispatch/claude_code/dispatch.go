@@ -26,12 +26,39 @@ import (
 // to spawn `claude --session-id <new-uuid>` non-interactively, persist
 // the anchor, and proceed with the regular `--resume <new-uuid>` path.
 func (d *Dispatcher) Dispatch(ctx context.Context, req DispatchRequest) (DispatchResponse, error) {
-	cmd, sessionUUID, anchor, err := d.buildCmd(ctx, req)
+	// HRD-146: impose a bounded per-message deadline. The production caller
+	// (pherald listen → Handle → Dispatch) passes the unbounded long-poll
+	// runtime ctx, so without this a hung `claude` invocation would block
+	// the inbound subscriber goroutine forever. context.WithTimeout takes
+	// the MINIMUM of the caller's existing deadline and ours, so a tighter
+	// caller deadline (e.g. the 180s integration-test budget capped, or an
+	// upstream cancellation) is preserved — we never extend the caller.
+	timeout := d.dispatchTimeoutOrDefault()
+	dctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	cmd, sessionUUID, anchor, err := d.buildCmd(dctx, req)
 	if err != nil {
 		return DispatchResponse{}, err
 	}
+	// Kill the whole process group (not just the direct child) on
+	// ctx-cancel, so a `claude` that spawns helper subprocesses holding the
+	// stdout pipe cannot keep cmd.Output() blocked past the deadline. No-op
+	// fallback on platforms without process groups (see setProcessGroup).
+	setProcessGroup(cmd)
+
 	out, err := cmd.Output()
 	if err != nil {
+		// Distinguish a deadline/cancellation from an ordinary non-zero
+		// exit. On timeout the child is SIGKILLed by exec.CommandContext, so
+		// the surfaced error would otherwise be a bare "signal: killed" with
+		// no hint that WE bounded it — name the timeout explicitly so the
+		// operator can tell a hang from a genuine claude failure (§107).
+		if de := dctx.Err(); de == context.DeadlineExceeded && ctx.Err() == nil {
+			return DispatchResponse{}, fmt.Errorf(
+				"claude_code: dispatch claude --resume %s: timed out after %s (HERALD_CLAUDE_DISPATCH_TIMEOUT); process killed: %w",
+				sessionUUID, timeout, err)
+		}
 		var ee *exec.ExitError
 		if errors.As(err, &ee) {
 			return DispatchResponse{}, fmt.Errorf("claude_code: dispatch claude --resume %s: exit %d: %s",
