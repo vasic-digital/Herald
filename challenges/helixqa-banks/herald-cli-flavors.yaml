@@ -1,0 +1,230 @@
+version: "1.0"
+name: Herald CLI flavor binaries
+description: >-
+  Anti-bluff CLI test bank for Herald's eight flavor binaries
+  (pherald / sherald / cherald / bherald / rherald / iherald / scherald /
+  qaherald — see commons/branding.go DefaultBranding). Each case runs the
+  REAL built binary end-to-end and asserts on its actual stdout: that
+  `<flavor>herald version --json` emits canonical JSON whose binary field
+  equals the flavor binary name, whose flavor / version / go_version / os /
+  arch keys are populated (commons/cli VersionCmd), and that a
+  representative subcommand (`version` human form, `--help`) prints its
+  expected DisplayName / usage text. This directly exercises the §107
+  "the binary actually runs end-to-end for the end user" guarantee that
+  Herald's memory flags as a RECURRING defect class — unit tests call the
+  cobra constructors and bypass main(), so eager-dependency and
+  flag-ordering bugs hide there; these cases drive the compiled binary
+  bare and with flags. scripts/helixqa_run.sh builds every flavor under
+  ${HERALD_BIN_DIR} before this bank runs.
+metadata:
+  author: vasic-digital
+  app: Herald
+  source: commons/branding.go + commons/cli/version.go
+test_cases:
+  - id: HRD-QA-CLI-001
+    name: pherald version emits canonical JSON build info
+    category: functional
+    priority: critical
+    platforms: [desktop]
+    steps:
+      - name: Run pherald version --json
+        action: Execute ${HERALD_BIN_DIR}/pherald version --json
+        expected: >-
+          Exit 0 and JSON on stdout where binary == "pherald", flavor is
+          populated, version is a non-empty string, and go_version / os / arch
+          are populated (commons/cli VersionCmd canonical shape)
+      - name: Run pherald version (human form)
+        action: Execute ${HERALD_BIN_DIR}/pherald version
+        expected: >-
+          Exit 0 and the first stdout line starts with "Project Herald"
+          (the DefaultBranding DisplayName for the p flavor)
+    tags: [cli, pherald, version, json, build-info, smoke]
+    estimated_duration: 5s
+    documentation_refs:
+      - type: source
+        section: VersionCmd
+        path: commons/cli/version.go
+      - type: source
+        section: DefaultBranding-p
+        path: commons/branding.go
+    expected_result: pherald version --json reports binary pherald with full build info
+  - id: HRD-QA-CLI-002
+    name: sherald version emits canonical JSON build info
+    category: functional
+    priority: critical
+    platforms: [desktop]
+    steps:
+      - name: Run sherald version --json
+        action: Execute ${HERALD_BIN_DIR}/sherald version --json
+        expected: >-
+          Exit 0 and JSON where binary == "sherald" with populated
+          version / go_version / os / arch
+      - name: Run sherald version (human form)
+        action: Execute ${HERALD_BIN_DIR}/sherald version
+        expected: First stdout line starts with "System Herald"
+    tags: [cli, sherald, version, json, smoke]
+    estimated_duration: 5s
+    documentation_refs:
+      - type: source
+        section: DefaultBranding-s
+        path: commons/branding.go
+    expected_result: sherald version --json reports binary sherald with full build info
+  - id: HRD-QA-CLI-003
+    name: cherald version emits canonical JSON build info
+    category: functional
+    priority: critical
+    platforms: [desktop]
+    steps:
+      - name: Run cherald version --json
+        action: Execute ${HERALD_BIN_DIR}/cherald version --json
+        expected: >-
+          Exit 0 and JSON where binary == "cherald" with populated
+          version / go_version / os / arch
+      - name: Run cherald version (human form)
+        action: Execute ${HERALD_BIN_DIR}/cherald version
+        expected: First stdout line starts with "Constitution Herald"
+    tags: [cli, cherald, version, json, smoke]
+    estimated_duration: 5s
+    documentation_refs:
+      - type: source
+        section: DefaultBranding-c
+        path: commons/branding.go
+    expected_result: cherald version --json reports binary cherald with full build info
+  - id: HRD-QA-CLI-004
+    name: bherald version emits canonical JSON build info
+    category: functional
+    priority: high
+    platforms: [desktop]
+    steps:
+      - name: Run bherald version --json
+        action: Execute ${HERALD_BIN_DIR}/bherald version --json
+        expected: >-
+          Exit 0 and JSON where binary == "bherald" with populated
+          version / go_version / os / arch
+      - name: Run bherald version (human form)
+        action: Execute ${HERALD_BIN_DIR}/bherald version
+        expected: First stdout line starts with "Build Herald"
+    tags: [cli, bherald, version, json, smoke]
+    estimated_duration: 5s
+    documentation_refs:
+      - type: source
+        section: DefaultBranding-b
+        path: commons/branding.go
+    expected_result: bherald version --json reports binary bherald with full build info
+  - id: HRD-QA-CLI-005
+    name: rherald version emits canonical JSON build info
+    category: functional
+    priority: high
+    platforms: [desktop]
+    steps:
+      - name: Run rherald version --json
+        action: Execute ${HERALD_BIN_DIR}/rherald version --json
+        expected: >-
+          Exit 0 and JSON where binary == "rherald" with populated
+          version / go_version / os / arch
+      - name: Run rherald version (human form)
+        action: Execute ${HERALD_BIN_DIR}/rherald version
+        expected: First stdout line starts with "Release Herald"
+    tags: [cli, rherald, version, json, smoke]
+    estimated_duration: 5s
+    documentation_refs:
+      - type: source
+        section: DefaultBranding-r
+        path: commons/branding.go
+    expected_result: rherald version --json reports binary rherald with full build info
+  - id: HRD-QA-CLI-006
+    name: iherald version emits canonical JSON build info
+    category: functional
+    priority: high
+    platforms: [desktop]
+    steps:
+      - name: Run iherald version --json
+        action: Execute ${HERALD_BIN_DIR}/iherald version --json
+        expected: >-
+          Exit 0 and JSON where binary == "iherald" with populated
+          version / go_version / os / arch
+      - name: Run iherald version (human form)
+        action: Execute ${HERALD_BIN_DIR}/iherald version
+        expected: First stdout line starts with "Incident Herald"
+    tags: [cli, iherald, version, json, smoke]
+    estimated_duration: 5s
+    documentation_refs:
+      - type: source
+        section: DefaultBranding-i
+        path: commons/branding.go
+    expected_result: iherald version --json reports binary iherald with full build info
+  - id: HRD-QA-CLI-007
+    name: scherald version emits canonical JSON build info
+    category: functional
+    priority: high
+    platforms: [desktop]
+    steps:
+      - name: Run scherald version --json
+        action: Execute ${HERALD_BIN_DIR}/scherald version --json
+        expected: >-
+          Exit 0 and JSON where binary == "scherald" with populated
+          version / go_version / os / arch
+      - name: Run scherald version (human form)
+        action: Execute ${HERALD_BIN_DIR}/scherald version
+        expected: First stdout line starts with "Scheduled-audit Herald"
+    tags: [cli, scherald, version, json, smoke]
+    estimated_duration: 5s
+    documentation_refs:
+      - type: source
+        section: DefaultBranding-sc
+        path: commons/branding.go
+    expected_result: scherald version --json reports binary scherald with full build info
+  - id: HRD-QA-CLI-008
+    name: qaherald version emits canonical JSON build info
+    category: functional
+    priority: high
+    platforms: [desktop]
+    steps:
+      - name: Run qaherald version --json
+        action: Execute ${HERALD_BIN_DIR}/qaherald version --json
+        expected: >-
+          Exit 0 and JSON where binary == "qaherald" with populated
+          version / go_version / os / arch
+      - name: Run qaherald version (human form)
+        action: Execute ${HERALD_BIN_DIR}/qaherald version
+        expected: Exit 0 with a populated DisplayName on the first stdout line
+    tags: [cli, qaherald, version, json, smoke]
+    estimated_duration: 5s
+    documentation_refs:
+      - type: source
+        section: DefaultBranding
+        path: commons/branding.go
+    expected_result: qaherald version --json reports binary qaherald with full build info
+  - id: HRD-QA-CLI-009
+    name: pherald help lists its subcommands
+    category: functional
+    priority: high
+    platforms: [desktop]
+    steps:
+      - name: Run pherald --help
+        action: Execute ${HERALD_BIN_DIR}/pherald --help
+        expected: >-
+          Exit 0 and usage text on stdout that names the available subcommands
+          (version, serve, listen — the §43 command catalogue surface) so an
+          operator can actually discover what the binary does
+    tags: [cli, pherald, help, usage, discoverability]
+    estimated_duration: 5s
+    documentation_refs:
+      - type: spec
+        section: "43"
+        path: docs/specs/mvp/specification.V3.md
+    expected_result: pherald --help prints discoverable usage with named subcommands
+  - id: HRD-QA-CLI-010
+    name: Unknown flavor subcommand fails loudly with non-zero exit
+    category: functional
+    priority: medium
+    platforms: [desktop]
+    steps:
+      - name: Run pherald with a bogus subcommand
+        action: Execute ${HERALD_BIN_DIR}/pherald no-such-command
+        expected: >-
+          Non-zero exit with an error message on stderr (cobra unknown-command
+          handling) — the binary does NOT silently succeed on an unknown verb
+    tags: [cli, pherald, unknown-command, negative, fail-loud]
+    estimated_duration: 5s
+    expected_result: An unknown subcommand exits non-zero with a clear error

@@ -1,0 +1,274 @@
+version: "1.0"
+name: Herald pherald API v1
+description: >-
+  Anti-bluff end-to-end API test bank for the pherald flavor binary's live
+  Gin HTTP plane. Every case targets a REAL route registered by
+  pherald/internal/http/routes.go + the commons/cli ServeCmd built-ins
+  (commons/cli/routes.go): the flavor-specific JWT-gated POST /v1/events
+  (Wave 3b live — drives the §32 7-stage Runner pipeline) plus the
+  healthz / readyz / metrics built-ins. Cases assert on the actual
+  response BODY fields and headers (status:ok, build.version,
+  status:ready, pherald_build_info gauge, the error envelope of a
+  rejected event, the X-Herald-Replay replay header) — never bare
+  absence-of-error. The serve listener is HTTPS (Wave 4a dual TCP/HTTPS +
+  UDP/HTTP3); probe with curl -k. serve REQUIRES HERALD_PG_DSN and a
+  usable JWT verifier (HERALD_AUTH_MODE=hmac + HERALD_AUTH_HMAC_SECRET);
+  scripts/helixqa_run.sh boots both before this bank runs.
+metadata:
+  author: vasic-digital
+  app: Herald
+  flavor: pherald
+  source: pherald/internal/http/routes.go + commons/cli/routes.go
+test_cases:
+  - id: HRD-QA-API-001
+    name: Health endpoint reports ok with build version
+    category: functional
+    priority: critical
+    platforms: [api]
+    steps:
+      - name: Request the liveness probe
+        action: GET https://127.0.0.1:${HERALD_HTTP_PORT}/v1/healthz (curl -k)
+        expected: >-
+          200 OK with JSON body where status == "ok", flavor == "pherald",
+          and build.version is a non-empty string (commons/cli HealthzHandler)
+    tags: [health, healthz, liveness, build-info, happy-path]
+    estimated_duration: 5s
+    documentation_refs:
+      - type: source
+        section: HealthzHandler
+        path: commons/cli/routes.go
+      - type: e2e
+        section: E8
+        path: scripts/e2e_bluff_hunt.sh
+    expected_result: >-
+      Liveness probe returns status ok and a populated build.version field
+  - id: HRD-QA-API-002
+    name: Readiness endpoint reports ready
+    category: functional
+    priority: critical
+    platforms: [api]
+    steps:
+      - name: Request the readiness probe
+        action: GET https://127.0.0.1:${HERALD_HTTP_PORT}/v1/readyz (curl -k)
+        expected: >-
+          200 OK with JSON body where status == "ready" and flavor == "pherald"
+          (commons/cli ReadyzHandler)
+    tags: [health, readyz, readiness, happy-path]
+    estimated_duration: 5s
+    documentation_refs:
+      - type: source
+        section: ReadyzHandler
+        path: commons/cli/routes.go
+      - type: e2e
+        section: E9
+        path: scripts/e2e_bluff_hunt.sh
+    expected_result: Readiness probe returns status ready
+  - id: HRD-QA-API-003
+    name: Metrics endpoint exposes Prometheus build_info gauge
+    category: functional
+    priority: high
+    platforms: [api]
+    steps:
+      - name: Request the Prometheus metrics surface
+        action: GET https://127.0.0.1:${HERALD_HTTP_PORT}/metrics (curl -k)
+        expected: >-
+          200 OK with Content-Type text/plain; version=0.0.4 and a body line
+          beginning with pherald_build_info{ carrying version, commit and
+          go_version labels (commons/cli MetricsHandler)
+    tags: [metrics, prometheus, monitoring, build-info]
+    estimated_duration: 5s
+    documentation_refs:
+      - type: source
+        section: MetricsHandler
+        path: commons/cli/routes.go
+      - type: e2e
+        section: E11
+        path: scripts/e2e_bluff_hunt.sh
+    expected_result: >-
+      Prometheus text output contains the pherald_build_info gauge line
+  - id: HRD-QA-API-004
+    name: Event ingestion rejects requests with no bearer token
+    category: security
+    priority: critical
+    platforms: [api]
+    steps:
+      - name: POST a CloudEvent with no Authorization header
+        action: >-
+          POST https://127.0.0.1:${HERALD_HTTP_PORT}/v1/events with header
+          Content-Type: application/cloudevents+json and body {} (no Bearer token)
+        expected: >-
+          401 Unauthorized — commons_auth.GinMiddleware short-circuits before
+          the EventsHandler runs; response body is a JSON error envelope
+          (no event is processed)
+    tags: [events, auth, no-token, jwt-gated, security, negative]
+    estimated_duration: 5s
+    documentation_refs:
+      - type: source
+        section: GinMiddleware
+        path: commons_auth/middleware.go
+      - type: e2e
+        section: E10
+        path: scripts/e2e_bluff_hunt.sh
+    expected_result: Unauthenticated event POST is rejected with 401
+  - id: HRD-QA-API-005
+    name: Event ingestion rejects a forged or malformed bearer token
+    category: security
+    priority: critical
+    platforms: [api]
+    steps:
+      - name: POST a CloudEvent with a junk bearer token
+        action: >-
+          POST https://127.0.0.1:${HERALD_HTTP_PORT}/v1/events with header
+          Authorization: Bearer not-a-real-jwt and a CloudEvent body
+        expected: >-
+          401 Unauthorized — the HMAC verifier (commons_auth/hmac.go) fails to
+          verify the HS256 signature and the middleware returns a 401 error
+          envelope; the body is NOT processed
+    tags: [events, auth, forged-token, invalid-signature, security, negative]
+    estimated_duration: 5s
+    documentation_refs:
+      - type: source
+        section: hmacVerifier.Verify
+        path: commons_auth/hmac.go
+    expected_result: A token with an invalid signature is rejected with 401
+  - id: HRD-QA-API-006
+    name: Event ingestion accepts a valid CloudEvent and returns a receipt
+    category: functional
+    priority: critical
+    platforms: [api]
+    steps:
+      - name: Mint a valid HS256 JWT with tenant and sub claims
+        action: >-
+          Sign a JWT with HERALD_AUTH_HMAC_SECRET carrying a "tenant" claim
+          (a UUID string) and a "sub" claim (commons_auth required claims)
+        expected: A bearer token the HMAC verifier will accept
+      - name: POST a well-formed CloudEvent
+        action: >-
+          POST https://127.0.0.1:${HERALD_HTTP_PORT}/v1/events with
+          Authorization: Bearer <token>, Content-Type: application/cloudevents+json
+          and a valid CloudEvent envelope (specversion, id, source, type, data)
+        expected: >-
+          202 Accepted with a JSON Receipt body produced by the §32 Runner
+          (event_parser -> idempotency -> tenant -> policy -> subscribers ->
+          dispatch -> outcome); the receipt carries the event acknowledgement
+    tags: [events, ingestion, cloudevent, runner, receipt, happy-path]
+    estimated_duration: 10s
+    documentation_refs:
+      - type: source
+        section: EventsHandler
+        path: pherald/internal/http/events.go
+      - type: spec
+        section: "41"
+        path: docs/specs/mvp/specification.V3.md
+    expected_result: >-
+      A well-formed authenticated CloudEvent yields 202 Accepted with a Receipt
+  - id: HRD-QA-API-007
+    name: Duplicate event is acknowledged as an idempotency replay
+    category: functional
+    priority: high
+    platforms: [api]
+    steps:
+      - name: POST a CloudEvent once
+        action: >-
+          POST a valid CloudEvent (fixed id) to /v1/events with a valid bearer token
+        expected: 202 Accepted with a fresh Receipt
+      - name: POST the identical CloudEvent again
+        action: >-
+          Re-POST the byte-identical CloudEvent (same id) to /v1/events
+        expected: >-
+          200 OK with the X-Herald-Replay: true response header set and a Receipt
+          whose WasReplay marker is true (stage-2 idempotency hit, not a 202)
+    tags: [events, idempotency, replay, dedup]
+    estimated_duration: 15s
+    documentation_refs:
+      - type: source
+        section: EventsHandler-replay-path
+        path: pherald/internal/http/events.go
+    expected_result: >-
+      A re-sent identical event returns 200 with the X-Herald-Replay header
+  - id: HRD-QA-API-008
+    name: Malformed event body returns a tagged bad-request error
+    category: functional
+    priority: high
+    platforms: [api]
+    steps:
+      - name: POST a body that is not a valid CloudEvent
+        action: >-
+          POST https://127.0.0.1:${HERALD_HTTP_PORT}/v1/events with a valid
+          bearer token but a body of "not valid json{" (Content-Type
+          application/cloudevents+json)
+        expected: >-
+          400 Bad Request with a JSON error envelope whose error string is
+          stage-tagged with the "event_parser:" prefix (mapErrorToStatus) —
+          the operator can tell parsing failed, not a downstream stage
+    tags: [events, malformed, event-parser, validation, negative]
+    estimated_duration: 5s
+    documentation_refs:
+      - type: source
+        section: mapErrorToStatus
+        path: pherald/internal/http/events.go
+    expected_result: >-
+      A malformed event body returns 400 with an event_parser-tagged error
+  - id: HRD-QA-API-009
+    name: Token missing the tenant claim is rejected as unauthorized
+    category: security
+    priority: high
+    platforms: [api]
+    steps:
+      - name: Mint a JWT with sub but no tenant claim
+        action: >-
+          Sign a valid HS256 token carrying "sub" but omitting the required
+          "tenant" claim
+        expected: A signature-valid but claim-incomplete token
+      - name: POST a CloudEvent with that token
+        action: POST /v1/events with the tenant-less bearer token and a valid body
+        expected: >-
+          401 Unauthorized — TenantFromClaims (commons_auth/claims.go) fails and
+          mapErrorToStatus maps "runner: claims missing 'tenant'" to 401
+    tags: [events, auth, missing-claim, tenant, rbac, negative]
+    estimated_duration: 10s
+    documentation_refs:
+      - type: source
+        section: TenantFromClaims
+        path: commons_auth/claims.go
+    expected_result: >-
+      A token lacking the tenant claim is rejected with 401
+  - id: HRD-QA-API-010
+    name: Unknown route under the API surface returns 404
+    category: functional
+    priority: medium
+    platforms: [api]
+    steps:
+      - name: Request a route that pherald does not register
+        action: GET https://127.0.0.1:${HERALD_HTTP_PORT}/v1/does-not-exist (curl -k)
+        expected: >-
+          404 Not Found — pherald only registers /v1/events plus the
+          healthz/readyz/metrics built-ins; /v1/compliance was deliberately
+          removed from pherald (it is a cherald-owned route)
+    tags: [routing, not-found, boundary, negative]
+    estimated_duration: 5s
+    documentation_refs:
+      - type: source
+        section: Routes
+        path: pherald/internal/http/routes.go
+    expected_result: An unregistered route returns 404
+  - id: HRD-QA-API-011
+    name: Compliance route is not served by pherald
+    category: functional
+    priority: medium
+    platforms: [api]
+    steps:
+      - name: Request the cherald-owned compliance route against pherald
+        action: GET https://127.0.0.1:${HERALD_HTTP_PORT}/v1/compliance (curl -k)
+        expected: >-
+          404 Not Found — Wave 3b Task 10 removed /v1/compliance from pherald's
+          route list to keep the binary boundary honest (pherald ingests
+          events; cherald serves the constitution state-pull surface)
+    tags: [routing, boundary, compliance, binary-boundary]
+    estimated_duration: 5s
+    documentation_refs:
+      - type: source
+        section: Routes-doc-comment
+        path: pherald/internal/http/routes.go
+    expected_result: >-
+      pherald does not serve /v1/compliance (cherald owns it)
