@@ -36,7 +36,7 @@ Paste the following block into any CLI agent (Claude Code / OpenCode / Cursor / 
 
 ## §1. Snapshot
 
-- **Active spec:** `docs/specs/mvp/specification.V3.md` Revision 4 (~4300 lines).
+- **Active spec:** `docs/specs/mvp/specification.V3.md` Revision 13 (~5080 lines).
 - **Archived specs:** V1 + V2 in `docs/specs/mvp/archive/` (frozen).
 - **Go modules:** `commons`, `commons_prefix`, `commons_messaging`, `commons_storage`, `pherald` (all compile + unit tests pass).
 - **Container scaffold:** `quickstart/{docker-compose.quickstart.yml, Dockerfile.pherald, otel-config.yaml, .env.example}` for §26.5 quickstart.
@@ -223,7 +223,7 @@ The containers `herald-postgres` (port 24100) and `herald-redis` (port 24200) ar
 
 ## §5. Long-form pointers
 
-- `docs/specs/mvp/specification.V3.md` — full active spec (Revision 4).
+- `docs/specs/mvp/specification.V3.md` — full active spec (Revision 13).
 - `docs/specs/mvp/specification.V3.md#30-v2-self-review-log` — every review pass.
 - `docs/guides/HERALD_CONSTITUTION.md` — §101..§106 extending Universal.
 - `docs/guides/CONSTITUTION_INHERITANCE.md` — parent-discovery + gate.

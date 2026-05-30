@@ -47,7 +47,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>39</td>
+<td>42</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -63,16 +63,66 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>r39 (§11.4.19 atomic migration: HRD-090 dead-letter handling
-Completed→<code>Fixed.md</code> — all four closure layers met: code +
-unit + real-PG integration + §11.4.85 stress/chaos + paired §1.1
+<td><strong>r42 (ATMOSphere↔︎Herald integration DEPLOYED across all
+repos). Cross-repo push complete:</strong> (1) HRD-155 —
+HelixConstitution workable-items parser extended for ATMOSphere's
+<code>## §… [ATM-NNN]</code> format, backward-compatible, byte-identical
+round-trip, pushed to 4 upstreams (<code>995bd2f</code>); (2) ATMOSphere
+<code>constitution</code> pointer bumped (<code>ecdec56</code>); (3)
+HRD-150/SSoT — <code>docs/workable_items.db</code> materialized on the
+ATMOSphere host (58 items, validate OK, lossless), committed
+version-controlled per §11.4.95 (<code>d41dda5</code>); (4) HRD-157 —
+Herald registered as a proper <code>tools/herald</code> submodule @
+Herald main <code>80cb734</code> (replaced the broken orphan gitlink)
+(<code>3368645</code>); (5) HRD-158 — anti-bluff covenant leading clause
+added to HelixConstitution QWEN.md (cross-file consistency) + cascaded
+to ATMOSphere (<code>8ec2b38</code>/<code>5462a38</code>). ATMOSphere
+pushes landed on github (ATMOSphere1234321) + vasic-digital
+github-mirror; the vasic-digital <strong>gitlab</strong> mirror is a
+structural split-archive mirror (1497-commit divergence +
+<code>Split-archive batch</code> commit) — operator split-tooling
+territory, NOT force-reconciled. <strong>STILL EXTERNALLY
+GATED:</strong> HRD-156 LIVE Telegram round-trip (needs one-time
+<code>qaherald mtproto login</code> credential bootstrap), live
+<code>pherald watch</code>/<code>listen</code> daemon run on the host
+(ops/deployment), per-submodule QWEN.md leading-clause cascade
+(forensic-completeness across 25 repos), Fixed.md item-structuring
+(currently raw-preserved). Prior r41 (ATMOSphere↔︎Herald integration
+Phase 2 CORE landed + pushed; remaining HRDs externally gated). LANDED +
+anti-bluff-tested + pushed:** HRD-148 <code>commons_workable</code>
+(SQLite store+CRUD+ATMOSphere parser+diff), HRD-149
+<code>commons_watch</code> (fsnotify+WAL-poll), HRD-151 workflow
+change→CloudEvent→Runner bridge + diff formatter, HRD-152 inbound
+item.update/item.delete/investigation.start + ItemMutator + CONFIRM flow
+(wired into <code>pherald listen --db</code>), HRD-153
+<code>pherald watch</code> end-to-end daemon
+(real-SQLite+fsnotify+diff+dispatch e2e), HRD-154 preference/quiet-hours
+routing (TZ-aware), e2e invariant E139,
+<code>docs/guides/WORKABLE_ITEMS_INTEGRATION.md</code> (+siblings),
+<code>docs/qa/HRD-153-*</code> evidence. <strong>EXTERNALLY GATED (need
+operator/remote/cross-repo):</strong> HRD-156 live Telegram round-trip
+(MTProto credential bootstrap), HRD-150/HRD-155 operationalize the
+constitution workable-items tool + SSoT materialization
+(HelixConstitution cross-repo), HRD-157 Phase 3 remote integration
+(register <code>tools/herald</code> + materialize
+<code>docs/workable_items.db</code> + live evidence on the ATMOSphere
+host), HRD-158 covenant QWEN.md propagation (push to HelixConstitution —
+high blast radius, operator confirmation required). Prior r40
+(ATMOSphere↔︎Herald integration Phase 2 kickoff — filed HRD-148..HRD-158,
+the work-stream HRDs from
+<code>~/Documents/ATMOSphere_Herald_Integration_Plan.md</code>). HRD-148
+(<code>commons_workable</code> SQLite SSoT foundation) + HRD-149
+(<code>commons_watch</code> watcher) LANDED + <code>-race</code> green
+(in_progress until the full watch→notify feature + e2e land). Count
+32→43.** Prior r39 (§11.4.19 atomic migration: HRD-090 dead-letter
+handling Completed→<code>Fixed.md</code> — all four closure layers met:
+code + unit + real-PG integration + §11.4.85 stress/chaos + paired §1.1
 mutation gate (4/0) + e2e E138; HRD-147 filed for the governance-plane
-subscriber follow-up). Issues count steady at 32 (−HRD-090
-+HRD-147).</strong> Prior r38 (HRD-146 filed —
-<code>pherald listen</code> dispatch hardening, from the 2026-05-29
-"worker OOM" Phase-1 investigation that found the OOM premise did NOT
-match committed reality; the real latent risk is unbounded per-message
-dispatch growth —
+subscriber follow-up). Issues count steady at 32 (−HRD-090 +HRD-147).**
+Prior r38 (HRD-146 filed — <code>pherald listen</code> dispatch
+hardening, from the 2026-05-29 "worker OOM" Phase-1 investigation that
+found the OOM premise did NOT match committed reality; the real latent
+risk is unbounded per-message dispatch growth —
 <code>docs/research/oom-investigation-2026-05-29.md</code>).** Prior r37
 (HRD-090 dead-letter handling — code + unit + real-PG integration
 landed; stays in_progress pending §11.4.85 stress+chaos + paired §1.1
@@ -335,11 +385,12 @@ inbound-runtime extension note
 <tr>
 <td>Issues</td>
 <td>HRD-008, HRD-015, HRD-019..HRD-025, HRD-029..HRD-056, HRD-081,
-HRD-085..HRD-089, HRD-115..HRD-121, HRD-131, HRD-146, HRD-147</td>
+HRD-085..HRD-089, HRD-115..HRD-121, HRD-131, HRD-146, HRD-147,
+HRD-148..HRD-158</td>
 </tr>
 <tr>
 <td>Issues summary</td>
-<td>32 open / in-progress workable items. r35 (Tgram-completeness wave
+<td>43 open / in-progress workable items. r35 (Tgram-completeness wave
 COMPLETE) atomically migrated HRD-133/134/135/136/137/138 Issues→Fixed
 per §11.4.19 — see <code>Fixed.md</code>. r34..r17 (v1.0.0 Batch A):
 HRD-018 (commons_constitution package —
@@ -1660,6 +1711,183 @@ profile in-repo).</td>
 <code>commons_messaging/channels/tgram/subscribe.go</code>;
 Catalogue-Check: no-match (Herald-specific dispatch path,
 2026-05-29).</td>
+</tr>
+<tr>
+<td>HRD-148</td>
+<td>feature</td>
+<td>in_progress</td>
+<td>high</td>
+<td><strong>ATMOSphere integration WS-1 — <code>commons_workable</code>
+SQLite SSoT foundation (LANDED + tested 2026-05-29).</strong> New L1
+module: SQLite store (pure-Go <code>modernc.org/sqlite</code>, no CGO)
+mirroring the workable-items schema v2 (<code>items</code> PK
+<code>(atm_id,current_location)</code> + <code>item_history</code> +
+<code>meta</code>, WAL, 10-value status closed set); full CRUD repo
+(Create/GetByID/Update/Delete/List, loud not-found, closed-set status
+validation); per-property <code>Diff(prev,curr)</code> change-feed
+emitting
+<code>item.created</code>/<code>item.deleted</code>/<code>item.status.changed</code>/<code>item.field.changed</code>/<code>item.content.updated</code>
+with exact old→new; <code>ParseTracker</code> matching ATMOSphere's REAL
+<code>## §… [ATM-NNN]</code> +
+<code>**Status:**</code>/<code>**Type:**</code>/<code>**Severity:**</code>
+format. 18 real-SQLite tests <code>-race -count=3</code> green. Keystone
+for R1/R3/R6.</td>
+<td>2026-05-29</td>
+<td>2026-05-29</td>
+<td>Plan <code>~/Documents/ATMOSphere_Herald_Integration_Plan.md</code>
+§4 (HRD-W1/W2); Catalogue-Check: reuse <code>modernc.org/sqlite</code>,
+schema mirrors
+<code>constitution/scripts/workable-items/schema.sql</code>
+(2026-05-29).</td>
+</tr>
+<tr>
+<td>HRD-149</td>
+<td>feature</td>
+<td>in_progress</td>
+<td>high</td>
+<td><strong>ATMOSphere integration WS-2 — <code>commons_watch</code>
+file/DB watcher (LANDED + tested 2026-05-29).</strong> New L1 module:
+fsnotify watcher (direct dep) over the <code>.db</code> SSoT + MD
+trackers, debounce-coalesce + SQLite-WAL polling fallback (WAL writes
+hit the <code>-wal</code> sidecar + may not raise reliable fsnotify
+Write on the main <code>.db</code>); graceful ctx-cancel, leak-free. 4
+real-fsnotify tests <code>-race</code> green. Feeds R1/R2.</td>
+<td>2026-05-29</td>
+<td>2026-05-29</td>
+<td>Plan §4 (HRD-W3); Catalogue-Check: reuse
+<code>github.com/fsnotify/fsnotify</code> (2026-05-29).</td>
+</tr>
+<tr>
+<td>HRD-150</td>
+<td>task</td>
+<td>open</td>
+<td>high</td>
+<td>ATMOSphere integration WS-1 — bidirectional MD↔︎SQLite regenerator +
+drift resolution (reference
+<code>constitution/scripts/workable-items/</code> per §11.4.74, supply
+the ATMOSphere-format parser the tool lacks).</td>
+<td>2026-05-29</td>
+<td>2026-05-29</td>
+<td>Plan §4 (HRD-W4); Catalogue-Check: extend constitution
+workable-items tool.</td>
+</tr>
+<tr>
+<td>HRD-151</td>
+<td>feature</td>
+<td>open</td>
+<td>high</td>
+<td>ATMOSphere integration WS-3 — change→CloudEvent→Runner bridge +
+Jira/ClickUp-style per-property-diff message formatter (reuse the
+existing <code>pherald/internal/runner</code> 7-stage fan-out; add only
+the workable-event producer + formatter).</td>
+<td>2026-05-29</td>
+<td>2026-05-29</td>
+<td>Plan §3.1 + §4 (HRD-W5); Catalogue-Check: reuse
+<code>pherald/internal/runner</code>.</td>
+</tr>
+<tr>
+<td>HRD-152</td>
+<td>feature</td>
+<td>open</td>
+<td>high</td>
+<td>ATMOSphere integration WS-4 — inbound action registry +
+<code>item.update</code>/<code>item.delete</code>/<code>investigation.start</code>
++ <code>ItemMutator</code> (writes <code>commons_workable</code>) +
+investigation orchestrator (<strong>act-with-confirmation</strong> per
+operator 2026-05-29).</td>
+<td>2026-05-29</td>
+<td>2026-05-29</td>
+<td>Plan §3.2 + §4 (HRD-W6); Catalogue-Check: extend
+<code>pherald/internal/inbound</code> action router.</td>
+</tr>
+<tr>
+<td>HRD-153</td>
+<td>feature</td>
+<td>open</td>
+<td>middle</td>
+<td>ATMOSphere integration WS-2 — watcher daemon entrypoint
+(<code>pherald watch</code> running the watch→diff→notify loop; promote
+to a <code>wherald</code> flavor if it grows).</td>
+<td>2026-05-29</td>
+<td>2026-05-29</td>
+<td>Plan §3.3 + §4 (HRD-W7); Catalogue-Check: extend
+<code>pherald</code> CLI.</td>
+</tr>
+<tr>
+<td>HRD-154</td>
+<td>task</td>
+<td>open</td>
+<td>middle</td>
+<td>ATMOSphere integration WS-3 — enforce preference/quiet-hours routing
+(<code>PreferenceSet</code>/<code>QuietHours</code> types exist but the
+resolver ignores them).</td>
+<td>2026-05-29</td>
+<td>2026-05-29</td>
+<td>Plan §4 (HRD-W10); Catalogue-Check: extend
+<code>pherald/internal/runner/subscriber.go</code>.</td>
+</tr>
+<tr>
+<td>HRD-155</td>
+<td>task</td>
+<td>open</td>
+<td>high</td>
+<td>ATMOSphere integration WS-1 — operationalize the workable-items
+SQLite tool + reconcile HRD-131 (implement the tool's
+<code>add</code>/<code>close</code>/<code>report</code> +
+ATMOSphere-format parser upstream in the constitution repo per §11.4.74;
+external blocker for SSoT materialization).</td>
+<td>2026-05-29</td>
+<td>2026-05-29</td>
+<td>Plan §4 (HRD-W11) + §10; composes with HRD-131; Catalogue-Check:
+extend constitution workable-items tool.</td>
+</tr>
+<tr>
+<td>HRD-156</td>
+<td>task</td>
+<td>open</td>
+<td>high</td>
+<td>ATMOSphere integration WS-5 — anti-bluff full-automation test suite
+(T-A real-SQLite→real-Telegram via MTProto; T-B
+inbound→real-row-mutation; T-C exact-diff byte-assert; T-D/T-E §11.4.85
+stress/chaos; T-F paired §1.1 mutation gate; wrap as Challenges for
+HelixQA; all <code>docs/qa/&lt;run-id&gt;/</code>).</td>
+<td>2026-05-29</td>
+<td>2026-05-29</td>
+<td>Plan §6 Part A; Catalogue-Check: reuse Herald e2e + §11.4.85 +
+MTProto harness + ATMOSphere HelixQA/Challenges.</td>
+</tr>
+<tr>
+<td>HRD-157</td>
+<td>task</td>
+<td>open</td>
+<td>high</td>
+<td>ATMOSphere integration Phase 3 — register Herald as a proper
+<code>tools/herald</code> submodule (replace the broken orphan gitlink,
+operator-chosen 2026-05-29), materialize
+<code>docs/workable_items.db</code>, wire host-side runner
+(<code>pherald watch</code> + <code>pherald listen</code>, mirroring
+<code>tools/oom-protect</code>), seed Subscribers, run live T-A..T-F
+evidence.</td>
+<td>2026-05-29</td>
+<td>2026-05-29</td>
+<td>Plan §5; Catalogue-Check: mirror <code>tools/oom-protect</code>
+host-tool pattern.</td>
+</tr>
+<tr>
+<td>HRD-158</td>
+<td>task</td>
+<td>open</td>
+<td>middle</td>
+<td>ATMOSphere integration WS-5 — anti-bluff covenant verbatim-phrase
+propagation: add the operator phrase to root
+<code>constitution/QWEN.md</code> (HelixConstitution) → cascade to
+ATMOSphere root <code>QWEN.md</code> + all 25 submodules'
+<code>QWEN.md</code> (6 helixqa confirmed-missing; audit the other ~18)
++ Herald README.</td>
+<td>2026-05-29</td>
+<td>2026-05-29</td>
+<td>Plan §6 Part B; §11.4.26 fetch-first governance workflow;
+Catalogue-Check: n/a.</td>
 </tr>
 </tbody>
 </table>

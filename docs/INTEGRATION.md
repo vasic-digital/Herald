@@ -45,7 +45,7 @@ Herald is a multi-tenant, multi-channel **notification fan-out platform** built 
 
 Inbound events use the **CloudEvents v1.0** envelope. Outbound delivery flows through pluggable **channel adapters** (today: `null://` sandbox + Telegram; coming: Slack, Email, Max, Discord, Teams, Lark, WhatsApp, Viber, ntfy, Gotify, webhook). All deliveries are recorded in `outbound_delivery_evidence` so the operator has a forensic trail.
 
-Herald ships as **seven flavor binaries** (Wave 2 r1):
+Herald ships as **eight flavor binaries** (Wave 2 r1 seeded six; `qaherald` added Wave 5):
 
 | Binary | Default port | What it does |
 |---|---|---|
@@ -56,8 +56,9 @@ Herald ships as **seven flavor binaries** (Wave 2 r1):
 | `bherald` | — (CLI-only) | **Build Herald** — CI/test bindings: evidence-capture, test-tier-verify, gate-retest. |
 | `rherald` | — (CLI-only) | **Release Herald** — tag-mirror, changelog-generate, gate-retest. |
 | `scherald` | — (CLI-only) | **Scheduled-audit Herald** — periodic Status.md sweep + compliance digest. |
+| `qaherald` | — (CLI-only) | **QA Herald** — autonomous QA bot: drives pherald ↔ Telegram round-trips (MTProto user-client) and preserves the full bidirectional transcript under `docs/qa/` per §107.x. |
 
-The seven binaries consume the shared `commons/cli/` scaffold (Wave 2) and `commons_auth/` JWT middleware (Wave 3a). Each `cmd/<flavor>/main.go` is ~25 LOC.
+The eight binaries consume the shared `commons/cli/` scaffold (Wave 2) and `commons_auth/` JWT middleware (Wave 3a). Each `cmd/<flavor>/main.go` is ~25 LOC.
 
 ---
 
@@ -68,7 +69,7 @@ You will need:
 | Component | Version | Why |
 |---|---|---|
 | Go | 1.25.0 or newer (1.26 verified) | Workspace + race-detector + `runtime.MemStats` |
-| Postgres | 15+ | `events_processed`, `subscribers`, `subscriber_aliases`, `outbound_delivery_evidence`, `constitution_state`, `constitution_bindings`, `claude_code_sessions` tables — see migrations `000001..000012` under `commons_storage/migrations/`. RLS-enforced; uses `app.current_tenant_id` GUC. |
+| Postgres | 15+ | `events_processed`, `subscribers`, `subscriber_aliases`, `outbound_delivery_evidence`, `constitution_state`, `constitution_bindings`, `claude_code_sessions`, `task_resource_snapshots`, `dead_letter_tasks` tables — see migrations `000001..000014` under `commons_storage/migrations/`. RLS-enforced; uses `app.current_tenant_id` GUC. |
 | Redis | 7+ | Hot idempotency cache (24h SETNX TTL by default) + JWKS cache (5min default). |
 | Container runtime | `podman` or `docker` | For the quickstart Compose stack + e2e_bluff_hunt invariants E13-E18. Optional if you bring your own PG/Redis. |
 | Python 3.9+ | (host) | Used by the e2e harness + the doc-export pipeline. |
@@ -90,7 +91,7 @@ git submodule add git@github.com:vasic-digital/Herald.git submodules/herald
 git submodule update --init --recursive submodules/herald
 ```
 
-Herald is a self-contained Go workspace (`go.work` listing 14 modules: 7 foundation + `commons_auth` + 6 flavor binaries). Per spec §9.1 `go.work` is **gitignored** — you'll need to initialize it on a fresh clone:
+Herald is a self-contained Go workspace (`go.work` listing 18 modules: 10 shared/foundation modules — incl. `commons_watch` + `commons_workable` — plus 8 flavor binaries). Per spec §9.1 `go.work` is **gitignored** — you'll need to initialize it on a fresh clone:
 
 ```bash
 cd submodules/herald
@@ -470,7 +471,7 @@ Per HelixConstitution §11.4.99 + Herald §108.n (Latest-Source Documentation Cr
 |---|---|---|
 | Telegram official Bot API documentation | https://core.telegram.org/bots/api | §5 (`pherald wizard credentials telegram` validation against `getMe`); §1 (Telegram appears in the live-channels list); §10 (Telegram-side delivery verification — operator's chat receives the message); the §11.4-anti-bluff invariant that `outbound_delivery_evidence.channel_message_id` MUST equal the Telegram-side `MessageID` (not a Herald UUID). |
 | CloudEvents v1.0 spec | https://github.com/cloudevents/spec/blob/v1.0.2/cloudevents/spec.md | §1 (`POST /v1/events` accepts CloudEvents); §8 (CloudEvents envelope shape in the first POST example); §10 (the inbound contract for every flavor); §11 (consumer-side CloudEvents emission). |
-| PostgreSQL official documentation | https://www.postgresql.org/docs/15/ | §2 prerequisite (`Postgres 15+`); §6 migration semantics (`000001..000012` schema versions; RLS-enforced; `app.current_tenant_id` GUC). |
+| PostgreSQL official documentation | https://www.postgresql.org/docs/15/ | §2 prerequisite (`Postgres 15+`); §6 migration semantics (`000001..000014` schema versions; RLS-enforced; `app.current_tenant_id` GUC). |
 | Redis official documentation | https://redis.io/docs/ | §2 prerequisite (`Redis 7+`); §6 (hot idempotency cache 24h SETNX TTL; JWKS cache 5 min default). |
 | Anthropic — Claude Code documentation | https://docs.anthropic.com/claude-code | §2 optional dependency (`claude` CLI required only for the Claude Code dispatcher — HRD-012); §10 the dispatcher half of the vertical slice. |
 | Herald spec V3 (source of truth) | `docs/specs/mvp/specification.V3.md` | The ENTIRE document — spec wins on conflict (per the §"Spec V3" closing note); §32 7-stage Runner architecture; §33 LLM/agent dispatch architecture; §43 command catalogue; §107 anti-bluff covenant. |

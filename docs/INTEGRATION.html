@@ -207,8 +207,8 @@ coming: Slack, Email, Max, Discord, Teams, Lark, WhatsApp, Viber, ntfy,
 Gotify, webhook). All deliveries are recorded in
 <code>outbound_delivery_evidence</code> so the operator has a forensic
 trail.</p>
-<p>Herald ships as <strong>seven flavor binaries</strong> (Wave 2
-r1):</p>
+<p>Herald ships as <strong>eight flavor binaries</strong> (Wave 2 r1
+seeded six; <code>qaherald</code> added Wave 5):</p>
 <table>
 <thead>
 <tr>
@@ -269,9 +269,16 @@ gate-retest.</td>
 <td><strong>Scheduled-audit Herald</strong> — periodic Status.md sweep +
 compliance digest.</td>
 </tr>
+<tr>
+<td><code>qaherald</code></td>
+<td>— (CLI-only)</td>
+<td><strong>QA Herald</strong> — autonomous QA bot: drives pherald ↔︎
+Telegram round-trips (MTProto user-client) and preserves the full
+bidirectional transcript under <code>docs/qa/</code> per §107.x.</td>
+</tr>
 </tbody>
 </table>
-<p>The seven binaries consume the shared <code>commons/cli/</code>
+<p>The eight binaries consume the shared <code>commons/cli/</code>
 scaffold (Wave 2) and <code>commons_auth/</code> JWT middleware (Wave
 3a). Each <code>cmd/&lt;flavor&gt;/main.go</code> is ~25 LOC.</p>
 <hr />
@@ -298,8 +305,9 @@ scaffold (Wave 2) and <code>commons_auth/</code> JWT middleware (Wave
 <code>subscriber_aliases</code>,
 <code>outbound_delivery_evidence</code>,
 <code>constitution_state</code>, <code>constitution_bindings</code>,
-<code>claude_code_sessions</code> tables — see migrations
-<code>000001..000012</code> under
+<code>claude_code_sessions</code>, <code>task_resource_snapshots</code>,
+<code>dead_letter_tasks</code> tables — see migrations
+<code>000001..000014</code> under
 <code>commons_storage/migrations/</code>. RLS-enforced; uses
 <code>app.current_tenant_id</code> GUC.</td>
 </tr>
@@ -348,8 +356,9 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> submodule add git@github.com:vasic-digital/Herald.git submodules/herald</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> submodule update <span class="at">--init</span> <span class="at">--recursive</span> submodules/herald</span></code></pre></div>
 <p>Herald is a self-contained Go workspace (<code>go.work</code> listing
-14 modules: 7 foundation + <code>commons_auth</code> + 6 flavor
-binaries). Per spec §9.1 <code>go.work</code> is
+18 modules: 10 shared/foundation modules — incl.
+<code>commons_watch</code> + <code>commons_workable</code> — plus 8
+flavor binaries). Per spec §9.1 <code>go.work</code> is
 <strong>gitignored</strong> — you'll need to initialize it on a fresh
 clone:</p>
 <div class="sourceCode" id="cb2"><pre
@@ -928,7 +937,7 @@ emission).</td>
 <td><a
 href="https://www.postgresql.org/docs/15/">https://www.postgresql.org/docs/15/</a></td>
 <td>§2 prerequisite (<code>Postgres 15+</code>); §6 migration semantics
-(<code>000001..000012</code> schema versions; RLS-enforced;
+(<code>000001..000014</code> schema versions; RLS-enforced;
 <code>app.current_tenant_id</code> GUC).</td>
 </tr>
 <tr>

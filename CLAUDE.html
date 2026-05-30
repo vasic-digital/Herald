@@ -418,23 +418,26 @@ Redis + OTel up on-demand.</li>
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> build ./commons/... ./commons_prefix/... ./commons_messaging/... ./commons_storage/... ./commons_constitution/... ./commons_infra/... ./pherald/...</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test <span class="at">-race</span> <span class="at">-count</span><span class="op">=</span>1 ./commons/... ./commons_prefix/... ./commons_messaging/... ./commons_storage/... ./commons_constitution/... ./commons_infra/... ./pherald/...</span></code></pre></div>
 <p>Tests pass on Go 1.25+ (verified on 1.26). Workspace is configured
-via <code>go.work</code> listing <strong>16</strong> Herald modules: the
-7 foundation modules (<code>commons</code>,
+via <code>go.work</code> listing <strong>18</strong> Herald modules: the
+10 shared/foundation modules (<code>commons</code>,
+<code>commons_auth</code> (Wave 3a JWT verifier / Gin middleware),
 <code>commons_constitution</code>, <code>commons_infra</code>,
 <code>commons_messaging</code>, <code>commons_prefix</code>,
-<code>commons_storage</code>, <code>pherald</code>) plus
-<code>commons_auth</code> (Wave 3a JWT verifier / Gin middleware),
-<code>commons_tls</code> (Wave 4a auto-cert loader for the dual
-HTTP/3+TLS listener), and the 7 flavor binaries: the 6 Wave 2 flavors
-(<code>sherald</code>, <code>cherald</code>, <code>bherald</code>,
-<code>rherald</code>, <code>iherald</code>, <code>scherald</code>) plus
-<code>qaherald</code> (Wave 5 — QA bot, pherald ↔︎ Telegram round-trip
-automation per §107.x docs/qa evidence mandate). <code>go.work</code>
-itself is gitignored per spec §9.1; a fresh clone needs
-<code>go work init &amp;&amp; go work use ./...</code> (or copy the
-existing snippet from the project's local working tree). The 9
-Helix-stack submodules under <code>submodules/</code> are referenced via
-<code>replace</code> directives in the consuming modules'
+<code>commons_storage</code>, <code>commons_tls</code> (Wave 4a
+auto-cert loader for the dual HTTP/3+TLS listener),
+<code>commons_watch</code> (fsnotify + WAL-poll change watcher for the
+workable-items SSoT), <code>commons_workable</code> (workable-items
+SQLite SSoT store + per-property change-feed — the ATMOSphere
+integration substrate)) plus the 8 flavor binaries
+(<code>pherald</code>, <code>sherald</code>, <code>cherald</code>,
+<code>bherald</code>, <code>rherald</code>, <code>iherald</code>,
+<code>scherald</code>, plus <code>qaherald</code> (Wave 5 — QA bot,
+pherald ↔︎ Telegram round-trip automation per §107.x docs/qa evidence
+mandate)). <code>go.work</code> itself is gitignored per spec §9.1; a
+fresh clone needs <code>go work init &amp;&amp; go work use ./...</code>
+(or copy the existing snippet from the project's local working tree).
+The 9 Helix-stack submodules under <code>submodules/</code> are
+referenced via <code>replace</code> directives in the consuming modules'
 <code>go.mod</code>, not via <code>go.work</code>.</p>
 <p><strong>Anti-bluff verification (run before any release tag or risky
 commit):</strong></p>
@@ -813,20 +816,27 @@ Constitution.md §11.4.94 (inherited per §11.4.35).</p>
 id="11495--workable-items-sqlite-db-is-tracked-in-git-never-gitignored-helix-2026-05-27">§11.4.95
 — Workable-items SQLite DB is TRACKED in git, never gitignored (Helix,
 2026-05-27)</h3>
-<p>Herald ALREADY complies (operator correction 2026-05-27, recorded in
-§108.h + <code>.gitignore</code>): the workable-items SQLite DB is
-version-controlled, committed + pushed alongside every state change,
-WAL-checkpointed (<code>PRAGMA wal_checkpoint(TRUNCATE)</code>) before
-commit so only the transient <code>-wal</code>/<code>-shm</code>
-sidecars stay gitignored, and never force-rewritten without a §9.2
-hardlinked-backup. This is an explicit §11.4.30 carve-out and AMENDS the
-earlier §11.4.93 / §108.h "gitignored-with-regeneration" text.
-<strong>Herald alignment note:</strong> the constitution's canonical
-path is <code>docs/workable_items.db</code> (no leading dot); Herald's
-HRD-131 currently references <code>docs/.workable_items.db</code> —
-reconcile to the canonical path when the DB is implemented (HRD-131
-Phase 2+, currently deferred). Canonical authority: HelixConstitution
-Constitution.md §11.4.95 (inherited per §11.4.35).</p>
+<p>Herald's <code>.gitignore</code> ALREADY encodes this policy
+(operator correction 2026-05-27, recorded in §108.h): WHEN the
+workable-items SQLite DB is materialized it is version-controlled —
+committed + pushed alongside every state change, WAL-checkpointed
+(<code>PRAGMA wal_checkpoint(TRUNCATE)</code>) before commit so only the
+transient <code>-wal</code>/<code>-shm</code> sidecars stay gitignored,
+and never force-rewritten without a §9.2 hardlinked-backup. This is an
+explicit §11.4.30 carve-out and AMENDS the earlier §11.4.93 / §108.h
+"gitignored-with-regeneration" text. <strong>Materialization status
+(anti-bluff, 2026-05-30):</strong> the DB artefact is NOT YET present in
+the Herald repo — <code>git ls-files '*.db'</code> is empty and no
+<code>docs/workable_items.db</code> exists on disk. HRD-131 Phase 2+
+(the in-repo DB) is deferred; the workable-items DB has so far been
+materialized only on the ATMOSphere host (per CONTINUATION r22), not
+committed into Herald. This clause therefore states the binding policy
+for WHEN the DB lands, NOT a claim that a committed DB exists today.
+<strong>Path note:</strong> the constitution's canonical path is
+<code>docs/workable_items.db</code> (no leading dot); Herald's HRD-131
+currently references <code>docs/.workable_items.db</code> — reconcile to
+the canonical path when the DB is implemented. Canonical authority:
+HelixConstitution Constitution.md §11.4.95 (inherited per §11.4.35).</p>
 <h3
 id="11496--safe-parallel-work-with-long-build-catalogue--mandate-helix-2026-05-27">§11.4.96
 — Safe-parallel-work-with-long-build catalogue + mandate (Helix,
@@ -1165,9 +1175,10 @@ repo): <code>auth</code>, <code>background</code>, <code>cache</code>,
 <code>middleware</code>, <code>observability</code>,
 <code>recovery</code>. They are referenced via <code>replace</code>
 directives in the consuming Herald modules' <code>go.mod</code>, NOT via
-<code>go.work</code> (which lists the <strong>14</strong> Herald-owned
-modules — 7 foundation + <code>commons_auth</code> + 6 flavor binaries).
-Do not add the Helix-stack submodules to <code>go.work</code>.</li>
+<code>go.work</code> (which lists the <strong>18</strong> Herald-owned
+modules — 10 shared/foundation incl. <code>commons_watch</code> +
+<code>commons_workable</code> + 8 flavor binaries). Do not add the
+Helix-stack submodules to <code>go.work</code>.</li>
 <li>The repo is in <code>main</code> branch and committed under "Milos
 Vasic" — no other contributors yet.</li>
 <li><code>.claude/</code> exists but is empty; project-local Claude
