@@ -164,11 +164,16 @@ fi
 
 log "running helixqa banks: ${BANKS}"
 set +e
+# Platform: the CLI bank is [desktop]; --platform all spreads it across
+# android/androidtv/web where the [desktop] cases SKIP (noise). Run the CLI
+# bank on desktop. (The api bank's [api] platform is not a `helixqa run`
+# platform — android|web|desktop|all — so the api plane is driven separately;
+# see HELIXQA_INTEGRATION.md "api bank wiring" follow-up.)
+HQ_PLATFORM="desktop"
 "${HELIXQA_BIN}" run \
     --banks "${BANKS}" \
-    --platform all \
+    --platform "${HQ_PLATFORM}" \
     --output "${OUT_DIR}" \
-    --report markdown,html,json \
     --verbose \
     >"${OUT_DIR}/helixqa_run.log" 2>&1
 RUN_RC=$?
