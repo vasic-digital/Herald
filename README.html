@@ -176,6 +176,8 @@ rules</a></li>
 <ul>
 <li><a href="#messengers">Messengers</a></li>
 <li><a href="#llm--agent-dispatchers">LLM / agent dispatchers</a></li>
+<li><a href="#per-flavor-operator-guides">Per-flavor operator
+guides</a></li>
 <li><a href="#credentials-master-guide">Credentials master
 guide</a></li>
 </ul></li>
@@ -463,6 +465,91 @@ href="docs/guides/dispatchers/CURSOR.md"><code>docs/guides/dispatchers/CURSOR.md
 <td>Planned</td>
 <td><a
 href="docs/guides/dispatchers/ANTHROPIC.md"><code>docs/guides/dispatchers/ANTHROPIC.md</code></a></td>
+</tr>
+</tbody>
+</table>
+<h3 id="per-flavor-operator-guides">Per-flavor operator guides</h3>
+<p>Each Herald flavor binary ships with a nano-detail operator reference
+under <a href="docs/guides/"><code>docs/guides/</code></a>, documenting
+every subcommand the built binary surfaces
+(<code>&lt;flavor&gt; --help</code>), the env/credentials each needs,
+real example invocations, and which subcommands are live vs
+not-yet-implemented (all anti-bluff — derived from running the actual
+binary, nothing invented).</p>
+<table>
+<thead>
+<tr>
+<th>Flavor</th>
+<th>Role</th>
+<th>Guide</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>pherald</code></td>
+<td>Project Herald — the richest flavor:
+<code>serve</code>/<code>listen</code>/<code>watch</code>/<code>migrate</code>/<code>wizard</code>/<code>commit-push</code>
++ the §43 GitOps commands</td>
+<td><a
+href="docs/guides/PHERALD.md"><code>docs/guides/PHERALD.md</code></a></td>
+</tr>
+<tr>
+<td><code>sherald</code></td>
+<td>System Herald — <code>serve</code> (<code>/v1/safety_state</code>) +
+the host-safety guard commands (<code>destructive-guard</code>,
+<code>force-push-gate</code>, <code>mem-budget-watch</code>,
+<code>backup-snapshot</code>, <code>sysctl</code>)</td>
+<td><a
+href="docs/guides/SHERALD.md"><code>docs/guides/SHERALD.md</code></a></td>
+</tr>
+<tr>
+<td><code>cherald</code></td>
+<td>Constitution Herald — <code>serve</code>
+(<code>/v1/compliance</code>) + the §11.4 compliance-check catalogue
+(<code>creds-scan</code>, <code>docs-sync</code>,
+<code>composite-gate</code>, <code>readme-sync</code>, …)</td>
+<td><a
+href="docs/guides/CHERALD.md"><code>docs/guides/CHERALD.md</code></a></td>
+</tr>
+<tr>
+<td><code>bherald</code></td>
+<td>Build Herald — CLI-only CI/test gates: <code>evidence-capture</code>
+(§11.4.2) + <code>test-tier-verify</code> (§40.2 8-tier matrix);
+<code>gate-retest</code> not-yet-implemented (HRD-045)</td>
+<td><a
+href="docs/guides/BHERALD.md"><code>docs/guides/BHERALD.md</code></a></td>
+</tr>
+<tr>
+<td><code>rherald</code></td>
+<td>Release Herald — CLI-only release path:
+<code>changelog-generate</code> (§5), <code>tag-mirror</code> (§4
+cross-mirror parity), <code>gate-retest</code> (§11.4.40 pre-tag
+retest)</td>
+<td><a
+href="docs/guides/RHERALD.md"><code>docs/guides/RHERALD.md</code></a></td>
+</tr>
+<tr>
+<td><code>iherald</code></td>
+<td>Incident Herald — <code>serve</code>; <code>/v1/webhooks/page</code>
+is an honest 501 stub pending HRD-024</td>
+<td><a
+href="docs/guides/IHERALD.md"><code>docs/guides/IHERALD.md</code></a></td>
+</tr>
+<tr>
+<td><code>scherald</code></td>
+<td>Status-Check Herald — CLI-only <code>status-digest</code> (§11.4.45
+rollup)</td>
+<td><a
+href="docs/guides/SCHERALD.md"><code>docs/guides/SCHERALD.md</code></a></td>
+</tr>
+<tr>
+<td><code>qaherald</code></td>
+<td>QA Herald — Herald's autonomous QA bot: <code>run</code> (scenario
+harness → docs/qa evidence), <code>mtproto</code> session lifecycle
+(<code>login</code>/<code>whoami</code>/<code>logout</code>),
+<code>lifecycle</code> (15-scenario driver, SKELETON)</td>
+<td><a
+href="docs/guides/QAHERALD.md"><code>docs/guides/QAHERALD.md</code></a></td>
 </tr>
 </tbody>
 </table>

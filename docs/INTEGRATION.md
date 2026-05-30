@@ -29,7 +29,7 @@
 - [§7. Starting `pherald serve`](#7-starting-pherald-serve)
 - [§8. Emitting your first CloudEvent](#8-emitting-your-first-cloudevent)
 - [§9. Verifying delivery (the anti-bluff battery)](#9-verifying-delivery-the-anti-bluff-battery)
-- [§10. The other flavors (sherald, cherald, iherald, bherald, rherald, scherald)](#10-the-other-flavors-sherald-cherald-iherald-bherald-rherald-scherald)
+- [§10. The other flavors (sherald, cherald, iherald, bherald, rherald, scherald, qaherald)](#10-the-other-flavors-sherald-cherald-iherald-bherald-rherald-scherald-qaherald)
 - [§11. Anti-bluff covenant (§107) — what a consumer MUST honor](#11-anti-bluff-covenant-107--what-a-consumer-must-honor)
 - [§12. Known limitations + Wave 4 transport roadmap](#12-known-limitations--wave-4-transport-roadmap)
 - [§13. Multi-mirror push contract](#13-multi-mirror-push-contract)
@@ -353,21 +353,24 @@ Herald itself has no CI yet (HRD-???; tracked under operator priorities) — the
 
 ---
 
-## §10. The other flavors (sherald, cherald, iherald, bherald, rherald, scherald)
+## §10. The other flavors (sherald, cherald, iherald, bherald, rherald, scherald, qaherald)
 
 Each flavor has its own `cmd/<flavor>/main.go` consuming `commons/cli/`. They're invoked the same way (`<flavor> serve --http-port <port>` for serving flavors, `<flavor> <subcommand>` for CLI-only). Per spec §18.0:
 
-| Flavor | Default port | Live routes (Wave 3a-b state) | §43 stubs |
-|---|---|---|---|
-| pherald | 24791 | `POST /v1/events` (live — Wave 3b) | 6 (HRD-029/030/043/044/049/053) |
-| sherald | 24793 | `GET /v1/safety_state` (live — Wave 3a) | 5 (HRD-033/034/040/046/056) |
-| cherald | 24792 | `GET /v1/compliance` (live — Wave 3a) | 11 (HRD-036..039,042,048,050..052,054,055) |
-| iherald | 24794 | `POST /v1/webhooks/page` (501 stub — HRD-024 pending) | 0 |
-| bherald | n/a | (CLI-only) | 3 (HRD-035/041/045) |
-| rherald | n/a | (CLI-only) | 3 (HRD-031/032/045) |
-| scherald | n/a | (CLI-only) | 1 (HRD-047) |
+| Flavor | Default port | Live routes (Wave 3a-b state) | §43 stubs | Operator guide |
+|---|---|---|---|---|
+| pherald | 24791 | `POST /v1/events` (live — Wave 3b) | 6 (HRD-029/030/043/044/049/053) | [`docs/guides/PHERALD.md`](guides/PHERALD.md) |
+| sherald | 24793 | `GET /v1/safety_state` (live — Wave 3a) | 5 (HRD-033/034/040/046/056) | [`docs/guides/SHERALD.md`](guides/SHERALD.md) |
+| cherald | 24792 | `GET /v1/compliance` (live — Wave 3a) | 11 (HRD-036..039,042,048,050..052,054,055) | [`docs/guides/CHERALD.md`](guides/CHERALD.md) |
+| iherald | 24794 | `POST /v1/webhooks/page` (501 stub — HRD-024 pending) | 0 | [`docs/guides/IHERALD.md`](guides/IHERALD.md) |
+| bherald | n/a | (CLI-only) | 3 (HRD-035/041/045) | [`docs/guides/BHERALD.md`](guides/BHERALD.md) |
+| rherald | n/a | (CLI-only) | 3 (HRD-031/032/045) | [`docs/guides/RHERALD.md`](guides/RHERALD.md) |
+| scherald | n/a | (CLI-only) | 1 (HRD-047) | [`docs/guides/SCHERALD.md`](guides/SCHERALD.md) |
+| qaherald | n/a | (CLI-only — autonomous QA bot) | n/a | [`docs/guides/QAHERALD.md`](guides/QAHERALD.md) |
 
 §43 stubs return non-zero with an HRD pointer in stderr — they're honest 501-equivalents. A consuming project that scripts `pherald commit-push` will hit a non-zero exit until HRD-029 lands. Plan accordingly.
+
+Each flavor's **operator guide** (linked in the table above) is a nano-detail, anti-bluff reference for that binary: every subcommand the built binary actually surfaces (`<flavor> --help`), the env/credentials each needs, real example invocations, and a live-vs-not-yet-implemented status per subcommand. `qaherald` is Herald's autonomous QA bot — it drives `pherald` ↔ Telegram round-trips via an MTProto user-client session and preserves the full bidirectional transcript under `docs/qa/` (§107.x).
 
 ---
 
@@ -433,6 +436,7 @@ For consumers who **only need read access**, any single mirror works — clone f
 - **Operator credentials guide**: `docs/guides/OPERATOR_CREDENTIALS.md` — full reference for every supported messenger + dispatcher.
 - **Per-messenger guides**: `docs/guides/messengers/{TELEGRAM,SLACK,EMAIL,MAX,DISCORD,TEAMS,LARK,WHATSAPP,VIBER}.md` (some are stubs for not-yet-implemented channels — code-complete: Telegram).
 - **Per-dispatcher guides**: `docs/guides/dispatchers/{CLAUDE_CODE,ANTHROPIC,OPENCODE,AIDER,GEMINI,CURSOR}.md` (code-complete: CLAUDE_CODE).
+- **Per-flavor operator guides**: `docs/guides/{PHERALD,SHERALD,CHERALD,BHERALD,RHERALD,IHERALD,SCHERALD,QAHERALD}.md` — one nano-detail, anti-bluff reference per flavor binary, documenting every subcommand the built binary surfaces, the env/credentials each needs, real example invocations, and live-vs-not-yet-implemented status. Cross-linked per-row in the §10 flavor table above.
 - **Herald Constitution**: `docs/guides/HERALD_CONSTITUTION.md` — project-specific constitutional extensions on top of the inherited Helix Constitution.
 - **Parent-discovery details**: `docs/guides/CONSTITUTION_INHERITANCE.md`.
 - **Spec V3** (the source of truth for the API + data model): `docs/specs/mvp/specification.V3.md`.

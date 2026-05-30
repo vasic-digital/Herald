@@ -33,6 +33,7 @@
 - [Operator setup guides](#operator-setup-guides)
   - [Messengers](#messengers)
   - [LLM / agent dispatchers](#llm--agent-dispatchers)
+  - [Per-flavor operator guides](#per-flavor-operator-guides)
   - [Credentials master guide](#credentials-master-guide)
 - [Mirror & push convention](#mirror-push-convention)
 - [License](#license)
@@ -181,6 +182,21 @@ Every supported messenger and every supported LLM / agent dispatcher has its own
 | Gemini | Planned | [`docs/guides/dispatchers/GEMINI.md`](docs/guides/dispatchers/GEMINI.md) |
 | Cursor | Planned | [`docs/guides/dispatchers/CURSOR.md`](docs/guides/dispatchers/CURSOR.md) |
 | Anthropic Managed Agent | Planned | [`docs/guides/dispatchers/ANTHROPIC.md`](docs/guides/dispatchers/ANTHROPIC.md) |
+
+### Per-flavor operator guides
+
+Each Herald flavor binary ships with a nano-detail operator reference under [`docs/guides/`](docs/guides/), documenting every subcommand the built binary surfaces (`<flavor> --help`), the env/credentials each needs, real example invocations, and which subcommands are live vs not-yet-implemented (all anti-bluff — derived from running the actual binary, nothing invented).
+
+| Flavor | Role | Guide |
+|---|---|---|
+| `pherald` | Project Herald — the richest flavor: `serve`/`listen`/`watch`/`migrate`/`wizard`/`commit-push` + the §43 GitOps commands | [`docs/guides/PHERALD.md`](docs/guides/PHERALD.md) |
+| `sherald` | System Herald — `serve` (`/v1/safety_state`) + the host-safety guard commands (`destructive-guard`, `force-push-gate`, `mem-budget-watch`, `backup-snapshot`, `sysctl`) | [`docs/guides/SHERALD.md`](docs/guides/SHERALD.md) |
+| `cherald` | Constitution Herald — `serve` (`/v1/compliance`) + the §11.4 compliance-check catalogue (`creds-scan`, `docs-sync`, `composite-gate`, `readme-sync`, …) | [`docs/guides/CHERALD.md`](docs/guides/CHERALD.md) |
+| `bherald` | Build Herald — CLI-only CI/test gates: `evidence-capture` (§11.4.2) + `test-tier-verify` (§40.2 8-tier matrix); `gate-retest` not-yet-implemented (HRD-045) | [`docs/guides/BHERALD.md`](docs/guides/BHERALD.md) |
+| `rherald` | Release Herald — CLI-only release path: `changelog-generate` (§5), `tag-mirror` (§4 cross-mirror parity), `gate-retest` (§11.4.40 pre-tag retest) | [`docs/guides/RHERALD.md`](docs/guides/RHERALD.md) |
+| `iherald` | Incident Herald — `serve`; `/v1/webhooks/page` is an honest 501 stub pending HRD-024 | [`docs/guides/IHERALD.md`](docs/guides/IHERALD.md) |
+| `scherald` | Status-Check Herald — CLI-only `status-digest` (§11.4.45 rollup) | [`docs/guides/SCHERALD.md`](docs/guides/SCHERALD.md) |
+| `qaherald` | QA Herald — Herald's autonomous QA bot: `run` (scenario harness → docs/qa evidence), `mtproto` session lifecycle (`login`/`whoami`/`logout`), `lifecycle` (15-scenario driver, SKELETON) | [`docs/guides/QAHERALD.md`](docs/guides/QAHERALD.md) |
 
 ### Credentials master guide
 

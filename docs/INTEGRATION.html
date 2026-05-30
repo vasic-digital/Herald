@@ -177,9 +177,9 @@ CloudEvent</a></li>
 <li><a href="#9-verifying-delivery-the-anti-bluff-battery">§9. Verifying
 delivery (the anti-bluff battery)</a></li>
 <li><a
-href="#10-the-other-flavors-sherald-cherald-iherald-bherald-rherald-scherald">§10.
+href="#10-the-other-flavors-sherald-cherald-iherald-bherald-rherald-scherald-qaherald">§10.
 The other flavors (sherald, cherald, iherald, bherald, rherald,
-scherald)</a></li>
+scherald, qaherald)</a></li>
 <li><a
 href="#11-anti-bluff-covenant-107--what-a-consumer-must-honor">§11.
 Anti-bluff covenant (§107) — what a consumer MUST honor</a></li>
@@ -629,9 +629,9 @@ priorities) — the operator runs the battery locally before each
 merge.</p>
 <hr />
 <h2
-id="10-the-other-flavors-sherald-cherald-iherald-bherald-rherald-scherald">§10.
+id="10-the-other-flavors-sherald-cherald-iherald-bherald-rherald-scherald-qaherald">§10.
 The other flavors (sherald, cherald, iherald, bherald, rherald,
-scherald)</h2>
+scherald, qaherald)</h2>
 <p>Each flavor has its own <code>cmd/&lt;flavor&gt;/main.go</code>
 consuming <code>commons/cli/</code>. They're invoked the same way
 (<code>&lt;flavor&gt; serve --http-port &lt;port&gt;</code> for serving
@@ -644,6 +644,7 @@ Per spec §18.0:</p>
 <th>Default port</th>
 <th>Live routes (Wave 3a-b state)</th>
 <th>§43 stubs</th>
+<th>Operator guide</th>
 </tr>
 </thead>
 <tbody>
@@ -652,18 +653,24 @@ Per spec §18.0:</p>
 <td>24791</td>
 <td><code>POST /v1/events</code> (live — Wave 3b)</td>
 <td>6 (HRD-029/030/043/044/049/053)</td>
+<td><a
+href="guides/PHERALD.md"><code>docs/guides/PHERALD.md</code></a></td>
 </tr>
 <tr>
 <td>sherald</td>
 <td>24793</td>
 <td><code>GET /v1/safety_state</code> (live — Wave 3a)</td>
 <td>5 (HRD-033/034/040/046/056)</td>
+<td><a
+href="guides/SHERALD.md"><code>docs/guides/SHERALD.md</code></a></td>
 </tr>
 <tr>
 <td>cherald</td>
 <td>24792</td>
 <td><code>GET /v1/compliance</code> (live — Wave 3a)</td>
 <td>11 (HRD-036..039,042,048,050..052,054,055)</td>
+<td><a
+href="guides/CHERALD.md"><code>docs/guides/CHERALD.md</code></a></td>
 </tr>
 <tr>
 <td>iherald</td>
@@ -671,24 +678,40 @@ Per spec §18.0:</p>
 <td><code>POST /v1/webhooks/page</code> (501 stub — HRD-024
 pending)</td>
 <td>0</td>
+<td><a
+href="guides/IHERALD.md"><code>docs/guides/IHERALD.md</code></a></td>
 </tr>
 <tr>
 <td>bherald</td>
 <td>n/a</td>
 <td>(CLI-only)</td>
 <td>3 (HRD-035/041/045)</td>
+<td><a
+href="guides/BHERALD.md"><code>docs/guides/BHERALD.md</code></a></td>
 </tr>
 <tr>
 <td>rherald</td>
 <td>n/a</td>
 <td>(CLI-only)</td>
 <td>3 (HRD-031/032/045)</td>
+<td><a
+href="guides/RHERALD.md"><code>docs/guides/RHERALD.md</code></a></td>
 </tr>
 <tr>
 <td>scherald</td>
 <td>n/a</td>
 <td>(CLI-only)</td>
 <td>1 (HRD-047)</td>
+<td><a
+href="guides/SCHERALD.md"><code>docs/guides/SCHERALD.md</code></a></td>
+</tr>
+<tr>
+<td>qaherald</td>
+<td>n/a</td>
+<td>(CLI-only — autonomous QA bot)</td>
+<td>n/a</td>
+<td><a
+href="guides/QAHERALD.md"><code>docs/guides/QAHERALD.md</code></a></td>
 </tr>
 </tbody>
 </table>
@@ -696,6 +719,15 @@ pending)</td>
 honest 501-equivalents. A consuming project that scripts
 <code>pherald commit-push</code> will hit a non-zero exit until HRD-029
 lands. Plan accordingly.</p>
+<p>Each flavor's <strong>operator guide</strong> (linked in the table
+above) is a nano-detail, anti-bluff reference for that binary: every
+subcommand the built binary actually surfaces
+(<code>&lt;flavor&gt; --help</code>), the env/credentials each needs,
+real example invocations, and a live-vs-not-yet-implemented status per
+subcommand. <code>qaherald</code> is Herald's autonomous QA bot — it
+drives <code>pherald</code> ↔︎ Telegram round-trips via an MTProto
+user-client session and preserves the full bidirectional transcript
+under <code>docs/qa/</code> (§107.x).</p>
 <hr />
 <h2 id="11-anti-bluff-covenant-107--what-a-consumer-must-honor">§11.
 Anti-bluff covenant (§107) — what a consumer MUST honor</h2>
@@ -838,6 +870,12 @@ Telegram).</li>
 <li><strong>Per-dispatcher guides</strong>:
 <code>docs/guides/dispatchers/{CLAUDE_CODE,ANTHROPIC,OPENCODE,AIDER,GEMINI,CURSOR}.md</code>
 (code-complete: CLAUDE_CODE).</li>
+<li><strong>Per-flavor operator guides</strong>:
+<code>docs/guides/{PHERALD,SHERALD,CHERALD,BHERALD,RHERALD,IHERALD,SCHERALD,QAHERALD}.md</code>
+— one nano-detail, anti-bluff reference per flavor binary, documenting
+every subcommand the built binary surfaces, the env/credentials each
+needs, real example invocations, and live-vs-not-yet-implemented status.
+Cross-linked per-row in the §10 flavor table above.</li>
 <li><strong>Herald Constitution</strong>:
 <code>docs/guides/HERALD_CONSTITUTION.md</code> — project-specific
 constitutional extensions on top of the inherited Helix
