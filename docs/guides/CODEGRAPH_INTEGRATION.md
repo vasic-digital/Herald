@@ -189,3 +189,13 @@ If an Explore subagent reports stale results despite CodeGraph being present, ru
 - **§11.4 / §11.4.69** — Anti-bluff covenant. `scripts/codegraph_validate.sh` is the captured-evidence proof per §11.4.5 — every PASS here means a real index returning real Herald symbol locations.
 - **§11.4.65** — Universal Markdown export. This guide's HTML + PDF + DOCX siblings ship in the same commit.
 - **§11.4.20** — Subagent-driven-by-default. CodeGraph is the substrate that makes the subagent default cheap (≈ 92% fewer tool calls per its benchmarks); the two clauses compose: subagents-by-default for parallelism + CodeGraph for per-subagent efficiency.
+
+## Sources verified
+
+This guide documents the external **CodeGraph** tool (`@colbymchenry/codegraph`, MIT) plus Herald's own setup/validate scripts. Per §11.4.99 the external-tool claims were cross-referenced against the tool's published source before this footer landed.
+
+**Verified 2026-05-30:** https://github.com/colbymchenry/codegraph (CodeGraph upstream — package name, MIT license, `serve --mcp` / `install` / `sync` / `status` / `visualize` subcommands, the ≈92%-fewer-tool-calls / ≈71%-faster-Explore benchmark claims, and the per-agent MCP-config shapes cited in §4); https://www.npmjs.com/package/@colbymchenry/codegraph (npm distribution invoked via `npx -y @colbymchenry/codegraph`).
+
+In-repo (read 2026-05-30): `scripts/codegraph_setup.sh`, `scripts/codegraph_validate.sh` (the Herald-side wrappers), and the `.codegraph/` index layout (`codegraph.db` + `config.json`, both gitignored). The MCP-client config paths for OpenCode / Cursor / Kimi CLI / Crush / Qwen Code are upstream-evolving and MUST be reconfirmed against each client's active-version docs before use — flagged inline in §4.5/§4.6/§4.7.
+
+**Re-verification cadence (per §11.4.99 (C)):** CodeGraph is a package-manager-distributed third-party tool (risk-classified) → **90-day staleness** (next due **2026-08-28**); re-verify the npm package name + subcommand surface + MCP config shapes on any CodeGraph major-version bump.

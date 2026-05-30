@@ -514,5 +514,15 @@ service/library online documentation was relied on beyond the vendored
 <code>fsnotify</code> already pinned in
 <code>commons_watch/go.mod</code>. All behavioural claims are grounded
 in the cited source files as of 2026-05-30.</p>
+<p><strong>Verified 2026-05-30:</strong> internal doc — no external
+online sources. Behavioural claims derive from
+<code>commons_watch/watch.go</code> +
+<code>commons_watch/watch_test.go</code> (read 2026-05-30); the only
+third-party dependency is
+<code>github.com/fsnotify/fsnotify v1.8.0</code>, pinned in
+<code>commons_watch/go.mod</code> (no online-doc cross-reference
+required — the API surface used is the vendored, version-pinned one).
+Re-verify on an <code>fsnotify</code> major-version bump or a
+<code>commons_watch</code> API change.</p>
 </body>
 </html>

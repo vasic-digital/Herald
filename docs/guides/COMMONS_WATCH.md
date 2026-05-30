@@ -209,3 +209,5 @@ Anti-bluff observations worth preserving when editing tests:
 ## Sources verified
 
 This guide documents internal Herald source only; no external service/library online documentation was relied on beyond the vendored `fsnotify` already pinned in `commons_watch/go.mod`. All behavioural claims are grounded in the cited source files as of 2026-05-30.
+
+**Verified 2026-05-30:** internal doc — no external online sources. Behavioural claims derive from `commons_watch/watch.go` + `commons_watch/watch_test.go` (read 2026-05-30); the only third-party dependency is `github.com/fsnotify/fsnotify v1.8.0`, pinned in `commons_watch/go.mod` (no online-doc cross-reference required — the API surface used is the vendored, version-pinned one). Re-verify on an `fsnotify` major-version bump or a `commons_watch` API change.

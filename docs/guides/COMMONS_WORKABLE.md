@@ -334,3 +334,5 @@ Anti-bluff observations worth preserving when editing tests:
 ## Sources verified
 
 This guide documents internal Herald source only; no external service/library online documentation was relied on beyond the vendored `modernc.org/sqlite` already pinned in `commons_workable/go.mod`. All behavioural claims are grounded in the cited source files as of 2026-05-30.
+
+**Verified 2026-05-30:** internal doc — no external online sources. Behavioural claims derive from `commons_workable/{store.go, item.go, crud.go, changefeed.go, parser.go}` + their `_test.go` siblings (read 2026-05-30); the only third-party dependency is the pure-Go `modernc.org/sqlite`, pinned in `commons_workable/go.mod` (no online-doc cross-reference required — the API surface used is the vendored, version-pinned one). Re-verify on a `modernc.org/sqlite` major-version bump or a `commons_workable` schema/CRUD API change.

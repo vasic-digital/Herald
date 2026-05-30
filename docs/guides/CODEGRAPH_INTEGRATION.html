@@ -353,5 +353,34 @@ the substrate that makes the subagent default cheap (≈ 92% fewer tool
 calls per its benchmarks); the two clauses compose: subagents-by-default
 for parallelism + CodeGraph for per-subagent efficiency.</li>
 </ul>
+<h2 id="sources-verified">Sources verified</h2>
+<p>This guide documents the external <strong>CodeGraph</strong> tool
+(<code>@colbymchenry/codegraph</code>, MIT) plus Herald's own
+setup/validate scripts. Per §11.4.99 the external-tool claims were
+cross-referenced against the tool's published source before this footer
+landed.</p>
+<p><strong>Verified 2026-05-30:</strong> <a
+href="https://github.com/colbymchenry/codegraph">https://github.com/colbymchenry/codegraph</a>
+(CodeGraph upstream — package name, MIT license,
+<code>serve --mcp</code> / <code>install</code> / <code>sync</code> /
+<code>status</code> / <code>visualize</code> subcommands, the
+≈92%-fewer-tool-calls / ≈71%-faster-Explore benchmark claims, and the
+per-agent MCP-config shapes cited in §4); <a
+href="https://www.npmjs.com/package/@colbymchenry/codegraph">https://www.npmjs.com/package/@colbymchenry/codegraph</a>
+(npm distribution invoked via
+<code>npx -y @colbymchenry/codegraph</code>).</p>
+<p>In-repo (read 2026-05-30): <code>scripts/codegraph_setup.sh</code>,
+<code>scripts/codegraph_validate.sh</code> (the Herald-side wrappers),
+and the <code>.codegraph/</code> index layout (<code>codegraph.db</code>
++ <code>config.json</code>, both gitignored). The MCP-client config
+paths for OpenCode / Cursor / Kimi CLI / Crush / Qwen Code are
+upstream-evolving and MUST be reconfirmed against each client's
+active-version docs before use — flagged inline in §4.5/§4.6/§4.7.</p>
+<p><strong>Re-verification cadence (per §11.4.99 (C)):</strong>
+CodeGraph is a package-manager-distributed third-party tool
+(risk-classified) → <strong>90-day staleness</strong> (next due
+<strong>2026-08-28</strong>); re-verify the npm package name +
+subcommand surface + MCP config shapes on any CodeGraph major-version
+bump.</p>
 </body>
 </html>

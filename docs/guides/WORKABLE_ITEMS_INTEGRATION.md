@@ -432,3 +432,5 @@ This guide documents Herald's own committed source code and the in-repo master p
 - Herald source tree (read 2026-05-29): `commons_workable/`, `commons_watch/`, `pherald/internal/workflow/`, `pherald/internal/inbound/`, `pherald/cmd/pherald/watch.go`.
 - `~/Documents/ATMOSphere_Herald_Integration_Plan.md` (rev 1, 2026-05-29).
 - `docs/Issues.md` (HRD-131, HRD-148..HRD-158 rows, read 2026-05-29).
+
+**Verified 2026-05-30:** internal doc — no external online sources. All claims derive from in-repo Herald source (`commons_workable/`, `commons_watch/`, `pherald/internal/workflow/`, `pherald/internal/inbound/`, `pherald/cmd/pherald/watch.go`) and the cited in-repo trackers; any external-service instructions are deferred to `MESSENGER_CHANNELS.md` / `OPERATOR_CREDENTIALS.md`, which carry their own §11.4.99 source-verification footers. Re-verify on Herald source breaking changes (workflow/inbound API edits, SQLite schema bumps).
