@@ -112,7 +112,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>22</td>
+<td>23</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -501,7 +501,16 @@ absent. Next free invariant id is <strong>E138+</strong>.</li>
 <li><strong>Phase:</strong> implementation r1.</li>
 </ul>
 <h2 id="2-last-commit-landed">§2. Last commit landed</h2>
-<p><strong>HEAD <code>873aab4</code></strong> —
+<p><strong>HEAD <code>534e785</code></strong> (2026-05-30) —
+<code>test(§11.4.98): gate/retire 4 NON-COMPLIANT attended tests behind opt-in skips</code>
++ (prior, same session) HRD-146 dispatch hardening <code>a975d8b</code>,
+per-flavor guides <code>87878fb</code>, api-bank wiring
+<code>c80ad81</code>, docs-audit <code>338a896</code>, stress/chaos
+<code>ee5566f</code>, CLI-bank shell: <code>bce6de7</code>. The session
+incorporated HelixQA as Herald's anti-bluff QA SSoT end-to-end (see §3).
+helixqa pushed to its 3 mirrors at <code>9e0ec3b</code>;
+HelixConstitution Fixed.md parser at <code>9b74f96</code>. <strong>Prior
+<code>873aab4</code></strong> —
 <code>docs(§11.4.19 + §11.4.90): atomic HRD-139..142 Issues→Fixed + Obsolete graduation of 3 legacy NON-COMPLIANT tests</code>.
 Fixed.md r17 records HRD-139/140/141/142 (Wave 8 Track B) as Fixed;
 Issues.md r36 marks 3 legacy tests Obsolete per §11.4.90 with full
@@ -557,31 +566,84 @@ HRDs (HRD-133/134/135/136/137/138) Issues→Fixed. Deterministic across
 Full tgram suite <strong>26/26 PASS, 0 SKIP</strong> (was 24/24 with
 chaos SKIPped). All 4 mirrors synced.</p>
 <h2 id="3-active-work">§3. Active work</h2>
-<p><strong>Background e2e_bluff_hunt running</strong>
-(<code>qa-results/e2e_bluff_hunt_20260529T0001Z.log</code>) to validate
-state post-§11.4.100 propagation + HRD-139..142 migration + 3-test
-Obsolete graduation. <strong>Push of 873aab4 to all 4 mirrors
-COMPLETE</strong> per §11.4.88 background-push (per-mirror flock, push
-detached after commit-lock release; all 4 mirrors confirmed at HEAD
-<code>873aab4</code>). <strong>No other active work in flight.</strong>
-Operator's next-priority pickup options: (a) v1.0.0 Batch C/D/E status
-confirm — Tasks #195-#212 mark all Batch C+D+Wave-7-T6-T12 complete; the
-Issues.md <code>in_progress</code> HRD-019..025 + HRD-029..056 +
-HRD-085..090 + HRD-115..121 rows need their Fixed→Obsolete graduation
-audit per §11.4.90; (b) <strong>DOCS task #147</strong> comprehensive
-documentation audit + per-flavor operator guides (nano-detail per
-<code>feedback_nano_detail_docs</code> memory — blocks v1.0.0
-production-ready readiness per
-<code>feedback_production_ready_mandate</code>); (c)
-<code>feedback_no_concurrent_mutation_gates</code> is ENFORCED via
-<code>scripts/mutation_residue_audit.sh</code> +
-<code>.git/MUTATION_IN_PROGRESS</code> lockfile + check_quiescence() —
-no carryover; (d) MTProto creds remain in <code>.env</code> + session
-cached for next-session reuse; (e) HRD-131 §11.4.93 SQLite SSoT remains
-OPEN-deferred (constitution-repo migration binary still unimplemented
-per the §11.4.74 catalogue-first constraint).</p>
+<p><strong>2026-05-30 — HelixQA incorporated as Herald's anti-bluff QA
+SSoT (COMPLETE, real-evidence-proven). Nothing in flight.</strong>
+HelixQA (<code>git@github.com:HelixDevelopment/helixqa.git</code>) is a
+sibling repo at <code>~/Projects/helixqa</code> (CONST-051 flat layout)
+with all 7 own-org deps at <code>~/Projects/</code> (snake_case per
+CONST-052, operator-approved). Herald drives it via
+<code>scripts/helixqa_run.sh</code> + banks under
+<code>challenges/helixqa-banks/</code>. Delivered this session (Herald
+<code>e36929a</code>→<code>534e785</code>, helixqa
+<code>c0b2757</code>→<code>9e0ec3b</code>, all pushed):</p>
+<ul>
+<li><strong>Both Herald banks genuinely execute,
+mutation-proven</strong> — CLI bank (10 cases, 8 flavor binaries) + api
+bank (11 <code>/v1/*</code> cases) rewritten to self-asserting
+<code>shell:</code>/<code>curl</code> actions (HelixQA <code>run</code>
+executes shell: on the desktop path; assertions bite — corrupting one
+flips PASSED→FAILED). Evidence:
+<code>docs/qa/HRD-QA-CLI-FLAVORS-*/</code>,
+<code>docs/qa/HRD-API-BANK-WIRING-*/</code>.</li>
+<li><strong>5 real anti-bluff bugs found + fixed in helixqa</strong>
+(it's the org-wide SSoT): i18n printf echo; desktop crash-absence
+promotion bluff (+ generalized to all platforms — a SKIP with any unrun
+asserting step is never promoted); §107.x captured-evidence reporter
+(qa-report.md now carries the real command + exit code); autonomous
+executor <code>shell:</code> wiring (was filing false-negative tickets);
+dead <code>swipe:</code> action + <code>description:</code> verdict
+divergence.</li>
+<li><strong>LLM/Vision bridge</strong> = HelixQA's existing
+<code>BridgedCLIProvider</code> (auto-discovers <code>claude</code> on
+PATH) — zero new bridge code; <code>helixqa autonomous</code> runs
+end-to-end with it ($0 free providers).</li>
+<li><strong>Herald-side hardening landed alongside:</strong> §11.4.85
+stress/chaos for commons_workable + Notifier (<code>ee5566f</code>);
+§11.4.98 full-automation — 4 attended tests gated behind opt-in, MTProto
+replacements confirmed (<code>534e785</code>); <strong>HRD-146 dispatch
+hardening</strong> — 120s timeout + process-group kill on the
+claude_code dispatcher (real 30s-shim killed in 702ms); 8 per-flavor
+operator guides + §11.4.99 footers (<code>87878fb</code>); docs-audit
+corrections (module/flavor/migration counts → 18/8/000014, honest
+DB-materialization status — <code>338a896</code>).</li>
+</ul>
+<p><strong>Cross-repo also landed:</strong> HelixConstitution Fixed.md
+tracker parser (<code>9b74f96</code>, 4 mirrors); ATMOSphere
+constitution pointer bump (<code>643b36c</code>); HRD-158 QWEN
+anti-bluff-clause cascade reconciled across 18/19 ATMOSphere submodule
+repos; codegraph re-indexed (5042 files, validator 7/0).</p>
+<p><strong>Remaining (next session):</strong> (a) the <strong>~52-HRD
+Issues→Fixed closure migration</strong> — the production-readiness map
+(a read-only audit this session) found ~52 HRDs are code-complete +
+tested + evidence-backed (E90-E96 e2e invariants VERIFIED present) but
+stuck in <code>open</code>/<code>in_progress</code> because the §11.4.19
+atomic migration was never run; this is the v1.0.0 critical path and it
+is paperwork, not engineering; (b) HRD-147 (governance dead_letter
+subscriber — genuinely not-started, needs design); (c) the 1 skipped
+QWEN repo <code>tools/helixqa/HelixQA</code> (has an unrelated 2nd
+commit — operator decision); (d) CONST-052 REMOTE GitHub repo renames
+(deferred — cross-org, GitHub redirect); (e) HRD-131 §11.4.93 SQLite
+SSoT (constitution-repo binary still unimplemented).</p>
 <h2 id="4-next-concrete-steps">§4. Next concrete steps</h2>
-<ol type="1">
+<ol start="0" type="1">
+<li><strong>▶ v1.0.0 critical path — the ~52-HRD Issues→Fixed closure
+migration (paperwork, not engineering).</strong> A read-only
+production-readiness audit (2026-05-30) found ~52 HRDs are
+code-complete, tested, and evidence-backed but sitting in
+<code>open</code>/<code>in_progress</code> because the §11.4.19 atomic
+migration was never run. The "after Telegram works" gate (HRD-156) is
+ALREADY live-proven, and the §43 binding e2e invariants E90-E96 are
+VERIFIED present in <code>scripts/e2e_bluff_hunt.sh</code>. Work: per
+closeable HRD, atomically move its entry Issues.md→Fixed.md, bump the
+revision metadata, regen siblings. Closeable-now (no operator):
+HRD-019..025 (flavor bindings, E90-E96), HRD-029..056 (§43 commands),
+HRD-085..089 (pgx repo ops), HRD-116/118/119/120/121,
+HRD-148/149/151/152/153/154 (ATMOSphere WS — table is stale vs the r42
+header which already says "landed"), HRD-146 (now hardened+tested this
+session). Anti-bluff: verify each HRD's real test/qa evidence before
+migrating (don't trust the self-reported status). Genuinely not-done
+(skip): HRD-147 (dead_letter subscriber, needs design). Externally-gated
+(skip): HRD-115-live/157/150/155/131/158/008/081.</li>
 <li><strong>Live evidence — Telegram + Claude Code closed-loop</strong>
 (gated on operator export). Drive
 <code>tests/test_wave6_live_loop.sh</code> end-to-end with real bot +
