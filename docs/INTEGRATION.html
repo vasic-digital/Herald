@@ -248,8 +248,11 @@ composite-gate.</td>
 <td><code>iherald</code></td>
 <td>24794</td>
 <td><strong>Incident Herald</strong> — credential-leak page-out +
-operator-blocked escalation. <code>POST /v1/webhooks/page</code>
-(currently a 501 stub awaiting HRD-024).</td>
+operator-blocked escalation. <code>POST /v1/webhooks/page</code> is LIVE
+(HRD-024): JWT-gated, drives the escalation bindings Pipeline → emits
+the <code>.credential.leak</code>/<code>.policy.violation</code>
+CloudEvent + persists state/audit → 202 + Receipt. Third-party pager
+egress (PagerDuty/Opsgenie) is a follow-up subscriber.</td>
 </tr>
 <tr>
 <td><code>bherald</code></td>
@@ -675,8 +678,8 @@ href="guides/CHERALD.md"><code>docs/guides/CHERALD.md</code></a></td>
 <tr>
 <td>iherald</td>
 <td>24794</td>
-<td><code>POST /v1/webhooks/page</code> (501 stub — HRD-024
-pending)</td>
+<td><code>POST /v1/webhooks/page</code> (LIVE — JWT-gated escalation
+handler, HRD-024)</td>
 <td>0</td>
 <td><a
 href="guides/IHERALD.md"><code>docs/guides/IHERALD.md</code></a></td>

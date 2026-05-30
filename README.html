@@ -530,8 +530,11 @@ href="docs/guides/RHERALD.md"><code>docs/guides/RHERALD.md</code></a></td>
 </tr>
 <tr>
 <td><code>iherald</code></td>
-<td>Incident Herald — <code>serve</code>; <code>/v1/webhooks/page</code>
-is an honest 501 stub pending HRD-024</td>
+<td>Incident Herald — <code>serve</code>;
+<code>POST /v1/webhooks/page</code> is a LIVE JWT-gated escalation
+handler (drives the bindings Pipeline → emits the escalation CloudEvent
+→ 202 + Receipt; third-party pager egress is a follow-up
+subscriber)</td>
 <td><a
 href="docs/guides/IHERALD.md"><code>docs/guides/IHERALD.md</code></a></td>
 </tr>

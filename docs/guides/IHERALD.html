@@ -131,14 +131,17 @@
 <td>Status summary</td>
 <td>Nano-detail operator reference for <code>iherald</code> (Incident
 Herald) — a serving flavor (DefaultPort=24794). Documents
-<code>serve</code> and, honestly, that its only application route
-<code>POST /v1/webhooks/page</code> is currently a <strong>501
-stub</strong> (HRD-024 pending). ANTI-BLUFF: derived from the built
-<code>iherald</code> binary (<code>iherald --help</code>,
-<code>version --json</code>) + <code>commons/branding.go</code> +
-<code>iherald/internal/http/routes.go</code>. Per the §11.4.69
-anti-bluff posture, iherald serves an honest 501 + HRD pointer rather
-than a fake 200 stub — this guide states that plainly.</td>
+<code>serve</code> and its now-LIVE application route
+<code>POST /v1/webhooks/page</code> (HRD-024): a JWT-gated escalation
+handler driving the <code>iherald/internal/bindings</code> Pipeline →
+emit CloudEvent → persist state/audit → 202 + Receipt. ANTI-BLUFF:
+derived from the built <code>iherald</code> binary
+(<code>iherald --help</code>, <code>version --json</code>) +
+<code>commons/branding.go</code> +
+<code>iherald/internal/page/page.go</code>. Third-party pager egress
+(PagerDuty/Opsgenie) is a separate operator-credentialed subscriber —
+each Receipt discloses <code>pager_delivery</code>; no fake "pager
+notified" 200 (§11.4.69).</td>
 </tr>
 <tr>
 <td>Issues</td>
@@ -167,13 +170,19 @@ and the 501 paging stub</a></li>
 <p><code>iherald</code> is <strong>Incident Herald</strong> — flavor key
 <code>i</code>, prefix <code>IHR</code>, default serving port
 <strong>24794</strong>. Per <code>commons/branding.go</code> its mission
-is "Credential-leak page-out + operator-blocked escalation". It is
-intended to be the paging surface for incident escalation. As of this
-revision its HTTP plane is wired but the paging route itself is a
-<strong>501 stub</strong> awaiting HRD-024 — <code>iherald</code> is the
-most honest demonstration of Herald's anti-bluff posture: it returns a
-real <code>501 Not Implemented</code> + an HRD pointer rather than a
-fake <code>200</code>.</p>
+is "Credential-leak page-out + operator-blocked escalation". It is the
+paging surface for incident escalation. As of HRD-024 its
+<code>POST /v1/webhooks/page</code> route is <strong>LIVE</strong>: a
+JWT-gated handler that classifies the page through the
+<code>iherald/internal/bindings</code> escalation Pipeline, emits the
+<code>.credential.leak</code>/<code>.policy.violation</code> CloudEvent
+on the constitution bus, persists <code>constitution_state</code> +
+<code>constitution_audit</code>, and returns <code>202</code> + a
+Receipt. Actual outbound delivery to a third-party pager
+(PagerDuty/Opsgenie) is a separate operator-credentialed bus subscriber
+— every Receipt carries a <code>pager_delivery</code> disclosure note;
+no fake "pager notified" 200 is returned (the §11.4.69 anti-bluff
+posture).</p>
 <p>Build it:</p>
 <div class="sourceCode" id="cb1"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> build <span class="at">-o</span> /tmp/iherald ./iherald/cmd/iherald</span></code></pre></div>
@@ -213,15 +222,30 @@ port 24794. Like the other serving flavors it exposes the standard
 health/metrics surface (<code>/v1/healthz</code>,
 <code>/v1/readyz</code>, <code>/metrics</code>), and shares the
 <code>commons/cli</code> serve scaffold.</p>
-<p><strong>The one application route,
-<code>POST /v1/webhooks/page</code>, is a 501 stub.</strong> Per
-<code>iherald/internal/http/routes.go</code> the route is registered
-with <code>HRD: "HRD-024"</code> and returns an honest
-<code>501 Not Implemented</code> + an HRD pointer. The package comment
-states the rationale directly: an honest 501 + HRD pointer beats a 200
-stub under the §11.4.69 anti-bluff posture. The live paging integration
-(the <code>/v1/webhooks/page</code> handler body + the §43 escalation
-command bodies) is scope-locked to the HRD-024 follow-ups.</p>
+<p><strong>The application route <code>POST /v1/webhooks/page</code> is
+LIVE (HRD-024).</strong> Per <code>iherald/internal/page/page.go</code>
+it is a JWT+tenant-gated handler (via
+<code>commons_auth.GinMiddleware</code>) that accepts a page webhook
+body (<code>rule_id</code>, <code>subject_kind</code>,
+<code>subject_id</code>, optional <code>operator_id</code>), classifies
+it through the matching <code>iherald/internal/bindings</code>
+escalation rule (§11.4.10 credential-leak page-out, §11.4.21
+operator-blocked, §11.4.66 blocker-clarification, §18.8
+incident-severity), emits the
+<code>.credential.leak</code>/<code>.policy.violation</code> CloudEvent
+on the constitution bus, persists <code>constitution_state</code> +
+<code>constitution_audit</code>, and returns <code>202</code> + a
+Receipt (<code>decision</code>, <code>mode</code>,
+<code>escalation</code>, <code>emitted</code>, <code>audited</code>,
+<code>changed</code>). Malformed/unknown-rule bodies return
+<code>400</code> with an <code>event_parser:</code>-tagged error; an
+<code>operator_id</code> outside the <code>HERALD_OPERATOR_IDS</code>
+allow-list (when configured) returns <code>403</code> for the
+operator-gated rules. <strong>Honest follow-up:</strong> outbound
+delivery to a third-party pager (PagerDuty Events API / Opsgenie) is a
+separate operator-credentialed bus subscriber — the emitted event IS the
+in-Herald page-out; each Receipt carries a <code>pager_delivery</code>
+disclosure. No fake 200.</p>
 <div class="sourceCode" id="cb3"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">iherald</span> serve <span class="at">--http-port</span> 24794</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co"># POST /v1/webhooks/page  →  501 Not Implemented  (HRD-024 pending)</span></span></code></pre></div>
@@ -239,7 +263,8 @@ written.</p>
 <li>Branding: <code>commons/branding.go</code> (flavor <code>i</code>,
 DefaultPort=24794).</li>
 <li>Integration: <code>docs/INTEGRATION.md</code> §1/§10 (iherald row —
-<code>POST /v1/webhooks/page</code> 501 stub, HRD-024 pending).</li>
+<code>POST /v1/webhooks/page</code> LIVE escalation handler,
+HRD-024).</li>
 <li>Open work: HRD-024 (the live paging handler + §43 escalation command
 bodies).</li>
 <li>Companion flavor guides:

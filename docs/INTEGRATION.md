@@ -52,7 +52,7 @@ Herald ships as **eight flavor binaries** (Wave 2 r1 seeded six; `qaherald` adde
 | `pherald` | 24791 | **Project Herald** — the event ingest path. `POST /v1/events` accepts CloudEvents and routes them through the §32 7-stage Runner (parse → idempotency → tenant → policy → subscriber fan-out → channel dispatch → outcome record). |
 | `sherald` | 24793 | **System Herald** — host-safety daemon. `GET /v1/safety_state` returns process-local counters (open events, mem%, last destructive-op log). §43 commands wrap `rm` / `git-reset` / `git-push-force` with prerequisite checks. |
 | `cherald` | 24792 | **Constitution Herald** — policy evaluator. `GET /v1/compliance` returns paginated `constitution_state` rows (the audit trail of every policy decision). §43 commands include creds-scan, docs-sync, composite-gate. |
-| `iherald` | 24794 | **Incident Herald** — credential-leak page-out + operator-blocked escalation. `POST /v1/webhooks/page` (currently a 501 stub awaiting HRD-024). |
+| `iherald` | 24794 | **Incident Herald** — credential-leak page-out + operator-blocked escalation. `POST /v1/webhooks/page` is LIVE (HRD-024): JWT-gated, drives the escalation bindings Pipeline → emits the `.credential.leak`/`.policy.violation` CloudEvent + persists state/audit → 202 + Receipt. Third-party pager egress (PagerDuty/Opsgenie) is a follow-up subscriber. |
 | `bherald` | — (CLI-only) | **Build Herald** — CI/test bindings: evidence-capture, test-tier-verify, gate-retest. |
 | `rherald` | — (CLI-only) | **Release Herald** — tag-mirror, changelog-generate, gate-retest. |
 | `scherald` | — (CLI-only) | **Scheduled-audit Herald** — periodic Status.md sweep + compliance digest. |
@@ -362,7 +362,7 @@ Each flavor has its own `cmd/<flavor>/main.go` consuming `commons/cli/`. They're
 | pherald | 24791 | `POST /v1/events` (live — Wave 3b) | 6 (HRD-029/030/043/044/049/053) | [`docs/guides/PHERALD.md`](guides/PHERALD.md) |
 | sherald | 24793 | `GET /v1/safety_state` (live — Wave 3a) | 5 (HRD-033/034/040/046/056) | [`docs/guides/SHERALD.md`](guides/SHERALD.md) |
 | cherald | 24792 | `GET /v1/compliance` (live — Wave 3a) | 11 (HRD-036..039,042,048,050..052,054,055) | [`docs/guides/CHERALD.md`](guides/CHERALD.md) |
-| iherald | 24794 | `POST /v1/webhooks/page` (501 stub — HRD-024 pending) | 0 | [`docs/guides/IHERALD.md`](guides/IHERALD.md) |
+| iherald | 24794 | `POST /v1/webhooks/page` (LIVE — JWT-gated escalation handler, HRD-024) | 0 | [`docs/guides/IHERALD.md`](guides/IHERALD.md) |
 | bherald | n/a | (CLI-only) | 3 (HRD-035/041/045) | [`docs/guides/BHERALD.md`](guides/BHERALD.md) |
 | rherald | n/a | (CLI-only) | 3 (HRD-031/032/045) | [`docs/guides/RHERALD.md`](guides/RHERALD.md) |
 | scherald | n/a | (CLI-only) | 1 (HRD-047) | [`docs/guides/SCHERALD.md`](guides/SCHERALD.md) |
