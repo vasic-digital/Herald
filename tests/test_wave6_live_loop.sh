@@ -2,6 +2,19 @@
 #
 # Wave 6 closed-loop e2e — §107 watershed for the inbound runtime.
 #
+# ┌──────────────────────────────────────────────────────────────────────┐
+# │ §11.4.90 OBSOLETE-CANDIDATE — Reason=superseded-by-later-mandate.     │
+# │ Since: 2026-05-30. Superseding-item: TestMTProto_Wave6_Autonomous-    │
+# │ ClosedLoop (qaherald/internal/lifecycle/mtproto_wave6_loop_test.go;   │
+# │ e2e_bluff_hunt invariant E136). This script is the legacy ATTENDED    │
+# │ driver: it polls getUpdates 60s for a HUMAN-typed inbound message,    │
+# │ which is a §11.4.98 full-automation-anti-bluff NON-COMPLIANT pattern  │
+# │ (a test that cannot run unattended / in CI). It is retained only for  │
+# │ manual diagnosis behind the HERALD_W6_LIVE_LOOP=1 opt-in gate below.  │
+# │ Triple-check evidence: grep TestMTProto_Wave6_AutonomousClosedLoop in │
+# │ qaherald/internal/lifecycle/ + E136 in scripts/e2e_bluff_hunt.sh.     │
+# └──────────────────────────────────────────────────────────────────────┘
+#
 # Flow (per operator architecture mandate 2026-05-22):
 #   1. Subscriber (operator) types a message in the configured Telegram chat
 #   2. pherald listen polls getUpdates, filters bot-self, dispatches to CC
@@ -22,6 +35,23 @@ cd "${REPO_ROOT}"
 
 skip_with_reason() { echo "SKIP: $1"; exit 0; }
 fail() { echo "FAIL: $*"; exit 1; }
+
+# --- §11.4.98 full-automation opt-in gate ---------------------------------
+# This ATTENDED test polls getUpdates for 60s for a HUMAN-typed inbound
+# message (line ~54). That is a §11.4.98 NON-COMPLIANT pattern: it cannot
+# run unattended / in CI, so an unattended invocation would always FAIL with
+# a spurious "no subscriber-typed message observed" — a §11.4 false-FAIL,
+# not a real-feature failure. The autonomous, fully-driven replacement is
+# TestMTProto_Wave6_AutonomousClosedLoop (e2e_bluff_hunt invariant E136),
+# which injects the inbound side via an MTProto user-client (no human typing).
+# Matches the existing scripts/e2e_bluff_hunt.sh E70 gate convention exactly.
+if [ "${HERALD_W6_LIVE_LOOP:-}" != "1" ]; then
+  echo "SKIP: ATTENDED test — superseded by TestMTProto_Wave6_AutonomousClosedLoop (E136)."
+  echo "      This script polls getUpdates 60s for a human-typed message and cannot run"
+  echo "      unattended (§11.4.98). Set HERALD_W6_LIVE_LOOP=1 to run the manual version."
+  echo "      Autonomous replacement: qaherald/internal/lifecycle/mtproto_wave6_loop_test.go"
+  exit 0
+fi
 
 # --- Pre-flight gates ---
 [ -n "${HERALD_TGRAM_BOT_TOKEN:-}" ]  || skip_with_reason "HERALD_TGRAM_BOT_TOKEN unset"

@@ -27,6 +27,15 @@ import (
 // the workdir MUST be the directory the session was created in. The
 // operator supplies workdir + UUID via env vars; the test cleans up
 // the anchor file it writes there.
+//
+// §11.4.98 rule-2 (UUID-collision safety): the test MUST NOT `claude
+// --resume` an arbitrary operator-supplied session UUID, because if it
+// collides with the session the dev conductor is currently driving,
+// claude silently exits -1 (Herald 2026-05-28 lesson). Therefore this
+// test requires a DEDICATED, test-only session via
+// HERALD_CLAUDE_TEST_SESSION_UUID (the legacy HERALD_CLAUDE_SESSION_UUID
+// is no longer accepted) and HARD-FAILS if that UUID equals the
+// conductor's live anchored session for this workdir/project.
 func TestDispatch_LiveClaudeInvocation(t *testing.T) {
 	binary := os.Getenv("HERALD_CLAUDE_BIN")
 	if binary == "" {
@@ -39,13 +48,20 @@ func TestDispatch_LiveClaudeInvocation(t *testing.T) {
 	if projectName == "" {
 		t.Skipf("skip: hardware_not_present — HERALD_CLAUDE_PROJECT_NAME absent per §11.4.3")
 	}
-	sessionUUIDStr := os.Getenv("HERALD_CLAUDE_SESSION_UUID")
-	if sessionUUIDStr == "" {
-		t.Skipf("skip: hardware_not_present — HERALD_CLAUDE_SESSION_UUID absent per §11.4.3 (claude --resume needs an existing session for the workdir)")
+	// §11.4.98 rule-2: a DEDICATED test-only session UUID is mandatory.
+	// We deliberately do NOT accept HERALD_CLAUDE_SESSION_UUID anymore —
+	// resuming an arbitrary operator-supplied UUID risks colliding with
+	// the conductor's live session (silent claude exit -1).
+	if os.Getenv("HERALD_CLAUDE_SESSION_UUID") != "" {
+		t.Fatalf("HERALD_CLAUDE_SESSION_UUID is rejected per §11.4.98 rule-2 — it risks colliding with the dev conductor's live session. Use HERALD_CLAUDE_TEST_SESSION_UUID with a DEDICATED test-only session instead.")
 	}
-	sessionUUID, err := uuid.Parse(sessionUUIDStr)
+	testSessionStr := os.Getenv("HERALD_CLAUDE_TEST_SESSION_UUID")
+	if testSessionStr == "" {
+		t.Skipf("skip: hardware_not_present — HERALD_CLAUDE_TEST_SESSION_UUID absent per §11.4.3 (claude --resume needs a DEDICATED test-only session, distinct from any conductor session, per §11.4.98 rule-2)")
+	}
+	sessionUUID, err := uuid.Parse(testSessionStr)
 	if err != nil {
-		t.Fatalf("HERALD_CLAUDE_SESSION_UUID %q is not a valid UUID: %v", sessionUUIDStr, err)
+		t.Fatalf("HERALD_CLAUDE_TEST_SESSION_UUID %q is not a valid UUID: %v", testSessionStr, err)
 	}
 
 	workdir := os.Getenv("HERALD_CLAUDE_WORKDIR")
@@ -59,6 +75,13 @@ func TestDispatch_LiveClaudeInvocation(t *testing.T) {
 	d, err := New(binary, workdir, projectName)
 	if err != nil {
 		t.Fatalf("New: %v", err)
+	}
+	// §11.4.98 rule-2 collision guard: if the conductor already anchored a
+	// live session for this workdir/project, the test session UUID MUST
+	// differ from it. Resuming the conductor's UUID would cause the silent
+	// exit -1 collision this rule exists to prevent.
+	if conductorUUID, _, rerr := d.ResolveSession(); rerr == nil && conductorUUID != uuid.Nil && conductorUUID == sessionUUID {
+		t.Fatalf("HERALD_CLAUDE_TEST_SESSION_UUID %s collides with the conductor's live anchored session for workdir=%q project=%q — §11.4.98 rule-2 forbids resuming it (silent claude exit -1). Use a dedicated test-only session UUID.", sessionUUID, workdir, projectName)
 	}
 	_, anchor, _ := d.ResolveSession()
 	if err := d.PersistSession(sessionUUID, anchor); err != nil {

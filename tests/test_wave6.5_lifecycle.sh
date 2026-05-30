@@ -43,7 +43,14 @@ cd "${REPO_ROOT}"
 skip_with_reason() { echo "SKIP test_wave6.5_lifecycle.sh — $1"; exit 0; }
 fail() { echo "FAIL: $*" >&2; exit 1; }
 
-# --- Mode selection: --manual flag OR HERALD_LIFECYCLE_MANUAL=1 ---
+# --- Mode selection: --manual flag OR HERALD_W65_MANUAL=1 / HERALD_LIFECYCLE_MANUAL=1 ---
+# The DEFAULT (no flag) path is the fully-automated `qaherald lifecycle`
+# driver — the §11.4.98-compliant CI path (no human typing). The manual
+# narrate/read path (S1-S15 "Press ENTER", "Attach a photo", "Send a voice
+# message") is REACHABLE ONLY behind an explicit opt-in below; it is a
+# §11.4.98 NON-COMPLIANT ATTENDED path retained for hands-on diagnosis.
+# HERALD_W65_MANUAL is the canonical opt-in; HERALD_LIFECYCLE_MANUAL is
+# kept as a back-compat alias.
 MANUAL_MODE=0
 for arg in "$@"; do
   case "${arg}" in
@@ -51,6 +58,7 @@ for arg in "$@"; do
     *) ;;
   esac
 done
+[ "${HERALD_W65_MANUAL:-0}" = "1" ]      && MANUAL_MODE=1
 [ "${HERALD_LIFECYCLE_MANUAL:-0}" = "1" ] && MANUAL_MODE=1
 
 # --- Pre-flight env gates common to BOTH modes (skip per §11.4.5) ---
@@ -149,10 +157,20 @@ if [ "${MANUAL_MODE}" != "1" ]; then
 fi
 
 # ====================================================================
-# MANUAL MODE (--manual / HERALD_LIFECYCLE_MANUAL=1) — legacy
-# operator-typing UX. Everything below is the original prompt-based
-# driver, preserved verbatim.
+# MANUAL MODE (--manual / HERALD_W65_MANUAL=1 / HERALD_LIFECYCLE_MANUAL=1)
+# — legacy operator-typing UX. Everything below is the original
+# prompt-based driver, preserved verbatim.
 # ====================================================================
+echo ""
+echo "################################################################"
+echo "# §11.4.98 NON-CI ATTENDED PATH — NOT for automated/CI runs.    #"
+echo "# This path uses interactive 'read' (Press ENTER / Attach a     #"
+echo "# photo / Send a voice message) and CANNOT run unattended.      #"
+echo "# CI MUST use the default automated path (qaherald lifecycle),  #"
+echo "# whose autonomous equivalent is TestMTProto_Wave65_Lifecycle-  #"
+echo "# Autonomous (qaherald/internal/lifecycle/). You opted in via    #"
+echo "# --manual / HERALD_W65_MANUAL=1 / HERALD_LIFECYCLE_MANUAL=1.    #"
+echo "################################################################"
 echo "[w6.5-lifecycle] manual mode — operator drives each scenario by typing into Telegram"
 
 # --- Snapshot docs/Issues.md + docs/Fixed.md BEFORE the run ---

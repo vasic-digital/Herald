@@ -27,7 +27,21 @@ func (h handlerFunc) Handle(ctx context.Context, ev commons.InboundEvent) error 
 // but never produced an update, OR the handler dispatch was wired to
 // nothing). Asserting ≥1 invocation proves the loop actually pulled a real
 // update produced by a human.
+//
+// §11.4.98 NON-COMPLIANT (ATTENDED): this test needs the operator to
+// hand-send a message within a 60s window — it cannot run unattended / in
+// CI. Its fully-automated, §11.4.98-COMPLIANT replacement is
+// TestMTProto_Subscribe_AutonomousRoundTrip
+// (qaherald/internal/lifecycle/mtproto_subscribe_test.go), which injects
+// the inbound message via an MTProto user-client (no human typing). This
+// body is RETAINED for manual diagnosis only, behind the
+// HERALD_TGRAM_MANUAL=1 opt-in gate below.
 func TestSubscribe_LiveBotAPI(t *testing.T) {
+	if os.Getenv("HERALD_TGRAM_MANUAL") != "1" {
+		t.Skipf("skip: §11.4.98 ATTENDED test — superseded by TestMTProto_Subscribe_AutonomousRoundTrip " +
+			"(qaherald/internal/lifecycle/mtproto_subscribe_test.go). This test polls 60s for a human-typed " +
+			"message and cannot run unattended. Set HERALD_TGRAM_MANUAL=1 to run the manual version.")
+	}
 	token := os.Getenv("HERALD_TGRAM_BOT_TOKEN")
 	chatID := os.Getenv("HERALD_TGRAM_CHAT_ID")
 	if token == "" || chatID == "" {
