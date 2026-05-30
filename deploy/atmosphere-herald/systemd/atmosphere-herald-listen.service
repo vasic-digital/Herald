@@ -1,0 +1,44 @@
+# systemd user unit — ATMOSphere↔Herald INBOUND daemon (HRD-152 / HRD-157).
+#
+# `pherald listen` runs the Telegram getUpdates long-poll, dispatches every
+# operator message to Claude Code, parses the <<<HERALD-REPLY>>> action, and —
+# for item.update / item.delete / investigation.start CONFIRM flows — mutates
+# the shared workable-items SQLite SSoT via --db. This is the Telegram → CRUD
+# direction.
+#
+# This file is a TEMPLATE: install.sh copies it to
+#   ~/.config/systemd/user/atmosphere-herald-listen.service
+# substituting @HERALD_HOME@ / @PHERALD_BIN@ / @ENV_FILE@ / @WORKABLE_DB@ /
+# @DOCS_DIR@ with the resolved deployment paths. Do NOT edit the installed copy
+# by hand — re-run install.sh.
+#
+# Run as a user service for the same reasons as the watch unit (HOME, no root).
+
+[Unit]
+Description=ATMOSphere Herald — pherald listen (inbound Telegram->CRUD)
+Documentation=file://@HERALD_HOME@/docs/guides/ATMOSPHERE_DAEMON_DEPLOY.md
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=@HERALD_HOME@
+EnvironmentFile=-@ENV_FILE@
+# --db backs the item.update/item.delete/CONFIRM mutation actions with a real
+# RepoMutator over the SSoT (HRD-152). --docs-dir points at the Issues.md /
+# Fixed.md trackers the issue.open + Done:/Reopen: fast-paths read; pherald
+# listen REFUSES to boot if @DOCS_DIR@/Issues.md is absent (§107 fail-loud).
+# A qa-out-dir captures the bidirectional transcript per §107.x; install.sh
+# points it at a per-boot timestamped dir under @HERALD_HOME@/docs/qa/.
+ExecStart=@PHERALD_BIN@ listen --db @WORKABLE_DB@ --docs-dir @DOCS_DIR@ --qa-out-dir @QA_OUT_DIR@
+KillSignal=SIGTERM
+TimeoutStopSec=15
+Restart=on-failure
+RestartSec=5
+StartLimitIntervalSec=120
+StartLimitBurst=6
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=atmosphere-herald-listen
+
+[Install]
+WantedBy=default.target

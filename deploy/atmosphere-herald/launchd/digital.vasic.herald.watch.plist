@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  launchd user agent — ATMOSphere Herald `pherald watch` (outbound SSoT->notify).
+
+  macOS alternative to the systemd watch unit. install.sh selects systemd on
+  Linux and launchd on Darwin automatically. This file is a TEMPLATE: install.sh
+  substitutes @PHERALD_BIN@ / @HERALD_HOME@ / @WORKABLE_DB@ / @ENV_FILE@ and
+  copies it to ~/Library/LaunchAgents/digital.vasic.herald.watch.plist, then
+  `launchctl bootstrap`s it.
+
+  launchd has no native EnvironmentFile; install.sh sources @ENV_FILE@ and bakes
+  the resolved HERALD_* values into <EnvironmentVariables> at install time. Re-run
+  install.sh after any .env change so the baked values stay current.
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>digital.vasic.herald.watch</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>@PHERALD_BIN@</string>
+        <string>watch</string>
+        <string>--db</string>
+        <string>@WORKABLE_DB@</string>
+        <string>--poll</string>
+        <string>1s</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>@HERALD_HOME@</string>
+    <!-- @ENVIRONMENT_VARIABLES@ is replaced by install.sh with the resolved
+         <key>HERALD_…</key><string>…</string> pairs sourced from @ENV_FILE@. -->
+    <key>EnvironmentVariables</key>
+    <dict>
+@ENVIRONMENT_VARIABLES@
+    </dict>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <dict>
+        <key>SuccessfulExit</key>
+        <false/>
+    </dict>
+    <key>ThrottleInterval</key>
+    <integer>5</integer>
+    <key>StandardOutPath</key>
+    <string>@HERALD_HOME@/qa-results/atmosphere-herald-watch.out.log</string>
+    <key>StandardErrorPath</key>
+    <string>@HERALD_HOME@/qa-results/atmosphere-herald-watch.err.log</string>
+</dict>
+</plist>

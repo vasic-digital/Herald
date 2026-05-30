@@ -1,0 +1,51 @@
+# systemd user unit — ATMOSphere↔Herald OUTBOUND daemon (HRD-153 / HRD-157).
+#
+# `pherald watch` opens the shared workable-items SQLite SSoT, watches it (+ the
+# Markdown trackers) and fans every change out to the configured notification
+# channel(s). This is the SSoT → Telegram direction.
+#
+# This file is a TEMPLATE: install.sh copies it to
+#   ~/.config/systemd/user/atmosphere-herald-watch.service
+# substituting @HERALD_HOME@ / @PHERALD_BIN@ / @ENV_FILE@ / @WORKABLE_DB@ with
+# the resolved deployment paths. Do NOT edit the installed copy by hand — re-run
+# install.sh so the template stays the single source of truth.
+#
+# Run as a *user* service (systemctl --user) so no root is required and the
+# daemon inherits the operator's $HOME (~/.herald/inbox, ~/.config/herald/...).
+# Enable lingering once (`loginctl enable-linger <user>`) so it survives logout;
+# install.sh does this for you.
+
+[Unit]
+Description=ATMOSphere Herald — pherald watch (outbound SSoT->notify)
+Documentation=file://@HERALD_HOME@/docs/guides/ATMOSPHERE_DAEMON_DEPLOY.md
+# Network-online.target is a user-target no-op on most systems, but harmless;
+# the real readiness gate is the channel getMe call inside pherald itself.
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=@HERALD_HOME@
+# EnvironmentFile carries the credentials (bot token, chat id, channels) and the
+# HERALD_PROJECT_NAME=ATMOSphere pin. "-" prefix = tolerate absence at parse
+# time; install.sh validates it is present + non-empty before enabling.
+EnvironmentFile=-@ENV_FILE@
+# --db pins the workable-items SSoT explicitly so the unit does not depend on
+# the process CWD default. --poll 1s keeps the WAL-poll + safety-net reconcile
+# tight enough that a mutation reaches Telegram within ~1-2s.
+ExecStart=@PHERALD_BIN@ watch --db @WORKABLE_DB@ --poll 1s
+# Clean SIGTERM handling: pherald watch cancels the loop via signal.NotifyContext.
+KillSignal=SIGTERM
+TimeoutStopSec=15
+# Resilience: restart on any non-clean exit, throttled so a hard-failing config
+# (e.g. revoked token) does not hot-loop. StartLimit caps the burst.
+Restart=on-failure
+RestartSec=5
+StartLimitIntervalSec=120
+StartLimitBurst=6
+# journald is the log sink: `journalctl --user -u atmosphere-herald-watch -f`.
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=atmosphere-herald-watch
+
+[Install]
+WantedBy=default.target

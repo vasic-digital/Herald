@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  launchd user agent — ATMOSphere Herald `pherald listen` (inbound Telegram->CRUD).
+
+  macOS alternative to the systemd listen unit. See the watch plist header for
+  the EnvironmentVariables baking note. install.sh substitutes @PHERALD_BIN@ /
+  @HERALD_HOME@ / @WORKABLE_DB@ / @DOCS_DIR@ / @QA_OUT_DIR@ / @ENV_FILE@.
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>digital.vasic.herald.listen</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>@PHERALD_BIN@</string>
+        <string>listen</string>
+        <string>--db</string>
+        <string>@WORKABLE_DB@</string>
+        <string>--docs-dir</string>
+        <string>@DOCS_DIR@</string>
+        <string>--qa-out-dir</string>
+        <string>@QA_OUT_DIR@</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>@HERALD_HOME@</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+@ENVIRONMENT_VARIABLES@
+    </dict>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <dict>
+        <key>SuccessfulExit</key>
+        <false/>
+    </dict>
+    <key>ThrottleInterval</key>
+    <integer>5</integer>
+    <key>StandardOutPath</key>
+    <string>@HERALD_HOME@/qa-results/atmosphere-herald-listen.out.log</string>
+    <key>StandardErrorPath</key>
+    <string>@HERALD_HOME@/qa-results/atmosphere-herald-listen.err.log</string>
+</dict>
+</plist>
