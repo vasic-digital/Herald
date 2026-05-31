@@ -1,0 +1,44 @@
+# Docs Chain FLEET rollout — captured evidence (20260531T1301Z)
+
+## Corpus: 66 docs / 263 nodes / 197 edges / 33 transforms (11 dirs)
+Per-directory breakdown:
+  19 docs/guides
+  14 docs/research/protocols
+   9 docs/guides/messengers
+   8 docs
+   6 docs/guides/dispatchers
+   3 docs/catalogue-checks
+   3 .
+   1 docs/specs/mvp
+   1 docs/requirements/blockers
+   1 docs/design
+   1 docs/audits
+
+## doctor
+context "herald-docs" (.docs_chain/contexts/herald-docs.yaml)
+  parse + graph: OK (263 nodes, 197 edges)
+  transforms: OK (all required tools present)
+exit=0
+
+## sync (cold; state.json removed first) — exit 0
+herald-docs              applied: committed [197 nodes]
+evidence: qa-results/docs_chain/20260531T080744Z
+
+## verify x3 (determinism)
+run 1: herald-docs              in-sync (exit 0)
+run 2: herald-docs              in-sync (exit 0)
+run 3: herald-docs              in-sync (exit 0)
+
+## Per-doc safety summary
+- HTML byte-IDENTICAL vs committed: 66 / 66 (zero drift)
+- HTML CHANGED: 0
+- logo <img herald_logo_square*.png> present: 66 / 66
+- print.css referenced: 66 / 66
+- PDF valid (file=PDF document, >1KB): 66 / 66
+- DOCX valid zip (word/document.xml): 65 / 65 wired (1 NA: CONSTITUTION_INHERITANCE has no committed docx leg)
+
+## Working-tree rebaseline (one-time, deterministic)
+- html changed: 0
+- pdf changed:  20 (byte-delta -1..-85: SOURCE_DATE_EPOCH + metadata determinism)
+- docx changed: 64 (byte-delta -4..-6: SOURCE_DATE_EPOCH timestamp normalization)
+- spot-check docs/guides/PHERALD.docx: valid word/document.xml + expected text present
