@@ -47,7 +47,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>22</td>
+<td>23</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -63,7 +63,11 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td>**r22: §11.4.90 + §11.4.19 atomic Obsolete→Fixed migration —
+<td>**r23: §11.4.19 received HRD-117 (Wave 7 T8 spec-doc) from Issues.md
+— closed because its deliverable is verified present in active spec V4
+(§11.0/§32.2/§43; doc-only, product code already Fixed under
+HRD-116/118/119/120/121). Inserted after the HRD-116 Wave-7 cluster row.
+Prior r22: §11.4.90 + §11.4.19 atomic Obsolete→Fixed migration —
 received the 4 <code>Obsolete</code>-status HRDs from
 <code>Issues.md</code>: HRD-143 (<code>TestSubscribe_LiveBotAPI</code>
 legacy attended live test, superseded by §11.4.98 + HRD-140's MTProto
@@ -1233,6 +1237,29 @@ mirrors <code>qaherald/internal/messenger/telegram.go</code>; evidence
 Slack Web API endpoints via raw HTTP (NOT slack-go SDK — different layer
 from HRD-115; offset bookkeeping is qaherald-controlled;
 2026-05-28).</td>
+</tr>
+<tr>
+<td>HRD-117</td>
+<td>task</td>
+<td>low</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
+<td>Wave 7 T8 — spec V3 r12→r13: §11.0 <code>channels.Channel</code>
+inbound-runtime extension note + §32.2 Telegram/Slack marked LIVE + §43
+multi-channel <code>pherald listen</code> row. Documents the Wave 7
+framework + Slack adapter (T6) + qaherald Slack client (T7) shipped
+reality — spec catches up to shipped code (no new product code in
+T8).</td>
+<td>2026-05-31</td>
+<td><code>d5107af</code> (carried into spec V4)</td>
+<td>CLOSED 2026-05-31: deliverable VERIFIED PRESENT in active spec V4
+§11.0 (line 1548 "Wave 7 inbound-runtime extension" note +
+<code>Channel.Subscribe</code>) + §32.2 Telegram/Slack LIVE + §43
+multi-channel <code>pherald listen</code> row; Wave-7 product code
+shipped under HRD-116/118/119/120/121 (Fixed). spec V3 r13
+§11.0/§32.2/§43;
+docs/superpowers/plans/2026-05-27-wave7-generic-messenger.md §T8;
+Catalogue-Check: n/a (doc-only).</td>
 </tr>
 <tr>
 <td>HRD-118</td>
