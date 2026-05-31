@@ -112,7 +112,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>14</td>
+<td>15</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -128,7 +128,20 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td>r14: propagated the intent-recognition mandate (operator 2026-05-31)
+<td>r15: synced the four spec pointers in this file (ToC +
+project-status bullet + spec-change-rule heading + rule body) from the
+now-archived <code>docs/specs/mvp/specification.V3.md</code> to the
+active <code>docs/specs/mvp/specification.V4.md</code>. V4 superseded V3
+on 2026-05-31 (V3 archived under <code>docs/specs/mvp/archive/</code>);
+the V4-creation stream updated CLAUDE.md/README/Status.md but missed
+AGENTS.md, leaving broken pointers to a moved file. Pure path-sync — no
+rule semantics changed; inheritance gate 15/15 PASS (I7b spec-change
+anchor intact). Companion fixes same effort: cherald
+<code>spec-version-check</code> default V3→V4
+(<code>checkops_cmds.go</code>, verified on the real binary) + its
+guide, <code>Status_Summary.md</code> active_spec drift (V3→V4, +V3
+archived), HRD-092 catalogue-check pointed at the archived V3. Prior
+r14: propagated the intent-recognition mandate (operator 2026-05-31)
 into the agent-rule cluster as a short-form restatement — new "Intent
 recognition &amp; clarification" section + ToC entry — citing the
 authoritative contract <code>docs/design/INTENT_RECOGNITION.md</code>
@@ -205,7 +218,7 @@ inheritance-gate invariant I8b.</td>
 <td>R-14 (V2), V3-path-sync (V3 r3), Go-scaffold-status-update (V3 r4),
 §107 mandate restatement + I8b anchor (r5), Helix §11.4.85 + §11.4.87 +
 §11.4.88 propagation (r7), Helix §11.4.89–§11.4.94 propagation (r8),
-Helix §11.4.95–§11.4.97 propagation (r9)</td>
+Helix §11.4.95–§11.4.97 propagation (r9), spec-V4-path-sync (r15)</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
@@ -273,7 +286,7 @@ gate (run before any commit that touches root docs or
 <code>constitution/</code>)</a></li>
 <li><a
 href="#spec-change-rule-load-bearing-docsspecsmvpspecificationmd-specification-documents">Spec-change
-rule (load-bearing — <code>docs/specs/mvp/specification.V3.md</code>
+rule (load-bearing — <code>docs/specs/mvp/specification.V4.md</code>
 §"Specification documents")</a></li>
 <li><a
 href="#multi-host-mirror-convention-heralds-own-upstreams">Multi-host
@@ -333,7 +346,7 @@ repo contains:</p>
 <ul>
 <li><code>README.md</code> — mission, deployment model,
 constitution-inheritance contract, how to run.</li>
-<li><code>docs/specs/mvp/specification.V3.md</code> — MVP spec (section
+<li><code>docs/specs/mvp/specification.V4.md</code> — MVP spec (section
 headings only; substantive content TBD).</li>
 <li><code>docs/guides/HERALD_CONSTITUTION.md</code> — project-specific
 constitutional extensions.</li>
@@ -943,10 +956,10 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="
 <p>Both MUST return 0. If either fails, fix at root cause per
 Constitution §11.4.4 — never silently accept the FAIL.</p>
 <h3
-id="spec-change-rule-load-bearing--docsspecsmvpspecificationv3md-specification-documents">Spec-change
-rule (load-bearing — <code>docs/specs/mvp/specification.V3.md</code>
+id="spec-change-rule-load-bearing--docsspecsmvpspecificationv4md-specification-documents">Spec-change
+rule (load-bearing — <code>docs/specs/mvp/specification.V4.md</code>
 §"Specification documents")</h3>
-<p>Whenever <code>docs/specs/mvp/specification.V3.md</code> or any file
+<p>Whenever <code>docs/specs/mvp/specification.V4.md</code> or any file
 under <code>docs/specs/</code> (any depth) is modified,
 <strong>comprehensive planning and implementation of all changes is
 MANDATORY</strong> — agents may not edit the spec in isolation. This

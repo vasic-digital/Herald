@@ -291,7 +291,7 @@ func newSpecVersionCheckCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "spec-version-check",
 		Short: "Audit a spec doc's Revision header vs its git-modified state (§11.4.73)",
-		Long: "Observes a spec doc (--spec, default docs/specs/mvp/specification.V3.md) under " +
+		Long: "Observes a spec doc (--spec, default docs/specs/mvp/specification.V4.md) under " +
 			"--repo: whether its content has been MODIFIED in the working tree without its " +
 			"`Revision` header being bumped. When the doc is git-modified (or --modified is " +
 			"forced) but its committed Revision value still matches HEAD, that is §11.4.73 " +
@@ -305,7 +305,7 @@ func newSpecVersionCheckCmd() *cobra.Command {
 			}
 			spec := specFlag
 			if spec == "" {
-				spec = filepath.Join("docs", "specs", "mvp", "specification.V3.md")
+				spec = filepath.Join("docs", "specs", "mvp", "specification.V4.md")
 			}
 			specAbs := spec
 			if !filepath.IsAbs(specAbs) {
@@ -335,7 +335,7 @@ func newSpecVersionCheckCmd() *cobra.Command {
 		},
 	}
 	cmd.Flags().StringVar(&repoFlag, "repo", "", "repo dir to scope the check to (default: discovered from CWD)")
-	cmd.Flags().StringVar(&specFlag, "spec", "", "spec doc path relative to --repo (default: docs/specs/mvp/specification.V3.md)")
+	cmd.Flags().StringVar(&specFlag, "spec", "", "spec doc path relative to --repo (default: docs/specs/mvp/specification.V4.md)")
 	cmd.Flags().BoolVar(&modified, "modified", false, "force-treat the spec content as modified (test seam / non-git checkout)")
 	cmd.Flags().BoolVar(&emit, "emit", false, "also drive the §11.4.73 verdict as a real constitution event")
 	return cmd

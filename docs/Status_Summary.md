@@ -33,9 +33,9 @@ Herald is **pre-implementation**. Spec set is V1 → V2 (archived) → V3 (activ
 ```jsonc
 {
   "phase":              "pre-implementation",
-  "active_spec":        "docs/specs/mvp/specification.V3.md",
-  "archived_specs":     ["docs/specs/mvp/archive/specification.V1.md", "docs/specs/mvp/archive/specification.V2.md"],
-  "spec_revision":      3,
+  "active_spec":        "docs/specs/mvp/specification.V4.md",
+  "archived_specs":     ["docs/specs/mvp/archive/specification.V1.md", "docs/specs/mvp/archive/specification.V2.md", "docs/specs/mvp/archive/specification.V3.md"],
+  "spec_revision":      1,
   "spec_lines":         3900,
   "items_open":         0,
   "items_in_progress":  1,

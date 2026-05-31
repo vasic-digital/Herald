@@ -76,7 +76,7 @@ Wave 2 (r8) landed `commons/cli/` in commit range `7e0a614..37e348e`:
 - Paired §1.1 mutation gate: `tests/test_wave2_mutation_meta.sh` (4/4 PASS).
 - Inheritance gate: 15/15 PASS.
 
-See `docs/specs/mvp/specification.V3.md` §44.M for the full Wave 2 milestone evidence.
+See `docs/specs/mvp/archive/specification.V3.md` §44.M for the full Wave 2 milestone evidence (the §44.M content is preserved in the archived V3; the active spec is now V4).
 
 ## §5. Reproducibility
 

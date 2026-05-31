@@ -118,7 +118,7 @@ Observes a PR description (`--pr-body`, inline or `@file`) or a changed-files/di
 
 ### `spec-version-check`
 
-Observes a spec doc (`--spec`, default `docs/specs/mvp/specification.V3.md`): whether its content was modified in the working tree without its `Revision` header bumped. Modified-but-unbumped ⇒ §11.4.73 drift ⇒ FAIL. DETECT-only; exits non-zero on drift.
+Observes a spec doc (`--spec`, default `docs/specs/mvp/specification.V4.md`): whether its content was modified in the working tree without its `Revision` header bumped. Modified-but-unbumped ⇒ §11.4.73 drift ⇒ FAIL. DETECT-only; exits non-zero on drift.
 
 | Flag | Meaning |
 |---|---|
