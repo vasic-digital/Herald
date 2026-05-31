@@ -22,7 +22,7 @@ import (
 // this is set inside ParseReply, not at decode-time, so callers can
 // distinguish "missing action → defaulted" from "explicit action".
 type Reply struct {
-	Action string        `json:"action"` // "reply" (default) | "issue.open" | "event.emit" | "item.update" | "item.delete" | "investigation.start"
+	Action string        `json:"action"` // "reply" (default) | "issue.open" | "event.emit" | "item.update" | "item.delete" | "investigation.start" | "clarify"
 	Text   string        `json:"text"`   // body for action=reply
 	Issue  *IssuePayload `json:"issue,omitempty"`
 	Event  *EventPayload `json:"event,omitempty"`
@@ -31,6 +31,16 @@ type Reply struct {
 	ItemUpdate    *ItemUpdatePayload   `json:"item_update,omitempty"`
 	ItemDelete    *ItemDeletePayload   `json:"item_delete,omitempty"`
 	Investigation *InvestigationPayload `json:"investigation,omitempty"`
+
+	// Question is the precise clarifying question for action=clarify (TIER 3,
+	// docs/design/INTENT_RECOGNITION.md §3). The clarifyHandler sends a reply
+	// whose body is `@<sender-username> <Question>`, tagging the original
+	// sender (resolved via the IdentityResolver) and naming the candidate
+	// intents — the anti-annoyance guarantee that the user is never ignored
+	// and never has to learn syntax. The LLM is instructed to return
+	// action=clarify with a specific question rather than guess an action
+	// (§11.4.6 no-guessing: a wrong action is worse than a clarifying question).
+	Question string `json:"question,omitempty"`
 }
 
 // ItemUpdatePayload is the action=item.update payload. Fields holds the

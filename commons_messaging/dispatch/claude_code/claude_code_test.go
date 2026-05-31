@@ -314,6 +314,46 @@ func TestFormatEnvelopePreText_ActionGuidance(t *testing.T) {
 	}
 }
 
+// TestFormatEnvelope_IntentInferenceInstruction is the TIER 2 envelope check
+// (docs/design/INTENT_RECOGNITION.md §4): the rendered envelope MUST instruct
+// the LLM that users speak plain language (no command syntax), to map natural
+// language onto Herald's command set, and to return action=clarify with a
+// precise question rather than guess when the intent is not determinable. A
+// regression that drops this instruction would let the LLM silently guess
+// (§11.4.6 no-guessing violation) — this test bites.
+func TestFormatEnvelope_IntentInferenceInstruction(t *testing.T) {
+	d, _ := New("/bin/true", t.TempDir(), "Intent")
+	req := DispatchRequest{
+		InboundID:      "01HXYZ",
+		Sender:         "tgram:milos",
+		Channel:        commons.ChannelTelegram,
+		Classification: Classification{Type: "query", Criticality: "low", Confidence: 0.5},
+		UserMessage:    "do the ATM-9 thing",
+	}
+	out := d.FormatEnvelopeWithPreText(req, "tgram")
+
+	mustContain := []string{
+		"INTENT RECOGNITION",   // the instruction block header
+		"PLAIN LANGUAGE",       // users speak plain language
+		"action=clarify",       // the clarify fallback directive
+		"DO NOT guess",         // no-guessing
+		"investigation.start",  // command-set mapping is present
+		"\"action\":\"clarify\"", // the clarify JSON example
+	}
+	for _, s := range mustContain {
+		if !strings.Contains(out, s) {
+			t.Fatalf("intent-inference instruction missing %q in envelope:\n%s", s, out)
+		}
+	}
+
+	// The instruction appears BEFORE the structured dispatch marker.
+	instrIdx := strings.Index(out, "INTENT RECOGNITION")
+	markerIdx := strings.Index(out, "<<<HERALD-DISPATCH-v1>>>")
+	if instrIdx < 0 || markerIdx < 0 || instrIdx >= markerIdx {
+		t.Fatalf("ordering wrong: instrIdx=%d markerIdx=%d", instrIdx, markerIdx)
+	}
+}
+
 func TestFormatEnvelope_TaskVerbVariesByType(t *testing.T) {
 	d, _ := New("claude", t.TempDir(), "X")
 	for itemType, expect := range map[string]string{

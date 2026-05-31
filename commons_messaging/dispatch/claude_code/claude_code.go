@@ -322,12 +322,47 @@ func (d *Dispatcher) FormatEnvelopeWithPreText(req DispatchRequest, channelName 
 	pre.WriteString("Help/Status/Continue/Done/Reopen never reach you — fast-pathed in pherald.\n")
 	pre.WriteString("\n")
 
+	// TIER 2 intent-inference instruction (docs/design/INTENT_RECOGNITION.md
+	// §1/§4). The user speaks PLAIN LANGUAGE — there is NO command syntax and
+	// no "COMMAND:" prefix. Recognize Herald's command set from natural
+	// language and map to the right action. If you CANNOT determine the intent
+	// with confidence, return action=clarify with a PRECISE question naming the
+	// candidate intents — do NOT guess (§11.4.6: a wrong action is worse than a
+	// clarifying question).
+	pre.WriteString(intentInferenceInstruction)
+	pre.WriteString("\n")
+
 	pre.WriteString(suggestedActionLine(req.Classification.Type))
 	pre.WriteString("\n")
 
 	pre.WriteString(d.FormatEnvelope(req)) // existing structured block unchanged
 	return pre.String()
 }
+
+// intentInferenceInstruction is the TIER 2 envelope block
+// (docs/design/INTENT_RECOGNITION.md §4). It is additive to the existing
+// ACTION FORMAT GUIDANCE: it tells the LLM that users speak plain language, to
+// map natural language onto Herald's command set, and — crucially — to return
+// action=clarify with a precise question instead of guessing when the intent
+// is not confidently determinable.
+//
+// §107 anchor: TestFormatEnvelope_IntentInferenceInstruction asserts this block
+// (and the literal "action=clarify" token) appears in the rendered envelope, so
+// a regression that drops the instruction is caught.
+const intentInferenceInstruction = `INTENT RECOGNITION — the user speaks PLAIN LANGUAGE. There is NO command syntax
+and NO "COMMAND:" prefix. Recognize Herald's command set from natural language
+and map the message to the right action:
+  - "close ATM-N" / "mark ATM-N fixed|done|resolved"  → item.update (status)
+  - "set ATM-N to <status>" / "ATM-N is blocked"       → item.update (status)
+  - "assign ATM-N to @x" / "give ATM-N to @x"          → item.update (assigned_to)
+  - "open a bug: <title>" / "create a task: <title>"   → issue.open (type+title)
+  - "investigate ATM-N" / "look into ATM-N"            → investigation.start
+  - "status of ATM-N?" / "what's ATM-N?"               → reply (status query)
+If you CANNOT determine the intent with confidence, DO NOT guess. Return
+action=clarify with a PRECISE question naming the candidate intents, e.g.:
+  {"action":"clarify","question":"did you want to close ATM-9, reassign it, or just get its status?"}
+A wrong action is worse than a clarifying question (§11.4.6 no-guessing).
+`
 
 // suggestedActionLine emits a single line telling the LLM which action
 // to use for this specific message, derived deterministically from

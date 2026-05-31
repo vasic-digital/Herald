@@ -148,6 +148,14 @@ type Dispatcher struct {
 	resolver    commons.IdentityResolver
 	pending     *pendingStore
 
+	// recognizer is the TIER 1 deterministic command matcher
+	// (docs/design/INTENT_RECOGNITION.md §1/§2). Handle tries it BEFORE the
+	// LLM dispatch: on a confident match the action is built directly (no LLM
+	// round-trip); otherwise the existing Claude Code dispatch (Tier 2) runs,
+	// which may itself return action=clarify (Tier 3). Always non-nil — set
+	// in NewDispatcher.
+	recognizer *CommandRecognizer
+
 	// actions is the action→handler registry (WS-4 / HRD-152). The
 	// Wave 6 switch is refactored into this map so new actions are
 	// added by registration, not by growing a switch. Each handler
@@ -201,6 +209,7 @@ func NewDispatcher(cfg Config) (*Dispatcher, error) {
 		confirmTok:  confirmTok,
 		resolver:    cfg.Resolver,
 		pending:     newPendingStore(),
+		recognizer:  NewCommandRecognizer(),
 	}
 	d.actions = map[string]actionHandler{
 		"reply":               d.actReply,
@@ -209,6 +218,7 @@ func NewDispatcher(cfg Config) (*Dispatcher, error) {
 		"item.update":         d.actItemUpdate,
 		"item.delete":         d.actItemDelete,
 		"investigation.start": d.actInvestigationStart,
+		"clarify":             d.actClarify,
 	}
 	return d, nil
 }
@@ -264,6 +274,27 @@ func (d *Dispatcher) Handle(ctx context.Context, ev commons.InboundEvent) error 
 		}
 	}
 
+	replyToID, _ := extractReplyToMessageID(ev.Raw)
+	rt := ""
+	if replyToID > 0 {
+		rt = strconv.Itoa(replyToID)
+	}
+
+	// TIER 1 (docs/design/INTENT_RECOGNITION.md §1/§2): the deterministic
+	// CommandRecognizer is tried BEFORE the LLM dispatch. On a confident match
+	// we build the action directly and route it — skipping the LLM round-trip.
+	// A no-match falls through to the existing Claude Code dispatch (Tier 2),
+	// which may itself return action=clarify (Tier 3).
+	if action, fields, ok := d.recognizer.RecognizeCommand(ev.Body.Plain); ok {
+		reply := buildRecognizedReply(action, fields)
+		handler, known := d.actions[reply.Action]
+		if !known {
+			return fmt.Errorf("inbound: recognizer produced unknown action %q", reply.Action)
+		}
+		log.Printf("inbound recognized (tier1): action=%s (event=%s)", reply.Action, ev.EventID)
+		return handler(ctx, dispatchCtx{ev: ev, reply: reply, replyToID: rt})
+	}
+
 	req := CodeRequest{
 		InboundID:      ev.EventID,
 		Sender:         fmt.Sprintf("%s:%s", ev.Sender.Channel, ev.Sender.ChannelUserID),
@@ -285,11 +316,6 @@ func (d *Dispatcher) Handle(ctx context.Context, ev commons.InboundEvent) error 
 	handler, ok := d.actions[reply.Action]
 	if !ok {
 		return fmt.Errorf("inbound: unknown action %q", reply.Action)
-	}
-	replyToID, _ := extractReplyToMessageID(ev.Raw)
-	rt := ""
-	if replyToID > 0 {
-		rt = strconv.Itoa(replyToID)
 	}
 	return handler(ctx, dispatchCtx{ev: ev, reply: reply, replyToID: rt})
 }
@@ -449,6 +475,117 @@ func (d *Dispatcher) actInvestigationStart(ctx context.Context, dc dispatchCtx) 
 	}
 	log.Printf("inbound dispatched: investigation.start (event=%s topic=%q pending=%v)", dc.ev.EventID, inv.Topic, inv.ProposedAction != nil)
 	return nil
+}
+
+// defaultItemLocation is the workable-item location Tier 1 assumes when the
+// recognizer fast-paths an item.update / investigation against a bare ATM id —
+// open items live in the "Issues" tracker. (The LLM path supplies an explicit
+// location in its payload; Tier 1 cannot know it, so it defaults to the
+// primary open-items location.)
+const defaultItemLocation = "Issues"
+
+// buildRecognizedReply translates a TIER 1 recognizer result (action string +
+// fields map, from CommandRecognizer.RecognizeCommand) into the concrete Reply
+// the action handlers consume. The shape mirrors what ParseReply would have
+// produced from an LLM <<<HERALD-REPLY>>> payload, so the SAME handler routes
+// both Tier 1 and Tier 2 actions (no parallel routing path).
+func buildRecognizedReply(action string, fields map[string]string) *Reply {
+	r := &Reply{Action: action}
+	switch action {
+	case "item.update":
+		f := map[string]string{}
+		if s, ok := fields[cmdFieldStatus]; ok && s != "" {
+			f["status"] = s
+		}
+		if a, ok := fields[cmdFieldAssignedTo]; ok && a != "" {
+			f[fieldAssignedTo] = normalizeAt(a)
+		}
+		r.ItemUpdate = &ItemUpdatePayload{
+			AtmID:    fields[cmdFieldAtmID],
+			Location: defaultItemLocation,
+			Fields:   f,
+		}
+	case "issue.open":
+		r.Issue = &IssuePayload{
+			Type:  fields[cmdFieldType],
+			Title: fields[cmdFieldTitle],
+		}
+	case "investigation.start":
+		r.Investigation = &InvestigationPayload{
+			Topic: fields[cmdFieldAtmID],
+		}
+	case "reply":
+		// A recognized status query — answer is produced downstream; Tier 1
+		// only routes it to the reply sink with a short acknowledgement naming
+		// the item so the subscriber sees their query was understood.
+		atm := fields[cmdFieldAtmID]
+		r.Text = "Looking up the status of " + atm + "…"
+	}
+	return r
+}
+
+// actClarify implements TIER 3 (docs/design/INTENT_RECOGNITION.md §3): when
+// neither a Tier-1 command nor a confident Tier-2 intent could be determined,
+// the LLM returns action=clarify with a precise Question. This handler replies
+// to the original message (threaded) with a body of:
+//
+//	@<sender-username> <question>
+//
+// The sender is resolved to their per-channel @username via the §11.4.104
+// IdentityResolver — ResolveSender maps the inbound sender to a canonical
+// handle, then UsernameFor maps that handle to the @username on the originating
+// channel. When no alias is known (or no resolver is configured) it falls back
+// to the raw sender handle so the user is STILL tagged (never ignored, the
+// anti-annoyance guarantee).
+//
+// §107 anchor: the recording-sink E2E test asserts the captured reply body is
+// EXACTLY "@<sender> <question>" — proving the user is tagged + asked, not
+// silently dropped.
+func (d *Dispatcher) actClarify(ctx context.Context, dc dispatchCtx) error {
+	q := strings.TrimSpace(dc.reply.Question)
+	if q == "" {
+		return errors.New("inbound: action=clarify but reply.question is empty (a clarify with no question is a §107 bluff)")
+	}
+	tag := d.clarifyTag(dc.ev)
+	body := tag + " " + q
+	rcpt := recipientOf(dc.ev)
+	if _, err := d.reply.SendReply(ctx, rcpt, body, dc.replyToID, nil); err != nil {
+		return fmt.Errorf("inbound: clarify reply: %w", err)
+	}
+	log.Printf("inbound dispatched: clarify (event=%s tag=%s)", dc.ev.EventID, tag)
+	return nil
+}
+
+// clarifyTag resolves the originating sender to the @username we tag in the
+// clarify reply. Resolution order (§11.4.104 IdentityResolver):
+//
+//  1. resolver.ResolveSender(channel, channelUserID, rawUsername) → canonical handle
+//  2. resolver.UsernameFor(handle, channel) → per-channel @username (preferred tag)
+//  3. fall back to the canonical handle itself (it is already an @username for
+//     unknown first-contact senders)
+//  4. fall back to the raw stamped @username from the event
+//  5. last resort: "@" + channelUserID so the user is STILL tagged
+//
+// Every path returns a non-empty @-prefixed tag — the user is never left
+// untagged.
+func (d *Dispatcher) clarifyTag(ev commons.InboundEvent) string {
+	rawUsername := senderUsername(ev)
+	if d.resolver != nil {
+		handle := d.resolver.ResolveSender(ev.Sender.Channel, ev.Sender.ChannelUserID, rawUsername)
+		if uname, ok := d.resolver.UsernameFor(handle, ev.Sender.Channel); ok && uname != "" {
+			return normalizeAt(uname)
+		}
+		if handle != "" {
+			return normalizeAt(handle)
+		}
+	}
+	if rawUsername != "" {
+		return normalizeAt(rawUsername)
+	}
+	if ev.Sender.ChannelUserID != "" {
+		return normalizeAt(ev.Sender.ChannelUserID)
+	}
+	return "@there"
 }
 
 // parseConfirm recognises a "CONFIRM <token>" message and returns the
