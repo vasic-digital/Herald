@@ -96,6 +96,13 @@ func applyFields(it *workable.Item, fields map[string]string) error {
 			it.BodyMd = v
 		case "last_modified":
 			it.LastModified = v
+		case "created_by":
+			// PARTICIPANT_ATTRIBUTION §4b: canonical handle of who opened
+			// the item. Injected by the inbound attribution wiring.
+			it.CreatedBy = v
+		case "assigned_to":
+			// PARTICIPANT_ATTRIBUTION §4b: canonical handle of the assignee.
+			it.AssignedTo = v
 		default:
 			return fmt.Errorf("inbound.RepoMutator: unknown/unupdatable field %q", k)
 		}

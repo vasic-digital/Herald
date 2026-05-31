@@ -1,0 +1,14 @@
+--- FAIL: TestNotifier_OutboundTagging_E2E (0.00s)
+    tagging_e2e_test.go:91: dispatched body[0] (ATM-A): "cc: @milos85vasic\n🔄 ATM-A status: Queued → In progress"
+    tagging_e2e_test.go:91: dispatched body[1] (ATM-B): "cc: @bob @milos85vasic\n🔄 ATM-B status: Queued → In progress"
+    tagging_e2e_test.go:91: dispatched body[2] (ATM-C): "cc: @milos85vasic @carol\n🆕 ATM-C created"
+    tagging_e2e_test.go:91: dispatched body[3] (ATM-D): "cc: @milos85vasic\n🔄 ATM-D status: Queued → In progress"
+    tagging_e2e_test.go:119: [ATM-A] body "cc: @milos85vasic\n🔄 ATM-A status: Queued → In progress" contains FORBIDDEN token "@milos85vasic" (matrix violation)
+    tagging_e2e_test.go:119: [ATM-A] body "cc: @milos85vasic\n🔄 ATM-A status: Queued → In progress" contains FORBIDDEN token "cc:" (matrix violation)
+    tagging_e2e_test.go:119: [ATM-B] body "cc: @bob @milos85vasic\n🔄 ATM-B status: Queued → In progress" contains FORBIDDEN token "@milos85vasic" (matrix violation)
+    tagging_e2e_test.go:119: [ATM-C] body "cc: @milos85vasic @carol\n🆕 ATM-C created" contains FORBIDDEN token "@milos85vasic" (matrix violation)
+    tagging_e2e_test.go:119: [ATM-D] body "cc: @milos85vasic\n🔄 ATM-D status: Queued → In progress" contains FORBIDDEN token "@milos85vasic" (matrix violation)
+    tagging_e2e_test.go:119: [ATM-D] body "cc: @milos85vasic\n🔄 ATM-D status: Queued → In progress" contains FORBIDDEN token "cc:" (matrix violation)
+FAIL
+FAIL	github.com/vasic-digital/herald/pherald/internal/workflow	0.307s
+FAIL

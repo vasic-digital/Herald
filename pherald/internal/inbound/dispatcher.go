@@ -124,6 +124,14 @@ type Config struct {
 	// The argument is the inbound event id (stable per message).
 	ConfirmToken func(eventID string) string
 
+	// Resolver is the participant identity resolver (PARTICIPANT_ATTRIBUTION
+	// §1/§2/§5). When non-nil, item.update injects created_by (from the
+	// message sender via ResolveSender) + assigned_to (OperatorHandle by
+	// default, or an explicit `assign:@x` directive) into the mutated item.
+	// When nil, attribution is skipped (Wave 6 behaviour preserved) — the
+	// fields are simply not touched.
+	Resolver commons.IdentityResolver
+
 	Fake bool // listen_test.go opt-in; production callers leave false
 }
 
@@ -137,6 +145,7 @@ type Dispatcher struct {
 	commands    *CommandsConfig
 	items       ItemMutator
 	confirmTok  func(string) string
+	resolver    commons.IdentityResolver
 	pending     *pendingStore
 
 	// actions is the action→handler registry (WS-4 / HRD-152). The
@@ -190,6 +199,7 @@ func NewDispatcher(cfg Config) (*Dispatcher, error) {
 		commands:    cfg.Commands,
 		items:       cfg.Items,
 		confirmTok:  confirmTok,
+		resolver:    cfg.Resolver,
 		pending:     newPendingStore(),
 	}
 	d.actions = map[string]actionHandler{
@@ -342,11 +352,45 @@ func (d *Dispatcher) actItemUpdate(ctx context.Context, dc dispatchCtx) error {
 		return errors.New("inbound: action=item.update but reply.ItemUpdate is nil")
 	}
 	p := dc.reply.ItemUpdate
-	if err := d.items.Update(ctx, p.AtmID, p.Location, p.Fields); err != nil {
+	fields := d.withAttribution(dc.ev, p.Fields)
+	if err := d.items.Update(ctx, p.AtmID, p.Location, fields); err != nil {
 		return fmt.Errorf("inbound: item.update %s/%s: %w", p.AtmID, p.Location, err)
 	}
-	log.Printf("inbound dispatched: item.update (event=%s atm=%s location=%s fields=%d)", dc.ev.EventID, p.AtmID, p.Location, len(p.Fields))
+	log.Printf("inbound dispatched: item.update (event=%s atm=%s location=%s fields=%d created_by=%q assigned_to=%q)", dc.ev.EventID, p.AtmID, p.Location, len(fields), fields[fieldCreatedBy], fields[fieldAssignedTo])
 	return nil
+}
+
+// withAttribution returns a copy of the LLM-supplied item.update fields with
+// created_by / assigned_to injected per PARTICIPANT_ATTRIBUTION §2/§5.
+//
+//   - When the resolver is nil, the fields pass through unchanged (Wave 6
+//     behaviour preserved).
+//   - When the LLM payload already carries created_by == "Claude", this is the
+//     System/Claude-opened path (§2) — created_by is left as "Claude" and only
+//     a missing assigned_to is defaulted.
+//   - Otherwise it is a subscriber message routed through Herald: created_by is
+//     set from the message sender via ResolveSender, and assigned_to defaults
+//     to OperatorHandle() (overridable by an explicit `assign:@x` in the body).
+//
+// An explicit created_by / assigned_to already present in the LLM fields is
+// NEVER overwritten — the LLM's deliberate attribution wins over the default.
+func (d *Dispatcher) withAttribution(ev commons.InboundEvent, in map[string]string) map[string]string {
+	if d.resolver == nil {
+		return in
+	}
+	out := make(map[string]string, len(in)+2)
+	for k, v := range in {
+		out[k] = v
+	}
+	system := out[fieldCreatedBy] == commons.SystemAgentHandle
+	createdBy, assignedTo := resolveAttribution(ev, d.resolver, system)
+	if _, ok := out[fieldCreatedBy]; !ok && createdBy != "" {
+		out[fieldCreatedBy] = createdBy
+	}
+	if _, ok := out[fieldAssignedTo]; !ok && assignedTo != "" {
+		out[fieldAssignedTo] = assignedTo
+	}
+	return out
 }
 
 // actItemDelete routes action=item.delete to the ItemMutator.

@@ -1,0 +1,17 @@
+=== RUN   TestInboundAttribution_SubscriberOpen_CreatedByIsSender
+2026/05/31 11:35:33 inbound dispatched: item.update (event=01HEVT atm=ATM-238 location=Issues fields=3 created_by="@someuser" assigned_to="@milos85vasic")
+--- PASS: TestInboundAttribution_SubscriberOpen_CreatedByIsSender (0.00s)
+=== RUN   TestInboundAttribution_SystemOpen_CreatedByIsClaude
+2026/05/31 11:35:33 inbound dispatched: item.update (event=01HEVT atm=ATM-238 location=Issues fields=3 created_by="Claude" assigned_to="@milos85vasic")
+--- PASS: TestInboundAttribution_SystemOpen_CreatedByIsClaude (0.00s)
+=== RUN   TestInboundAttribution_DefaultAssignee_IsOperator
+2026/05/31 11:35:33 inbound dispatched: item.update (event=01HEVT atm=ATM-238 location=Issues fields=3 created_by="@carol" assigned_to="@theoperator")
+--- PASS: TestInboundAttribution_DefaultAssignee_IsOperator (0.00s)
+=== RUN   TestInboundAttribution_ExplicitAssign_OverridesDefault
+2026/05/31 11:35:33 inbound dispatched: item.update (event=01HEVT atm=ATM-238 location=Issues fields=3 created_by="@carol" assigned_to="@bob")
+--- PASS: TestInboundAttribution_ExplicitAssign_OverridesDefault (0.00s)
+=== RUN   TestInboundAttribution_ParseAssign_SplitForm
+2026/05/31 11:35:33 inbound dispatched: item.update (event=01HEVT atm=ATM-238 location=Issues fields=3 created_by="@carol" assigned_to="@dave")
+--- PASS: TestInboundAttribution_ParseAssign_SplitForm (0.00s)
+PASS
+ok  	github.com/vasic-digital/herald/pherald/internal/inbound	0.297s

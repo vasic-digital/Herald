@@ -1,0 +1,10 @@
+=== RUN   TestNotifier_OutboundTagging_E2E
+    tagging_e2e_test.go:91: dispatched body[0] (ATM-A): "🔄 ATM-A status: Queued → In progress"
+    tagging_e2e_test.go:91: dispatched body[1] (ATM-B): "cc: @bob\n🔄 ATM-B status: Queued → In progress"
+    tagging_e2e_test.go:91: dispatched body[2] (ATM-C): "cc: @carol\n🆕 ATM-C created"
+    tagging_e2e_test.go:91: dispatched body[3] (ATM-D): "🔄 ATM-D status: Queued → In progress"
+--- PASS: TestNotifier_OutboundTagging_E2E (0.00s)
+=== RUN   TestNotifier_NoTagging_BodiesVerbatim
+--- PASS: TestNotifier_NoTagging_BodiesVerbatim (0.00s)
+PASS
+ok  	github.com/vasic-digital/herald/pherald/internal/workflow	0.289s
