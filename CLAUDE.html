@@ -112,7 +112,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>16</td>
+<td>17</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -120,7 +120,7 @@
 </tr>
 <tr>
 <td>Last modified</td>
-<td>2026-05-29</td>
+<td>2026-05-31</td>
 </tr>
 <tr>
 <td>Status</td>
@@ -128,24 +128,36 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>r16: propagated HelixConstitution §11.4.100 (Video color +
-visual-quality fidelity mandate, 2026-05-28) as a short-form restatement
-citing the literal anchor <code>11.4.100</code>, inherited per §11.4.35;
-restated + cited, not redefined. Herald-applicability classification:
-non-applicable-but-cite (Herald has NO video-playback surface —
-<code>pherald listen</code> downloads video attachments as opaque
-sha256-blobs without decoding/rendering); mandate binds latently if
-Herald ever ships a video-rendering surface in future. Cascade-parallel:
-§11.4.96 ("Herald has no AOSP build, but the principle binds"). Required
-by the upcoming <code>CM-COVENANT-114-100-PROPAGATION</code> pre-build
-gate. Prior r13: propagated HelixConstitution §11.4.95–§11.4.97
-(workable-items SQLite DB is tracked-in-git not gitignored,
-safe-parallel-work-with-long-build catalogue + mandate,
-maximum-use-of-idle-time + progress-update cadence) as short-form
-restatements citing the literal anchors
+<td><strong>r17: propagated the participant/attribution/tagging mandate
+(operator 2026-05-31) as a short-form restatement — new "Participant
+identity, attribution &amp; notification-tagging" section + ToC entry —
+citing the authoritative contract
+<code>docs/design/PARTICIPANT_ATTRIBUTION.md</code> and noting
+inheritance from HelixConstitution per §11.4.35. Covers: per-messenger
+Participant identity
+(<code>subscribers</code>/<code>subscriber_aliases.username</code>), the
+<code>HERALD_&lt;CHANNEL&gt;_OPERATOR_USERNAME</code> operator env var
+(<code>HERALD_TGRAM_OPERATOR_USERNAME=@milos85vasic</code>),
+<code>created_by</code>/<code>assigned_to</code> attribution, and the
+@-tagging matrix (Claude + Operator never tagged). Restated + cited, not
+redefined.</strong> Prior r16: propagated HelixConstitution §11.4.100
+(Video color + visual-quality fidelity mandate, 2026-05-28) as a
+short-form restatement citing the literal anchor <code>11.4.100</code>,
+inherited per §11.4.35; restated + cited, not redefined.
+Herald-applicability classification: non-applicable-but-cite (Herald has
+NO video-playback surface — <code>pherald listen</code> downloads video
+attachments as opaque sha256-blobs without decoding/rendering); mandate
+binds latently if Herald ever ships a video-rendering surface in future.
+Cascade-parallel: §11.4.96 ("Herald has no AOSP build, but the principle
+binds"). Required by the upcoming
+<code>CM-COVENANT-114-100-PROPAGATION</code> pre-build gate. Prior r13:
+propagated HelixConstitution §11.4.95–§11.4.97 (workable-items SQLite DB
+is tracked-in-git not gitignored, safe-parallel-work-with-long-build
+catalogue + mandate, maximum-use-of-idle-time + progress-update cadence)
+as short-form restatements citing the literal anchors
 <code>11.4.95</code>/<code>11.4.96</code>/<code>11.4.97</code>,
-inherited per §11.4.35; restated + cited, not redefined.</strong> Prior
-r12: propagated HelixConstitution §11.4.89–§11.4.94 (background-test
+inherited per §11.4.35; restated + cited, not redefined.** Prior r12:
+propagated HelixConstitution §11.4.89–§11.4.94 (background-test
 execution, Obsolete status + obsolescence audit, summary-doc clarity,
 multi-pass change-evaluation, SQLite workable-items SSoT, zero-idle
 parallel-by-default) as short-form restatements citing the literal
@@ -285,6 +297,10 @@ href="#inherited-covenant-restatements--helix-11485--11487--11488--11489--11490-
 covenant restatements — Helix §11.4.85 / §11.4.87 / §11.4.88 / §11.4.89
 / §11.4.90 / §11.4.91 / §11.4.92 / §11.4.93 / §11.4.94 / §11.4.95 /
 §11.4.96 / §11.4.97</a></li>
+<li><a
+href="#participant-identity-attribution--notification-tagging-herald-109--contract-docsdesignparticipant_attributionmd--inherited-from-helixconstitution-per-11435">Participant
+identity, attribution &amp; notification-tagging (Herald §109 / contract
+<code>docs/design/PARTICIPANT_ATTRIBUTION.md</code>)</a></li>
 <li><a href="#mission-from-the-spec">Mission (from the spec)</a></li>
 <li><a href="#intended-stack">Intended stack</a></li>
 <li><a href="#multi-host-mirror-convention">Multi-host mirror
@@ -993,6 +1009,75 @@ restatement-with-non-applicability-but-cite shape. Inheritance per
 upcoming <code>CM-COVENANT-114-100-PROPAGATION</code> pre-build gate.
 Canonical authority: HelixConstitution Constitution.md §11.4.100
 (inherited per §11.4.35).</p>
+<h2
+id="participant-identity-attribution--notification-tagging-herald-109--contract-docsdesignparticipant_attributionmd--inherited-from-helixconstitution-per-11435">Participant
+identity, attribution &amp; notification-tagging (Herald §109 / contract
+<code>docs/design/PARTICIPANT_ATTRIBUTION.md</code> — inherited from
+HelixConstitution per §11.4.35)</h2>
+<p><strong>Operator mandate (2026-05-31).</strong> Every messenger must
+relate each message to a <strong>Participant</strong> (a logical
+Subscriber/User — one person/agent, with a potentially DIFFERENT
+username on every messenger); workable items gain
+<code>created_by</code> + <code>assigned_to</code> attribution; outbound
+notifications <strong>@-tag</strong> the right participant per a fixed
+rule matrix. The <strong>single authoritative contract</strong> every
+implementation stream codes against is <a
+href="docs/design/PARTICIPANT_ATTRIBUTION.md"><code>docs/design/PARTICIPANT_ATTRIBUTION.md</code></a>.
+These rules are restated (root definitions) in HelixConstitution
+<code>Constitution.md</code> / <code>CLAUDE.md</code> /
+<code>AGENTS.md</code> / <code>QWEN.md</code> and inherited here per
+§11.4.35 — Herald restates + cites, it does NOT redefine or weaken.</p>
+<ul>
+<li><strong>Identity model.</strong> A Participant is backed by PG
+<code>subscribers</code> (logical party: canonical messenger-neutral
+<code>handle</code>, <code>display_name</code>,
+<code>kind ∈ {human, agent, service}</code>) +
+<code>subscriber_aliases</code> (per-channel handle:
+<code>subscriber_id</code>, <code>channel</code>,
+<code>channel_user_id</code>, <strong>+ NEW
+<code>username TEXT</code></strong> — the per-channel
+<code>@handle</code> used for tagging, distinct from
+<code>channel_user_id</code>). The <strong>canonical handle</strong>
+(the string stored in <code>created_by</code>/<code>assigned_to</code>)
+is either <code>Claude</code> (the reserved system-agent sentinel;
+<code>kind=agent</code>; NEVER tagged) or a human's canonical handle
+(defaults to their Telegram <code>@username</code> since Telegram is the
+primary messenger, but is messenger-neutral; per-channel
+<code>@username</code>s resolve via
+<code>subscriber_aliases</code>).</li>
+<li><strong>Operator env var.</strong> The one human who drives the
+system via the Claude Code CLI is designated by env var, NOT a DB flag:
+<code>HERALD_TGRAM_OPERATOR_USERNAME</code> (e.g.
+<code>@milos85vasic</code>), generalizing to
+<code>HERALD_&lt;CHANNEL&gt;_OPERATOR_USERNAME</code>
+(<code>HERALD_SLACK_OPERATOR_USERNAME</code>, …). The operator's
+canonical handle equals that env value; the operator is a normal
+Participant.</li>
+<li><strong>Attribution.</strong> <code>created_by</code> =
+<code>OperatorHandle()</code> when opened via the Claude Code CLI
+prompt; <code>"Claude"</code> when System/Claude detects the
+issue/task/improvement/missing-feature; the sender's resolved canonical
+handle when received through Herald (a subscriber message).
+<code>assigned_to</code> defaults to <code>OperatorHandle()</code>,
+overridable explicitly. Both columns store the canonical handle
+string.</li>
+<li><strong>Tagging matrix.</strong> On any workable-item event, the
+notification to each channel @-mentions: the <code>assigned_to</code>
+handle if it is a human AND ≠ Operator; the <code>created_by</code>
+handle if it is a human AND ≠ Operator AND ≠ <code>"Claude"</code>.
+<code>"Claude"</code> is NEVER tagged (it is the system); the Operator
+is NEVER tagged (no self-ping). De-dup, then resolve each handle to that
+channel's <code>@username</code> (skip if the participant has no alias
+on that channel). Concretely: assigned-to-Operator → no tag;
+opened-by-Operator-assigned-to-another → tag the assignee;
+opened-by-a-non-Operator-non-Claude subscriber → tag them.</li>
+</ul>
+<p>The anti-bluff covenant (§107 / Helix §11.4) is a hard precondition
+of every PASS for this feature — every layer ships unit + integration +
+E2E + full-automation tests producing real captured evidence under
+<code>docs/qa/&lt;run-id&gt;/</code> (the tagging matrix proven by a
+truth-table test with a per-cell mutation, plus a NEGATIVE case proving
+the Operator is NOT tagged).</p>
 <h2 id="mission-from-the-spec">Mission (from the spec)</h2>
 <blockquote>
 <p>Ingesting system events and reliably fanning them out to multiple

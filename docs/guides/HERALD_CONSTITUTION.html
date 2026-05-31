@@ -112,7 +112,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>10</td>
+<td>11</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -120,7 +120,7 @@
 </tr>
 <tr>
 <td>Last modified</td>
-<td>2026-05-29</td>
+<td>2026-05-31</td>
 </tr>
 <tr>
 <td>Status</td>
@@ -128,12 +128,24 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td>r10: extended §108 with §108.o restating inherited HelixConstitution
-§11.4.100 (Video color + visual-quality fidelity mandate, 2026-05-28) at
-Herald project-constitution level per §1.1 multi-file propagation
-discipline; inherited per §11.4.35, restated + cited, not redefined;
-literal anchor <code>11.4.100</code> now present in all three Herald
-root docs (CLAUDE.md r16, AGENTS.md r12, QWEN.md). Herald-applicability
+<td>r11: added §109 (Participant identity, attribution &amp;
+notification-tagging) restating the operator mandate (2026-05-31) at
+Herald project-constitution level — per-messenger Participant identity
+(<code>subscribers</code> + <code>subscriber_aliases.username</code>),
+the <code>HERALD_&lt;CHANNEL&gt;_OPERATOR_USERNAME</code> operator env
+var (<code>HERALD_TGRAM_OPERATOR_USERNAME=@milos85vasic</code>),
+<code>created_by</code>/<code>assigned_to</code> attribution, and the
+@-tagging matrix (Claude + Operator never tagged) as a table; cites the
+authoritative contract
+<code>docs/design/PARTICIPANT_ATTRIBUTION.md</code> and notes
+inheritance from HelixConstitution per §11.4.35; restated + cited, not
+redefined; ToC entry added. Prior r10: extended §108 with §108.o
+restating inherited HelixConstitution §11.4.100 (Video color +
+visual-quality fidelity mandate, 2026-05-28) at Herald
+project-constitution level per §1.1 multi-file propagation discipline;
+inherited per §11.4.35, restated + cited, not redefined; literal anchor
+<code>11.4.100</code> now present in all three Herald root docs
+(CLAUDE.md r16, AGENTS.md r12, QWEN.md). Herald-applicability
 classification: non-applicable-but-cite (Herald has NO video-playback
 surface — pherald downloads video attachments as opaque sha256-blobs
 without decoding/rendering); cascade-parallel to §108.k (Universal
@@ -245,6 +257,9 @@ Inherited covenant restatements (Helix §11.4.85 / §11.4.87 / §11.4.88 /
 §11.4.89 / §11.4.90 / §11.4.91 / §11.4.92 / §11.4.93 / §11.4.94 /
 §11.4.95 / §11.4.96 / §11.4.97 / §11.4.98 / §11.4.99 /
 §11.4.100)</a></li>
+<li><a
+href="#109-participant-identity-attribution--notification-tagging-operator-mandate-2026-05-31-inherited-from-helixconstitution-per-11435">§109.
+Participant identity, attribution &amp; notification-tagging</a></li>
 </ul></li>
 <li><a href="#overrides-of-universal-constitution">Overrides of
 Universal Constitution</a></li>
@@ -1486,6 +1501,198 @@ prospectively the moment Herald ships any video-rendering surface; until
 then, the non-applicability is documented HERE (this very §108.o
 restatement) — the absence-of-implementation is itself the §108.o
 evidence shape.</p>
+<hr />
+<h3
+id="109-participant-identity-attribution--notification-tagging-operator-mandate-2026-05-31-inherited-from-helixconstitution-per-11435">§109.
+Participant identity, attribution &amp; notification-tagging (operator
+mandate, 2026-05-31; inherited from HelixConstitution per §11.4.35)</h3>
+<p><strong>Forensic anchor — verbatim operator mandate
+(2026-05-31):</strong></p>
+<blockquote>
+<p>every messenger must relate messages to <strong>participants
+(Subscribers/Users)</strong>; workable items gain
+<code>created_by</code> + <code>assigned_to</code>; notifications
+<strong>@-tag</strong> the right participant per a fixed rule matrix;
+the same logical person may have a <strong>different username on every
+messenger</strong>.</p>
+</blockquote>
+<p><strong>Canonical authority.</strong> The single authoritative
+contract every implementation stream codes against is <a
+href="../design/PARTICIPANT_ATTRIBUTION.md"><code>docs/design/PARTICIPANT_ATTRIBUTION.md</code></a>.
+The mandatory rules are restated (root definitions) in HelixConstitution
+<code>Constitution.md</code> / <code>CLAUDE.md</code> /
+<code>AGENTS.md</code> / <code>QWEN.md</code> and inherited per
+§11.4.35; Herald §109 is the project-binding restatement. Herald
+<strong>restates + cites</strong>, it does NOT redefine or weaken.</p>
+<h4
+id="1091-identity-model--logical-participant--per-channel-handle">§109.1.
+Identity model — logical participant + per-channel handle</h4>
+<p>A <strong>Participant</strong> (logical Subscriber/User) is one
+person/agent, with a potentially DIFFERENT username on every messenger.
+Backed by the existing PG tables:</p>
+<ul>
+<li><code>subscribers</code> — the logical party: <code>handle</code>
+(canonical, messenger-neutral), <code>display_name</code>,
+<code>kind ∈ {human, agent, service}</code>.</li>
+<li><code>subscriber_aliases</code> — the per-channel handle:
+<code>subscriber_id</code>, <code>channel</code>,
+<code>channel_user_id</code>, <strong>+ NEW
+<code>username TEXT</code></strong> (the per-channel
+<code>@handle</code> used for tagging — distinct from
+<code>channel_user_id</code>, which is the chat/user id).
+<code>UNIQUE (channel, channel_user_id)</code>.</li>
+</ul>
+<p>The <strong>canonical handle</strong> = the string stored in items'
+<code>created_by</code> / <code>assigned_to</code>. Closed set:</p>
+<ul>
+<li><code>Claude</code> — the system agent (reserved sentinel;
+<code>kind=agent</code>). NEVER tagged.</li>
+<li>a human's <strong>canonical handle</strong> — defaults to their
+Telegram <code>@username</code> (Telegram is the primary messenger) but
+is messenger-neutral; per-channel <code>@username</code>s are resolved
+via <code>subscriber_aliases</code>.</li>
+</ul>
+<h4 id="1092-operator-env-var">§109.2. Operator env var</h4>
+<p>The <strong>operator</strong> is the one human who drives the system
+via the Claude Code CLI. Designated by env var, NOT a DB flag:</p>
+<table>
+<thead>
+<tr>
+<th>Env var</th>
+<th>Example value</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>HERALD_TGRAM_OPERATOR_USERNAME</code></td>
+<td><code>@milos85vasic</code></td>
+<td>The operator's Telegram <code>@username</code> (primary
+messenger).</td>
+</tr>
+<tr>
+<td><code>HERALD_&lt;CHANNEL&gt;_OPERATOR_USERNAME</code></td>
+<td><code>HERALD_SLACK_OPERATOR_USERNAME=…</code></td>
+<td>Per-messenger generalization for any other channel.</td>
+</tr>
+</tbody>
+</table>
+<p>The operator's <strong>canonical handle</strong> = their Telegram
+operator username (e.g. <code>@milos85vasic</code>). The operator is a
+normal Participant whose handle equals the operator env value.
+<code>IdentityResolver.OperatorHandle()</code> returns this.</p>
+<h4
+id="1093-attribution-rules--who-sets-created_by--assigned_to">§109.3.
+Attribution rules — who sets <code>created_by</code> /
+<code>assigned_to</code></h4>
+<p><code>created_by</code> (who opened/assigned the item):</p>
+<ul>
+<li>Opened via the <strong>Claude Code CLI prompt</strong>
+(operator-driven) → <code>created_by = OperatorHandle()</code>.</li>
+<li>Opened by <strong>System/Claude</strong> detecting an
+issue/task/improvement/missing-feature →
+<code>created_by = "Claude"</code>.</li>
+<li>Received <strong>through Herald</strong> (a subscriber message) →
+<code>created_by =</code> the sender's resolved canonical handle (via
+<code>ResolveSender</code> from the message's <code>@username</code> +
+other data).</li>
+</ul>
+<p><code>assigned_to</code>:</p>
+<ul>
+<li><strong>Default</strong> = <code>OperatorHandle()</code> (the
+operator's canonical handle).</li>
+<li>May be overridden explicitly (e.g. a prompt or message that assigns
+to <code>@someoneelse</code>).</li>
+</ul>
+<p>Both columns store the <strong>canonical handle string</strong>
+(self-contained in the SSoT/MD).</p>
+<h4 id="1094-notification-tagging-matrix--who-gets--mentioned">§109.4.
+Notification-tagging matrix — who gets @-mentioned</h4>
+<p>On any workable-item event, the outbound notification dispatched to
+each messenger channel/group @-tags the participant(s) who must be
+aware, resolved to that channel's <code>@username</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Condition</th>
+<th>@-tag?</th>
+<th>Rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>assigned_to</code> is a human handle AND
+<code>assigned_to != Operator</code></td>
+<td><strong>yes</strong> — tag <code>assigned_to</code></td>
+<td>the assignee must be made aware</td>
+</tr>
+<tr>
+<td><code>created_by</code> is a human handle AND
+<code>created_by != Operator</code> AND
+<code>created_by != "Claude"</code></td>
+<td><strong>yes</strong> — tag <code>created_by</code></td>
+<td>a non-operator subscriber opened it</td>
+</tr>
+<tr>
+<td>handle == <code>"Claude"</code></td>
+<td><strong>no</strong></td>
+<td><code>Claude</code> is the system; never tagged</td>
+</tr>
+<tr>
+<td>handle == Operator</td>
+<td><strong>no</strong></td>
+<td>the operator drives the system; no self-ping</td>
+</tr>
+</tbody>
+</table>
+<p>De-dup the resulting set; for each mention resolve
+<code>UsernameFor(handle, channel)</code> and <strong>skip</strong> if
+the participant has no alias on that channel (you cannot tag someone not
+on that messenger). This satisfies the operator's stated cases:
+assigned-to-Operator → no tag; opened-by-Operator-assigned-to-another →
+tag the assignee; opened-by-a-non-Operator-non-Claude subscriber → tag
+them.</p>
+<h4 id="1095-storage-wiring--anti-bluff">§109.5. Storage, wiring &amp;
+anti-bluff</h4>
+<ul>
+<li><strong>Storage.</strong> The workable-items SSoT <code>items</code>
+table gains <code>created_by TEXT NOT NULL DEFAULT ''</code> +
+<code>assigned_to TEXT NOT NULL DEFAULT ''</code> (parser reads
+<code>**Created-By:**</code> / <code>**Assigned-To:**</code>; renderer
+writes them; byte-identical round-trip; <code>validate</code> accepts
+empty for legacy). <code>commons_workable.Item</code> gains
+<code>CreatedBy</code> + <code>AssignedTo</code>; the change-feed emits
+<code>item.field.changed</code> for those fields. Markdown trackers add
+<strong>Created-By</strong> + <strong>Assigned-To</strong>
+columns/fields. PG migration adds
+<code>subscriber_aliases.username</code>.</li>
+<li><strong>Wiring.</strong> Inbound
+(<code>pherald/internal/inbound</code>) sets <code>created_by</code> via
+<code>ResolveSender</code>, defaults
+<code>assigned_to = OperatorHandle()</code>; Claude-opened items use
+<code>created_by = "Claude"</code>. Outbound
+(<code>pherald/internal/workflow</code>) calls <code>MentionsFor</code>
+and prepends/appends the resolved <code>@username</code>s to the
+dispatched body per channel; the <code>tgram</code> adapter renders a
+mention as <code>@username</code> (other adapters render their channel's
+mention syntax — future).</li>
+<li><strong>Anti-bluff (§107 / Helix §11.4).</strong> Every layer ships
+unit + integration + E2E + full-automation tests with real captured
+evidence under <code>docs/qa/&lt;run-id&gt;/</code>: real SQLite
+round-trip with the new columns (byte-identical); a real
+<code>IdentityResolver</code> over real
+<code>subscribers</code>/<code>subscriber_aliases</code>; the tagging
+matrix proven by a truth-table test covering every cell + a
+per-cell-flip mutation that must FAIL; an E2E with a real item event → a
+real dispatched message whose body contains exactly the expected
+<code>@username</code>s, plus a NEGATIVE case proving the Operator is
+NOT tagged.</li>
+</ul>
+<p><strong>Non-compliance is a release blocker.</strong> Documenting
+behaviour without the captured evidence above is itself a §107
+PASS-bluff. No <code>--skip-attribution</code>,
+<code>--tag-later</code>, <code>--operator-tag-OK</code> flag
+exists.</p>
 <hr />
 <h2 id="overrides-of-universal-constitution">Overrides of Universal
 Constitution</h2>

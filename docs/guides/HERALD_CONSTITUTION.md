@@ -8,11 +8,11 @@
 
 | Field | Value |
 |---|---|
-| Revision | 10 |
+| Revision | 11 |
 | Created | 2026-05-15 |
-| Last modified | 2026-05-29 |
+| Last modified | 2026-05-31 |
 | Status | active |
-| Status summary | r10: extended §108 with §108.o restating inherited HelixConstitution §11.4.100 (Video color + visual-quality fidelity mandate, 2026-05-28) at Herald project-constitution level per §1.1 multi-file propagation discipline; inherited per §11.4.35, restated + cited, not redefined; literal anchor `11.4.100` now present in all three Herald root docs (CLAUDE.md r16, AGENTS.md r12, QWEN.md). Herald-applicability classification: non-applicable-but-cite (Herald has NO video-playback surface — pherald downloads video attachments as opaque sha256-blobs without decoding/rendering); cascade-parallel to §108.k (Universal §11.4.96 "Herald has no AOSP build, but the principle binds"). Required by upcoming Helix-side `CM-COVENANT-114-100-PROPAGATION` pre-build gate. Prior r7: extended §108 with §108.j–§108.l restating the next three inherited HelixConstitution mandates — §11.4.95 workable-items SQLite DB tracked-in-git-not-gitignored, §11.4.96 safe-parallel-work-with-long-build catalogue + mandate, §11.4.97 maximum-use-of-idle-time + progress-update cadence — at Herald project-constitution level per §1.1 multi-file propagation discipline; inherited per §11.4.35, restated + cited, not redefined; literal anchors `11.4.95`/`11.4.96`/`11.4.97` now present in all three Herald root docs. Prior r6: extended §108 with §108.d–§108.i restating the next six inherited HelixConstitution mandates — §11.4.89 background-test execution, §11.4.90 Obsolete status + obsolescence audit, §11.4.91 summary-doc clarity, §11.4.92 multi-pass change-evaluation, §11.4.93 SQLite workable-items SSoT, §11.4.94 zero-idle parallel-by-default — at Herald project-constitution level per §1.1 multi-file propagation discipline; inherited per §11.4.35, restated + cited, not redefined; literal anchors `11.4.89`–`11.4.94` now present. Prior r5: added §108 (with §108.a/b/c) restating the three inherited HelixConstitution mandates — §11.4.85 stress + chaos test mandate, §11.4.87 endless-loop autonomous work + zero-idle agent dispatch + anti-bluff testing, §11.4.88 background-push — at Herald project-constitution level per §1.1 multi-file propagation discipline; inherited per §11.4.35, restated + cited, not redefined. Required by the §11.4.87 `CM-COVENANT-114-87-PROPAGATION` pre-build gate. Prior r4: added §107 End-user-usability covenant (verbatim operator mandate restated at Herald level per §1.1 propagation) + paired gate invariant I8a–c; corrected stale "Owned-submodule set: (none)" to reflect the 10 vendored modules (9 Helix-stack + containers). |
+| Status summary | r11: added §109 (Participant identity, attribution & notification-tagging) restating the operator mandate (2026-05-31) at Herald project-constitution level — per-messenger Participant identity (`subscribers` + `subscriber_aliases.username`), the `HERALD_<CHANNEL>_OPERATOR_USERNAME` operator env var (`HERALD_TGRAM_OPERATOR_USERNAME=@milos85vasic`), `created_by`/`assigned_to` attribution, and the @-tagging matrix (Claude + Operator never tagged) as a table; cites the authoritative contract `docs/design/PARTICIPANT_ATTRIBUTION.md` and notes inheritance from HelixConstitution per §11.4.35; restated + cited, not redefined; ToC entry added. Prior r10: extended §108 with §108.o restating inherited HelixConstitution §11.4.100 (Video color + visual-quality fidelity mandate, 2026-05-28) at Herald project-constitution level per §1.1 multi-file propagation discipline; inherited per §11.4.35, restated + cited, not redefined; literal anchor `11.4.100` now present in all three Herald root docs (CLAUDE.md r16, AGENTS.md r12, QWEN.md). Herald-applicability classification: non-applicable-but-cite (Herald has NO video-playback surface — pherald downloads video attachments as opaque sha256-blobs without decoding/rendering); cascade-parallel to §108.k (Universal §11.4.96 "Herald has no AOSP build, but the principle binds"). Required by upcoming Helix-side `CM-COVENANT-114-100-PROPAGATION` pre-build gate. Prior r7: extended §108 with §108.j–§108.l restating the next three inherited HelixConstitution mandates — §11.4.95 workable-items SQLite DB tracked-in-git-not-gitignored, §11.4.96 safe-parallel-work-with-long-build catalogue + mandate, §11.4.97 maximum-use-of-idle-time + progress-update cadence — at Herald project-constitution level per §1.1 multi-file propagation discipline; inherited per §11.4.35, restated + cited, not redefined; literal anchors `11.4.95`/`11.4.96`/`11.4.97` now present in all three Herald root docs. Prior r6: extended §108 with §108.d–§108.i restating the next six inherited HelixConstitution mandates — §11.4.89 background-test execution, §11.4.90 Obsolete status + obsolescence audit, §11.4.91 summary-doc clarity, §11.4.92 multi-pass change-evaluation, §11.4.93 SQLite workable-items SSoT, §11.4.94 zero-idle parallel-by-default — at Herald project-constitution level per §1.1 multi-file propagation discipline; inherited per §11.4.35, restated + cited, not redefined; literal anchors `11.4.89`–`11.4.94` now present. Prior r5: added §108 (with §108.a/b/c) restating the three inherited HelixConstitution mandates — §11.4.85 stress + chaos test mandate, §11.4.87 endless-loop autonomous work + zero-idle agent dispatch + anti-bluff testing, §11.4.88 background-push — at Herald project-constitution level per §1.1 multi-file propagation discipline; inherited per §11.4.35, restated + cited, not redefined. Required by the §11.4.87 `CM-COVENANT-114-87-PROPAGATION` pre-build gate. Prior r4: added §107 End-user-usability covenant (verbatim operator mandate restated at Herald level per §1.1 propagation) + paired gate invariant I8a–c; corrected stale "Owned-submodule set: (none)" to reflect the 10 vendored modules (9 Helix-stack + containers). |
 | Issues | none |
 | Issues summary | — |
 | Fixed | R-14 (V2), V3-path-sync (V3 r3), §107 mandate + I8 gate invariant + owned-submodule list (r4), §108 Helix §11.4.85 + §11.4.87 + §11.4.88 propagation (r5), §108.d–§108.i Helix §11.4.89–§11.4.94 propagation (r6), §108.j–§108.l Helix §11.4.95–§11.4.97 propagation (r7) |
@@ -30,6 +30,7 @@
   - [§106. Spec-change rule (extends Universal §11.4)](#106-spec-change-rule-extends-universal-114)
   - [§107. End-user-usability covenant (extends Universal §11.4 — MANDATORY ANTI-BLUFF)](#107-end-user-usability-covenant-extends-universal-114--mandatory-anti-bluff)
   - [§108. Inherited covenant restatements (Helix §11.4.85 / §11.4.87 / §11.4.88 / §11.4.89 / §11.4.90 / §11.4.91 / §11.4.92 / §11.4.93 / §11.4.94 / §11.4.95 / §11.4.96 / §11.4.97 / §11.4.98 / §11.4.99 / §11.4.100)](#108-inherited-covenant-restatements-helix-11485--11487--11488--11489--11490--11491--11492--11493--11494--11495--11496--11497)
+  - [§109. Participant identity, attribution & notification-tagging](#109-participant-identity-attribution--notification-tagging-operator-mandate-2026-05-31-inherited-from-helixconstitution-per-11435)
 - [Overrides of Universal Constitution](#overrides-of-universal-constitution)
 - [Owned-submodule set (per Universal §4)](#owned-submodule-set-per-universal-4)
 - [Project-specific remotes](#project-specific-remotes)
@@ -397,6 +398,75 @@ The mandate therefore binds **latently**: if Herald ever ships a video-rendering
 **Composition.** §108.o composes with §107 (anti-bluff), §108.a (Universal §11.4.85 stress + chaos — fidelity holds under sustained playback + fault injection, not just on the first frame, IF Herald ever has a playback surface), §108.m (Universal §11.4.98 full-automation testing — fidelity analysis runs without operator presence), §108.n (Universal §11.4.99 latest-source documentation — the tolerance thresholds and capture mechanisms must be cross-referenced against the latest official codec / display / OS documentation before publication).
 
 **Non-compliance is a release blocker.** No `--skip-color-fidelity`, `--no-frame-analysis`, `--metadata-video-pass-suffices`, `--color-check-later`, `--source-comparison-optional` flag exists. This applies prospectively the moment Herald ships any video-rendering surface; until then, the non-applicability is documented HERE (this very §108.o restatement) — the absence-of-implementation is itself the §108.o evidence shape.
+
+---
+
+### §109. Participant identity, attribution & notification-tagging (operator mandate, 2026-05-31; inherited from HelixConstitution per §11.4.35)
+
+**Forensic anchor — verbatim operator mandate (2026-05-31):**
+
+> every messenger must relate messages to **participants (Subscribers/Users)**; workable items gain `created_by` + `assigned_to`; notifications **@-tag** the right participant per a fixed rule matrix; the same logical person may have a **different username on every messenger**.
+
+**Canonical authority.** The single authoritative contract every implementation stream codes against is [`docs/design/PARTICIPANT_ATTRIBUTION.md`](../design/PARTICIPANT_ATTRIBUTION.md). The mandatory rules are restated (root definitions) in HelixConstitution `Constitution.md` / `CLAUDE.md` / `AGENTS.md` / `QWEN.md` and inherited per §11.4.35; Herald §109 is the project-binding restatement. Herald **restates + cites**, it does NOT redefine or weaken.
+
+#### §109.1. Identity model — logical participant + per-channel handle
+
+A **Participant** (logical Subscriber/User) is one person/agent, with a potentially DIFFERENT username on every messenger. Backed by the existing PG tables:
+
+- `subscribers` — the logical party: `handle` (canonical, messenger-neutral), `display_name`, `kind ∈ {human, agent, service}`.
+- `subscriber_aliases` — the per-channel handle: `subscriber_id`, `channel`, `channel_user_id`, **+ NEW `username TEXT`** (the per-channel `@handle` used for tagging — distinct from `channel_user_id`, which is the chat/user id). `UNIQUE (channel, channel_user_id)`.
+
+The **canonical handle** = the string stored in items' `created_by` / `assigned_to`. Closed set:
+
+- `Claude` — the system agent (reserved sentinel; `kind=agent`). NEVER tagged.
+- a human's **canonical handle** — defaults to their Telegram `@username` (Telegram is the primary messenger) but is messenger-neutral; per-channel `@username`s are resolved via `subscriber_aliases`.
+
+#### §109.2. Operator env var
+
+The **operator** is the one human who drives the system via the Claude Code CLI. Designated by env var, NOT a DB flag:
+
+| Env var | Example value | Meaning |
+|---|---|---|
+| `HERALD_TGRAM_OPERATOR_USERNAME` | `@milos85vasic` | The operator's Telegram `@username` (primary messenger). |
+| `HERALD_<CHANNEL>_OPERATOR_USERNAME` | `HERALD_SLACK_OPERATOR_USERNAME=…` | Per-messenger generalization for any other channel. |
+
+The operator's **canonical handle** = their Telegram operator username (e.g. `@milos85vasic`). The operator is a normal Participant whose handle equals the operator env value. `IdentityResolver.OperatorHandle()` returns this.
+
+#### §109.3. Attribution rules — who sets `created_by` / `assigned_to`
+
+`created_by` (who opened/assigned the item):
+
+- Opened via the **Claude Code CLI prompt** (operator-driven) → `created_by = OperatorHandle()`.
+- Opened by **System/Claude** detecting an issue/task/improvement/missing-feature → `created_by = "Claude"`.
+- Received **through Herald** (a subscriber message) → `created_by =` the sender's resolved canonical handle (via `ResolveSender` from the message's `@username` + other data).
+
+`assigned_to`:
+
+- **Default** = `OperatorHandle()` (the operator's canonical handle).
+- May be overridden explicitly (e.g. a prompt or message that assigns to `@someoneelse`).
+
+Both columns store the **canonical handle string** (self-contained in the SSoT/MD).
+
+#### §109.4. Notification-tagging matrix — who gets @-mentioned
+
+On any workable-item event, the outbound notification dispatched to each messenger channel/group @-tags the participant(s) who must be aware, resolved to that channel's `@username`:
+
+| Condition | @-tag? | Rationale |
+|---|---|---|
+| `assigned_to` is a human handle AND `assigned_to != Operator` | **yes** — tag `assigned_to` | the assignee must be made aware |
+| `created_by` is a human handle AND `created_by != Operator` AND `created_by != "Claude"` | **yes** — tag `created_by` | a non-operator subscriber opened it |
+| handle == `"Claude"` | **no** | `Claude` is the system; never tagged |
+| handle == Operator | **no** | the operator drives the system; no self-ping |
+
+De-dup the resulting set; for each mention resolve `UsernameFor(handle, channel)` and **skip** if the participant has no alias on that channel (you cannot tag someone not on that messenger). This satisfies the operator's stated cases: assigned-to-Operator → no tag; opened-by-Operator-assigned-to-another → tag the assignee; opened-by-a-non-Operator-non-Claude subscriber → tag them.
+
+#### §109.5. Storage, wiring & anti-bluff
+
+- **Storage.** The workable-items SSoT `items` table gains `created_by TEXT NOT NULL DEFAULT ''` + `assigned_to TEXT NOT NULL DEFAULT ''` (parser reads `**Created-By:**` / `**Assigned-To:**`; renderer writes them; byte-identical round-trip; `validate` accepts empty for legacy). `commons_workable.Item` gains `CreatedBy` + `AssignedTo`; the change-feed emits `item.field.changed` for those fields. Markdown trackers add **Created-By** + **Assigned-To** columns/fields. PG migration adds `subscriber_aliases.username`.
+- **Wiring.** Inbound (`pherald/internal/inbound`) sets `created_by` via `ResolveSender`, defaults `assigned_to = OperatorHandle()`; Claude-opened items use `created_by = "Claude"`. Outbound (`pherald/internal/workflow`) calls `MentionsFor` and prepends/appends the resolved `@username`s to the dispatched body per channel; the `tgram` adapter renders a mention as `@username` (other adapters render their channel's mention syntax — future).
+- **Anti-bluff (§107 / Helix §11.4).** Every layer ships unit + integration + E2E + full-automation tests with real captured evidence under `docs/qa/<run-id>/`: real SQLite round-trip with the new columns (byte-identical); a real `IdentityResolver` over real `subscribers`/`subscriber_aliases`; the tagging matrix proven by a truth-table test covering every cell + a per-cell-flip mutation that must FAIL; an E2E with a real item event → a real dispatched message whose body contains exactly the expected `@username`s, plus a NEGATIVE case proving the Operator is NOT tagged.
+
+**Non-compliance is a release blocker.** Documenting behaviour without the captured evidence above is itself a §107 PASS-bluff. No `--skip-attribution`, `--tag-later`, `--operator-tag-OK` flag exists.
 
 ---
 

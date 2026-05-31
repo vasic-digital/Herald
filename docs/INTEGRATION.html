@@ -112,7 +112,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>1</td>
+<td>2</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -120,7 +120,7 @@
 </tr>
 <tr>
 <td>Last modified</td>
-<td>2026-05-22</td>
+<td>2026-05-31</td>
 </tr>
 <tr>
 <td>Status</td>
@@ -128,10 +128,16 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td>First-cut consumer integration guide written after Wave 3b lands the
-§32 7-stage Runner (commit <code>c2b67c3</code>). Covers: adding Herald
-as a submodule, the parent-discovery contract for the HelixConstitution,
-credential configuration via the wizard, running migrations, starting
+<td>r2: added a §5 mention + doc-link for the
+<code>HERALD_&lt;CHANNEL&gt;_OPERATOR_USERNAME</code> operator env var
+and the participant/attribution contract
+(<code>docs/design/PARTICIPANT_ATTRIBUTION.md</code>) driving
+<code>created_by</code>/<code>assigned_to</code> attribution +
+notification @-tagging. First-cut consumer integration guide written
+after Wave 3b lands the §32 7-stage Runner (commit
+<code>c2b67c3</code>). Covers: adding Herald as a submodule, the
+parent-discovery contract for the HelixConstitution, credential
+configuration via the wizard, running migrations, starting
 <code>pherald serve</code>, emitting a first CloudEvent via
 <code>POST /v1/events</code>, verifying delivery, running the anti-bluff
 battery. Known limitations + Wave 4 transport roadmap (HTTP/3 + Brotli +
@@ -451,6 +457,20 @@ httptest fixture that opts/env/prompt all work as documented.</p>
 <code>claude-code</code>, <code>all</code>. Other channels (Slack,
 Email, etc.) are documented in <code>docs/guides/messengers/</code> but
 their wizard flows haven't shipped yet.</p>
+<p><strong>Operator identity for attribution + @-tagging.</strong> Set
+<code>HERALD_TGRAM_OPERATOR_USERNAME</code> (e.g.
+<code>@milos85vasic</code>; generalizes to
+<code>HERALD_&lt;CHANNEL&gt;_OPERATOR_USERNAME</code>) to designate
+yourself as the operator. It drives workable-item
+<code>created_by</code>/<code>assigned_to</code> attribution and the
+notification @-tagging matrix (the operator and the <code>Claude</code>
+system agent are never tagged). Authoritative contract: <a
+href="design/PARTICIPANT_ATTRIBUTION.md"><code>docs/design/PARTICIPANT_ATTRIBUTION.md</code></a>;
+operator setup in <a
+href="guides/OPERATOR_CREDENTIALS.md"><code>docs/guides/OPERATOR_CREDENTIALS.md</code></a>
+Step 4b; full behaviour in <a
+href="guides/WORKABLE_ITEMS_INTEGRATION.md"><code>docs/guides/WORKABLE_ITEMS_INTEGRATION.md</code></a>
+§3.6–§3.8.</p>
 <hr />
 <h2 id="6-database--redis-migrations--bring-up">§6. Database + Redis
 (migrations + bring-up)</h2>

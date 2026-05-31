@@ -8,11 +8,11 @@
 
 | Field | Value |
 |---|---|
-| Revision | 1 |
+| Revision | 2 |
 | Created | 2026-05-28 |
-| Last modified | 2026-05-28 |
+| Last modified | 2026-05-31 |
 | Status | active |
-| Status summary | Operator-facing reference for Herald's Wave 7 generic messenger-channel framework. Documents the `commons_messaging/channels.Channel` interface (the richer inbound contract that embeds the §11.0 outbound `commons.Channel`), the `init()`-driven registry that resolves channel names at runtime, the per-channel content-addressed inbox (`~/.herald/inbox/<channel>/<sha256>.<ext>`), the generalized self-filter that defends every adapter against echo-loops, the `HERALD_CHANNELS` selector that drives multi-channel `pherald listen`, the two live adapters (Telegram since Wave 6, Slack since Wave 7 T6), the URL-scheme parsers, the implementer checklist for adding a new channel, the troubleshooting cookbook, and the operator pre-deploy audit checklist. |
+| Status summary | r2: added §6A (Participant identity, attribution & @-tagging) documenting the participant/attribution contract (`docs/design/PARTICIPANT_ATTRIBUTION.md`) — per-channel `subscribers`/`subscriber_aliases.username` mapping, the `HERALD_<CHANNEL>_OPERATOR_USERNAME` operator env var (`HERALD_TGRAM_OPERATOR_USERNAME=@milos85vasic`), and the @-tagging matrix (Claude + Operator never tagged). Operator-facing reference for Herald's Wave 7 generic messenger-channel framework. Documents the `commons_messaging/channels.Channel` interface (the richer inbound contract that embeds the §11.0 outbound `commons.Channel`), the `init()`-driven registry that resolves channel names at runtime, the per-channel content-addressed inbox (`~/.herald/inbox/<channel>/<sha256>.<ext>`), the generalized self-filter that defends every adapter against echo-loops, the `HERALD_CHANNELS` selector that drives multi-channel `pherald listen`, the two live adapters (Telegram since Wave 6, Slack since Wave 7 T6), the URL-scheme parsers, the implementer checklist for adding a new channel, the troubleshooting cookbook, and the operator pre-deploy audit checklist. |
 | Issues | none |
 | Issues summary | — |
 | Fixed | (n/a — new guide) |
@@ -26,6 +26,7 @@
 - [§4. Slack (LIVE — Wave 7 T6 HRD-115)](#4-slack-live--wave-7-t6-hrd-115)
 - [§5. Per-channel inbox isolation](#5-per-channel-inbox-isolation)
 - [§6. Self-filter (anti-echo-loop)](#6-self-filter-anti-echo-loop)
+- [§6A. Participant identity, attribution & @-tagging](#6a-participant-identity-attribution--tagging-per-docsdesignparticipant_attributionmd)
 - [§7. URL schemes](#7-url-schemes)
 - [§8. Adding a new channel](#8-adding-a-new-channel)
 - [§9. Troubleshooting](#9-troubleshooting)
@@ -314,6 +315,46 @@ Every Herald channel adapter is a bot that BOTH sends and receives in the same c
 | Email (Wave 8) | `IdentityAddress` | configured From-address | `herald@example.com` |
 
 A new channel chooses the `IdentityKind` that the channel's native event API exposes on every inbound event; if the channel has no native sender identity (a truly anonymous channel), the channel cannot host bidirectional bot traffic at all — that constraint is upstream of Herald.
+
+---
+
+## §6A. Participant identity, attribution & @-tagging (per `docs/design/PARTICIPANT_ATTRIBUTION.md`)
+
+Beyond the self-filter's bot-identity check (§6, which only answers "is this message from MY own bot?"), Herald relates every message to a **Participant** — a logical Subscriber/User. The same logical person may have a DIFFERENT username on every messenger, so identity is resolved per channel. This is the contract in [`docs/design/PARTICIPANT_ATTRIBUTION.md`](../design/PARTICIPANT_ATTRIBUTION.md), inherited from HelixConstitution per §11.4.35.
+
+### §6A.1 Per-channel username mapping
+
+A Participant is backed by two PG tables:
+
+- `subscribers` — the logical party: canonical messenger-neutral `handle`, `display_name`, `kind ∈ {human, agent, service}`.
+- `subscriber_aliases` — the per-channel handle: `subscriber_id`, `channel`, `channel_user_id`, **+ NEW `username TEXT`** (the per-channel `@handle` used for @-tagging — distinct from `channel_user_id`, which is the chat/user id). `UNIQUE (channel, channel_user_id)`.
+
+The **canonical handle** (the messenger-neutral string stored in a workable item's `created_by`/`assigned_to`) is either `Claude` (the reserved system-agent sentinel — `kind=agent`, NEVER tagged) or a human's canonical handle (defaults to their Telegram `@username` since Telegram is the primary messenger). Resolution bridges the two worlds:
+
+- inbound — `ResolveSender(channel, channel_user_id, username)` maps a received message's sender to a canonical handle;
+- outbound — `UsernameFor(handle, channel)` returns the `@username` for a canonical handle on a target channel, reporting not-found when the participant has no alias there (you cannot tag someone who is not on that messenger).
+
+### §6A.2 Operator env var
+
+The **operator** — the one human who drives the system via the Claude Code CLI — is designated by env var, NOT a DB flag:
+
+| Env var | Example value | Meaning |
+|---|---|---|
+| `HERALD_TGRAM_OPERATOR_USERNAME` | `@milos85vasic` | the operator's Telegram `@username` (primary messenger) |
+| `HERALD_<CHANNEL>_OPERATOR_USERNAME` | `HERALD_SLACK_OPERATOR_USERNAME=…` | per-messenger generalization for any other channel |
+
+The operator's canonical handle equals this env value (`IdentityResolver.OperatorHandle()`).
+
+### §6A.3 @-tagging behaviour
+
+On any workable-item event, the outbound notification to each channel @-tags the participant(s) who must be aware, resolved to that channel's `@username`:
+
+- tag `assigned_to` when it is a human handle AND `assigned_to != Operator`;
+- tag `created_by` when it is a human handle AND `created_by != Operator` AND `created_by != "Claude"`;
+- `"Claude"` is NEVER tagged (it is the system); the Operator is NEVER tagged (no self-ping);
+- de-dup, then resolve each handle to the channel's `@username` and skip any participant with no alias on that channel.
+
+The `tgram` adapter renders a mention as `@username` (a Telegram username mention reaches a group member); other adapters render their channel's native mention syntax (Slack `<@U…>`, etc. — future). Attribution columns + the wiring points are documented in [`WORKABLE_ITEMS_INTEGRATION.md`](WORKABLE_ITEMS_INTEGRATION.md) §3.6–§3.8.
 
 ---
 

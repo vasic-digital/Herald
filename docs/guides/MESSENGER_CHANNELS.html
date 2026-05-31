@@ -113,7 +113,7 @@ Channels (Operator Guide)</h1>
 <tbody>
 <tr>
 <td>Revision</td>
-<td>1</td>
+<td>2</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -121,7 +121,7 @@ Channels (Operator Guide)</h1>
 </tr>
 <tr>
 <td>Last modified</td>
-<td>2026-05-28</td>
+<td>2026-05-31</td>
 </tr>
 <tr>
 <td>Status</td>
@@ -129,10 +129,17 @@ Channels (Operator Guide)</h1>
 </tr>
 <tr>
 <td>Status summary</td>
-<td>Operator-facing reference for Herald's Wave 7 generic
-messenger-channel framework. Documents the
-<code>commons_messaging/channels.Channel</code> interface (the richer
-inbound contract that embeds the §11.0 outbound
+<td>r2: added §6A (Participant identity, attribution &amp; @-tagging)
+documenting the participant/attribution contract
+(<code>docs/design/PARTICIPANT_ATTRIBUTION.md</code>) — per-channel
+<code>subscribers</code>/<code>subscriber_aliases.username</code>
+mapping, the <code>HERALD_&lt;CHANNEL&gt;_OPERATOR_USERNAME</code>
+operator env var
+(<code>HERALD_TGRAM_OPERATOR_USERNAME=@milos85vasic</code>), and the
+@-tagging matrix (Claude + Operator never tagged). Operator-facing
+reference for Herald's Wave 7 generic messenger-channel framework.
+Documents the <code>commons_messaging/channels.Channel</code> interface
+(the richer inbound contract that embeds the §11.0 outbound
 <code>commons.Channel</code>), the <code>init()</code>-driven registry
 that resolves channel names at runtime, the per-channel
 content-addressed inbox
@@ -180,6 +187,9 @@ T6 HRD-115)</a></li>
 isolation</a></li>
 <li><a href="#6-self-filter-anti-echo-loop">§6. Self-filter
 (anti-echo-loop)</a></li>
+<li><a
+href="#6a-participant-identity-attribution--tagging-per-docsdesignparticipant_attributionmd">§6A.
+Participant identity, attribution &amp; @-tagging</a></li>
 <li><a href="#7-url-schemes">§7. URL schemes</a></li>
 <li><a href="#8-adding-a-new-channel">§8. Adding a new channel</a></li>
 <li><a href="#9-troubleshooting">§9. Troubleshooting</a></li>
@@ -744,6 +754,99 @@ channel's native event API exposes on every inbound event; if the
 channel has no native sender identity (a truly anonymous channel), the
 channel cannot host bidirectional bot traffic at all — that constraint
 is upstream of Herald.</p>
+<hr />
+<h2
+id="6a-participant-identity-attribution---tagging-per-docsdesignparticipant_attributionmd">§6A.
+Participant identity, attribution &amp; @-tagging (per
+<code>docs/design/PARTICIPANT_ATTRIBUTION.md</code>)</h2>
+<p>Beyond the self-filter's bot-identity check (§6, which only answers
+"is this message from MY own bot?"), Herald relates every message to a
+<strong>Participant</strong> — a logical Subscriber/User. The same
+logical person may have a DIFFERENT username on every messenger, so
+identity is resolved per channel. This is the contract in <a
+href="../design/PARTICIPANT_ATTRIBUTION.md"><code>docs/design/PARTICIPANT_ATTRIBUTION.md</code></a>,
+inherited from HelixConstitution per §11.4.35.</p>
+<h3 id="6a1-per-channel-username-mapping">§6A.1 Per-channel username
+mapping</h3>
+<p>A Participant is backed by two PG tables:</p>
+<ul>
+<li><code>subscribers</code> — the logical party: canonical
+messenger-neutral <code>handle</code>, <code>display_name</code>,
+<code>kind ∈ {human, agent, service}</code>.</li>
+<li><code>subscriber_aliases</code> — the per-channel handle:
+<code>subscriber_id</code>, <code>channel</code>,
+<code>channel_user_id</code>, <strong>+ NEW
+<code>username TEXT</code></strong> (the per-channel
+<code>@handle</code> used for @-tagging — distinct from
+<code>channel_user_id</code>, which is the chat/user id).
+<code>UNIQUE (channel, channel_user_id)</code>.</li>
+</ul>
+<p>The <strong>canonical handle</strong> (the messenger-neutral string
+stored in a workable item's
+<code>created_by</code>/<code>assigned_to</code>) is either
+<code>Claude</code> (the reserved system-agent sentinel —
+<code>kind=agent</code>, NEVER tagged) or a human's canonical handle
+(defaults to their Telegram <code>@username</code> since Telegram is the
+primary messenger). Resolution bridges the two worlds:</p>
+<ul>
+<li>inbound —
+<code>ResolveSender(channel, channel_user_id, username)</code> maps a
+received message's sender to a canonical handle;</li>
+<li>outbound — <code>UsernameFor(handle, channel)</code> returns the
+<code>@username</code> for a canonical handle on a target channel,
+reporting not-found when the participant has no alias there (you cannot
+tag someone who is not on that messenger).</li>
+</ul>
+<h3 id="6a2-operator-env-var">§6A.2 Operator env var</h3>
+<p>The <strong>operator</strong> — the one human who drives the system
+via the Claude Code CLI — is designated by env var, NOT a DB flag:</p>
+<table>
+<thead>
+<tr>
+<th>Env var</th>
+<th>Example value</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>HERALD_TGRAM_OPERATOR_USERNAME</code></td>
+<td><code>@milos85vasic</code></td>
+<td>the operator's Telegram <code>@username</code> (primary
+messenger)</td>
+</tr>
+<tr>
+<td><code>HERALD_&lt;CHANNEL&gt;_OPERATOR_USERNAME</code></td>
+<td><code>HERALD_SLACK_OPERATOR_USERNAME=…</code></td>
+<td>per-messenger generalization for any other channel</td>
+</tr>
+</tbody>
+</table>
+<p>The operator's canonical handle equals this env value
+(<code>IdentityResolver.OperatorHandle()</code>).</p>
+<h3 id="6a3--tagging-behaviour">§6A.3 @-tagging behaviour</h3>
+<p>On any workable-item event, the outbound notification to each channel
+@-tags the participant(s) who must be aware, resolved to that channel's
+<code>@username</code>:</p>
+<ul>
+<li>tag <code>assigned_to</code> when it is a human handle AND
+<code>assigned_to != Operator</code>;</li>
+<li>tag <code>created_by</code> when it is a human handle AND
+<code>created_by != Operator</code> AND
+<code>created_by != "Claude"</code>;</li>
+<li><code>"Claude"</code> is NEVER tagged (it is the system); the
+Operator is NEVER tagged (no self-ping);</li>
+<li>de-dup, then resolve each handle to the channel's
+<code>@username</code> and skip any participant with no alias on that
+channel.</li>
+</ul>
+<p>The <code>tgram</code> adapter renders a mention as
+<code>@username</code> (a Telegram username mention reaches a group
+member); other adapters render their channel's native mention syntax
+(Slack <code>&lt;@U…&gt;</code>, etc. — future). Attribution columns +
+the wiring points are documented in <a
+href="WORKABLE_ITEMS_INTEGRATION.md"><code>WORKABLE_ITEMS_INTEGRATION.md</code></a>
+§3.6–§3.8.</p>
 <hr />
 <h2 id="7-url-schemes">§7. URL schemes</h2>
 <p>Adapters accept both env-driven <code>channels.Config</code>

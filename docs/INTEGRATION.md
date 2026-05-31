@@ -8,11 +8,11 @@
 
 | Field | Value |
 |---|---|
-| Revision | 1 |
+| Revision | 2 |
 | Created | 2026-05-22 |
-| Last modified | 2026-05-22 |
+| Last modified | 2026-05-31 |
 | Status | active |
-| Status summary | First-cut consumer integration guide written after Wave 3b lands the §32 7-stage Runner (commit `c2b67c3`). Covers: adding Herald as a submodule, the parent-discovery contract for the HelixConstitution, credential configuration via the wizard, running migrations, starting `pherald serve`, emitting a first CloudEvent via `POST /v1/events`, verifying delivery, running the anti-bluff battery. Known limitations + Wave 4 transport roadmap (HTTP/3 + Brotli + TOON — design doc landed in commit `c60b3fd`) called out at the end. |
+| Status summary | r2: added a §5 mention + doc-link for the `HERALD_<CHANNEL>_OPERATOR_USERNAME` operator env var and the participant/attribution contract (`docs/design/PARTICIPANT_ATTRIBUTION.md`) driving `created_by`/`assigned_to` attribution + notification @-tagging. First-cut consumer integration guide written after Wave 3b lands the §32 7-stage Runner (commit `c2b67c3`). Covers: adding Herald as a submodule, the parent-discovery contract for the HelixConstitution, credential configuration via the wizard, running migrations, starting `pherald serve`, emitting a first CloudEvent via `POST /v1/events`, verifying delivery, running the anti-bluff battery. Known limitations + Wave 4 transport roadmap (HTTP/3 + Brotli + TOON — design doc landed in commit `c60b3fd`) called out at the end. |
 | Issues | none |
 | Issues summary | — |
 | Fixed | (n/a — first revision) |
@@ -180,6 +180,8 @@ The wizard:
 §107 evidence baked in: every step that claims success carries positive runtime evidence. The wizard's smoke-test invariants (see `pherald/internal/wizard/telegram_test.go`) prove against an httptest fixture that opts/env/prompt all work as documented.
 
 **Available services**: `telegram`, `claude-code`, `all`. Other channels (Slack, Email, etc.) are documented in `docs/guides/messengers/` but their wizard flows haven't shipped yet.
+
+**Operator identity for attribution + @-tagging.** Set `HERALD_TGRAM_OPERATOR_USERNAME` (e.g. `@milos85vasic`; generalizes to `HERALD_<CHANNEL>_OPERATOR_USERNAME`) to designate yourself as the operator. It drives workable-item `created_by`/`assigned_to` attribution and the notification @-tagging matrix (the operator and the `Claude` system agent are never tagged). Authoritative contract: [`docs/design/PARTICIPANT_ATTRIBUTION.md`](design/PARTICIPANT_ATTRIBUTION.md); operator setup in [`docs/guides/OPERATOR_CREDENTIALS.md`](guides/OPERATOR_CREDENTIALS.md) Step 4b; full behaviour in [`docs/guides/WORKABLE_ITEMS_INTEGRATION.md`](guides/WORKABLE_ITEMS_INTEGRATION.md) §3.6–§3.8.
 
 ---
 

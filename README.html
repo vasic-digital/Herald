@@ -112,7 +112,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>3</td>
+<td>4</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -120,7 +120,7 @@
 </tr>
 <tr>
 <td>Last modified</td>
-<td>2026-05-20</td>
+<td>2026-05-31</td>
 </tr>
 <tr>
 <td>Status</td>
@@ -128,8 +128,14 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td>Updated spec links to V3 (active) + archive/ for V1/V2; repo-layout
-block reflects current docs/specs/mvp/ tree.</td>
+<td>r4: added a credentials-guide bullet + doc-link for the
+<code>HERALD_&lt;CHANNEL&gt;_OPERATOR_USERNAME</code> operator env var
+and the participant/attribution contract
+(<code>docs/design/PARTICIPANT_ATTRIBUTION.md</code>) driving
+<code>created_by</code>/<code>assigned_to</code> attribution +
+notification @-tagging. Prior r3: updated spec links to V3 (active) +
+archive/ for V1/V2; repo-layout block reflects current docs/specs/mvp/
+tree.</td>
 </tr>
 <tr>
 <td>Issues</td>
@@ -570,6 +576,15 @@ is the umbrella reference covering:</p>
 no obvious-format secrets; <code>.env.example</code> only has
 placeholders)</li>
 <li>Quickstart-compose vs native pherald operating modes</li>
+<li>The <code>HERALD_&lt;CHANNEL&gt;_OPERATOR_USERNAME</code> operator
+env var (e.g. <code>HERALD_TGRAM_OPERATOR_USERNAME=@milos85vasic</code>)
+that drives workable-item
+<code>created_by</code>/<code>assigned_to</code> attribution +
+notification @-tagging — authoritative contract <a
+href="docs/design/PARTICIPANT_ATTRIBUTION.md"><code>docs/design/PARTICIPANT_ATTRIBUTION.md</code></a>,
+full behaviour in <a
+href="docs/guides/WORKABLE_ITEMS_INTEGRATION.md"><code>docs/guides/WORKABLE_ITEMS_INTEGRATION.md</code></a>
+§3.6–§3.8</li>
 <li>Troubleshooting (SQLSTATE 28P01, "DSN not set", SKIP-with-reason
 logic per §11.4.3, …)</li>
 </ul>

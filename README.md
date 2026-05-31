@@ -8,11 +8,11 @@
 
 | Field | Value |
 |---|---|
-| Revision | 3 |
+| Revision | 4 |
 | Created | 2026-05-15 |
-| Last modified | 2026-05-20 |
+| Last modified | 2026-05-31 |
 | Status | active |
-| Status summary | Updated spec links to V3 (active) + archive/ for V1/V2; repo-layout block reflects current docs/specs/mvp/ tree. |
+| Status summary | r4: added a credentials-guide bullet + doc-link for the `HERALD_<CHANNEL>_OPERATOR_USERNAME` operator env var and the participant/attribution contract (`docs/design/PARTICIPANT_ATTRIBUTION.md`) driving `created_by`/`assigned_to` attribution + notification @-tagging. Prior r3: updated spec links to V3 (active) + archive/ for V1/V2; repo-layout block reflects current docs/specs/mvp/ tree. |
 | Issues | none |
 | Issues summary | — |
 | Fixed | spec-path references updated to specification.V3.md path |
@@ -206,6 +206,7 @@ Each Herald flavor binary ships with a nano-detail operator reference under [`do
 - How to set credentials via `~/.bashrc` / `~/.zshrc` (shell-export path) AND `.env` (project-local path) — both supported per spec V3 §3.3
 - Pre-commit secrets audit checklist (`.env` not tracked; no obvious-format secrets; `.env.example` only has placeholders)
 - Quickstart-compose vs native pherald operating modes
+- The `HERALD_<CHANNEL>_OPERATOR_USERNAME` operator env var (e.g. `HERALD_TGRAM_OPERATOR_USERNAME=@milos85vasic`) that drives workable-item `created_by`/`assigned_to` attribution + notification @-tagging — authoritative contract [`docs/design/PARTICIPANT_ATTRIBUTION.md`](docs/design/PARTICIPANT_ATTRIBUTION.md), full behaviour in [`docs/guides/WORKABLE_ITEMS_INTEGRATION.md`](docs/guides/WORKABLE_ITEMS_INTEGRATION.md) §3.6–§3.8
 - Troubleshooting (SQLSTATE 28P01, "DSN not set", SKIP-with-reason logic per §11.4.3, …)
 
 Per Universal Constitution §11.4.10: **`.env` files MUST NEVER be committed**. The repo's `.gitignore` already covers `.env`. The committed `quickstart/.env.example` is the only credentials-file that lives in git, and it contains only placeholder values.

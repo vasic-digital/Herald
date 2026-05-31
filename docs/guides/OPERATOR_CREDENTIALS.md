@@ -8,11 +8,11 @@
 
 | Field | Value |
 |---|---|
-| Revision | 1 |
+| Revision | 2 |
 | Created | 2026-05-21 |
-| Last modified | 2026-05-21 |
+| Last modified | 2026-05-31 |
 | Status | active |
-| Status summary | Comprehensive step-by-step guide for obtaining and configuring every environment variable Herald requires — covers live integrations (Postgres, Redis, Telegram, Claude Code) AND reserved env-var names for planned integrations (Slack, Email, Max, Microsoft Teams, Lark, Discord, WhatsApp, Viber, OpenCode, Aider, Gemini, Cursor). Documents the dual-source resolution model (shell exports vs `.env`) per spec §3.3 + Universal Constitution §11.4.10. |
+| Status summary | r2: documented the `HERALD_TGRAM_OPERATOR_USERNAME` operator env var (Telegram env table row + Step 4b) per the participant/attribution contract `docs/design/PARTICIPANT_ATTRIBUTION.md` — designates the operator (env, not DB flag), drives `created_by`/`assigned_to` attribution + the @-tagging no-self-ping rule, generalizes to `HERALD_<CHANNEL>_OPERATOR_USERNAME`. Comprehensive step-by-step guide for obtaining and configuring every environment variable Herald requires — covers live integrations (Postgres, Redis, Telegram, Claude Code) AND reserved env-var names for planned integrations (Slack, Email, Max, Microsoft Teams, Lark, Discord, WhatsApp, Viber, OpenCode, Aider, Gemini, Cursor). Documents the dual-source resolution model (shell exports vs `.env`) per spec §3.3 + Universal Constitution §11.4.10. |
 | Issues | none |
 | Issues summary | — |
 | Fixed | (n/a — new guide) |
@@ -202,6 +202,7 @@ REQUIRED for the Telegram channel. Closed by HRD-011 (code complete; live eviden
 | `HERALD_TGRAM_CHAT_ID` | Target chat ID (numeric) | (no default) | `/getUpdates` (see steps below) |
 | `HERALD_TGRAM_LIVE_INBOUND` | Enables the E19 vertical-slice test | (unset) | set to `1` when running E19 + hand-sending a message |
 | `HERALD_TGRAM_WEBHOOK_SECRET` | Webhook secret_token (PRODUCTION) | (unset) | `openssl rand -hex 32` — reserved for HRD-NNN webhook-ingress |
+| `HERALD_TGRAM_OPERATOR_USERNAME` | The operator's Telegram `@username` — used for workable-item attribution + @-tagging | (unset) | your own Telegram `@username` (e.g. `@milos85vasic`) — see step below |
 
 #### Step 1: Create a bot via @BotFather
 
@@ -234,6 +235,21 @@ openssl rand -hex 32     # generate a 256-bit secret
 ```
 
 Set `HERALD_TGRAM_WEBHOOK_SECRET=<the-hex>`. Configure the bot's webhook URL to `https://your-herald.example.com/v1/webhooks/tgram` (when HRD-NNN ships webhook ingress; long-poll only in v1).
+
+#### Step 4b: (Attribution + @-tagging) set the operator username
+
+Per the participant/attribution contract ([`docs/design/PARTICIPANT_ATTRIBUTION.md`](../design/PARTICIPANT_ATTRIBUTION.md)), set `HERALD_TGRAM_OPERATOR_USERNAME` to your own Telegram `@username`:
+
+```bash
+export HERALD_TGRAM_OPERATOR_USERNAME='@milos85vasic'
+```
+
+This designates you as the **operator** (the one human who drives the system via the Claude Code CLI) — by env var, NOT a DB flag. Your canonical handle equals this value. It drives two behaviours:
+
+- **Attribution.** Workable items opened via the Claude Code CLI prompt get `created_by =` this value; `assigned_to` defaults to it.
+- **@-tagging.** The operator is NEVER @-tagged on notifications (no self-ping); only non-operator human assignees/openers are tagged (and `Claude`, the system agent, is never tagged).
+
+The env var generalizes to `HERALD_<CHANNEL>_OPERATOR_USERNAME` for any other messenger (e.g. `HERALD_SLACK_OPERATOR_USERNAME`). A Participant may have a different `@username` on each messenger; the per-channel mapping lives in PG `subscriber_aliases.username`. See [`MESSENGER_CHANNELS.md`](MESSENGER_CHANNELS.md) §6A and [`WORKABLE_ITEMS_INTEGRATION.md`](WORKABLE_ITEMS_INTEGRATION.md) §3.6–§3.8.
 
 #### Step 5: Verify
 

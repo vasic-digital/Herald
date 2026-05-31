@@ -114,7 +114,7 @@ id="herald--atmosphere-workable-items-integration-operator-guide">Herald
 <tbody>
 <tr>
 <td>Revision</td>
-<td>1</td>
+<td>2</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -122,7 +122,7 @@ id="herald--atmosphere-workable-items-integration-operator-guide">Herald
 </tr>
 <tr>
 <td>Last modified</td>
-<td>2026-05-29</td>
+<td>2026-05-31</td>
 </tr>
 <tr>
 <td>Status</td>
@@ -130,9 +130,16 @@ id="herald--atmosphere-workable-items-integration-operator-guide">Herald
 </tr>
 <tr>
 <td>Status summary</td>
-<td>Operator-facing reference for the ATMOSphere↔︎Herald workable-items
-integration (Phase 2 build). Documents the OUTBOUND flow (workable-items
-SQLite SSoT + Markdown trackers → <code>commons_watch</code> →
+<td>r2: documented the participant/attribution contract
+(<code>docs/design/PARTICIPANT_ATTRIBUTION.md</code>) — new §3.6
+(<code>created_by</code>/<code>assigned_to</code> columns), §3.7 (the
+<code>HERALD_&lt;CHANNEL&gt;_OPERATOR_USERNAME</code> operator env var +
+per-messenger
+<code>subscribers</code>/<code>subscriber_aliases.username</code>
+mapping), §3.8 (the @-tagging behaviour matrix). Operator-facing
+reference for the ATMOSphere↔︎Herald workable-items integration (Phase 2
+build). Documents the OUTBOUND flow (workable-items SQLite SSoT +
+Markdown trackers → <code>commons_watch</code> →
 <code>commons_workable.Diff</code> →
 <code>pherald/internal/workflow</code> bridge → existing
 <code>pherald/internal/runner</code> fan-out → channels) and the INBOUND
@@ -583,6 +590,142 @@ tool for the implemented <code>sync</code> / <code>diff</code> /
 <code>validate</code> rather than reimplementing them; the regenerator +
 drift resolution is HRD-150.</li>
 </ul>
+<h3
+id="36-participant-attribution--created_by--assigned_to-per-docsdesignparticipant_attributionmd">§3.6
+Participant attribution — <code>created_by</code> /
+<code>assigned_to</code> (per
+<code>docs/design/PARTICIPANT_ATTRIBUTION.md</code>)</h3>
+<p>Per the participant/attribution contract (<a
+href="../design/PARTICIPANT_ATTRIBUTION.md"><code>docs/design/PARTICIPANT_ATTRIBUTION.md</code></a>,
+inherited from HelixConstitution per §11.4.35), the <code>items</code>
+table gains two attribution columns:</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>created_by</code></td>
+<td><code>TEXT NOT NULL DEFAULT ''</code></td>
+<td>the <strong>canonical handle</strong> of whoever opened/assigned the
+item</td>
+</tr>
+<tr>
+<td><code>assigned_to</code></td>
+<td><code>TEXT NOT NULL DEFAULT ''</code></td>
+<td>the <strong>canonical handle</strong> of the responsible participant
+(default = the operator)</td>
+</tr>
+</tbody>
+</table>
+<p>A <strong>canonical handle</strong> is a messenger-neutral string:
+either the reserved sentinel <code>Claude</code> (the system agent —
+<code>kind=agent</code>, NEVER tagged) or a human's canonical handle
+(which defaults to their Telegram <code>@username</code> since Telegram
+is the primary messenger). The handle is the same value that appears in
+the Markdown trackers, so the SSoT round-trips byte-identically.</p>
+<p><strong>Who sets <code>created_by</code>:</strong></p>
+<ul>
+<li>Opened via the <strong>Claude Code CLI prompt</strong>
+(operator-driven) → <code>created_by = OperatorHandle()</code> (see
+§3.7).</li>
+<li>Opened by <strong>System/Claude</strong> detecting an
+issue/task/improvement/missing-feature →
+<code>created_by = "Claude"</code>.</li>
+<li>Received <strong>through Herald</strong> (an inbound subscriber
+message that opens/updates the item) → <code>created_by =</code> the
+sender's resolved canonical handle
+(<code>IdentityResolver.ResolveSender</code> maps the message's
+per-channel <code>@username</code> + ids to the canonical handle).</li>
+</ul>
+<p><strong><code>assigned_to</code></strong> defaults to
+<code>OperatorHandle()</code> and may be overridden explicitly (a prompt
+or inbound message that assigns to <code>@someoneelse</code>).</p>
+<p>In the Markdown trackers these surface as
+<code>**Created-By:** &lt;handle&gt;</code> /
+<code>**Assigned-To:** &lt;handle&gt;</code> (ATMOSphere heading-format)
+or as <strong>Created-By</strong> / <strong>Assigned-To</strong>
+pipe-table columns (Herald
+<code>Issues.md</code>/<code>Fixed.md</code>); the parser reads them and
+<code>validate</code> accepts empty values for legacy items.
+<code>commons_workable.Item</code> carries <code>CreatedBy</code> +
+<code>AssignedTo</code>, and the change-feed <code>Diff</code> emits an
+<code>item.field.changed</code> for either column.</p>
+<h3 id="37-operator-env-var--per-messenger-username-mapping">§3.7
+Operator env var + per-messenger username mapping</h3>
+<p>The <strong>operator</strong> is the one human who drives the system
+via the Claude Code CLI. They are designated by an env var, NOT a DB
+flag:</p>
+<table>
+<thead>
+<tr>
+<th>Env var</th>
+<th>Example value</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>HERALD_TGRAM_OPERATOR_USERNAME</code></td>
+<td><code>@milos85vasic</code></td>
+<td>the operator's Telegram <code>@username</code> (primary
+messenger)</td>
+</tr>
+<tr>
+<td><code>HERALD_&lt;CHANNEL&gt;_OPERATOR_USERNAME</code></td>
+<td><code>HERALD_SLACK_OPERATOR_USERNAME=…</code></td>
+<td>per-messenger generalization for any other channel</td>
+</tr>
+</tbody>
+</table>
+<p>The operator's canonical handle equals this env value;
+<code>IdentityResolver.OperatorHandle()</code> returns it. The operator
+is otherwise a normal Participant.</p>
+<p>A <strong>Participant</strong> (logical Subscriber/User) may have a
+DIFFERENT username on every messenger. The mapping is held in PG:
+<code>subscribers</code> carries the logical party (canonical
+<code>handle</code>, <code>display_name</code>,
+<code>kind ∈ {human, agent, service}</code>), and
+<code>subscriber_aliases</code> carries the per-channel handle
+(<code>subscriber_id</code>, <code>channel</code>,
+<code>channel_user_id</code>, <strong>+ NEW
+<code>username TEXT</code></strong> — the per-channel
+<code>@handle</code> used for tagging, distinct from
+<code>channel_user_id</code>, which is the chat/user id;
+<code>UNIQUE (channel, channel_user_id)</code>). Resolution:
+<code>ResolveSender(channel, channel_user_id, username)</code> maps an
+inbound message to a canonical handle;
+<code>UsernameFor(handle, channel)</code> returns the
+<code>@username</code> for a canonical handle on a target channel (and
+reports not-found when the participant has no alias on that channel —
+you cannot tag someone who is not on that messenger).</p>
+<h3 id="38-tagging-behaviour-on-notifications">§3.8 Tagging behaviour on
+notifications</h3>
+<p>On any workable-item event, the outbound notification to each channel
+@-tags the participant(s) who must be aware, resolved to that channel's
+<code>@username</code>:</p>
+<ul>
+<li>tag <code>assigned_to</code> when it is a human handle AND
+<code>assigned_to != Operator</code>;</li>
+<li>tag <code>created_by</code> when it is a human handle AND
+<code>created_by != Operator</code> AND
+<code>created_by != "Claude"</code>;</li>
+<li><code>"Claude"</code> is NEVER tagged (it is the system); the
+Operator is NEVER tagged (no self-ping);</li>
+<li>de-dup the set, then resolve each handle to the channel's
+<code>@username</code> and skip any participant with no alias on that
+channel.</li>
+</ul>
+<p>So: assigned-to-Operator → no tag;
+opened-by-Operator-assigned-to-another → tag the assignee;
+opened-by-a-non-Operator-non-Claude subscriber → tag them. The
+<code>tgram</code> adapter renders a mention as <code>@username</code>;
+other adapters render their channel's native mention syntax
+(future).</p>
 <hr />
 <h2 id="4-running-pherald-watch">§4. Running
 <code>pherald watch</code></h2>
@@ -826,6 +969,16 @@ then a Kind rank, then field name). Each <code>Change</code> also maps
 single-line forms above; richer formatting polish (multi-field grouping,
 attribution <code>by</code>/<code>on</code>) is tracked under
 HRD-151.</p>
+</blockquote>
+<blockquote>
+<p><strong>Participant @-tagging (per
+<code>docs/design/PARTICIPANT_ATTRIBUTION.md</code>).</strong> The
+rendered notification body is prefixed/suffixed with the resolved
+<code>@username</code>s for the participants the tagging matrix selects
+(see §3.8): the <code>assigned_to</code> and/or <code>created_by</code>
+human handles, never <code>"Claude"</code> and never the Operator, each
+resolved to the target channel's <code>@username</code> and skipped if
+the participant has no alias on that channel.</p>
 </blockquote>
 <hr />
 <h2 id="7-testing-and-evidence">§7. Testing and evidence</h2>
