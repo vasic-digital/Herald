@@ -47,7 +47,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>22</td>
+<td>23</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -63,7 +63,15 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td>**r22: §11.4.90 + §11.4.19 atomic Obsolete→Fixed migration of the 4
+<td>**r23: §11.4.19 closed HRD-117 (Wave 7 T8 spec-doc) Issues→Fixed —
+deliverable verified present in active spec V4 (§11.0/§32.2/§43;
+doc-only, product code already Fixed under HRD-116/118-121); open 10→9.
+Also refreshed the frozen Wave-2/3a-era body sections (Project phase /
+Implementation / Operations) to current reality (18 modules, Waves 2–8,
+v0.6.0, gate 15/15, e2e 167/0/0) — current-state notes added, the
+detailed Wave-2/3a snapshots retained as labeled history; authoritative
+per-module list now points to the refreshed CLAUDE.md. Prior r22:
+§11.4.90 + §11.4.19 atomic Obsolete→Fixed migration of the 4
 <code>Obsolete</code> HRDs (HRD-143 legacy
 <code>TestSubscribe_LiveBotAPI</code>, HRD-144
 <code>tests/test_wave6_live_loop.sh</code>, HRD-145
@@ -198,11 +206,12 @@ closed HRD-016 (Wave 3b pherald Runner live). r12 closed HRD-011
 </tr>
 <tr>
 <td>Issues</td>
-<td>10 open in <code>Issues.md</code> r47: HRD-008, HRD-081
+<td>9 open in <code>Issues.md</code> r48: HRD-008, HRD-081
 (operator/upstream); HRD-115 (Slack adapter — operator-gated on LIVE
-round-trip evidence per §107.x); HRD-117 (spec doc-only); HRD-131,
-HRD-150, HRD-155, HRD-156, HRD-157, HRD-158 (ATMOSphere/SSoT externally
-gated). The 4 Obsolete HRDs (HRD-143/144/145 + HRD-015) were migrated to
+round-trip evidence per §107.x); HRD-131, HRD-150, HRD-155, HRD-156,
+HRD-157, HRD-158 (ATMOSphere/SSoT externally gated). HRD-117 (spec
+doc-only) closed r48 — deliverable verified present in active spec V4.
+The 4 Obsolete HRDs (HRD-143/144/145 + HRD-015) were migrated to
 <code>Fixed.md</code> per §11.4.90; the v1.0.0 closure-migration earlier
 moved HRD-019..025 + HRD-029..056 + HRD-085..089 +
 HRD-116/118/119/120/121 + HRD-148/149/151/152/153/154 to
@@ -210,9 +219,9 @@ HRD-116/118/119/120/121 + HRD-148/149/151/152/153/154 to
 </tr>
 <tr>
 <td>Issues summary</td>
-<td>see <code>Issues.md</code> r47 — §11.4.90+§11.4.19 atomic
-Obsolete→Fixed migration of the 4 Obsolete HRDs; 10 items remain open,
-the rest evidence-gated.</td>
+<td>see <code>Issues.md</code> r48 — HRD-117 closed (§11.4.19) leaving 9
+open; the rest evidence-gated (live messenger creds / operator
+validation / ATMOSphere cross-repo).</td>
 </tr>
 <tr>
 <td>Fixed</td>
@@ -251,15 +260,23 @@ multi-mirror push + full anti-bluff verification.</td>
 <li><a href="#risk-surface">Risk surface</a></li>
 </ul>
 <h2 id="project-phase">Project phase</h2>
-<p><strong>Implementation-r1, Foundation complete + Wave 2 flavor
-scaffolds landed.</strong> Spec V3 r8 is active, the Go module
-foundation compiles, all three Foundation milestones (M1/M2/M3) plus the
-Wave 2 flavor-scaffold workstream have landed, and the §107
-end-user-usability covenant is now explicit in Herald's three root docs
-+ gate (added 2026-05-20). The remaining cycle is wiring live channel
-integrations (HRD-011, HRD-016, HRD-024, HRD-028, HRD-098), validating
-the §26.5 quickstart end-to-end on operator hardware, and implementing
-the 28 §43 command bodies still stubbed.</p>
+<p><strong>Active multi-wave implementation — Waves 2–8 shipped; tag
+v0.6.0 (2026-05-28).</strong> As of 2026-05-31 the active spec is
+<strong>V4</strong>, the Go workspace (<strong>18 modules</strong>)
+builds and tests green, and all three Foundation milestones (M1–M3) plus
+Waves 2 through 8 have landed: flavor scaffolds (Wave 2), Wave 3a/3b
+REST substrate + live routes, Wave 4a/4b HTTP/3 + TOON, Wave 5
+<code>qaherald</code>, Wave 6/6.5 <code>pherald listen</code> inbound
+runtime + lifecycle, Wave 7 multi-channel framework + Slack adapter,
+Wave 8 Track B MTProto §11.4.98 full-automation harness. The
+participant-attribution (§11.4.104), natural-language intent-recognition
+(§11.4.105), and Docs Chain documentation-sync (§11.4.106) mandates are
+integrated. The remaining <strong>~9 open HRDs</strong> in
+<code>Issues.md</code> are evidence-gated (live messenger credentials,
+operator quickstart validation, the ATMOSphere cross-repo integration);
+the bulk of the catalogue is in <code>Fixed.md</code>. The authoritative
+current per-module/component list lives in <code>CLAUDE.md</code>
+"Project status"; this doc summarizes status + history.</p>
 <h2 id="specification">Specification</h2>
 <ul>
 <li><strong>Active spec:</strong>
@@ -284,6 +301,29 @@ meta-test in <code>tests/test_i8_usability_meta.sh</code> (5/5
 PASS).</li>
 </ul>
 <h2 id="implementation">Implementation</h2>
+<blockquote>
+<p><strong>Current state (2026-05-31):</strong> the per-module table
+below is a <strong>Wave-2/3a-era snapshot</strong> retained as history —
+several rows are stale (modules then marked "stub"/"partial"/"pending"
+are now live). For the authoritative current module/component list see
+<a href="../CLAUDE.md"><code>CLAUDE.md</code></a> "Project status"
+(refreshed 2026-05-31) and <a href="Fixed.md"><code>Fixed.md</code></a>
+for the wave-by-wave per-HRD record. Summary: <strong>18 workspace
+modules</strong> (10 shared/foundation: <code>commons</code>,
+<code>commons_auth</code>, <code>commons_constitution</code>,
+<code>commons_infra</code>, <code>commons_messaging</code>,
+<code>commons_prefix</code>, <code>commons_storage</code>,
+<code>commons_tls</code>, <code>commons_watch</code>,
+<code>commons_workable</code>; + 8 flavor binaries
+<code>pherald</code>/<code>sherald</code>/<code>cherald</code>/<code>bherald</code>/<code>rherald</code>/<code>iherald</code>/<code>scherald</code>/<code>qaherald</code>),
+all building + testing green. Live and tested: the
+<code>pherald listen</code> inbound runtime, the Telegram + Slack
+channel adapters, the Claude Code dispatcher,
+<code>commons_storage</code> (pgx + River + Redis), and the Gin
+<code>/v1/*</code> REST API across the serving flavors — plus
+participant-attribution (§11.4.104), intent-recognition (§11.4.105), and
+the Docs Chain integration (§11.4.106).</p>
+</blockquote>
 <table>
 <thead>
 <tr>
@@ -406,6 +446,17 @@ helpers. Catalogue-Check: no-match → vendored Herald-internal
 </tbody>
 </table>
 <h2 id="operations">Operations</h2>
+<blockquote>
+<p><strong>Current verified state (2026-05-31):</strong> inheritance
+gate <strong>15 PASS / 0 FAIL</strong>;
+<code>scripts/e2e_bluff_hunt.sh</code> <strong>167 PASS / 0 FAIL / 0
+stress-chaos-evidence SKIP</strong> (the suite grew through Waves 3a–8 +
+the E140–E147 participant-attribution / intent-recognition / Docs-Chain
+invariants); all four mirrors (GitHub / GitLab / GitFlic / GitVerse) in
+sync; latest tag <strong>v0.6.0</strong> (2026-05-28); workspace at
+<strong>18 modules</strong> + 17 vendored submodules. The detailed
+bullets below are a Wave-3a-era snapshot retained as history.</p>
+</blockquote>
 <ul>
 <li><strong>Repo hygiene:</strong> <code>main</code> only; four-mirror
 fan-out proven across spec + Foundation M1/M2/M3 + anti-bluff infra +
@@ -457,15 +508,22 @@ locally.</li>
 line per Universal §11.4.74. New HRDs (HRD-029..056 §43 catalogue)
 currently default to <code>TBD</code> pending operator review.</li>
 <li><strong>Versioning discipline (operator mandate
-2026-05-20).</strong> Minor changes bump secondary version, major bump
-primary. Currently at V3 r7→r8 within the V3 series; a full V4 rewrite
-is reserved for a primary-version jump.</li>
-<li><strong>Live channel integrations untested at runtime.</strong>
-HRD-011 (Telegram telebot live) requires operator-supplied credentials
-per <code>docs/CONTINUATION.md</code>. HRD-012 (Claude Code
-<code>claude --resume</code> live) is closed with live PASS evidence
-captured. The §107 covenant blocks claims of "done" on these until
-end-user evidence is captured.</li>
+2026-05-20).</strong> Minor changes bump the secondary version, major
+the primary. The active spec is now <strong>V4</strong> (V1–V3 archived
+under <code>docs/specs/mvp/archive/</code>); the V3→V4 jump landed
+2026-05-31, incorporating participant-attribution (§11.4.104) +
+intent-recognition (§11.4.105).</li>
+<li><strong>Live messenger round-trips need operator credentials for
+full LIVE evidence.</strong> The Telegram + Slack adapters are
+implemented and hermetically tested, and the Wave 8 MTProto user-account
+harness proves the §11.4.98 full-automation round-trip
+<strong>LIVE</strong> (HRD-140/141/142, captured under
+<code>docs/qa/HRD-LIVE-MTPROTO-*</code>). HRD-012 (Claude Code dispatch)
+is closed with live PASS evidence. What remains gated: full per-channel
+LIVE end-to-end evidence under <code>docs/qa/</code> for channels like
+Slack (HRD-115) still requires operator-supplied credentials per
+<code>docs/CONTINUATION.md</code> — the §107 covenant blocks "done" on a
+live channel until that evidence lands.</li>
 <li><strong>HRD-008 operator-side quickstart not yet validated
 end-to-end on a fresh laptop.</strong> The compose stack works in dev;
 operator hardware validation is the next concrete §107 evidence
