@@ -24,8 +24,8 @@ This guide walks you through every step needed to enable Slack in Herald — fro
 - [Pre-requisites](#pre-requisites)
 - [How Slack fits into Herald (architecture)](#1--how-slack-fits-into-herald-architecture)
 - [Step 2 — Create the Slack app](#2--step-2--create-the-slack-app)
-- [Step 3 — OAuth scopes + install → get the `xoxb-` bot token](#3--step-3--oauth-scopes--install--get-the-xoxb--bot-token)
-- [Step 4 — Enable Socket Mode → get the `xapp-` app-level token](#4--step-4--enable-socket-mode--get-the-xapp--app-level-token)
+- [Step 3 — OAuth scopes + install → get the `xoxb-` bot token](#3--step-3--oauth-scopes--install--get-the-xoxb-<bot-token>)
+- [Step 4 — Enable Socket Mode → get the `xapp-` app-level token](#4--step-4--enable-socket-mode--get-the-xapp-<app-level-token>)
 - [Step 5 — Find the channel ID + invite the bot](#5--step-5--find-the-channel-id--invite-the-bot)
 - [Step 6 — Provide the credentials to Herald (env vars)](#6--step-6--provide-the-credentials-to-herald-env-vars)
 - [Step 7 — Verify the live round-trip (E127 / `TestSlack_Live_Send`)](#7--step-7--verify-the-live-round-trip-e127--testslack_live_send)
@@ -107,7 +107,7 @@ The bot token (`xoxb-…`) is what Herald uses for **all outbound** calls. You g
 4. Review the permission screen and click **Allow**.
 5. You're returned to **OAuth & Permissions**. Under **OAuth Tokens for Your Workspace**, copy the **Bot User OAuth Token** — it starts with `xoxb-`:
    ```
-   xoxb-0000000000000-0000000000000-XXXXXXXXXXXXXXXXXXXXXXXX
+   xoxb-<13-digit-team>-<13-digit-bot>-<24-char-secret>
    ```
 6. **Copy it immediately** to a password manager / secrets vault. This is `HERALD_SLACK_BOT_TOKEN`.
 
@@ -123,7 +123,7 @@ Socket Mode is Herald's **inbound** transport — the persistent WebSocket that 
 4. Give the token a name (e.g. `socket`) and add the scope **`connections:write`** — the official scope that "Grants permission to generate websocket URIs and connect to Socket Mode" (verified 2026-05-31). This is the **only** scope an app-level token needs for Herald.
 5. Click **Generate**. Copy the token — it starts with `xapp-`:
    ```
-   xapp-1-A00000000-0000000000000-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+   xapp-1-<app-id>-<config-token-id>-<64-char-secret>
    ```
 6. **Copy it immediately** to your vault. This is `HERALD_SLACK_APP_TOKEN`.
 7. Open **Event Subscriptions** in the sidebar and ensure it is **On**. Under **Subscribe to bot events**, add **`message.channels`** (public channels) and/or **`message.groups`** (private channels) so the bot receives the `message` events that drive `Subscribe`. (Over Socket Mode you do **not** configure a Request URL — events arrive on the WebSocket.)
@@ -169,10 +169,10 @@ Herald reads exactly these env vars for Slack (verified against `pherald/cmd/phe
 
 Example `.env` block (values are placeholders):
 ```bash
-HERALD_SLACK_BOT_TOKEN=xoxb-0000000000000-0000000000000-XXXXXXXXXXXXXXXXXXXXXXXX
+HERALD_SLACK_BOT_TOKEN=xoxb-<13-digit-team>-<13-digit-bot>-<24-char-secret>
 HERALD_SLACK_CHANNEL_ID=C0123ABCD
 # Only needed if you want inbound (Socket Mode) replies:
-HERALD_SLACK_APP_TOKEN=xapp-1-A00000000-0000000000000-xxxxxxxxxxxxxxxxxxxxxxxx
+HERALD_SLACK_APP_TOKEN=xapp-1-<app-id>-<config-token-id>-<secret>
 # Optional — attribution/tagging:
 # HERALD_SLACK_OPERATOR_USERNAME=@yourhandle
 ```
@@ -226,7 +226,7 @@ docs/qa/HRD-115-LIVE-<run-id>/
 ## 8 — Token security (§107 redaction, rotation)
 
 - **Never commit a token.** Not in code, a PR, a commit message, a committed `.env`, a `docs/qa/` transcript, or any indexed location. `.env` is git-ignored; keep it that way.
-- **Tokens never leak to logs.** The qaherald Slack client deliberately keeps the token out of every error string — errors name the API method (`chat.postMessage failed: …`) but never the URL or token — and a belt-and-braces `sanitizeError(msg, token)` scrubs any accidental occurrence to `[REDACTED]`. The test **`TestSlack_Send_ErrorDoesNotLeakToken`** pins this with a planted sentinel `xoxb-SUPERSECRET-must-not-leak-7777` and asserts it never appears in error text. The production channel adapter likewise carries the bot token only in the `Authorization: Bearer` header, never in URLs.
+- **Tokens never leak to logs.** The qaherald Slack client deliberately keeps the token out of every error string — errors name the API method (`chat.postMessage failed: …`) but never the URL or token — and a belt-and-braces `sanitizeError(msg, token)` scrubs any accidental occurrence to `[REDACTED]`. The test **`TestSlack_Send_ErrorDoesNotLeakToken`** pins this with a planted sentinel `xoxb-<planted-sentinel-must-not-leak-7777>` and asserts it never appears in error text. The production channel adapter likewise carries the bot token only in the `Authorization: Bearer` header, never in URLs.
 - **Two tokens, two blast radii.** `xoxb-` (bot) can read/post per its granted scopes; `xapp-` (app-level) can open Socket Mode WebSockets. Rotate **both** if either leaks.
 - **Rotate by regenerating.** Bot token: **OAuth & Permissions → Reinstall / rotate** (or revoke + reinstall). App-level token: **Basic Information → App-Level Tokens → revoke** and generate a new one. Git-history scrubbing alone does **not** invalidate a leaked Slack token — you must revoke/rotate on Slack's side.
 - **Least privilege.** Grant only the scopes §3 lists for your actual use. Skip `files:write`/`files:read` if you don't send/receive attachments; skip `chat:write.public` if you invite the bot.

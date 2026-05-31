@@ -173,10 +173,11 @@ into Herald (architecture)</a></li>
 <li><a href="#2--step-2--create-the-slack-app">Step 2 — Create the Slack
 app</a></li>
 <li><a
-href="#3--step-3--oauth-scopes--install--get-the-xoxb--bot-token">Step 3
-— OAuth scopes + install → get the <code>xoxb-</code> bot token</a></li>
+href="#3--step-3--oauth-scopes--install--get-the-xoxb-&lt;bot-token&gt;">Step
+3 — OAuth scopes + install → get the <code>xoxb-</code> bot
+token</a></li>
 <li><a
-href="#4--step-4--enable-socket-mode--get-the-xapp--app-level-token">Step
+href="#4--step-4--enable-socket-mode--get-the-xapp-&lt;app-level-token&gt;">Step
 4 — Enable Socket Mode → get the <code>xapp-</code> app-level
 token</a></li>
 <li><a href="#5--step-5--find-the-channel-id--invite-the-bot">Step 5 —
@@ -432,7 +433,7 @@ Install</strong> if your workspace requires admin approval — see
 <li>You're returned to <strong>OAuth &amp; Permissions</strong>. Under
 <strong>OAuth Tokens for Your Workspace</strong>, copy the <strong>Bot
 User OAuth Token</strong> — it starts with <code>xoxb-</code>:
-<pre><code>xoxb-0000000000000-0000000000000-XXXXXXXXXXXXXXXXXXXXXXXX</code></pre></li>
+<pre><code>xoxb-&lt;13-digit-team&gt;-&lt;13-digit-bot&gt;-&lt;24-char-secret&gt;</code></pre></li>
 <li><strong>Copy it immediately</strong> to a password manager / secrets
 vault. This is <code>HERALD_SLACK_BOT_TOKEN</code>.</li>
 </ol>
@@ -467,7 +468,7 @@ Mode" (verified 2026-05-31). This is the <strong>only</strong> scope an
 app-level token needs for Herald.</li>
 <li>Click <strong>Generate</strong>. Copy the token — it starts with
 <code>xapp-</code>:
-<pre><code>xapp-1-A00000000-0000000000000-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</code></pre></li>
+<pre><code>xapp-1-&lt;app-id&gt;-&lt;config-token-id&gt;-&lt;64-char-secret&gt;</code></pre></li>
 <li><strong>Copy it immediately</strong> to your vault. This is
 <code>HERALD_SLACK_APP_TOKEN</code>.</li>
 <li>Open <strong>Event Subscriptions</strong> in the sidebar and ensure
@@ -587,10 +588,10 @@ names; never commit real values.</li>
 </ul>
 <p>Example <code>.env</code> block (values are placeholders):</p>
 <div class="sourceCode" id="cb4"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="va">HERALD_SLACK_BOT_TOKEN</span><span class="op">=</span>xoxb-0000000000000-0000000000000-XXXXXXXXXXXXXXXXXXXXXXXX</span>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="va">HERALD_SLACK_BOT_TOKEN</span><span class="op">=</span>xoxb-<span class="op">&lt;</span>13-digit-team<span class="op">&gt;</span>-<span class="op">&lt;</span>13-digit-bot<span class="op">&gt;</span>-<span class="op">&lt;</span>24-char-secret<span class="op">&gt;</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="va">HERALD_SLACK_CHANNEL_ID</span><span class="op">=</span>C0123ABCD</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Only needed if you want inbound (Socket Mode) replies:</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="va">HERALD_SLACK_APP_TOKEN</span><span class="op">=</span>xapp-1-A00000000-0000000000000-xxxxxxxxxxxxxxxxxxxxxxxx</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="va">HERALD_SLACK_APP_TOKEN</span><span class="op">=</span>xapp-1-<span class="op">&lt;</span>app-id<span class="op">&gt;</span>-<span class="op">&lt;</span>config-token-id<span class="op">&gt;</span>-<span class="op">&lt;</span>secret<span class="op">&gt;</span></span>
 <span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Optional — attribution/tagging:</span></span>
 <span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co"># HERALD_SLACK_OPERATOR_USERNAME=@yourhandle</span></span></code></pre></div>
 <blockquote>
@@ -682,10 +683,10 @@ the URL or token — and a belt-and-braces
 to <code>[REDACTED]</code>. The test
 <strong><code>TestSlack_Send_ErrorDoesNotLeakToken</code></strong> pins
 this with a planted sentinel
-<code>xoxb-SUPERSECRET-must-not-leak-7777</code> and asserts it never
-appears in error text. The production channel adapter likewise carries
-the bot token only in the <code>Authorization: Bearer</code> header,
-never in URLs.</li>
+<code>xoxb-&lt;planted-sentinel-must-not-leak-7777&gt;</code> and
+asserts it never appears in error text. The production channel adapter
+likewise carries the bot token only in the
+<code>Authorization: Bearer</code> header, never in URLs.</li>
 <li><strong>Two tokens, two blast radii.</strong> <code>xoxb-</code>
 (bot) can read/post per its granted scopes; <code>xapp-</code>
 (app-level) can open Socket Mode WebSockets. Rotate
