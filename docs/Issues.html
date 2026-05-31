@@ -47,7 +47,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>45</td>
+<td>46</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -55,7 +55,7 @@
 </tr>
 <tr>
 <td>Last modified</td>
-<td>2026-05-30</td>
+<td>2026-05-31</td>
 </tr>
 <tr>
 <td>Status</td>
@@ -63,367 +63,16 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>r45: closed HRD-015 Obsolete (§11.4.90) — its "Go-scaffold
-I8 invariant" was superseded by design change (the I8 gate slot was
-repurposed for the §107 covenant I8a/b/c; the scaffold is verified by
-the broader test suite). Prior <strong>r44: migrated the now-complete
-HRD-146 (<code>pherald listen</code> dispatch hardening,
-<code>a975d8b</code>) + HRD-147 (governance dead-letter subscriber,
-<code>9ef4be9</code>) Issues→Fixed — 15 open.</strong> Prior <strong>r43
-(v1.0.0 closure-migration — §11.4.19 atomic Issues→Fixed of 51
-code-verified HRDs). Re-audited each candidate against committed reality
-(grep/read the impl + run the test + confirm the e2e invariant + confirm
-the <code>docs/qa/&lt;run-id&gt;/</code> dir) BEFORE migrating; nothing
-trusted on self-reported status alone.</strong> Migrated to
-<code>Fixed.md</code>: the 7 flavor constitution bindings HRD-019..025
-(bindings tests 7/7 PASS <code>-race</code>; e2e E90-E96 present;
-per-HRD <code>docs/qa/</code> dirs); the entire §43 command catalogue
-HRD-029..056 (30 commands, all wired into the Cobra root via
-<code>registerGitOps</code>/<code>registerSysOps</code>/etc., cmd-test
-suites PASS, e2e E97-E122 present, per-HRD <code>docs/qa/</code> dirs);
-the Batch-D <code>commons_infra.pgxTaskRepository</code> ops
-HRD-085..089 (all 15 methods are real impls not
-<code>ErrUnsupported</code>, migration
-<code>000013_task_resource_snapshots</code> present, e2e E123,
-<code>docs/qa/HRD-085-089-*</code>); Wave 7 HRD-116/118/119/120/121
-(qaherald Slack client + e2e E124-E131 + paired §1.1 gate
-<code>tests/test_wave7_mutation_meta.sh</code> + multi-channel
-stress/chaos + operator guide — all hermetic tests PASS); and the
-ATMOSphere features HRD-148/149/151/152/153/154
-(<code>commons_workable</code>+<code>commons_watch</code> modules
-build+test PASS, workflow bridge + inbound action registry +
-<code>pherald watch</code> daemon + quiet-hours resolver all wired, e2e
-E139 <code>TestRunWatch_EndToEndOutbound</code> PASS hermetic). Issues
-count 43→17→15 (HRD-146/147 also closed in r44). <strong>DELIBERATELY
-LEFT OPEN (evidence-gated, NOT migrated):</strong> HRD-115 (Slack
-channel adapter — user-visible external-service feature whose closure is
-operator-gated on LIVE <code>docs/qa/HRD-115-LIVE-*/</code> round-trip
-evidence per §107.x; only hermetic httptest transcript exists, E127
-LIVE-Slack is SKIP-with-reason — closing it would be a §107 PASS-bluff);
-HRD-117 (spec V3 doc-only — §106 spec-change discipline, not a
-code-closure); HRD-150/155/156/157/158 (ATMOSphere externally-gated:
-constitution-tool upstream, MTProto live creds, cross-repo push);
-HRD-131 (SQLite SSoT migration Phase 2 externally blocked);
-HRD-146/147/081/008/015 (not-started / upstream / operator-validation);
-HRD-143/144/145 (already Obsolete). Prior r42 (ATMOSphere↔︎Herald
-integration DEPLOYED across all repos). Cross-repo push
-complete:</strong> (1) HRD-155 — HelixConstitution workable-items parser
-extended for ATMOSphere's <code>## §… [ATM-NNN]</code> format,
-backward-compatible, byte-identical round-trip, pushed to 4 upstreams
-(<code>995bd2f</code>); (2) ATMOSphere <code>constitution</code> pointer
-bumped (<code>ecdec56</code>); (3) HRD-150/SSoT —
-<code>docs/workable_items.db</code> materialized on the ATMOSphere host
-(58 items, validate OK, lossless), committed version-controlled per
-§11.4.95 (<code>d41dda5</code>); (4) HRD-157 — Herald registered as a
-proper <code>tools/herald</code> submodule @ Herald main
-<code>80cb734</code> (replaced the broken orphan gitlink)
-(<code>3368645</code>); (5) HRD-158 — anti-bluff covenant leading clause
-added to HelixConstitution QWEN.md (cross-file consistency) + cascaded
-to ATMOSphere (<code>8ec2b38</code>/<code>5462a38</code>). ATMOSphere
-pushes landed on github (ATMOSphere1234321) + vasic-digital
-github-mirror; the vasic-digital <strong>gitlab</strong> mirror is a
-structural split-archive mirror (1497-commit divergence +
-<code>Split-archive batch</code> commit) — operator split-tooling
-territory, NOT force-reconciled. <strong>STILL EXTERNALLY
-GATED:</strong> HRD-156 LIVE Telegram round-trip (needs one-time
-<code>qaherald mtproto login</code> credential bootstrap), live
-<code>pherald watch</code>/<code>listen</code> daemon run on the host
-(ops/deployment), per-submodule QWEN.md leading-clause cascade
-(forensic-completeness across 25 repos), Fixed.md item-structuring
-(currently raw-preserved). Prior r41 (ATMOSphere↔︎Herald integration
-Phase 2 CORE landed + pushed; remaining HRDs externally gated). LANDED +
-anti-bluff-tested + pushed:** HRD-148 <code>commons_workable</code>
-(SQLite store+CRUD+ATMOSphere parser+diff), HRD-149
-<code>commons_watch</code> (fsnotify+WAL-poll), HRD-151 workflow
-change→CloudEvent→Runner bridge + diff formatter, HRD-152 inbound
-item.update/item.delete/investigation.start + ItemMutator + CONFIRM flow
-(wired into <code>pherald listen --db</code>), HRD-153
-<code>pherald watch</code> end-to-end daemon
-(real-SQLite+fsnotify+diff+dispatch e2e), HRD-154 preference/quiet-hours
-routing (TZ-aware), e2e invariant E139,
-<code>docs/guides/WORKABLE_ITEMS_INTEGRATION.md</code> (+siblings),
-<code>docs/qa/HRD-153-*</code> evidence. <strong>EXTERNALLY GATED (need
-operator/remote/cross-repo):</strong> HRD-156 live Telegram round-trip
-(MTProto credential bootstrap), HRD-150/HRD-155 operationalize the
-constitution workable-items tool + SSoT materialization
-(HelixConstitution cross-repo), HRD-157 Phase 3 remote integration
-(register <code>tools/herald</code> + materialize
-<code>docs/workable_items.db</code> + live evidence on the ATMOSphere
-host), HRD-158 covenant QWEN.md propagation (push to HelixConstitution —
-high blast radius, operator confirmation required). Prior r40
-(ATMOSphere↔︎Herald integration Phase 2 kickoff — filed HRD-148..HRD-158,
-the work-stream HRDs from
-<code>~/Documents/ATMOSphere_Herald_Integration_Plan.md</code>). HRD-148
-(<code>commons_workable</code> SQLite SSoT foundation) + HRD-149
-(<code>commons_watch</code> watcher) LANDED + <code>-race</code> green
-(in_progress until the full watch→notify feature + e2e land). Count
-32→43.** Prior r39 (§11.4.19 atomic migration: HRD-090 dead-letter
-handling Completed→<code>Fixed.md</code> — all four closure layers met:
-code + unit + real-PG integration + §11.4.85 stress/chaos + paired §1.1
-mutation gate (4/0) + e2e E138; HRD-147 filed for the governance-plane
-subscriber follow-up). Issues count steady at 32 (−HRD-090 +HRD-147).**
-Prior r38 (HRD-146 filed — <code>pherald listen</code> dispatch
-hardening, from the 2026-05-29 "worker OOM" Phase-1 investigation that
-found the OOM premise did NOT match committed reality; the real latent
-risk is unbounded per-message dispatch growth —
-<code>docs/research/oom-investigation-2026-05-29.md</code>).** Prior r37
-(HRD-090 dead-letter handling — code + unit + real-PG integration
-landed; stays in_progress pending §11.4.85 stress+chaos + paired §1.1
-mutation gate + e2e invariant).** <code>MoveToDeadLetter</code>
-implemented (migration <code>000014_dead_letter_tasks</code>, tx-atomic
-JSONB-snapshot move + terminal-mark, new 13th operational event class
-<code>ClassQueueDeadLetter</code>/<code>QueueEvent</code>/<code>DeadLetter()</code>
-wired nil-tolerantly into <code>pgxTaskRepository</code>); 3 hermetic
-unit tests + <code>TestRepoMoveToDeadLetter_RoundTripAndEmit</code>
-real-PG integration (3 independent sinks: source terminal-state + dlq
-snapshot + real-bus event delivery) <code>-race</code> green; evidence
-<code>docs/qa/HRD-090-20260529T052228Z/</code>. NOT migrated to Fixed —
-closure bar (CONST-048 four-layer) not yet met. Prior r36 (§11.4.90
-Obsolete graduation of 3 legacy NON-COMPLIANT live tests + Wave 8 Track
-B closure recorded against Fixed.md).** Three legacy live tests that
-fundamentally required manual operator action during execution graduate
-to <code>Obsolete</code> status per Universal §11.4.90 + Herald §108.e,
-with full <strong>Obsolete-Details</strong> lines (Since /
-Reason=superseded-by-later-mandate §11.4.98 / Superseding-item +
-triple-check evidence per §11.4.6 no-guessing): HRD-143 supersedes
-<code>TestSubscribe_LiveBotAPI</code> via HRD-140; HRD-144 supersedes
-<code>tests/test_wave6_live_loop.sh</code> via HRD-141; HRD-145
-supersedes <code>qaherald lifecycle --manual</code> via HRD-142. Each
-Obsolete row cites a literal source-comment quote / file size /
-Cobra-flag line confirming the supersession is grounded in code that
-still exists, never a bare assertion. v0.6.0 tag (<code>844f340</code>)
-already covers HRD-139..142 in Fixed.md r17. Prior r35
-(Tgram-completeness Wave C — HRD-137 §11.4.85 stress+chaos COMPLETE —
-SKIP→PASS conversion + atomic Issues→Fixed migration of all 6
-tgram-completeness HRDs per §11.4.19).** Wave C closes the 6-HRD
-tgram-completeness wave (HRD-133..138).
-<code>TestTgram_Stress_MultiRecipientFanOut</code> already PASS
-(Wave-B-era multi-recipient fan-out stress).
-<code>TestTgram_Chaos_GetUpdatesPollerResilience</code> converted from
-<code>t.Skipf</code> SKIP-with-reason to real httptest-driven fault
-injection via a one-line <code>subscribe.go</code> seam fix (threads
-<code>a.baseURL</code> into <code>telebot.Settings.URL</code> before
-<code>NewBot</code> — parallel to the <code>ensureBot</code> pattern at
-<code>tgram.go:60-67</code>; production path unchanged when
-<code>a.baseURL == ""</code>). 8-phase fault matrix (3× 500 + 2× 1.5s
-hangs honoring ctx-cancel + 1× mid-body Hijacker connection-close + 2×
-success), bot-username-aware self-filter bypass (success messages come
-<code>from @someuser</code>, not <code>chaostestbot</code>), assertion
-thresholds chosen deterministic-first: <code>recoveryFloor=3</code>
-(observed <code>recovery_event_count=6</code> every iteration),
-<code>goroSlack=16</code>, <code>settleWaitMs=2000</code>. Deterministic
-across <code>-race -count=3</code> per §11.4.50 — all 3 iterations
-IDENTICAL:
-<code>recovery=6 fault(500=12 hang=8 close=3 ok=6) goroutines 3→4 (leaked=1) duration=12.07s</code>.
-Full tgram suite <strong>26/26 PASS, 0 SKIP</strong> post-fix (was 24/24
-with chaos SKIPped). Evidence
-<code>docs/qa/HRD-137-20260528T150000Z/stress_chaos/</code> (anchor
-preserved verbatim, §2 SKIP→PASS section appended, chaos_assertion.txt
-rewritten with measured PASS-state values). §11.4.92 5-pass: P1
-captured-evidence per-iteration table; P2 blast-radius —
-<code>subscribe.go</code> baseURL seam is read-only when unused
-(production unaffected); P3 cross-feature — the seam mirrors existing
-<code>ensureBot</code> pattern, no novel state; P4 deep-research —
-telebot.v3 <code>LongPoller</code> retry behavior under fault (poller
-logs + continues, no internal retry); P5 anti-bluff — handlerHits,
-fault-counter atomics, ctx-aware subscribe return, no goroutine leak
-(delta=1) are all positive captured invariants from REAL Subscribe
-poller, not synthetic. <strong>Atomic migration:</strong> HRD-133,
-HRD-134, HRD-135, HRD-136, HRD-137 (this), HRD-138 ALL move Issues→Fixed
-in the same commit per §11.4.19 (Wave A/B previously parked them
-in_progress in Issues.md awaiting Wave C closure — now landed together).
-<strong>Prior r34 (Tgram-completeness Wave B combined — HRD-133
-token-redaction + HRD-134 429 retry_after) marks BOTH Open→in_progress;
-Wave B is now CLOSED (5 of 6 tgram-completeness tasks done).</strong>
-Both HRDs land in ONE commit because they share
-<code>commons_messaging/channels/tgram/send.go</code>'s error-and-retry
-paths atomically — splitting them would require partial-file commits
-with messy <code>git add -p</code> (precedent: C4+C5 / D-stragglers were
-the same shape). <strong>HRD-133</strong> ships
-<code>sanitizeTgramError</code> (new <code>errors.go</code>) wrapping 6
-error-return sites in Send + SendReply so the Bot API token NEVER
-appears in any error / log message;
-<code>TestTgram_Send_ErrorDoesNotLeakToken</code> plants
-<code>123456:supersecret-must-not-leak-9999</code> + asserts absence
-(mirrors <code>TestSlack_Send_ErrorDoesNotLeakToken</code>).
-<strong>HRD-134</strong> ships <code>withRetry429</code> wrapping all 3
-telebot <code>bot.Send</code> call sites; on
-<code>429 + retry_after=N</code> sleeps N seconds
-(<code>ctx.Done()</code>-aware), retries up to 3 attempts, clamps
-per-retry to 60s; <code>retry_after</code> extracted via
-<code>errors.As(err, &amp;telebot.FloodError{}).RetryAfter</code>
-(telebot's typed error — no body parse). Composition: the retry's log
-lines + final error are themselves sanitized so 429 logging never leaks
-the token. Injectable <code>sleeper</code> field on <code>Adapter</code>
-for hermetic tests. 7 new tests <code>-race -count=1</code> (2 HRD-133 +
-5 HRD-134) → tgram suite now 24/24 PASS. Parts 4+5 of 6 in the
-tgram-completeness wave. <strong>Next: Wave C HRD-137</strong>
-(multi-recipient fan-out stress + getUpdates resilience) on a now-stable
-send.go. <strong>Prior r33 (Tgram-completeness Wave A SA-c — HRD-138
-operator deep-dive guide) marked HRD-138 Open→in_progress and closed
-Wave A (3 of 6 tgram-completeness tasks).</strong>
-<code>docs/guides/TELEGRAM.md</code> (810 lines, 11 §-sections, 58
-subsections + 3 siblings .html/.pdf/.docx) is the per-module nano-detail
-operator guide called for by the operator memory
-<code>feedback_nano_detail_docs</code>. Sections: §1 architecture; §2
-BotFather walkthrough; §3 env table + 3 chat_id discovery methods; §4
-pre-deploy smoke-test commands; §5 attachment size limits +
-content-addressed inbox; §6 chat-type matrix
-(private/group/supergroup/channel id formats + bot permissions); §7
-reply threading + attachment-fan-out rationale; §8 self-filter +
-echo-loop hazard (Wave 6 T12 M1); §9 12-entry troubleshooting cookbook
-(401/400/429/413/403/echo-loop/long-poll/409/privacy/webhook/zero-byte/wrong-inbox);
-§10 6-subsection pre-deploy audit (tick-boxes); §11 references (spec V3
-+ 13 HRDs + source paths). Cross-linked from the pre-existing
-<code>docs/guides/messengers/TELEGRAM.md</code> (HRD-011 setup,
-preserved untouched). Part 3 of 6 in the tgram-completeness wave — Wave
-A complete (HRD-135 + HRD-136 + HRD-138). <strong>Next: Wave B HRD-133 +
-HRD-134</strong> (combined subagent — both touch send.go:
-token-redaction symmetry + 429 retry_after honored), then <strong>Wave C
-HRD-137</strong> (multi-recipient stress+chaos). <strong>Prior r32
-(Tgram-completeness Wave A SA-b — HRD-136 webhook validator skeleton)
-marked HRD-136 Open→in_progress.</strong> New
-<code>commons_messaging/channels/tgram/webhook.go</code> lands the Bot
-API webhook <code>secret_token</code> validation layer for the future
-V1.x webhook-path operator (spec V3 §11.1 alternative to
-<code>getUpdates</code>). <code>WebhookHandler</code> validates the
-<code>X-Telegram-Bot-Api-Secret-Token</code> header via
-<code>crypto/subtle.ConstantTimeCompare</code> (timing-attack-safe),
-refuses empty secret at construction
-(<code>NewWebhookHandler("",…)</code> errors — §107 footgun guard),
-returns 401 with EMPTY body on header mismatch/missing (no
-token-existence-oracle leakage to probes), 400 on malformed JSON, 405 on
-wrong method, 500 (no body) on InboundHandler error. Decoded
-<code>tele.Update</code> is forwarded as the SAME
-<code>InboundEvent</code> shape
-<code>OnText</code>/<code>OnEdited</code> produce — unified downstream
-contract. <strong>Skeleton-only:</strong> wiring into
-<code>pherald listen --webhook</code> +
-<code>setWebhook(secret_token=…)</code> registration + TLS-bound public
-listener deferred to V1.x; the cryptographic layer is here + tested so
-the future flip is one-flag. 7/7 hermetic httptest tests
-<code>-race</code>: ValidSecret_Dispatches,
-InvalidSecret_Returns401_NoTokenLeak, MissingSecret_Returns401,
-GET_Returns405, MalformedJSON_Returns400,
-EmptySecretAtConstruction_ErrorsLoud, ConstantTimeCompare. Part 2 of 6
-in the tgram-completeness wave. <strong>Prior r31 (Tgram-completeness
-Wave A SA-a — HRD-135 lifecycle handlers) marked HRD-135
-Open→in_progress.</strong>
-<code>commons_messaging/channels/tgram/subscribe.go</code> gains 3 new
-event handlers per the operator's tgram-completeness mandate (Section 2
-of the 2026-05-28 live-gap analysis): <strong>OnEdited</strong> rebuilds
-the same <code>InboundEvent</code> shape <code>OnText</code> does +
-<code>Raw["edited"]=true</code>; <strong>OnMyChatMember</strong> detects
-bot kicked/left/restricted status transitions (with Alice-left and
-promotion-to-Admin false-positive guards) + emits a grep-able
-<code>log.Printf</code> carrying <code>ErrBotKicked</code> text + the
-chat_id; <strong>15 service-message endpoints</strong>
-(UsersJoined/UserLeft/NewGroupTitle/etc.) registered to a single
-<code>serviceHandler</code> that emits nothing to
-<code>InboundHandler</code> but logs
-<code>tgram: ignored service message kind=… chat_id=…</code>. Sentinel
-<code>var ErrBotKicked</code> package-level so callers can
-<code>errors.Is</code>. 17/17 PASS <code>-race -count=1</code> (3 new in
-<code>subscribe_lifecycle_test.go</code> + 14 existing, zero
-regression). Part 1 of 6 in the tgram-completeness wave. <strong>Prior
-r30 (v0.6.0 Wave 7 T12 — operator guide; Wave 7 CODE-COMPLETE) marked
-HRD-121 Open→in_progress.</strong>
-<code>docs/guides/MESSENGER_CHANNELS.md</code> ships as the
-operator-facing entry point for the multi-channel messenger framework —
-610 lines, 11 sections covering architecture (commons.Channel outbound
-vs commons_messaging/channels.Channel inbound; ASCII fan-in diagram),
-HERALD_CHANNELS selector (fail-loud on unknown), Telegram + Slack
-live-setup walkthroughs (BotFather + api.slack.com/apps including Socket
-Mode app-token), §107 token-redaction security note for xoxb-/xapp-
-(citing <code>TestSlack_Send_ErrorDoesNotLeakToken</code>), per-channel
-inbox isolation, self-filter contract, URL schemes, "add a new channel"
-implementer checklist + "what you do NOT touch" companion (the
-framework's hot paths come for free), 10-entry troubleshooting cookbook,
-6-checklist pre-deploy audit, full HRD/spec cross-references. Generated
-3 siblings (.html/.pdf/.docx) via
-<code>REGEN_ALL=1 scripts/export_docs.sh</code>. <strong>Wave 7 (T1-T12)
-is now code-complete:</strong> HRD-110..114 (framework, already Fixed
-pre-session) + HRD-115 (slack adapter Socket Mode, <code>54d4316</code>)
-+ HRD-116 (qaherald slack MessengerClient + builder,
-<code>6811114</code>) + HRD-117 (spec V3 r12→r13, <code>7f1b043</code>)
-+ HRD-118 (e2e E124-E131, <code>17ecd0b</code>) + HRD-119 (paired §1.1
-mutation gate 4/0, <code>6737040</code>) + HRD-120 (multi-channel
-§11.4.85 stress+chaos 12/12, <code>86dfa1e</code>) + HRD-121 (this row).
-Wave 7 HRDs <strong>stay in_progress</strong> pending operator-live
-Slack evidence (mirrors Wave 6's v0.4.0 deferred-to-T13b pattern);
-v0.6.0 tag is operator-gated on live
-<code>docs/qa/HRD-115-LIVE-*/</code> workspace evidence per §107.x.
-<strong>Prior r29 (v0.6.0 Wave 7 T11 — multi-channel §11.4.85
-stress+chaos) marked HRD-120 Open→in_progress.</strong> Extended
-<code>pherald/cmd/pherald/listen_stress_chaos_test.go</code> (HRD-126's
-single-channel scaffold) with two W7-specific multi-channel tests:
-<code>TestListen_MultiChannel_StressBurst</code> (2 channels × 200
-concurrent events → 400 unique IDs all dispatched exactly once +
-<strong>per-channel attribution</strong> via
-<code>perChannelCountingReplier</code> keyed on
-<code>rcpt.Channel</code> proves the channelRouter doesn't cross-wire;
-~9-19k events/s under <code>-race</code>) +
-<code>TestListen_MultiChannel_ChaosOneChannelDies_OtherKeepsGoing</code>
-(the fan-in concurrency proof — tgram errors immediately, slack ticks 50
-events at 2ms; assertion conjunction ≥5 slack dispatches landed BEFORE
-tgram fail-loud teardown AND the tgram error is tagged
-<code>channel="tgram-stub" + subscribe</code> → only true under a
-CONCURRENT goroutine orchestration, not a strictly-serial one).
-<strong>runListen contract:</strong> fail-loud-tears-down-siblings
-(<code>pherald/cmd/pherald/listen.go:387-398</code>); per-channel
-supervised restart is a deferred Wave 8 design and the doc-comment warns
-against silent change. 12/12 PASS over <code>-race -count=3</code> (3
-iterations × 2 new + 2 sibling HRD-126 tests); race-detector clean.
-Evidence anchors <code>multichannel_no_drop_under_burst=1</code>
-(stress) + <code>multichannel_concurrency_proven=1</code> (chaos) at
-<code>docs/qa/HRD-120-20260528T110000Z/</code>. <strong>Prior r28
-(v0.6.0 Wave 7 T10 — paired §1.1 mutation gate) marked HRD-119
-Open→in_progress.</strong>
-<code>tests/test_wave7_mutation_meta.sh</code> ships 3 paired hermetic
-mutations against the Wave 7 multi-channel framework —
-<strong>M1</strong> blank <code>IsSelfEcho</code> (echo-loop hazard),
-<strong>M2</strong> drop slack <code>channels.Register</code> in
-<code>init()</code> (registry-resolution broken), <strong>M3</strong>
-drop slack <code>thread_ts</code> append (reply threading degrades) —
-each mutated build observed FAIL on the matching e2e detector + restored
-byte-for-byte + post-restore PASS. New
-<code>TestSlackRegisteredViaInit</code> detector added to
-<code>slack_test.go</code> (it asserts <code>channels.Names()</code>
-contains <code>"slack"</code> — the only test that would FAIL under M2
-specifically; without it M2 would silently "no tests to run"
-PASS-bluff). Gate run = <strong>4 PASS / 0 FAIL</strong> (3 mutations +
-1 quiescence assertion, no <code>MUTATED W7-</code> residue in 3
-production target files post-restore). Reuses Wave 6 canonical lockfile
-+ trap + assert_restored + pre-flight guard verbatim.
-<strong>FOREGROUND-ONLY</strong> (§107.y /
-<code>feedback_no_concurrent_mutation_gates</code> operator mandate).
-<strong>Prior r27 (v0.6.0 Wave 7 T9 — e2e multi-channel invariants)
-marked HRD-118 Open→in_progress.</strong>
-<code>scripts/e2e_bluff_hunt.sh</code> gains <strong>E124-E131</strong>
-(8 invariants anchored to live test names already shipped in
-HRD-110..117): E124 channels registry (resolve + unknown-errors), E125
-tgram self-filter post-Wave-7 generalization
-(<code>TestSubscribeBotSelfFilter</code>), E126 slack adapter
-(TestSlackSatisfiesChannel + auth.test + chat.postMessage + registry
-wiring + sc_anchor to T6 docs/qa), <strong>E127 LIVE Slack</strong>
-triple-guarded (<code>HERALD_SLACK_BOT_TOKEN</code> +
-<code>HERALD_SLACK_CHANNEL_ID</code> +
-<code>grep TestSlack_Live_Send</code> — the third guard prevents the
-§107 "no tests to run = exit 0 = PASS-bluff" gotcha when env is set but
-no live-test exists), E128 per-channel inbox isolation +
-content-addressed idempotency, E129 generalized IsSelfEcho (Username +
-UserID + empty-self echo-loop hazard), E130 multi-channel pherald listen
-wiring (<code>TestListenWiresHandlerAndExitsOnCancel</code>), E131
-qaherald messenger.Build dispatch (tgram + slack + unknown-errors-loud +
-sc_anchor to T7 docs/qa). <strong>Prior r26 (v0.6.0 Wave 7 T8 — spec V3
-r12→r13) marked HRD-117 Open→in_progress.</strong> Spec edits document
-the already-shipped Wave 7 framework + Slack: §11.0 gains the
-inbound-runtime extension note
-(<code>commons_messaging/channels.Channel</code> embeds
-<code>commons.Channel</code> + <code>SendReplyGeneric</code> +
-<code>BotSelfIdentity</code> + <code>DownloadAttachment</code> +
-<code>init()</code>-registered registry + generalized
-<code>IsSelfEcho</code> via `SelfIdentity{Kind: IdentityUsername</td>
+<td>**r46: added two participant-attribution columns —
+<code>Created-By</code> + <code>Assigned-To</code> — to BOTH pipe-tables
+(the "Open" + "In progress" tracker tables), each placed immediately
+AFTER the <code>Criticality</code> column (before <code>Title</code>) so
+the severity-grouped metadata stays together and the long
+<code>Title</code> stays at the right edge (per
+<code>docs/design/PARTICIPANT_ATTRIBUTION.md</code> §4c). Tables widen
+8→10 columns; header + separator + every data row updated
+programmatically (<code>/tmp/add_attribution_cols.py</code>) so every
+row's `</td>
 </tr>
 <tr>
 <td>Issues</td>
@@ -515,6 +164,8 @@ implementation PR will re-verify.</p>
 <th>Type</th>
 <th>Status</th>
 <th>Criticality</th>
+<th>Created-By</th>
+<th>Assigned-To</th>
 <th>Title</th>
 <th>Opened</th>
 <th>Last update</th>
@@ -527,6 +178,8 @@ implementation PR will re-verify.</p>
 <td>task</td>
 <td>Obsolete</td>
 <td>low</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td><code>TestSubscribe_LiveBotAPI</code> legacy live test — superseded
 by §11.4.98 + HRD-140. <strong>Obsolete-Details:</strong> Since
 2026-05-28; Reason=superseded-by-later-mandate;
@@ -557,6 +210,8 @@ Catalogue-Check: n/a (Obsolete classification, not new code)</td>
 <td>task</td>
 <td>Obsolete</td>
 <td>low</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td><code>tests/test_wave6_live_loop.sh</code> legacy live closed-loop
 script — superseded by §11.4.98 + HRD-141.
 <strong>Obsolete-Details:</strong> Since 2026-05-28;
@@ -585,6 +240,8 @@ Catalogue-Check: n/a (Obsolete classification, not new code)</td>
 <td>task</td>
 <td>Obsolete</td>
 <td>low</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td><code>qaherald lifecycle --manual</code> interactive mode —
 superseded by §11.4.98 + HRD-142. <strong>Obsolete-Details:</strong>
 Since 2026-05-28; Reason=superseded-by-later-mandate;
@@ -614,6 +271,8 @@ Catalogue-Check: n/a (Obsolete classification, not new code)</td>
 <td>task</td>
 <td>Obsolete</td>
 <td>low</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>Inheritance gate I8 invariants for Go scaffold (go.work +
 commons/types.go + null adapter test passes) — superseded by design
 change. <strong>Obsolete-Details:</strong> Since 2026-05-30;
@@ -648,6 +307,8 @@ not new code)</td>
 <td>task</td>
 <td>open</td>
 <td>low</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>Extend <code>digital.vasic.containers/pkg/compose</code> to detect
 podman-compose vs docker compose runtime and either emit
 runtime-appropriate flags (no <code>--wait</code> for podman-compose) or
@@ -669,6 +330,8 @@ TCP-probe used for healthcheck).</td>
 <td>task</td>
 <td>in_progress</td>
 <td>high</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>Wave 7 T6 — Slack channel adapter (Socket Mode):
 <code>commons_messaging/channels/slack/</code> implements
 <code>channels.Channel</code> —
@@ -701,6 +364,8 @@ spec V3 §11 Slack + §32.2; evidence
 <td>task</td>
 <td>in_progress</td>
 <td>low</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>Wave 7 T8 — spec V3 r12→r13: §11.0 <code>channels.Channel</code>
 inbound-runtime extension note + §32.2 Telegram/Slack marked LIVE + §43
 multi-channel <code>pherald listen</code> row. Documents the Wave 7
@@ -718,6 +383,8 @@ Catalogue-Check: n/a (doc-only).</td>
 <td>task</td>
 <td>open</td>
 <td>middle</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>Migrate text HRD trackers to versioned SQLite single-source-of-truth
 (§11.4.93 / Herald §108.h, 6-phase) — DB committed as authoritative SSoT
 per operator mandate 2026-05-27. Phase 1 (this item): file the
@@ -773,6 +440,8 @@ Catalogue-Check: reuse <code>constitution/scripts/workable-items/</code>
 <td>task</td>
 <td>open</td>
 <td>high</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>ATMOSphere integration WS-1 — bidirectional MD↔︎SQLite regenerator +
 drift resolution (reference
 <code>constitution/scripts/workable-items/</code> per §11.4.74, supply
@@ -787,6 +456,8 @@ workable-items tool.</td>
 <td>task</td>
 <td>open</td>
 <td>high</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>ATMOSphere integration WS-1 — operationalize the workable-items
 SQLite tool + reconcile HRD-131 (implement the tool's
 <code>add</code>/<code>close</code>/<code>report</code> +
@@ -802,6 +473,8 @@ extend constitution workable-items tool.</td>
 <td>task</td>
 <td>open</td>
 <td>high</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>ATMOSphere integration WS-5 — anti-bluff full-automation test suite
 (T-A real-SQLite→real-Telegram via MTProto; T-B
 inbound→real-row-mutation; T-C exact-diff byte-assert; T-D/T-E §11.4.85
@@ -817,6 +490,8 @@ MTProto harness + ATMOSphere HelixQA/Challenges.</td>
 <td>task</td>
 <td>open</td>
 <td>high</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>ATMOSphere integration Phase 3 — register Herald as a proper
 <code>tools/herald</code> submodule (replace the broken orphan gitlink,
 operator-chosen 2026-05-29), materialize
@@ -834,6 +509,8 @@ host-tool pattern.</td>
 <td>task</td>
 <td>open</td>
 <td>middle</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>ATMOSphere integration WS-5 — anti-bluff covenant verbatim-phrase
 propagation: add the operator phrase to root
 <code>constitution/QWEN.md</code> (HelixConstitution) → cascade to
@@ -855,6 +532,8 @@ Catalogue-Check: n/a.</td>
 <th>Type</th>
 <th>Status</th>
 <th>Criticality</th>
+<th>Created-By</th>
+<th>Assigned-To</th>
 <th>Title</th>
 <th>Opened</th>
 <th>Last update</th>
@@ -867,6 +546,8 @@ Catalogue-Check: n/a.</td>
 <td>task</td>
 <td>in_progress</td>
 <td>middle</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>Operator-side quickstart compose validation (Postgres + Redis + OTel
 + pherald container)</td>
 <td>2026-05-20</td>

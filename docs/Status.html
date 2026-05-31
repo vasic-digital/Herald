@@ -47,7 +47,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>20</td>
+<td>21</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -55,7 +55,7 @@
 </tr>
 <tr>
 <td>Last modified</td>
-<td>2026-05-30</td>
+<td>2026-05-31</td>
 </tr>
 <tr>
 <td>Status</td>
@@ -63,14 +63,25 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>r18 (v1.0.0 closure-migration) records the §11.4.19 atomic
-Issues→Fixed of 51 code-verified HRDs</strong> — the 7 flavor
-constitution bindings (HRD-019..025), the entire §43 command catalogue
-(HRD-029..056, 30 commands), the Batch-D
-<code>commons_infra.pgxTaskRepository</code> ops (HRD-085..089), Wave 7
-multi-channel (HRD-116/118/119/120/121), and the ATMOSphere
-workable-items features (HRD-148/149/151/152/153/154). Each was
-re-verified against committed reality before migration: source impl
+<td><strong>r21: the participant-attribution feature
+(<code>docs/design/PARTICIPANT_ATTRIBUTION.md</code> §4c) added two
+columns — <code>Created-By</code> + <code>Assigned-To</code> — to the
+<code>Issues.md</code> (r46; both the Open + In-progress pipe-tables,
+widened 8→10 cols) and <code>Fixed.md</code> (r21; widened 7→9 cols)
+trackers, each placed immediately after the <code>Criticality</code>
+column. Legacy rows carry the honest blanket backfill
+<code>Created-By = Claude</code> (HRDs opened by the agent during
+autonomous development) / <code>Assigned-To = @milos85vasic</code> (the
+Operator default per <code>HERALD_TGRAM_OPERATOR_USERNAME</code>) — a
+documented convention, NOT fabricated per-item forensics; new items get
+live per-message attribution going forward. Prior <strong>r18 (v1.0.0
+closure-migration) records the §11.4.19 atomic Issues→Fixed of 51
+code-verified HRDs</strong> — the 7 flavor constitution bindings
+(HRD-019..025), the entire §43 command catalogue (HRD-029..056, 30
+commands), the Batch-D <code>commons_infra.pgxTaskRepository</code> ops
+(HRD-085..089), Wave 7 multi-channel (HRD-116/118/119/120/121), and the
+ATMOSphere workable-items features (HRD-148/149/151/152/153/154). Each
+was re-verified against committed reality before migration: source impl
 read/grepped (no <code>ErrUnsupported</code> stubs; §43 commands wired
 into Cobra roots via
 <code>registerGitOps</code>/<code>registerSysOps</code>/etc.), the
@@ -85,7 +96,7 @@ LIVE round-trip evidence; E127 LIVE-Slack SKIP-with-reason), HRD-117
 (spec doc-only), HRD-131/150/155/156/157/158 (ATMOSphere/SSoT externally
 gated), HRD-146/147/081/008/015, HRD-015/143/144/145 (Obsolete). Prior
 r17 catches up a week of release-cycle work that the doc had not
-tracked.** HEAD <code>3048b48</code>; constitution at
+tracked.</strong> HEAD <code>3048b48</code>; constitution at
 <code>3244bf4</code> (just gained §11.4.100 Video color + visual-quality
 fidelity mandate; Herald non-applicable-but-cite — no video-playback
 surface). Tags shipped since r16: v0.4.0 (Wave 6 closed-loop), v0.5.0

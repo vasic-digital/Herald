@@ -47,7 +47,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>20</td>
+<td>21</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -55,7 +55,7 @@
 </tr>
 <tr>
 <td>Last modified</td>
-<td>2026-05-30</td>
+<td>2026-05-31</td>
 </tr>
 <tr>
 <td>Status</td>
@@ -63,150 +63,15 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>r20: lands HRD-146 (<code>pherald listen</code> dispatch
-hardening — 120s timeout + process-group kill on the claude_code
-dispatcher, <code>a975d8b</code>) + HRD-147 (governance dead-letter
-subscriber + <code>DeadLetterSink</code> + real emitter wiring in
-boot.go, <code>9ef4be9</code>) Issues→Fixed — both completed this
-session with <code>-race</code> tests.</strong> Prior <strong>r19
-(v1.0.0 closure-migration) atomically lands (§11.4.19) 51 code-verified
-HRDs Issues→Fixed after a re-verification audit (grep/read the impl +
-run the test + confirm the matching e2e invariant + confirm the
-<code>docs/qa/&lt;run-id&gt;/</code> dir; nothing migrated on
-self-reported status alone). The 51:</strong> the 7 flavor constitution
-bindings HRD-019..025 (<code>&lt;flavor&gt;/internal/bindings</code>
-Pipelines; 7/7 bindings test suites PASS <code>-race</code>; e2e
-E90-E96; per-HRD <code>docs/qa/</code>); the entire §43 command
-catalogue HRD-029..056 (30 commands wired into Cobra roots via
-<code>registerGitOps</code>/<code>registerSysOps</code>/etc., cmd-test
-suites PASS, e2e E97-E122, per-HRD <code>docs/qa/</code>); the Batch-D
-<code>commons_infra.pgxTaskRepository</code> ops HRD-085..089 (all 15
-methods real impls not <code>ErrUnsupported</code>, migration
-<code>000013_task_resource_snapshots</code>, e2e E123,
-<code>docs/qa/HRD-085-089-*</code>); Wave 7 HRD-116/118/119/120/121
-(qaherald Slack <code>MessengerClient</code> + e2e E124-E131 + paired
-§1.1 gate <code>tests/test_wave7_mutation_meta.sh</code> + multi-channel
-§11.4.85 stress/chaos + <code>MESSENGER_CHANNELS.md</code> guide; all
-hermetic tests PASS); ATMOSphere features HRD-148/149/151/152/153/154
-(<code>commons_workable</code>+<code>commons_watch</code> build+test
-PASS, change→CloudEvent→Runner bridge + inbound action registry +
-<code>pherald watch</code> daemon + quiet-hours resolver, e2e E139
-<code>TestRunWatch_EndToEndOutbound</code> PASS hermetic). <strong>NOT
-migrated (evidence-gated, left in Issues.md):</strong> HRD-115 (Slack
-channel adapter — operator-gated on LIVE
-<code>docs/qa/HRD-115-LIVE-*/</code> round-trip evidence per §107.x;
-only hermetic transcript exists, E127 LIVE-Slack SKIP-with-reason —
-closing now would be a §107 PASS-bluff); HRD-117 (spec V3 doc-only —
-§106); HRD-131/150/155/156/157/158 (externally gated);
-HRD-146/147/081/008/015 (not-started/upstream/operator). Prior r18
-atomically lands (§11.4.19) HRD-090 dead-letter handling Completed→Fixed
-— <code>commons_infra.pgxTaskRepository.MoveToDeadLetter</code> (was the
-last Batch-D <code>ErrUnsupported</code> stub): migration
-<code>000014_dead_letter_tasks</code> + tx-atomic JSONB-snapshot move +
-terminal-mark; new 13th OPERATIONAL constitution event class
-<code>ClassQueueDeadLetter</code> + <code>QueueEvent</code> +
-<code>DeadLetter()</code> emit (wired nil-tolerantly; governance §42.2
-set unchanged). Four-layer closure: 3 unit + real-PG integration (3
-sinks) + §11.4.85 stress/chaos (50 concurrent race-clean, atomic under
-fault) + paired §1.1 mutation gate (4/0) + e2e E138; commits
-<code>549261d</code>+<code>9c765f6</code>; evidence
-<code>docs/qa/HRD-090-20260529T052228Z/</code> +
-<code>docs/qa/HRD-090-stress-chaos-20260529T054500Z/</code>.
-Governance-plane subscriber follow-up = HRD-147 (Issues.md).** Prior r17
-atomically lands (§11.4.19) the completed Wave 8 Track B (MTProto
-user-account harness for §11.4.98 full-automation testing) — HRD-139
-(MTProto Client live wiring + qaherald mtproto CLI), HRD-140 (Subscribe
-roundtrip), HRD-141 (Wave 6 closed loop), HRD-142 (Wave 6.5 lifecycle)
-all New→Fixed (these HRDs were tracked directly in the TaskList rather
-than Issues.md and graduate directly into Fixed.md per §11.4.19 the
-moment closure landed).** Wave 8 Track B closure proves §11.4.98
-(full-automation anti-bluff mandate) end-to-end: 3 MTProto-driven live
-tests (E135 Subscribe / E136 Wave 6 closed loop / E137 Wave 6.5
-lifecycle) all PASSING LIVE under §11.4.98-pure interpretation, captured
-under <code>docs/qa/HRD-LIVE-MTPROTO-20260528T125321Z/</code>. Three
-legacy NON-COMPLIANT tests graduate to §11.4.90 Obsolete in Issues.md
-r36 with Obsolete-Details cite of §11.4.98 + §108.m superseding-mandate:
-<code>TestSubscribe_LiveBotAPI</code>,
-<code>tests/test_wave6_live_loop.sh</code>, lifecycle
-<code>--manual</code> mode. v0.6.0 tag (<code>844f340</code> annotated)
-was already cut on <code>d843ddf</code> covering Wave 8 Track B closure
-+ the §11.4.98+§11.4.99 anchoring + 9-Helix-submodule §11.4.98+§11.4.99
-propagation. Prior r16 atomically migrates (§11.4.19) the completed
-Tgram-completeness wave — HRD-133/134/135/136/137/138 (all 6
-Tgram-completeness HRDs) Issues→Fixed.** Wave A: HRD-135 lifecycle
-handlers (<code>fe2a7c8</code> — OnEdited / OnMyChatMember /
-serviceHandler / ErrBotKicked sentinel) + HRD-136 webhook secret_token
-validator (<code>6d7d543</code> —
-<code>crypto/subtle.ConstantTimeCompare</code>, 401-no-leak posture) +
-HRD-138 operator deep-dive guide (<code>ff9b9c0</code> — 810-line
-<code>docs/guides/TELEGRAM.md</code>, 11 §-sections, 3 siblings). Wave
-B: HRD-133 token-redaction symmetry (<code>8162d14</code> —
-<code>sanitizeTgramError</code> wraps 6 error-return sites in
-Send/SendReply) + HRD-134 429 retry_after honored (<code>8162d14</code>
-combined — <code>withRetry429</code> wraps all 3 telebot
-<code>bot.Send</code> sites, telebot.FloodError typed extraction,
-ctx-aware sleep, 3-attempt 60s-clamp). Wave C: HRD-137 stress+chaos
-suite (this commit — <code>TestTgram_Stress_MultiRecipientFanOut</code>
-20×20=400 calls/20 chats deterministic +
-<code>TestTgram_Chaos_GetUpdatesPollerResilience</code> SKIP→PASS
-conversion via one-line <code>subscribe.go</code> baseURL seam fix;
-8-phase fault matrix deterministic across <code>-race -count=3</code> —
-every iteration IDENTICAL
-<code>recovery=6 fault(500=12 hang=8 close=3 ok=6) goroutines 3→4</code>).
-Full tgram suite <strong>26/26 PASS, 0 SKIP</strong> post-Wave-C. All 6
-HRDs carry <code>docs/qa/HRD-NNN-20260528T*Z/transcript.txt</code>
-evidence per §107.x. Prior r15 atomically migrated (§11.4.19) the
-completed GAP-3 §11.4.85 stress+chaos suite — HRD-122..HRD-130
-(Task→Completed) — and the HRD-132 Runner idempotency-window fix
-(Bug→Fixed): 10 rows Issues→Fixed.** GAP-3 commits
-<code>02d272d</code>→<code>d2a60d3</code> (HRD-122
-<code>commons/stresschaos/</code> scaffold, HRD-123 Gin
-<code>/v1/events</code>, HRD-124
-<code>/v1/compliance</code>+<code>/v1/safety_state</code>, HRD-125
-Runner — surfaced HRD-132, HRD-126 <code>pherald listen</code> inbound,
-HRD-127 claude_code dispatch, HRD-128 container/resource §12.6-safe,
-HRD-129 e2e E81-E88, HRD-130 paired §1.1 mutation gate); HRD-132 fix
-<code>354b883</code> (claim-before-dispatch at Runner Stage 2 —
-<code>INSERT events_processed … ON CONFLICT DO NOTHING</code> is the
-authoritative exactly-once dispatch gate; latent
-<code>runner.go:132</code> <code>CachedRcpt.WasReplay</code> race
-closed; HRD-125 assertion upgraded to <code>sends==1</code>) +
-wave3-M4-retire <code>4f45f26</code>. Full
-<code>scripts/e2e_bluff_hunt.sh</code> 78 PASS / 0 FAIL; HRD-130 gate 6
-PASS / 0 FAIL (5 load-bearing mutations); HRD-132 evidence
-<code>docs/qa/HRD-125-stress-chaos-2026-05-27T131251-gap3/</code>
-(<code>dispatch_exactly_once=1</code>). HRD-131 (SQLite SSoT migration
-Phase 1) remains OPEN. Prior r14 captured Wave 6 (pherald inbound
-runtime + Claude Code headless bridge — code-doc closure). HRD-100
-closed atomically with 12 Wave-6 commit SHAs + 8 new e2e invariants
-E63-E70 (currently SKIP-with-documented-reason — converting to PASS once
-operator runs the live closed-loop at T10b and commits
-<code>docs/qa/HRD-100/</code>). Tag v0.4.0 DEFERRED to T13b
-(operator-supplied live evidence per §107.x — code-doc closure ships in
-this commit; runtime evidence lands separately).** Wave 6 surfaces: new
-Cobra subcommand <code>pherald listen</code> (Telegram
-<code>getUpdates</code> long-poll +
-<code>OnText</code>/<code>OnPhoto</code>/<code>OnDocument</code>/<code>OnVoice</code>
-+ bot self-filter + sha256 content-addressed attachment download); Opus
-model pin in spawned <code>claude</code> argv
-(<code>--model claude-opus-4-7</code>); envelope pre-text — verbatim
-operator wording "We have received new message from our communication
-channel <channel-name>. ..." preceding the
-<code>&lt;&lt;&lt;HERALD-DISPATCH-v1&gt;&gt;&gt;</code> structured
-block; <code>&lt;&lt;&lt;HERALD-REPLY&gt;&gt;&gt;</code> parser with
-<code>action</code> routing (<code>reply</code> /
-<code>issue.open</code> / <code>event.emit</code>);
-<code>tgram.Adapter.SendReply</code> wiring
-<code>reply_to_message_id</code>; <code>--qa-out-dir</code> JSONL
-journaling per §107.x. Wave 6 mutation gate
-(<code>tests/test_wave6_mutation_meta.sh</code>) lands 3 paired hermetic
-mutations (M1 blank bot self-filter → echo-loop signature; M2 Opus →
-Sonnet model swap → E67 FAIL; M3 drop <code>opts.ReplyTo</code> in
-SendReply → E68 FAIL). Prior r13 captured Wave 4b (TOON
-<code>application/toon</code> content negotiation; tag v0.3.0). r12
-captured Wave 4a (HTTP/3 + Brotli + Alt-Svc + TLS 1.3; tag v0.2.0). r11
-closed HRD-016 (Wave 3b pherald Runner live). r10 closed HRD-011
-(Telegram live).</td>
+<td>**r21: added two participant-attribution columns —
+<code>Created-By</code> + <code>Assigned-To</code> — to the Fixed
+pipe-table, placed immediately AFTER the <code>Criticality</code> column
+(before <code>Title</code>) so the metadata stays grouped and the long
+<code>Title</code> stays at the right edge (per
+<code>docs/design/PARTICIPANT_ATTRIBUTION.md</code> §4c). Table widens
+7→9 columns; header + separator + every data row updated
+programmatically (<code>/tmp/add_attribution_cols.py</code>) so every
+row's `</td>
 </tr>
 <tr>
 <td>Issues</td>
@@ -279,6 +144,8 @@ closed atomically.</td>
 <th>ID</th>
 <th>Type</th>
 <th>Criticality</th>
+<th>Created-By</th>
+<th>Assigned-To</th>
 <th>Title</th>
 <th>Closed</th>
 <th>Commit</th>
@@ -290,6 +157,8 @@ closed atomically.</td>
 <td>HRD-147</td>
 <td>task</td>
 <td>low</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>Governance-plane dead-letter subscriber — durable consumer draining
 <code>.queue.dead_letter</code> events into a
 <code>DeadLetterSink</code> (<code>MemoryDeadLetterSink</code> M1; a
@@ -316,6 +185,8 @@ documented follow-up.</td>
 <td>HRD-146</td>
 <td>task</td>
 <td>middle</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td><code>pherald listen</code> dispatch hardening — bounded per-message
 resource use in the inbound→<code>claude_code.Dispatch</code> path. The
 production path threaded an UNBOUNDED ctx (<code>pherald listen</code>
@@ -342,6 +213,8 @@ pipe-holding child can't wedge <code>Output()</code> past the deadline.
 <td>HRD-019</td>
 <td>task</td>
 <td>high</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td><code>cherald</code> constitution bindings —
 <code>cherald/internal/bindings</code> Pipeline registers the 32
 cherald-owned §42.3 rules as concrete
@@ -370,6 +243,8 @@ stress_chaos/). e2e: E90 proposed.</td>
 <td>HRD-020</td>
 <td>task</td>
 <td>high</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td><code>sherald</code> host-safety + repo-safety constitution bindings
 — <code>sherald/internal/bindings</code> Pipeline registers the 15
 sherald-owned §42.3 host/repo-safety rules (§2, §9.1/.2/.3,
@@ -424,6 +299,8 @@ out of this unit's edit scope, flagged for conductor.</td>
 <td>HRD-021</td>
 <td>task</td>
 <td>middle</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td><code>bherald</code> CI/test bindings —
 <code>bherald/internal/bindings</code> Pipeline registers the 22
 bherald-owned §42.3 CI/test gate-result rules (§1, §1.1,
@@ -473,6 +350,8 @@ detected+persisted+audited via the bindings Pipeline).</td>
 <td>HRD-022</td>
 <td>task</td>
 <td>middle</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td><code>rherald</code> release constitution bindings —
 <code>rherald/internal/bindings</code> Pipeline registers the 4
 rherald-owned §42.3 release-lifecycle rules (§4 tag mirroring, §5
@@ -538,6 +417,8 @@ bindings Pipeline).</td>
 <td>HRD-023</td>
 <td>task</td>
 <td>middle</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td><code>pherald</code> project bindings (§2 commit+push, §3 submodule
 propagation, §11.4.11/.15/.21/.22/.34/.37/.42/.55/.66/.71/.74) — Batch
 B: <code>pherald/internal/bindings/</code> Pipeline + §42.3-owned rule
@@ -556,6 +437,8 @@ commons_constitution (Batch-A)</td>
 <td>HRD-024</td>
 <td>task</td>
 <td>middle</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td><code>iherald</code> constitution-rule escalation bindings
 (§11.4.10/.10.A credential-leak page-out, §11.4.21 + §11.4.66
 operator-blocked escalation) — Batch B:
@@ -575,6 +458,8 @@ commons_constitution (Batch-A)</td>
 <td>HRD-025</td>
 <td>task</td>
 <td>low</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td><code>scherald</code> scheduled-audit bindings (§11.4.45 periodic
 Status.md sweep + daily/weekly/monthly compliance digest) — Batch B:
 <code>scherald/internal/bindings/</code> Pipeline routing
@@ -592,6 +477,8 @@ Catalogue-Check: reuse commons_constitution (Batch-A)</td>
 <td>HRD-029</td>
 <td>task</td>
 <td>middle</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>§2 <code>pherald commit-push</code> — single-entrypoint locked
 commit + multi-mirror push — Batch C: implemented as gitops command
 (§11.4.74 wrap of git binary); --emit feeds HRD-023 binding; hermetic
@@ -606,6 +493,8 @@ constitution-submodule script); evidence
 <td>HRD-030</td>
 <td>task</td>
 <td>middle</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>§3 <code>pherald submodule propagate</code> — owned-submodule walk
 in propagation order — Batch C: implemented as gitops command (§11.4.74
 wrap of git binary); --emit feeds HRD-023 binding; hermetic temp-repo
@@ -619,6 +508,8 @@ tests -race green</td>
 <td>HRD-031</td>
 <td>task</td>
 <td>middle</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>§4 <code>rherald tag mirror</code> — assert tag exists on every
 owned submodule — Batch C: implemented as rherald §43 release command
 (<code>rherald/cmd/rherald/release_cmds.go</code>) feeding the HRD-022
@@ -633,6 +524,8 @@ docs/qa/HRD-031-20260528T040000Z/</td>
 <td>HRD-032</td>
 <td>task</td>
 <td>low</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>§5 <code>rherald changelog generate</code> — Conventional Commits →
 <code>docs/changelogs/&lt;v&gt;.md</code> + multi-format export — Batch
 C: implemented as rherald §43 release command
@@ -648,6 +541,8 @@ docs/qa/HRD-032-20260528T040000Z/</td>
 <td>HRD-033</td>
 <td>task</td>
 <td>high</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>§9.1 <code>sherald destructive guard &lt;op&gt;</code> — wrap
 rm/git-reset/git-push-force with prerequisite checks — Batch C:
 implemented as sherald §43 command
@@ -664,6 +559,8 @@ docs/qa/HRD-033-20260528T030000Z/</td>
 <td>HRD-034</td>
 <td>task</td>
 <td>middle</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>§9.3 <code>sherald backup-snapshot &lt;target&gt;</code> —
 hardlinked snapshot helper — Batch C straggler: implemented in
 <code>sherald/cmd/sherald/sysops_cmds.go</code> (os.Link hardlinks,
@@ -678,6 +575,8 @@ refuses overwrite, classifies §9.3 SubjectBackup →
 <td>HRD-035</td>
 <td>task</td>
 <td>middle</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>§11.4.2 <code>bherald evidence capture &lt;test_id&gt;</code> —
 captured-evidence recorder — Batch C: implemented as bherald §43
 build/CI command (<code>bherald/cmd/bherald/build_cmds.go</code>)
@@ -691,6 +590,8 @@ docs/qa/HRD-035-20260528T040000Z/</td>
 <td>HRD-036</td>
 <td>task</td>
 <td>high</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>§11.4.10 <code>cherald creds scan</code> — gitleaks/trufflehog
 integration, emits <code>.credential.leak</code> — Batch C: implemented
 as cherald §43 verify/check command
@@ -706,6 +607,8 @@ scanner; docs/qa/HRD-036-20260528T050000Z/</td>
 <td>HRD-037</td>
 <td>task</td>
 <td>low</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>§11.4.12 <code>cherald docs sync</code> — regen Issues_Summary /
 Fixed_Summary / Status_Summary — Batch C: implemented as cherald §43
 docs-pipeline command (<code>cherald/cmd/cherald/docops_cmds.go</code>)
@@ -721,6 +624,8 @@ constitution-submodule script); docs/qa/HRD-037-20260528T050000Z/</td>
 <td>HRD-038</td>
 <td>task</td>
 <td>low</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>§11.4.18 <code>cherald script-docs check</code> — assert sibling .md
 for every scripts/**/*.sh — Batch C: implemented as cherald §43
 verify/check command (<code>cherald/cmd/cherald/checkops_cmds.go</code>)
@@ -735,6 +640,8 @@ docs/qa/HRD-038-20260528T050000Z/</td>
 <td>HRD-039</td>
 <td>task</td>
 <td>low</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>§11.4.19 / .23 <code>cherald fixed align</code> +
 <code>cherald colorize</code> — Issues/Fixed format + HTML colorizer —
 Batch C: implemented as cherald §43 docs-pipeline command
@@ -751,6 +658,8 @@ docs/qa/HRD-039-20260528T050000Z/</td>
 <td>HRD-040</td>
 <td>task</td>
 <td>high</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>§11.4.26 <code>sherald constitution pull</code> — wrap fetch +
 rebase + validation gate, emits <code>.bundle.updated</code> — Batch C:
 implemented as sherald §43 command
@@ -767,6 +676,8 @@ docs/qa/HRD-040-20260528T030000Z/</td>
 <td>HRD-041</td>
 <td>task</td>
 <td>middle</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>§11.4.27 <code>bherald test-tier verify</code> — 8-tier matrix
 verification — Batch C: implemented as bherald §43 build/CI command
 (<code>bherald/cmd/bherald/build_cmds.go</code>) feeding the HRD-021
@@ -780,6 +691,8 @@ docs/qa/HRD-041-20260528T040000Z/</td>
 <td>HRD-042</td>
 <td>task</td>
 <td>low</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>§11.4.31 <code>cherald submanifest verify</code> —
 Submodule-Dependency-Manifest gate — Batch C: implemented as cherald §43
 verify/check command (<code>cherald/cmd/cherald/checkops_cmds.go</code>)
@@ -794,6 +707,8 @@ docs/qa/HRD-042-20260528T050000Z/</td>
 <td>HRD-043</td>
 <td>task</td>
 <td>high</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>§11.4.36 <code>pherald install-upstreams</code> — install_upstreams
 wrapper — Batch C: implemented as gitops command (§11.4.74
 FindScript-resolved constitution script); --emit feeds HRD-023 binding;
@@ -808,6 +723,8 @@ submodule's install_upstreams.sh; evidence
 <td>HRD-044</td>
 <td>task</td>
 <td>middle</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>§11.4.37 <code>pherald fetch-guard</code> — pre-edit fetch + rebase
 enforcement — Batch C: implemented as gitops command (§11.4.74 wrap of
 git binary); --emit feeds HRD-023 binding; hermetic temp-repo tests
@@ -821,6 +738,8 @@ git binary); --emit feeds HRD-023 binding; hermetic temp-repo tests
 <td>HRD-045</td>
 <td>task</td>
 <td>high</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>§11.4.40 <code>rherald gate retest</code> — pre-tag full-suite
 retest gate — Batch C: implemented as rherald §43 release command
 (<code>rherald/cmd/rherald/release_cmds.go</code>) feeding the HRD-022
@@ -835,6 +754,8 @@ docs/qa/HRD-045-20260528T040000Z/</td>
 <td>HRD-046</td>
 <td>task</td>
 <td>high</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>§11.4.41 <code>sherald force-push gate</code> — merge-first +
 per-session-auth enforcement — Batch C: implemented as sherald §43
 command (<code>sherald/cmd/sherald/sysops_cmds.go</code>) feeding the
@@ -851,6 +772,8 @@ docs/qa/HRD-046-20260528T030000Z/</td>
 <td>HRD-047</td>
 <td>task</td>
 <td>middle</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>§11.4.45 / .56 <code>scherald status-digest</code> — periodic
 Status.md sweep + Status_Summary regen — Batch C straggler: implemented
 in <code>scherald/cmd/scherald/digest_cmds.go</code> feeding the HRD-025
@@ -866,6 +789,8 @@ green</td>
 <td>HRD-048</td>
 <td>task</td>
 <td>low</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>§11.4.53 <code>cherald fixed-summary sync</code> — standalone
 Fixed_Summary backfill — Batch C: implemented as cherald §43
 docs-pipeline command (<code>cherald/cmd/cherald/docops_cmds.go</code>)
@@ -881,6 +806,8 @@ script); docs/qa/HRD-048-20260528T050000Z/</td>
 <td>HRD-049</td>
 <td>task</td>
 <td>middle</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>§11.4.55 <code>pherald reopen &lt;HRD-NNN&gt;</code> — Issues→Fixed
 reversal + Reopens history — Batch C: implemented as gitops command (the
 Wave 6.5 inbound Fixed→Issues migration); --emit feeds HRD-023 binding;
@@ -894,6 +821,8 @@ HRD flow); evidence <code>docs/qa/HRD-049-20260527T213201Z/</code></td>
 <td>HRD-050</td>
 <td>task</td>
 <td>middle</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>§11.4.59 <code>cherald readme sync</code> — README doc-link regen +
 multi-format re-export — Batch C: implemented as cherald §43
 docs-pipeline command (<code>cherald/cmd/cherald/docops_cmds.go</code>)
@@ -909,6 +838,8 @@ docs/qa/HRD-050-20260528T050000Z/</td>
 <td>HRD-051</td>
 <td>task</td>
 <td>high</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>§11.4.60 <code>cherald composite-gate</code> — canonical
 implementation of CM-DOCS-COMPOSITE-SYNC — Batch C: implemented as
 cherald §43 verify/check command
@@ -923,6 +854,8 @@ docs/qa/HRD-051-20260528T050000Z/</td>
 <td>HRD-052</td>
 <td>task</td>
 <td>middle</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>§11.4.65 <code>cherald export</code> — bulk Markdown export wrapper
 (md/html/pdf/docx) — Batch C: implemented as cherald §43 docs-pipeline
 command (<code>cherald/cmd/cherald/docops_cmds.go</code>) feeding the
@@ -938,6 +871,8 @@ Pandoc + WeasyPrint); docs/qa/HRD-052-20260528T050000Z/</td>
 <td>HRD-053</td>
 <td>task</td>
 <td>high</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>§11.4.71 <code>pherald pre-push</code> — fetch + investigate +
 integrate hook — Batch C: implemented as gitops command (§11.4.74 wrap
 of git binary); --emit feeds HRD-023 binding; hermetic temp-repo tests
@@ -951,6 +886,8 @@ of git binary); --emit feeds HRD-023 binding; hermetic temp-repo tests
 <td>HRD-054</td>
 <td>task</td>
 <td>middle</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>§11.4.73 <code>cherald spec-version check</code> — Revision-vs-edits
 drift detection — Batch C: implemented as cherald §43 verify/check
 command (<code>cherald/cmd/cherald/checkops_cmds.go</code>) feeding the
@@ -964,6 +901,8 @@ docs/qa/HRD-054-20260528T050000Z/</td>
 <td>HRD-055</td>
 <td>task</td>
 <td>middle</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>§11.4.74 <code>cherald catalogue-check &lt;pr&gt;</code> — scan PR
 for Catalogue-Check + survey runner over vasic-digital +
 HelixDevelopment — Batch C: implemented as cherald §43 verify/check
@@ -978,6 +917,8 @@ docs/qa/HRD-055-20260528T050000Z/</td>
 <td>HRD-056</td>
 <td>task</td>
 <td>high</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>§12.6 <code>sherald mem-budget watch</code> — daemon-mode 60%
 threshold watcher emitting <code>.host.safety_breach</code> — Batch C:
 implemented as sherald §43 command
@@ -994,6 +935,8 @@ docs/qa/HRD-056-20260528T030000Z/</td>
 <td>HRD-085</td>
 <td>task</td>
 <td>middle</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>Implement single-task admin operations on
 <code>commons_infra.pgxTaskRepository</code> — <code>GetByID</code>,
 <code>Update</code>, <code>Delete</code>. Required for Requeue +
@@ -1014,6 +957,8 @@ interface; these three rows finish the single-task surface).</td>
 <td>HRD-086</td>
 <td>task</td>
 <td>middle</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>Implement worker-side running-task state mutations on
 <code>commons_infra.pgxTaskRepository</code> —
 <code>UpdateStatus</code>, <code>UpdateProgress</code>,
@@ -1037,6 +982,8 @@ reporting).</td>
 <td>HRD-087</td>
 <td>task</td>
 <td>low</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>Implement admin / stats / audit reads on
 <code>commons_infra.pgxTaskRepository</code> — <code>GetByStatus</code>,
 <code>GetPendingTasks</code>, <code>CountByStatus</code>,
@@ -1059,6 +1006,8 @@ extend
 <td>HRD-088</td>
 <td>task</td>
 <td>middle</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>Implement queue-recovery reads on
 <code>commons_infra.pgxTaskRepository</code> —
 <code>GetStaleTasks</code>, <code>GetByWorkerID</code>. Drives the
@@ -1079,6 +1028,8 @@ without operator intervention).</td>
 <td>HRD-089</td>
 <td>task</td>
 <td>low</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>Implement resource-monitor I/O on
 <code>commons_infra.pgxTaskRepository</code> —
 <code>SaveResourceSnapshot</code>, <code>GetResourceSnapshots</code>.
@@ -1103,6 +1054,8 @@ not stream-only).</td>
 <td>HRD-116</td>
 <td>task</td>
 <td>middle</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>Wave 7 T7 — qaherald Slack <code>MessengerClient</code> +
 channel-keyed builder
 (<code>qaherald/internal/messenger/{slack.go,builder.go}</code>):
@@ -1135,6 +1088,8 @@ from HRD-115; offset bookkeeping is qaherald-controlled;
 <td>HRD-118</td>
 <td>task</td>
 <td>high</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>Wave 7 T9 — e2e_bluff_hunt.sh E124-E131 multi-channel invariants:
 E124 channels registry resolution, E125 tgram self-filter post-Wave-7
 (pure-refactor invariant), E126 slack adapter (interface satisfied +
@@ -1156,6 +1111,8 @@ Catalogue-Check: n/a (e2e wiring against shipped tests).</td>
 <td>HRD-119</td>
 <td>task</td>
 <td>high</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>Wave 7 T10 — paired §1.1 mutation gate
 <code>tests/test_wave7_mutation_meta.sh</code> (4 PASS / 0 FAIL):
 <strong>M1</strong> blank <code>IsSelfEcho</code> →
@@ -1185,6 +1142,8 @@ Catalogue-Check: n/a (gate).</td>
 <td>HRD-120</td>
 <td>task</td>
 <td>high</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>Wave 7 T11 — §11.4.85 multi-channel stress + chaos. Extended
 HRD-126's <code>pherald/cmd/pherald/listen_stress_chaos_test.go</code>
 (NOT duplicated to a new file):
@@ -1223,6 +1182,8 @@ burstSubscriber.</td>
 <td>HRD-121</td>
 <td>task</td>
 <td>low</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>Wave 7 T12 — <code>docs/guides/MESSENGER_CHANNELS.md</code> operator
 guide (610 lines, 11 §-sections + 3 siblings .html/.pdf/.docx): §1
 architecture (commons.Channel outbound vs
@@ -1259,6 +1220,8 @@ Catalogue-Check: n/a (operator doc).</td>
 <td>HRD-148</td>
 <td>feature</td>
 <td>high</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td><strong>ATMOSphere integration WS-1 — <code>commons_workable</code>
 SQLite SSoT foundation (LANDED + tested 2026-05-29).</strong> New L1
 module: SQLite store (pure-Go <code>modernc.org/sqlite</code>, no CGO)
@@ -1286,6 +1249,8 @@ schema mirrors
 <td>HRD-149</td>
 <td>feature</td>
 <td>high</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td><strong>ATMOSphere integration WS-2 — <code>commons_watch</code>
 file/DB watcher (LANDED + tested 2026-05-29).</strong> New L1 module:
 fsnotify watcher (direct dep) over the <code>.db</code> SSoT + MD
@@ -1302,6 +1267,8 @@ real-fsnotify tests <code>-race</code> green. Feeds R1/R2.</td>
 <td>HRD-151</td>
 <td>feature</td>
 <td>high</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>ATMOSphere integration WS-3 — change→CloudEvent→Runner bridge +
 Jira/ClickUp-style per-property-diff message formatter (reuse the
 existing <code>pherald/internal/runner</code> 7-stage fan-out; add only
@@ -1315,6 +1282,8 @@ the workable-event producer + formatter).</td>
 <td>HRD-152</td>
 <td>feature</td>
 <td>high</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>ATMOSphere integration WS-4 — inbound action registry +
 <code>item.update</code>/<code>item.delete</code>/<code>investigation.start</code>
 + <code>ItemMutator</code> (writes <code>commons_workable</code>) +
@@ -1329,6 +1298,8 @@ operator 2026-05-29).</td>
 <td>HRD-153</td>
 <td>feature</td>
 <td>middle</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>ATMOSphere integration WS-2 — watcher daemon entrypoint
 (<code>pherald watch</code> running the watch→diff→notify loop; promote
 to a <code>wherald</code> flavor if it grows).</td>
@@ -1341,6 +1312,8 @@ to a <code>wherald</code> flavor if it grows).</td>
 <td>HRD-154</td>
 <td>task</td>
 <td>middle</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>ATMOSphere integration WS-3 — enforce preference/quiet-hours routing
 (<code>PreferenceSet</code>/<code>QuietHours</code> types exist but the
 resolver ignores them).</td>
@@ -1353,6 +1326,8 @@ resolver ignores them).</td>
 <td>HRD-090</td>
 <td>task</td>
 <td>middle</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>Dead-letter handling on <code>commons_infra.pgxTaskRepository</code>
 — <code>MoveToDeadLetter</code> (was the last
 <code>ErrUnsupported</code> Batch-D stub). Migration
@@ -1398,6 +1373,8 @@ cancelled-ctx-no-orphan) + paired §1.1 mutation gate
 <td>HRD-133</td>
 <td>task</td>
 <td>high</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>Tgram-completeness Wave B — token-redaction symmetry
 (<code>commons_messaging/channels/tgram/errors.go</code> + send.go
 wraps). <code>sanitizeTgramError(msg, token) string</code> strips the
@@ -1430,6 +1407,8 @@ Catalogue-Check: mirror slack adapter's <code>sanitizeError</code> (Wave
 <td>HRD-134</td>
 <td>task</td>
 <td>high</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>Tgram-completeness Wave B — Bot API rate-limit 429 +
 <code>retry_after</code> honored
 (<code>commons_messaging/channels/tgram/send.go</code> +
@@ -1467,6 +1446,8 @@ exposes the field); files
 <td>HRD-135</td>
 <td>task</td>
 <td>middle</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>Tgram-completeness Wave A — edited-message + bot-kicked typed-error
 + service-message ignore-and-log handlers
 (<code>commons_messaging/channels/tgram/subscribe.go</code>).
@@ -1505,6 +1486,8 @@ endpoints; files
 <td>HRD-136</td>
 <td>task</td>
 <td>low</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>Tgram-completeness Wave A — Bot API webhook
 <code>secret_token</code> validation skeleton
 (<code>commons_messaging/channels/tgram/webhook.go</code>).
@@ -1543,6 +1526,8 @@ Catalogue-Check: reuse <code>crypto/subtle</code> + telebot.v3's
 <td>HRD-137</td>
 <td>task</td>
 <td>high</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>Tgram-completeness Wave C — §11.4.85 stress + chaos suite
 (<code>commons_messaging/channels/tgram/stress_chaos_test.go</code>).
 <code>TestTgram_Stress_MultiRecipientFanOut</code> drives the REAL
@@ -1595,6 +1580,8 @@ commons/stresschaos primitives; files
 <td>HRD-138</td>
 <td>task</td>
 <td>low</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>Tgram-completeness Wave A — <code>docs/guides/TELEGRAM.md</code>
 per-module operator deep-dive guide (810 lines, 11 §-sections, 58
 subsections, 3 siblings .html/.pdf/.docx). §1 architecture overview
@@ -1631,6 +1618,8 @@ Catalogue-Check: n/a (operator doc); files
 <td>HRD-139</td>
 <td>task</td>
 <td>high</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>Wave 8 Track B — <code>qaherald/internal/mtproto/</code> MTProto
 user-account Client live wiring (gotd/td v0.144.0 vendored as
 <code>submodules/gotd-td</code> per §11.4.74 catalogue-first). Client
@@ -1669,6 +1658,8 @@ protocol library, no Herald reimplementation); files
 <td>HRD-140</td>
 <td>task</td>
 <td>high</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>Wave 8 Track B Test 1 —
 <code>TestMTProto_Subscribe_AutonomousRoundTrip</code>
 (<code>qaherald/internal/lifecycle/mtproto_subscribe_test.go</code>,
@@ -1700,6 +1691,8 @@ files
 <td>HRD-141</td>
 <td>task</td>
 <td>high</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>Wave 8 Track B Test 2 —
 <code>TestMTProto_Wave6_AutonomousClosedLoop</code>
 (<code>qaherald/internal/lifecycle/mtproto_wave6_loop_test.go</code>,
@@ -1738,6 +1731,8 @@ wired in <code>a80d206</code>; Catalogue-Check: extend pherald
 <td>HRD-142</td>
 <td>task</td>
 <td>high</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>Wave 8 Track B Test 3 —
 <code>TestMTProto_Wave65_LifecycleAutonomous</code>
 (<code>qaherald/internal/lifecycle/mtproto_wave65_lifecycle_test.go</code>,
@@ -1756,6 +1751,8 @@ asserts on the pherald journal for <code>tgram.message in</code> +
 <td>HRD-018</td>
 <td>task</td>
 <td>high</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td><code>commons_constitution</code> Go package: Evaluator interface +
 12 event-class emit helpers +
 <code>constitution_state</code>/<code>constitution_bindings</code>
@@ -1800,6 +1797,8 @@ admin-flip + §11.4.85 stress/chaos); files
 <td>HRD-026</td>
 <td>task</td>
 <td>middle</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>Constitution-bundle hash captureer — computes SHA-256 of rendered
 Constitution.md at evaluation time; persists on every emitted event for
 replayability. The captureer (<code>bundle.go</code>
@@ -1824,6 +1823,8 @@ replay-correlation requirement.</td>
 <td>HRD-027</td>
 <td>task</td>
 <td>middle</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>Mode-ladder runtime config (<code>constitution_bindings</code> table
 + admin REST endpoints to flip allow/warn/enforce per binding per tenant
 without redeploy). The <code>ModeLadder</code> interface +
@@ -1854,6 +1855,8 @@ files <code>cherald/internal/modes/handler.go</code>,
 <td>HRD-132</td>
 <td>bug</td>
 <td>high</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>§11.4.85/§32.1 Runner idempotency-window FIX — concurrent same-key
 replay no longer duplicate-dispatches a notification (FINDING from
 HRD-125 stress/chaos). Root cause: <code>idempotency.go:64-72</code>
@@ -1896,6 +1899,8 @@ redundant, M4's blast-radius moved into the Stage-2 claim.</td>
 <td>HRD-130</td>
 <td>task</td>
 <td>high</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>§11.4.85 / §1.1 paired mutation gate for the GAP-3 stress+chaos
 suite — <code>tests/test_stress_chaos_mutation_meta.sh</code> (GAP-3
 plan §5 / §6 T9). Proves each hermetic stress/chaos detector is
@@ -1936,6 +1941,8 @@ FAIL (5 mutations load-bearing).</td>
 <td>HRD-129</td>
 <td>task</td>
 <td>high</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>§11.4.85 stress+chaos suite wired into the canonical anti-bluff
 harness <code>scripts/e2e_bluff_hunt.sh</code> as new invariants E81-E88
 (GAP-3 plan §4 / §6 T8) — ADDITIVE-ONLY append after E80 (E1-E80 logic
@@ -1974,6 +1981,8 @@ deterministic; header bumped E1..E80→E1..E88. Full
 <td>HRD-128</td>
 <td>task</td>
 <td>high</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>§11.4.85 container-orchestrated / resource-exhaustion stress+chaos
 tests (GAP-3 plan §1 row 6 / §6 T7 + §7 host-safety) —
 <code>commons_storage/resource_stress_chaos_test.go</code> (hermetic
@@ -2010,6 +2019,8 @@ cross-refs HRD-081 + HRD-056; evidence
 <td>HRD-127</td>
 <td>task</td>
 <td>high</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>§11.4.85 claude_code dispatch stress+chaos tests (GAP-3 plan §1 row
 5 / §6 T6) —
 <code>commons_messaging/dispatch/claude_code/dispatch_stress_chaos_test.go</code>
@@ -2047,6 +2058,8 @@ evidence
 <td>HRD-126</td>
 <td>task</td>
 <td>high</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>§11.4.85 <code>pherald listen</code> inbound-path stress+chaos tests
 (GAP-3 plan §1 row 4 / §6 T5) —
 <code>pherald/internal/inbound/stress_chaos_test.go</code> (in-package,
@@ -2083,6 +2096,8 @@ once_only_side_effect.txt)</td>
 <td>HRD-125</td>
 <td>task</td>
 <td>high</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>§11.4.85 Runner 7-stage pipeline stress+chaos tests (GAP-3 plan §1
 row 3 / §6 T4) —
 <code>pherald/internal/runner/stress_chaos_test.go</code> exercising the
@@ -2113,6 +2128,8 @@ deadlock_recovery.log, nil_redis_degrade.txt)</td>
 <td>HRD-124</td>
 <td>task</td>
 <td>high</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>§11.4.85 Gin <code>/v1/compliance</code> (cherald) +
 <code>/v1/safety_state</code> (sherald) GET stress+chaos tests (GAP-3
 plan §1 row 2 / §6 T3) —
@@ -2150,6 +2167,8 @@ HRD-125; evidence
 <td>HRD-123</td>
 <td>task</td>
 <td>high</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>§11.4.85 Gin <code>/v1/events</code> stress+chaos tests (GAP-3 plan
 §1 row 1 / §6 T2) —
 <code>pherald/internal/http/events_stress_chaos_test.go</code> driving
@@ -2185,6 +2204,8 @@ evidence
 <td>HRD-122</td>
 <td>task</td>
 <td>middle</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>§11.4.85 stress+chaos shared scaffold — Go-native
 <code>commons/stresschaos</code> test-helper package (GAP-3 plan §2 / §6
 T1). Provides: a bounded concurrent load-runner (<code>RunLoad</code> —
@@ -2216,6 +2237,8 @@ layering (commons L0, importable by every flavor).</td>
 <td>HRD-114</td>
 <td>task</td>
 <td>high</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>Wave 7 T5 — multi-channel <code>pherald listen</code>
 (HERALD_CHANNELS fan-in: N Subscribe goroutines → 1 dispatcher).
 <code>pherald/internal/inbound/dispatcher.go</code> renames the Wave-6
@@ -2291,6 +2314,8 @@ Catalogue-Check: reuse (internal, 2026-05-27)</td>
 <td>HRD-113</td>
 <td>task</td>
 <td>high</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>Wave 7 T4 — generalize the bot self-filter via
 <code>BotSelfIdentity</code> (channel-agnostic). New file
 <code>commons_messaging/channels/selffilter.go</code> adds the Raw-map
@@ -2353,6 +2378,8 @@ Catalogue-Check: reuse (internal, 2026-05-27)</td>
 <td>HRD-112</td>
 <td>task</td>
 <td>middle</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>Wave 7 T3 — per-channel inbox subdirs
 <code>~/.herald/inbox/&lt;channel&gt;/&lt;sha256&gt;.&lt;ext&gt;</code>.
 New file <code>commons_messaging/channels/inbox.go</code> adds the
@@ -2410,6 +2437,8 @@ Catalogue-Check: reuse (internal, 2026-05-27)</td>
 <td>HRD-111</td>
 <td>task</td>
 <td>high</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>Wave 7 T2 — channel registry (name→constructor) +
 <code>init()</code>-based registration. New file
 <code>commons_messaging/channels/registry.go</code> adds
@@ -2466,6 +2495,8 @@ mirrors qaherald <code>scenario.Register</code>; Catalogue-Check: reuse
 <td>HRD-110</td>
 <td>task</td>
 <td>high</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>Wave 7 T1 — extract <code>commons_messaging/channels.Channel</code>
 interface (pure refactor). New package
 <code>commons_messaging/channels/</code> defines <code>Channel</code>
@@ -2512,6 +2543,8 @@ Catalogue-Check: reuse (extends existing <code>commons.Channel</code>
 <td>HRD-101</td>
 <td>task</td>
 <td>high</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>Wave 6.5 ticket-lifecycle layer — §32.6 deterministic classifier
 (<code>Bug:</code>/<code>Issue:</code>/<code>Task:</code>/<code>Implementation:</code>/<code>Investigation:</code>/<code>Query:</code>/<code>Question:</code>/<code>Help:</code>/<code>Status:</code>/<code>Continue:</code>/<code>Done:</code>/<code>Resolve:</code>/<code>Reopen:</code>/<code>Override:</code>
 prefix routing with
@@ -2552,6 +2585,8 @@ cases). Spec V3 r13: §32.6/§32.9/§33.6/§33.7 subsections landed. Tag
 <td>HRD-100</td>
 <td>task</td>
 <td>high</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>Wave 6 — pherald inbound runtime + Claude Code headless bridge
 (code-doc closure). New Cobra subcommand <code>pherald listen</code>
 runs the closed-loop runtime: Telegram <code>getUpdates</code> long-poll
@@ -2608,6 +2643,8 @@ Catalogue-Check: no-match → Herald-internal package
 <td>HRD-016</td>
 <td>task</td>
 <td>middle</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>pherald <code>/v1/events</code> Runner wiring (REST API surface via
 Gin Gonic per spec §41) — §32 7-stage event-ingest pipeline lands as 7
 concrete structs under <code>pherald/internal/runner/</code>
@@ -2641,6 +2678,8 @@ T1..T10: <code>eb9b2f4</code>, <code>40ad60f</code>,
 <td>HRD-011</td>
 <td>task</td>
 <td>middle</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>Telegram channel adapter live integration — telebot.v3 vendored
 (<code>submodules/telebot</code>); HealthCheck + Send + Subscribe +
 outbound_delivery_evidence persistence all live-wired with §107 bluff
@@ -2664,6 +2703,8 @@ Telegram Bot API <code>sendMessage</code> returning
 <td>HRD-099</td>
 <td>task</td>
 <td>low</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>commons_auth/ JWT verifier — HMAC + JWKS hybrid + Gin middleware +
 claims helpers, vendored Herald-internal per §11.4.74 catalogue-check
 no-match. Catalogue evidence:
@@ -2680,6 +2721,8 @@ docs/catalogue-checks/HRD-099-commons-auth.md</td>
 <td>HRD-098</td>
 <td>task</td>
 <td>middle</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>sherald <code>/v1/safety_state</code> live — process-local
 Aggregator + background mem-sampler (15s tick) + Handler with JWT gate
 via commons_auth.GinMiddleware. Replaces the Wave 2 501-stub. §107
@@ -2696,6 +2739,8 @@ destructive-op trigger awaits HRD-033 body.</td>
 <td>HRD-028</td>
 <td>task</td>
 <td>low</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>cherald <code>/v1/compliance</code> live — paginated + filter-aware
 <code>constitution_state</code> pull surface with JWT gate via
 commons_auth.GinMiddleware. Backed by ConstitutionStore.ListQuery
@@ -2712,6 +2757,8 @@ yet).</td>
 <td>HRD-092</td>
 <td>task</td>
 <td>middle</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>commons/cli/ shared CLI scaffold (Wave 2) — NewRootCmd + VersionCmd
 + ServeCmd (with Middleware hook) + StubCmd + healthz/readyz/metrics
 handlers. Vendored as Herald-internal per §11.4.74 catalogue-check
@@ -2725,6 +2772,8 @@ docs/catalogue-checks/HRD-092-commons-cli.md.</td>
 <td>HRD-093</td>
 <td>task</td>
 <td>middle</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>sherald flavor scaffold — System Herald binary serving :24793 with
 cli.ServeCmd, 5 §43 stubs (HRD-033/034/040/046/056) + /v1/safety_state
 501 stub → HRD-098.</td>
@@ -2736,6 +2785,8 @@ cli.ServeCmd, 5 §43 stubs (HRD-033/034/040/046/056) + /v1/safety_state
 <td>HRD-094</td>
 <td>task</td>
 <td>middle</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>cherald flavor scaffold — Constitution Herald binary serving :24792
 with cli.ServeCmd, 11 §43 stubs + /v1/compliance 501 stub →
 HRD-028.</td>
@@ -2747,6 +2798,8 @@ HRD-028.</td>
 <td>HRD-095</td>
 <td>task</td>
 <td>low</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>bherald flavor scaffold — Build Herald CLI-only binary with 3 §43
 stubs (HRD-035/041/045).</td>
 <td>2026-05-21</td>
@@ -2757,6 +2810,8 @@ stubs (HRD-035/041/045).</td>
 <td>HRD-096</td>
 <td>task</td>
 <td>low</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>rherald flavor scaffold — Release Herald CLI-only binary with 3 §43
 stubs (HRD-031/032/045).</td>
 <td>2026-05-21</td>
@@ -2767,6 +2822,8 @@ stubs (HRD-031/032/045).</td>
 <td>HRD-097</td>
 <td>task</td>
 <td>low</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>iherald + scherald flavor scaffolds — Incident Herald serving :24794
 with /v1/webhooks/page → HRD-024 + Scheduled-audit Herald CLI-only with
 1 §43 stub (HRD-047). Paired since iherald has zero §43 stubs.</td>
@@ -2778,6 +2835,8 @@ with /v1/webhooks/page → HRD-024 + Scheduled-audit Herald CLI-only with
 <td>HRD-012</td>
 <td>task</td>
 <td>middle</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>Claude Code dispatcher live integration —
 <code>claude --resume &lt;UUID&gt; --print &lt;envelope&gt;</code> exec
 + <code>&lt;&lt;&lt;HERALD-REPLY&gt;&gt;&gt;</code> JSON parse +
@@ -2800,6 +2859,8 @@ for live pool.</td>
 <td>HRD-010</td>
 <td>task</td>
 <td>middle</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>commons_storage live wiring — pgx pool + RLS-enforcing
 WithTenantContext (discovered + fixed RLS-bypass bug via E14
 falsifiability) + 9 migrations + background queue
@@ -2817,6 +2878,8 @@ digital.vasic.cache@<pinned>; Models + Concurrency submodules added</td>
 <td>HRD-080</td>
 <td>task</td>
 <td>low</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>Refine I6 inheritance-gate invariant from blanket
 <code>.gitmodules</code>-forbidden to "no <code>constitution/</code>
 entry in <code>.gitmodules</code>" — paired meta-test
@@ -2830,6 +2893,8 @@ Enables Foundation M2/M3 Helix-stack submodule installs.</td>
 <td>HRD-017</td>
 <td>task</td>
 <td>middle</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>Propagate Universal §11.4.73 (main-spec versioning + revision
 discipline) and §11.4.74 (submodule-catalogue-first discovery) into
 parent constitution Constitution.md + CLAUDE.md + AGENTS.md</td>
@@ -2841,6 +2906,8 @@ parent constitution Constitution.md + CLAUDE.md + AGENTS.md</td>
 <td>HRD-014</td>
 <td>task</td>
 <td>middle</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>pherald CLI scaffold — Cobra root + version + 5 stubbed subcommands;
 <code>pherald version --json</code> returns canonical build info</td>
 <td>2026-05-20</td>
@@ -2851,6 +2918,8 @@ parent constitution Constitution.md + CLAUDE.md + AGENTS.md</td>
 <td>HRD-013</td>
 <td>task</td>
 <td>middle</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>commons_messaging + null:// adapter — full §11.0 Channel contract
 impl with ring buffer + fail_rate/latency/ceiling URL params + 8-case
 unit test suite</td>
@@ -2862,6 +2931,8 @@ unit test suite</td>
 <td>HRD-009b</td>
 <td>task</td>
 <td>low</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>commons_prefix module — §8.2 deterministic 3-letter prefix algorithm
 with CamelCase split + collision-resolution via fnv1a32 + table-driven
 tests</td>
@@ -2873,6 +2944,8 @@ tests</td>
 <td>HRD-009</td>
 <td>task</td>
 <td>middle</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>commons module — full §11.0 Go type contract (Channel + Capabilities
 + DeliveryEvidence + OutboundMessage + Body + Attachment + Recipient +
 Action + Priority + Receipt + InboundHandler + InboundEvent + Subscriber
@@ -2887,6 +2960,8 @@ DefaultBranding factory</td>
 <td>HRD-007</td>
 <td>task</td>
 <td>middle</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>V3 r3 cross-doc sync + tracking-doc scaffold
 (Issues/Fixed/Status/Status_Summary/Issues_Summary/Fixed_Summary/CONTINUATION)</td>
 <td>2026-05-20</td>
@@ -2897,6 +2972,8 @@ DefaultBranding factory</td>
 <td>HRD-006</td>
 <td>task</td>
 <td>middle</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>V3 r2 flavor refinement — 9 flavors × per-channel interaction
 tables</td>
 <td>2026-05-20</td>
@@ -2907,6 +2984,8 @@ tables</td>
 <td>HRD-005</td>
 <td>task</td>
 <td>middle</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>V3 r1 operator-product layer (§31..§36 + §18.2 expansion)</td>
 <td>2026-05-20</td>
 <td><code>e26a8dc</code></td>
@@ -2916,6 +2995,8 @@ tables</td>
 <td>HRD-004</td>
 <td>task</td>
 <td>middle</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>V2 r3 — Go type contract closure + operational ops detail</td>
 <td>2026-05-20</td>
 <td><code>f4ebba1</code></td>
@@ -2925,6 +3006,8 @@ tables</td>
 <td>HRD-003</td>
 <td>task</td>
 <td>middle</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>V2 r2 — close prose↔︎definition gaps + add operational guidance</td>
 <td>2026-05-19</td>
 <td><code>9648545</code></td>
@@ -2934,6 +3017,8 @@ tables</td>
 <td>HRD-002</td>
 <td>task</td>
 <td>middle</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>V2 r1 — architectural authoring
 (CloudEvents/Watermill/OTel/RLS/SLSA/9 flavors)</td>
 <td>2026-05-19</td>
@@ -2944,6 +3029,8 @@ tables</td>
 <td>HRD-001</td>
 <td>task</td>
 <td>middle</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
 <td>V1 — initial MVP specification + Review section +
 Recommendations</td>
 <td>2026-05-19</td>
