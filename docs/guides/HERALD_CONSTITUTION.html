@@ -265,7 +265,7 @@ present in all three Herald root docs.</td>
 <ul>
 <li><a href="#project-articles">Project Articles</a>
 <ul>
-<li><a href="#101-pre-implementation-status">§101. Pre-implementation
+<li><a href="#101-implementation-status">§101. Implementation
 status</a></li>
 <li><a href="#102-mission-boundary">§102. Mission boundary</a></li>
 <li><a href="#103-mirror-parity-extends-universal-21">§103. Mirror
@@ -313,13 +313,19 @@ section.</p>
 <p>Canonical constitution repo: <a
 href="https://github.com/HelixDevelopment/HelixConstitution">https://github.com/HelixDevelopment/HelixConstitution</a></p>
 <h2 id="project-articles">Project Articles</h2>
-<h3 id="101-pre-implementation-status">§101. Pre-implementation
-status</h3>
-<p>Herald is pre-implementation. Until a <code>go.mod</code> is
-committed, no clause below may be interpreted as authorizing the agent
-to fabricate build/test infrastructure that doesn't yet exist. Confirm
-the disambiguation (scaffold vs. fill spec) with the operator before
-writing code, per Universal §11.4.6 (no-guessing).</p>
+<h3 id="101-implementation-status">§101. Implementation status</h3>
+<p>Herald is in <strong>active multi-wave implementation</strong> as of
+2026-05-31 — waves 2 through 7 have shipped, the
+<code>go.mod</code>/<code>go.work</code> foundation (18 workspace
+modules) is committed and green, and the latest tag is
+<strong>v0.6.0</strong> (2026-05-28). The original anti-bluff intent of
+this section is unchanged and now binds the <em>running</em> system: no
+clause below may be read as authorizing the agent to
+<strong>fabricate</strong> build/test infrastructure, runtime evidence,
+or feature-completeness that does not actually exist and pass (Universal
+§11.4 / Herald §107). When a requirement is genuinely ambiguous
+(scaffold vs. fill-spec vs. close an evidence-gated HRD), confirm with
+the operator before acting, per Universal §11.4.6 (no-guessing).</p>
 <h3 id="102-mission-boundary">§102. Mission boundary</h3>
 <p>Herald ingests system events and fans them out to multiple
 notification channels. Anything outside event ingestion or notification

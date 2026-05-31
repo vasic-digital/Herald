@@ -45,16 +45,18 @@ Ingesting system events and reliably fanning them out to multiple notification c
 
 ## Status
 
-Herald is **pre-implementation** (2026-05-15). The repository currently contains:
+Herald is in **active multi-wave implementation** (as of 2026-05-31) — waves 2 through 7 have shipped and the latest tag is **v0.6.0** (2026-05-28). The repository contains:
 
 - This README.
-- The current specification at [`docs/specs/mvp/specification.V4.md`](docs/specs/mvp/specification.V4.md) — comprehensive (~3900 lines): project-integration contract, inbound processing pipeline, LLM/agent dispatch with Claude Code, tri-stage reply protocol, versioned reports, multi-format outbound attachments, nine refined flavors. V1 and V2 preserved in [`docs/specs/mvp/archive/`](docs/specs/mvp/archive/) for traceability.
+- The current specification at [`docs/specs/mvp/specification.V4.md`](docs/specs/mvp/specification.V4.md) — comprehensive: project-integration contract, inbound processing pipeline, LLM/agent dispatch with Claude Code, tri-stage reply protocol, versioned reports, multi-format outbound attachments, the refined flavors. V1–V3 preserved in [`docs/specs/mvp/archive/`](docs/specs/mvp/archive/) for traceability.
+- **18 Go workspace modules** (10 shared/foundation + 8 flavor binaries `pherald`/`sherald`/`cherald`/`bherald`/`rherald`/`iherald`/`scherald`/`qaherald`). Live and tested: the `pherald listen` inbound runtime, the Telegram + Slack channel adapters, the Claude Code dispatcher, `commons_storage` (pgx + River + Redis), and the Gin `/v1/*` REST API.
+- Landed cross-cutting mandates: participant-attribution (§11.4.104), natural-language intent-recognition (§11.4.105), and the Docs Chain documentation-sync integration (§11.4.106).
 - Project-specific Constitution + operator/agent guides under [`docs/guides/`](docs/guides/).
 - Mirror declarations at [`upstreams/`](upstreams/) — one shell script per host that exports `UPSTREAMABLE_REPOSITORY`.
-- The inheritance gate + paired mutation meta-test at [`tests/`](tests/).
+- The inheritance gate + paired mutation meta-test at [`tests/`](tests/), plus `scripts/e2e_bluff_hunt.sh` (the canonical anti-bluff end-to-end smoke).
 - `.gitignore` tuned for Go (`*.test`, `go.work*`, `coverage.*`) and `.DS_Store`.
 
-There is no `go.mod`, no Go source code, and no build tooling yet. Intended language is Go; standard `cmd/` + `internal/` layout will be used when scaffolding starts.
+The Go workspace (`go.work`, 18 modules) builds and tests green; see [`CLAUDE.md`](CLAUDE.md) for the canonical build/test commands. Standard `cmd/` + `internal/` layout. Roughly a dozen evidence-gated HRDs remain open in [`docs/Issues.md`](docs/Issues.md) (live-integration credentials + later-iteration channels); the bulk of the catalogue migrated to [`docs/Fixed.md`](docs/Fixed.md).
 
 ## Mission
 

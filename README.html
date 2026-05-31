@@ -204,32 +204,50 @@ notification channels so every alert reaches the right destination
 without confusion.</p>
 <hr />
 <h2 id="status">Status</h2>
-<p>Herald is <strong>pre-implementation</strong> (2026-05-15). The
-repository currently contains:</p>
+<p>Herald is in <strong>active multi-wave implementation</strong> (as of
+2026-05-31) — waves 2 through 7 have shipped and the latest tag is
+<strong>v0.6.0</strong> (2026-05-28). The repository contains:</p>
 <ul>
 <li>This README.</li>
 <li>The current specification at <a
 href="docs/specs/mvp/specification.V4.md"><code>docs/specs/mvp/specification.V4.md</code></a>
-— comprehensive (~3900 lines): project-integration contract, inbound
-processing pipeline, LLM/agent dispatch with Claude Code, tri-stage
-reply protocol, versioned reports, multi-format outbound attachments,
-nine refined flavors. V1 and V2 preserved in <a
+— comprehensive: project-integration contract, inbound processing
+pipeline, LLM/agent dispatch with Claude Code, tri-stage reply protocol,
+versioned reports, multi-format outbound attachments, the refined
+flavors. V1–V3 preserved in <a
 href="docs/specs/mvp/archive/"><code>docs/specs/mvp/archive/</code></a>
 for traceability.</li>
+<li><strong>18 Go workspace modules</strong> (10 shared/foundation + 8
+flavor binaries
+<code>pherald</code>/<code>sherald</code>/<code>cherald</code>/<code>bherald</code>/<code>rherald</code>/<code>iherald</code>/<code>scherald</code>/<code>qaherald</code>).
+Live and tested: the <code>pherald listen</code> inbound runtime, the
+Telegram + Slack channel adapters, the Claude Code dispatcher,
+<code>commons_storage</code> (pgx + River + Redis), and the Gin
+<code>/v1/*</code> REST API.</li>
+<li>Landed cross-cutting mandates: participant-attribution (§11.4.104),
+natural-language intent-recognition (§11.4.105), and the Docs Chain
+documentation-sync integration (§11.4.106).</li>
 <li>Project-specific Constitution + operator/agent guides under <a
 href="docs/guides/"><code>docs/guides/</code></a>.</li>
 <li>Mirror declarations at <a
 href="upstreams/"><code>upstreams/</code></a> — one shell script per
 host that exports <code>UPSTREAMABLE_REPOSITORY</code>.</li>
 <li>The inheritance gate + paired mutation meta-test at <a
-href="tests/"><code>tests/</code></a>.</li>
+href="tests/"><code>tests/</code></a>, plus
+<code>scripts/e2e_bluff_hunt.sh</code> (the canonical anti-bluff
+end-to-end smoke).</li>
 <li><code>.gitignore</code> tuned for Go (<code>*.test</code>,
 <code>go.work*</code>, <code>coverage.*</code>) and
 <code>.DS_Store</code>.</li>
 </ul>
-<p>There is no <code>go.mod</code>, no Go source code, and no build
-tooling yet. Intended language is Go; standard <code>cmd/</code> +
-<code>internal/</code> layout will be used when scaffolding starts.</p>
+<p>The Go workspace (<code>go.work</code>, 18 modules) builds and tests
+green; see <a href="CLAUDE.md"><code>CLAUDE.md</code></a> for the
+canonical build/test commands. Standard <code>cmd/</code> +
+<code>internal/</code> layout. Roughly a dozen evidence-gated HRDs
+remain open in <a href="docs/Issues.md"><code>docs/Issues.md</code></a>
+(live-integration credentials + later-iteration channels); the bulk of
+the catalogue migrated to <a
+href="docs/Fixed.md"><code>docs/Fixed.md</code></a>.</p>
 <h2 id="mission">Mission</h2>
 <p>Herald sits between systems that <strong>emit events</strong> and
 humans/services that <strong>want to be told about them</strong>. It

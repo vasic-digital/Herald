@@ -22,7 +22,7 @@
 ## Table of contents
 
 - [Project Articles](#project-articles)
-  - [§101. Pre-implementation status](#101-pre-implementation-status)
+  - [§101. Implementation status](#101-implementation-status)
   - [§102. Mission boundary](#102-mission-boundary)
   - [§103. Mirror parity (extends Universal §2.1)](#103-mirror-parity-extends-universal-21)
   - [§104. No embedded constitution (extends Universal §3)](#104-no-embedded-constitution-extends-universal-3)
@@ -45,9 +45,9 @@ Canonical constitution repo: <https://github.com/HelixDevelopment/HelixConstitut
 
 ## Project Articles
 
-### §101. Pre-implementation status
+### §101. Implementation status
 
-Herald is pre-implementation. Until a `go.mod` is committed, no clause below may be interpreted as authorizing the agent to fabricate build/test infrastructure that doesn't yet exist. Confirm the disambiguation (scaffold vs. fill spec) with the operator before writing code, per Universal §11.4.6 (no-guessing).
+Herald is in **active multi-wave implementation** as of 2026-05-31 — waves 2 through 7 have shipped, the `go.mod`/`go.work` foundation (18 workspace modules) is committed and green, and the latest tag is **v0.6.0** (2026-05-28). The original anti-bluff intent of this section is unchanged and now binds the *running* system: no clause below may be read as authorizing the agent to **fabricate** build/test infrastructure, runtime evidence, or feature-completeness that does not actually exist and pass (Universal §11.4 / Herald §107). When a requirement is genuinely ambiguous (scaffold vs. fill-spec vs. close an evidence-gated HRD), confirm with the operator before acting, per Universal §11.4.6 (no-guessing).
 
 ### §102. Mission boundary
 
