@@ -1,0 +1,48 @@
+=== RUN   TestCommandRecognizer_TruthTable
+=== RUN   TestCommandRecognizer_TruthTable/close_ATM-N
+=== RUN   TestCommandRecognizer_TruthTable/mark_ATM-N_fixed
+=== RUN   TestCommandRecognizer_TruthTable/ATM-N_is_done_(state_assertion_closes)
+=== RUN   TestCommandRecognizer_TruthTable/set_ATM-N_to_in_progress
+=== RUN   TestCommandRecognizer_TruthTable/ATM-N_is_blocked
+=== RUN   TestCommandRecognizer_TruthTable/assign_ATM-N_to_@x
+=== RUN   TestCommandRecognizer_TruthTable/give_ATM-N_to_@x
+=== RUN   TestCommandRecognizer_TruthTable/open_a_bug:_<title>
+=== RUN   TestCommandRecognizer_TruthTable/create_a_task:_<title>
+=== RUN   TestCommandRecognizer_TruthTable/new_feature_request:_<title>
+=== RUN   TestCommandRecognizer_TruthTable/investigate_ATM-N
+=== RUN   TestCommandRecognizer_TruthTable/look_into_ATM-N
+=== RUN   TestCommandRecognizer_TruthTable/status_of_ATM-N?
+=== RUN   TestCommandRecognizer_TruthTable/what's_ATM-N?
+=== RUN   TestCommandRecognizer_TruthTable/vague:_hey_can_you_look_at_the_thing
+=== RUN   TestCommandRecognizer_TruthTable/vague:_close_it_(no_target)
+=== RUN   TestCommandRecognizer_TruthTable/conversational:_thanks!
+=== RUN   TestCommandRecognizer_TruthTable/set_to_unknown_status_(declines,_LLM_handles)
+=== RUN   TestCommandRecognizer_TruthTable/open_a_bug_with_no_title_after_colon
+=== RUN   TestCommandRecognizer_TruthTable/bare_mention_of_an_ATM_id_(no_imperative)
+=== RUN   TestCommandRecognizer_TruthTable/empty_message
+--- PASS: TestCommandRecognizer_TruthTable (0.00s)
+    --- PASS: TestCommandRecognizer_TruthTable/close_ATM-N (0.00s)
+    --- PASS: TestCommandRecognizer_TruthTable/mark_ATM-N_fixed (0.00s)
+    --- PASS: TestCommandRecognizer_TruthTable/ATM-N_is_done_(state_assertion_closes) (0.00s)
+    --- PASS: TestCommandRecognizer_TruthTable/set_ATM-N_to_in_progress (0.00s)
+    --- PASS: TestCommandRecognizer_TruthTable/ATM-N_is_blocked (0.00s)
+    --- PASS: TestCommandRecognizer_TruthTable/assign_ATM-N_to_@x (0.00s)
+    --- PASS: TestCommandRecognizer_TruthTable/give_ATM-N_to_@x (0.00s)
+    --- PASS: TestCommandRecognizer_TruthTable/open_a_bug:_<title> (0.00s)
+    --- PASS: TestCommandRecognizer_TruthTable/create_a_task:_<title> (0.00s)
+    --- PASS: TestCommandRecognizer_TruthTable/new_feature_request:_<title> (0.00s)
+    --- PASS: TestCommandRecognizer_TruthTable/investigate_ATM-N (0.00s)
+    --- PASS: TestCommandRecognizer_TruthTable/look_into_ATM-N (0.00s)
+    --- PASS: TestCommandRecognizer_TruthTable/status_of_ATM-N? (0.00s)
+    --- PASS: TestCommandRecognizer_TruthTable/what's_ATM-N? (0.00s)
+    --- PASS: TestCommandRecognizer_TruthTable/vague:_hey_can_you_look_at_the_thing (0.00s)
+    --- PASS: TestCommandRecognizer_TruthTable/vague:_close_it_(no_target) (0.00s)
+    --- PASS: TestCommandRecognizer_TruthTable/conversational:_thanks! (0.00s)
+    --- PASS: TestCommandRecognizer_TruthTable/set_to_unknown_status_(declines,_LLM_handles) (0.00s)
+    --- PASS: TestCommandRecognizer_TruthTable/open_a_bug_with_no_title_after_colon (0.00s)
+    --- PASS: TestCommandRecognizer_TruthTable/bare_mention_of_an_ATM_id_(no_imperative) (0.00s)
+    --- PASS: TestCommandRecognizer_TruthTable/empty_message (0.00s)
+=== RUN   TestCommandRecognizer_CaseInsensitive
+--- PASS: TestCommandRecognizer_CaseInsensitive (0.00s)
+PASS
+ok  	github.com/vasic-digital/herald/pherald/internal/inbound	2.116s

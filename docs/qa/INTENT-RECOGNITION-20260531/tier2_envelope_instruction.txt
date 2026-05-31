@@ -1,0 +1,4 @@
+=== RUN   TestFormatEnvelope_IntentInferenceInstruction
+--- PASS: TestFormatEnvelope_IntentInferenceInstruction (0.00s)
+PASS
+ok  	github.com/vasic-digital/herald/commons_messaging/dispatch/claude_code	1.774s

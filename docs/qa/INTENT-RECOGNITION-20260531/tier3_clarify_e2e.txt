@@ -1,0 +1,17 @@
+=== RUN   TestClarify_E2E_TagsSenderAndAsks
+2026/05/31 11:55:15 inbound dispatched: clarify (event=01HEVT tag=@carol)
+--- PASS: TestClarify_E2E_TagsSenderAndAsks (0.00s)
+=== RUN   TestClarify_E2E_UnknownSender_FallsBackToRawHandle
+2026/05/31 11:55:15 inbound dispatched: clarify (event=01HEVT tag=@stranger)
+--- PASS: TestClarify_E2E_UnknownSender_FallsBackToRawHandle (0.00s)
+=== RUN   TestClarify_NilResolver_Graceful
+2026/05/31 11:55:15 inbound dispatched: clarify (event=01HEVT tag=@dave)
+--- PASS: TestClarify_NilResolver_Graceful (0.00s)
+=== RUN   TestClarify_EmptyQuestion_IsLoudError
+--- PASS: TestClarify_EmptyQuestion_IsLoudError (0.00s)
+=== RUN   TestClearCommand_DoesNotTriggerClarify
+2026/05/31 11:55:15 inbound recognized (tier1): action=item.update (event=01HEVT)
+2026/05/31 11:55:15 inbound dispatched: item.update (event=01HEVT atm=ATM-9 location=Issues fields=3 created_by="@carol" assigned_to="@op")
+--- PASS: TestClearCommand_DoesNotTriggerClarify (0.00s)
+PASS
+ok  	github.com/vasic-digital/herald/pherald/internal/inbound	2.347s

@@ -1,0 +1,24 @@
+
+== M1-tier1-confidence-guard ==
+  → applying mutation
+  → mutation marker present; running detector (expect FAIL)
+  ✓ detector FAILed as expected on mutated build
+  → restoring tree
+  → post-restore detector (expect PASS)
+PASS  M1-tier1-confidence-guard (mutation observable + restore clean + post-restore PASS)
+
+== M2-tier3-sender-tag ==
+  → applying mutation
+  → mutation marker present; running detector (expect FAIL)
+  ✓ detector FAILed as expected on mutated build
+  → restoring tree
+  → post-restore detector (expect PASS)
+PASS  M2-tier3-sender-tag (mutation observable + restore clean + post-restore PASS)
+
+== Quiescence: working tree free of MUTATED IR-M* markers ==
+PASS  Quiescence: no MUTATED IR-M* markers leaked into tracked source
+
+----
+Result: 3 PASS / 0 FAIL
+PASS: intent-recognition mutation gate (2 paired + quiescence)
+[intent-mutation] cleanup: restoring mutated files + clearing lockfile

@@ -1,0 +1,17 @@
+=== TIER 3 clarify reply body — captured from recording sink (anti-bluff) ===
+Test: TestClarify_E2E_TagsSenderAndAsks
+Ambiguous inbound message: "hey can you do the ATM-9 thing" (from sender 'carol' on tgram)
+Recognizer (Tier 1) declines → LLM (Tier 2 stub) returns action=clarify → Tier 3 handler:
+
+  Captured recording-sink reply body (EXACT):
+    @carol did you want to close ATM-9, reassign it, or just get its status?
+
+  Assertions proven:
+    - body STARTS WITH the @sender tag '@carol '
+    - question is non-generic (names candidate intents: close/reassign/status)
+    - reply_to_message_id == 7 (threaded to the original message)
+
+  Unknown-sender fallback (TestClarify_E2E_UnknownSender_FallsBackToRawHandle):
+    @stranger ...
+  Nil-resolver graceful (TestClarify_NilResolver_Graceful):
+    @dave ...
