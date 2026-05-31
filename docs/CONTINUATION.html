@@ -112,7 +112,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>23</td>
+<td>24</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -120,7 +120,7 @@
 </tr>
 <tr>
 <td>Last modified</td>
-<td>2026-05-29</td>
+<td>2026-05-31</td>
 </tr>
 <tr>
 <td>Status</td>
@@ -249,10 +249,12 @@ is <code>tgram.message in</code> + `cc.reply</td>
 </tr>
 <tr>
 <td>Issues</td>
-<td>HRD-008, HRD-015, HRD-019..HRD-025, HRD-029..HRD-056, HRD-081,
-HRD-085..HRD-090, HRD-115..HRD-121 (Wave 7 T6-T12 pending — Slack live
-evidence gated), HRD-131 (SQLite SSoT Phase 1, OPEN-deferred) —
-<strong>31 open</strong></td>
+<td><strong>9 open, all evidence-gated</strong> (Issues.md r48): HRD-008
+(operator quickstart validation), HRD-081 (containers submodule
+upstream), HRD-115 (Slack live — provide creds per §1a), HRD-131 (SQLite
+SSoT — constitution-repo binary), HRD-150/155/156/157/158 (ATMOSphere —
+needs the repo cloned locally per §1a). The bulk of the catalogue
+migrated to <code>Fixed.md</code>.</td>
 </tr>
 <tr>
 <td>Issues summary</td>
@@ -289,12 +291,30 @@ HRD-133..HRD-138</td>
 </tr>
 <tr>
 <td>Continuation</td>
-<td><strong>▶▶ RESUME TOMORROW (2026-05-30) — ATMOSphere integration:
-LIVE EVIDENCE + DAEMON LAUNCH.</strong> STATE: code is DEPLOYED
-end-to-end (Herald <code>2412512</code> / HelixConstitution
-<code>8ec2b38</code> / ATMOSphere <code>5462a38</code>); the SQLite SSoT
-is materialized (58 items at <code>docs/workable_items.db</code> on the
-nezha host
+<td><strong>▶▶ RESUME (next session, after 2026-05-31).</strong> Current
+state in <strong>§1 Snapshot</strong>; exactly-what-to-provide in
+<strong>§1a "TOMORROW — mandatory data to provide"</strong>. HEAD
+<code>bff48a5</code>; all 4 mirrors synced; all submodules + the
+<code>docs_chain</code> sibling repo clean+pushed; gate 15/15; 9 open
+HRDs, all evidence-gated. To unblock: <strong>(A)</strong> drop Slack
+creds into <code>.env</code>
+(<code>HERALD_SLACK_BOT_TOKEN</code>/<code>_CHANNEL_ID</code>[/<code>_APP_TOKEN</code>])
+per <code>docs/guides/messengers/SLACK.md</code> → I run
+<code>TestSlack_Live_Send</code>/E127, capture
+<code>docs/qa/HRD-115-LIVE-*</code>, close HRD-115; <strong>(B)</strong>
+clone the ATMOSphere repo to <code>~/Projects/ATMOSphere</code> (absent)
+→ I reconcile HRD-155/157 drift + advance HRD-156 T-B..T-F. MTProto
+session is live (E135 re-confirmed 2026-05-31,
+<code>message_id=211685</code>); <code>docs/guides/MTPROTO.md</code> is
+the re-bootstrap guide. The prior-session "ATMOSphere resume tomorrow"
+directive below is <strong>HISTORICAL</strong> — most of it landed (see
+<code>Fixed.md</code> + <code>Issues.md</code> r48). ──── (prior
+continuation history below) ──── <strong>▶▶ RESUME TOMORROW (2026-05-30)
+— ATMOSphere integration: LIVE EVIDENCE + DAEMON LAUNCH.</strong> STATE:
+code is DEPLOYED end-to-end (Herald <code>2412512</code> /
+HelixConstitution <code>8ec2b38</code> / ATMOSphere
+<code>5462a38</code>); the SQLite SSoT is materialized (58 items at
+<code>docs/workable_items.db</code> on the nezha host
 <code>milosvasic@10.6.100.146:/run/media/milosvasic/DATA4TB/Projects/Android_15</code>);
 <code>tools/herald</code> submodule is live. Every Herald module + both
 flows (watch→diff→notify, inbound→CRUD) are hermetically
@@ -438,6 +458,9 @@ every 2-3 commits.</td>
 <li><a href="#0-how-to-use-this-document">§0. How to use this
 document</a></li>
 <li><a href="#1-snapshot">§1. Snapshot</a></li>
+<li><a
+href="#1a--tomorrow--mandatory-data-to-provide-then-i-resume-closing-the-gated-tracks">§1a.
+⭐ TOMORROW — mandatory data to provide</a></li>
 <li><a href="#2-last-commit-landed">§2. Last commit landed</a></li>
 <li><a href="#3-active-work">§3. Active work</a></li>
 <li><a href="#4-next-concrete-steps">§4. Next concrete steps</a></li>
@@ -469,38 +492,108 @@ MUST exit 0 before any commit. Multi-mirror fan-out push to four hosts
 </blockquote>
 <h2 id="1-snapshot">§1. Snapshot</h2>
 <ul>
+<li><strong>HEAD:</strong> <code>bff48a5</code> (2026-05-31).
+<strong>All 4 mirrors (GitHub / GitLab / GitFlic / GitVerse) in
+sync</strong>; all 9 Helix-stack submodules + <code>containers/</code>
+clean + at pinned commits; the <code>docs_chain</code> sibling repo
+(<code>~/Projects/docs_chain</code>) clean + pushed.</li>
 <li><strong>Active spec:</strong>
-<code>docs/specs/mvp/specification.V4.md</code> Revision 13 (~5080
-lines).</li>
-<li><strong>Archived specs:</strong> V1 + V2 in
-<code>docs/specs/mvp/archive/</code> (frozen).</li>
-<li><strong>Go modules:</strong> <code>commons</code>,
-<code>commons_prefix</code>, <code>commons_messaging</code>,
-<code>commons_storage</code>, <code>pherald</code> (all compile + unit
-tests pass).</li>
-<li><strong>Container scaffold:</strong>
-<code>quickstart/{docker-compose.quickstart.yml, Dockerfile.pherald, otel-config.yaml, .env.example}</code>
-for §26.5 quickstart.</li>
-<li><strong>CLI:</strong> <code>pherald version --json</code> returns
-canonical build info;
-<code>serve</code>/<code>send</code>/<code>doctor</code>/<code>migrate</code>/<code>subscriber</code>/<code>deadletter</code>
-stubbed with HRD-NNN pointers.</li>
-<li><strong>Inheritance gate:</strong> 15 PASS / 0 FAIL. Meta-test
-✓.</li>
-<li><strong>e2e_bluff_hunt:</strong> invariants now run through
-<strong>E137</strong> (E89 Batch-A; E90-E96 Batch-B bindings; E97-E120
-Batch C §43 command catalogue; E121-E131 Wave 7 multi-channel; E132-E133
-HRD-137 tgram stress+chaos; E134 mtproto scaffold; <strong>E135-E137 =
-Wave 8 Track B MTProto live tests — E135 Subscribe roundtrip / E136 Wave
-6 closed loop / E137 Wave 6.5 lifecycle</strong>, all PASS LIVE
-2026-05-28). E135-E137 honest-SKIP-with-reason when MTProto creds
-absent. Next free invariant id is <strong>E138+</strong>.</li>
-<li><strong>Stress+chaos mutation gate:</strong>
-<code>tests/test_stress_chaos_mutation_meta.sh</code> (HRD-130) 6 PASS /
-0 FAIL (5 load-bearing mutations).</li>
-<li><strong>Phase:</strong> implementation r1.</li>
+<code>docs/specs/mvp/specification.V4.md</code> (V1–V3 archived under
+<code>docs/specs/mvp/archive/</code>).</li>
+<li><strong>Workspace:</strong> <strong>18 Go modules</strong> (10
+shared/foundation + 8 flavor binaries). Live + tested:
+<code>pherald listen</code> inbound runtime, Telegram + Slack adapters,
+Claude Code dispatch, <code>commons_storage</code> (pgx + River +
+Redis), the Gin <code>/v1/*</code> REST API. <strong>Every module now
+has an operator/developer guide</strong> under <code>docs/guides/</code>
+(the 8 shared-module guides landed 2026-05-31).</li>
+<li><strong>Latest tag:</strong> <strong>v0.6.0</strong>
+(2026-05-28).</li>
+<li><strong>Inheritance gate:</strong> 15 PASS / 0 FAIL.</li>
+<li><strong>e2e_bluff_hunt:</strong> <strong>167 PASS / 0 FAIL / 0
+stress-chaos-evidence SKIP</strong> (last full run); invariants through
+<strong>E147</strong> (E140-E142 participant-attribution, E143-E145
+intent-recognition, E146 docs_chain pilot drift-gate, E147 docs_chain
+fleet drift-gate). Next free id <strong>E148+</strong>.</li>
+<li><strong>Docs Chain:</strong> integrated end-to-end (engine fix +
+§11.4.106 governance + 66-doc fleet, <code>verify</code> exit 0); binary
+built from <code>~/Projects/docs_chain</code> →
+<code>/tmp/docs_chain</code>.</li>
+<li><strong>MTProto live harness:</strong> session active at
+<code>~/.config/herald/mtproto.session</code> (@milos85vasic); E135
+round-trip re-confirmed LIVE 2026-05-31
+(<code>message_id=211685</code>).</li>
+<li><strong>Open HRDs:</strong> <strong>9, all evidence-gated</strong> —
+HRD-008, 081, 115, 131, 150, 155, 156, 157, 158 (see
+<code>docs/Issues.md</code> r48). The non-gated autonomous queue is
+drained.</li>
 </ul>
+<h2
+id="1a-star-tomorrow--mandatory-data-to-provide-then-i-resume-closing-the-gated-tracks">§1a.
+⭐ TOMORROW — mandatory data to provide (then I resume closing the gated
+tracks)</h2>
+<p>The non-gated autonomous queue is <strong>drained</strong>; all 9
+open HRDs are evidence-gated. To unblock, provide ONE or both:</p>
+<h3 id="a--slack-live-credentials--i-close-hrd-115">A — Slack live
+credentials → I close HRD-115</h3>
+<p>Add to <code>.env</code> (git-ignored — never commit it), then tell
+me <strong>"Slack creds are in .env"</strong>:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># === SLACK (HRD-115) ===</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="va">HERALD_SLACK_BOT_TOKEN</span><span class="op">=</span>xoxb-<span class="op">&lt;</span>bot <span class="ex">token</span><span class="op">&gt;</span>     <span class="co"># api.slack.com/apps -&gt; your app -&gt; OAuth &amp; Permissions -&gt; Install to Workspace -&gt; copy &quot;Bot User OAuth Token&quot;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="va">HERALD_SLACK_CHANNEL_ID</span><span class="op">=</span>C<span class="op">&lt;</span>channel <span class="fu">id</span><span class="op">&gt;</span>       <span class="co"># target channel -&gt; View channel details -&gt; bottom -&gt; Channel ID; then invite the bot to that channel</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="va">HERALD_SLACK_APP_TOKEN</span><span class="op">=</span>xapp-<span class="op">&lt;</span>app <span class="ex">token</span><span class="op">&gt;</span>     <span class="co"># ONLY if you want inbound (Socket Mode) replies; omit for outbound-only</span></span></code></pre></div>
+<p>Full step-by-step (create app, scopes, install, Socket Mode, channel
+ID, the live-test command):
+<strong><code>docs/guides/messengers/SLACK.md</code></strong>. Once
+provided I run
+<code>go test -tags=integration -count=1 -run TestSlack_Live_Send ./qaherald/internal/messenger/...</code>,
+capture <code>docs/qa/HRD-115-LIVE-&lt;TS&gt;/</code>, and migrate
+HRD-115 Issues→Fixed.</p>
+<h3
+id="b--clone-the-atmosphere-repo--i-advance-hrd-156--150--155--157--158">B
+— Clone the ATMOSphere repo → I advance HRD-156 / 150 / 155 / 157 /
+158</h3>
+<p>The ATMOSphere repo is <strong>not present locally</strong>
+(<code>~/Projects/ATMOSphere</code> absent), so the ATMOSphere tracks
+cannot be reconciled or advanced from here. Clone it alongside Herald
+(<code>git clone &lt;url&gt; ~/Projects/ATMOSphere</code>) and tell me —
+I'll reconcile the HRD-155/157 status-vs-narrative drift against real
+upstream state + advance HRD-156's remaining T-B..T-F test layers (the
+MTProto live foundation is already proven, E135 PASS 2026-05-31).</p>
+<h3 id="already-ready-no-action-needed-tonight">Already ready (no action
+needed tonight)</h3>
+<ul>
+<li><strong>MTProto:</strong> session live + verified
+(<code>qaherald mtproto whoami</code> OK as <code>@milos85vasic</code>);
+<code>docs/guides/MTPROTO.md</code> is the complete re-bootstrap guide
+if the session ever expires.</li>
+<li><strong>HRD-008</strong> (quickstart): validate the §26.5 compose
+stack on your hardware per
+<code>docs/guides/OPERATOR_CREDENTIALS.md</code> when convenient.</li>
+</ul>
+<blockquote>
+<p>The §4 "Next concrete steps" further below is from a prior session
+and is <strong>superseded</strong> by this §1a block + the §1
+snapshot.</p>
+</blockquote>
 <h2 id="2-last-commit-landed">§2. Last commit landed</h2>
+<p><strong>HEAD <code>bff48a5</code></strong> (2026-05-31). This session
+landed, all pushed to 4 mirrors: <strong>Docs Chain integration
+end-to-end</strong> (CLI binary-hash <code>verify</code> fix + §11.4.106
+governance propagation into all 4 root docs + pilot + <strong>66-doc
+fleet</strong> with E146/E147 drift-gates); <strong>4 parallel
+streams</strong> (Obsolete-HRD migration, docs_chain consumer docs,
+open-work audit, project-status currency); <strong>HRD-117
+closed</strong> (Issues 10→9); <strong>Status.md / README /
+HERALD_CONSTITUTION §101 / CLAUDE.md (70XXX→24XXX ports)</strong>
+refreshed to current reality; spec-V4 path-sync; <strong>2 credential
+guides</strong> (<code>messengers/SLACK.md</code> + new
+<code>MTPROTO.md</code>, §11.4.99-verified vs official docs); <strong>8
+shared-module guides</strong> (all 18 modules now have guides); GitHub
+secret-scan false-positive resolved (operator unblock) → 4-mirror sync;
+<strong>MTProto live re-confirmed</strong> (E135 PASS,
+<code>message_id=211685</code>). Prior-session history below. ─────</p>
 <p><strong>HEAD <code>534e785</code></strong> (2026-05-30) —
 <code>test(§11.4.98): gate/retire 4 NON-COMPLIANT attended tests behind opt-in skips</code>
 + (prior, same session) HRD-146 dispatch hardening <code>a975d8b</code>,
@@ -678,31 +771,31 @@ exchanged.</p>
 <p><strong>Step-by-step.</strong></p>
 <ol type="1">
 <li>Export credentials in the shell that will drive the test:
-<div class="sourceCode" id="cb1"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">HERALD_TGRAM_BOT_TOKEN</span><span class="op">=</span><span class="st">&quot;&lt;your-bot-token-from-BotFather&gt;&quot;</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">HERALD_TGRAM_CHAT_ID</span><span class="op">=</span><span class="st">&quot;&lt;numeric-chat-id-where-bot-is-admin&gt;&quot;</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">HERALD_CLAUDE_BIN</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$(</span><span class="bu">command</span> <span class="at">-v</span> claude<span class="va">)</span><span class="st">&quot;</span>   <span class="co"># path to the claude CLI binary</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">HERALD_PROJECT_NAME</span><span class="op">=</span><span class="st">&quot;Herald&quot;</span>                <span class="co"># or any operator-chosen session name</span></span></code></pre></div></li>
-<li>Pick a <code>&lt;run-id&gt;</code> (timestamp + 4-char nonce):
 <div class="sourceCode" id="cb2"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="va">RUN_ID</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$(</span><span class="fu">date</span> <span class="at">-u</span> +%Y-%m-%dT%H-%M-%S<span class="va">)</span><span class="st">-</span><span class="va">$(</span><span class="fu">uuidgen</span> <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-c1-4</span><span class="va">)</span><span class="st">&quot;</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="va">QA_DIR</span><span class="op">=</span><span class="st">&quot;docs/qa/HRD-100-</span><span class="va">${RUN_ID}</span><span class="st">&quot;</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> <span class="st">&quot;</span><span class="va">${QA_DIR}</span><span class="st">/attachments&quot;</span></span></code></pre></div></li>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">HERALD_TGRAM_BOT_TOKEN</span><span class="op">=</span><span class="st">&quot;&lt;your-bot-token-from-BotFather&gt;&quot;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">HERALD_TGRAM_CHAT_ID</span><span class="op">=</span><span class="st">&quot;&lt;numeric-chat-id-where-bot-is-admin&gt;&quot;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">HERALD_CLAUDE_BIN</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$(</span><span class="bu">command</span> <span class="at">-v</span> claude<span class="va">)</span><span class="st">&quot;</span>   <span class="co"># path to the claude CLI binary</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">HERALD_PROJECT_NAME</span><span class="op">=</span><span class="st">&quot;Herald&quot;</span>                <span class="co"># or any operator-chosen session name</span></span></code></pre></div></li>
+<li>Pick a <code>&lt;run-id&gt;</code> (timestamp + 4-char nonce):
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="va">RUN_ID</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$(</span><span class="fu">date</span> <span class="at">-u</span> +%Y-%m-%dT%H-%M-%S<span class="va">)</span><span class="st">-</span><span class="va">$(</span><span class="fu">uuidgen</span> <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-c1-4</span><span class="va">)</span><span class="st">&quot;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="va">QA_DIR</span><span class="op">=</span><span class="st">&quot;docs/qa/HRD-100-</span><span class="va">${RUN_ID}</span><span class="st">&quot;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> <span class="st">&quot;</span><span class="va">${QA_DIR}</span><span class="st">/attachments&quot;</span></span></code></pre></div></li>
 <li>Type ONE message in the configured Telegram chat (script reads it
 via <code>getUpdates</code> within 60s).</li>
 <li>Run the live closed-loop test:
-<div class="sourceCode" id="cb3"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> tests/test_wave6_live_loop.sh</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> tests/test_wave6_live_loop.sh</span></code></pre></div>
 The script builds <code>pherald</code>, observes the original
 <code>message_id</code>, starts
 <code>pherald listen --bot-token "$HERALD_TGRAM_BOT_TOKEN" --chat-id "$HERALD_TGRAM_CHAT_ID" --qa-out-dir "$QA_DIR"</code>
 in the background, waits up to 45s for a reply with
 <code>reply_to_message_id == original</code>, and exits 0 on PASS.</li>
 <li>Capture supplementary logs:
-<div class="sourceCode" id="cb4"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> /tmp/pherald-w6.log <span class="st">&quot;</span><span class="va">${QA_DIR}</span><span class="st">/pherald-listen.log&quot;</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co"># claude stdout/stderr — paths depend on the journaling setup. Copy whatever</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># the test produced into ${QA_DIR}/claude-stdout.log + claude-stderr.log.</span></span></code></pre></div></li>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> /tmp/pherald-w6.log <span class="st">&quot;</span><span class="va">${QA_DIR}</span><span class="st">/pherald-listen.log&quot;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co"># claude stdout/stderr — paths depend on the journaling setup. Copy whatever</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co"># the test produced into ${QA_DIR}/claude-stdout.log + claude-stderr.log.</span></span></code></pre></div></li>
 <li>Author a brief <code>${QA_DIR}/README.md</code> (5 lines minimum)
 narrating: who ran it, when, what message was sent, what reply came
 back, any anomalies. This is NOT auto-generated — operator-written
@@ -742,11 +835,11 @@ shell-adapter</strong> then live run + tag.</li>
 <h3 id="resume-prerequisites">Resume prerequisites</h3>
 <p>The following are <strong>already provisioned</strong> in
 <code>~/.zshrc</code> (export-on-shell-start):</p>
-<div class="sourceCode" id="cb5"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">HERALD_TGRAM_BOT_TOKEN</span>     <span class="co"># @atmosphere_worker_bot — pherald-bot (Telegram bot 8823384001)</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="ex">HERALD_TGRAM_CHAT_ID</span>       <span class="co"># -4946584787 (ATMOSphere Development group)</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="ex">HERALD_OPERATOR_IDS</span>        <span class="co"># 2057253161 (the operator&#39;s user-id)</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="ex">HERALD_QA_BOT_TOKEN</span>        <span class="co"># @pherald_qa_bot — 2nd bot (8971749017, privacy DISABLED, member of the group)</span></span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">HERALD_TGRAM_BOT_TOKEN</span>     <span class="co"># @atmosphere_worker_bot — pherald-bot (Telegram bot 8823384001)</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ex">HERALD_TGRAM_CHAT_ID</span>       <span class="co"># -4946584787 (ATMOSphere Development group)</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="ex">HERALD_OPERATOR_IDS</span>        <span class="co"># 2057253161 (the operator&#39;s user-id)</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="ex">HERALD_QA_BOT_TOKEN</span>        <span class="co"># @pherald_qa_bot — 2nd bot (8971749017, privacy DISABLED, member of the group)</span></span></code></pre></div>
 <p><strong>The qa-bot token is plaintext in
 <code>~/.zshrc</code></strong> — operator should <code>/revoke</code>
 via @BotFather after Wave 6.5 close-out and regenerate (the token leaked
@@ -761,10 +854,10 @@ Schema is at migration v12 (all 12 applied).</p>
 (suggested next-session order)</h3>
 <ol type="1">
 <li><p><strong>Pull state + verify</strong>:</p>
-<div class="sourceCode" id="cb6"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ~/Projects/Herald <span class="kw">&amp;&amp;</span> <span class="fu">git</span> pull origin main <span class="kw">&amp;&amp;</span> <span class="fu">git</span> log <span class="at">--oneline</span> <span class="at">-10</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> status <span class="at">--short</span>  <span class="co"># expect clean</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> stash list      <span class="co"># 2 stashes preserved: T8 Wave-5 salvage + premature S3-S5 transcript WIP</span></span></code></pre></div></li>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ~/Projects/Herald <span class="kw">&amp;&amp;</span> <span class="fu">git</span> pull origin main <span class="kw">&amp;&amp;</span> <span class="fu">git</span> log <span class="at">--oneline</span> <span class="at">-10</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> status <span class="at">--short</span>  <span class="co"># expect clean</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> stash list      <span class="co"># 2 stashes preserved: T8 Wave-5 salvage + premature S3-S5 transcript WIP</span></span></code></pre></div></li>
 <li><p><strong>Spawn T6 (pre-flight)</strong> via a fresh subagent —
 read <code>docs/superpowers/plans/2026-05-23-qaherald-auto.md</code>
 Task 6 in full. Implementation lands at
@@ -784,34 +877,34 @@ download + Issues.md/Fixed.md fs-mutation assertion.</p></li>
 <code>--manual</code> flag for the operator-typing interactive UX as a
 fallback.</p></li>
 <li><p><strong>Run the live e2e (the §107 watershed)</strong>:</p>
-<div class="sourceCode" id="cb7"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ~/Projects/Herald</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Add qa-bot user-id to OPERATOR_IDS so S5/S6/S8/S10 succeed</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">HERALD_OPERATOR_IDS</span><span class="op">=</span><span class="st">&quot;</span><span class="va">${HERALD_OPERATOR_IDS}</span><span class="st">,8971749017&quot;</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Re-export from .zshrc (or just open a new shell)</span></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="bu">source</span> ~/.zshrc</span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Build pherald + qaherald</span></span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> build <span class="at">-o</span> /tmp/pherald ./pherald/cmd/pherald</span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> build <span class="at">-o</span> /tmp/qaherald ./qaherald/cmd/qaherald</span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Start pherald listen in background with QA journaling</span></span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="va">RUN_ID</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$(</span><span class="fu">date</span> <span class="at">-u</span> +%Y-%m-%dT%H-%M-%S<span class="va">)</span><span class="st">-w6.5live&quot;</span></span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="va">PHERALD_QA_DIR</span><span class="op">=</span><span class="st">&quot;docs/qa/HRD-101-lifecycle-</span><span class="va">${RUN_ID}</span><span class="st">-pherald&quot;</span></span>
-<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="va">QAUTO_QA_DIR</span><span class="op">=</span><span class="st">&quot;docs/qa/HRD-101-lifecycle-</span><span class="va">${RUN_ID}</span><span class="st">&quot;</span></span>
-<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> <span class="st">&quot;</span><span class="va">${PHERALD_QA_DIR}</span><span class="st">/attachments&quot;</span> <span class="st">&quot;</span><span class="va">${QAUTO_QA_DIR}</span><span class="st">/attachments&quot;</span></span>
-<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a><span class="ex">/tmp/pherald</span> listen <span class="at">--qa-out-dir</span> <span class="st">&quot;</span><span class="va">${PHERALD_QA_DIR}</span><span class="st">&quot;</span> <span class="at">--docs-dir</span> docs <span class="kw">&amp;</span></span>
-<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a><span class="va">PHERALD_PID</span><span class="op">=</span><span class="va">$!</span></span>
-<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a><span class="bu">trap</span> <span class="st">&#39;kill -TERM $PHERALD_PID 2&gt;/dev/null&#39;</span> EXIT</span>
-<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a><span class="fu">sleep</span> 5</span>
-<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Run qaherald lifecycle (T6-T8 must be done first)</span></span>
-<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a><span class="ex">/tmp/qaherald</span> lifecycle <span class="dt">\</span></span>
-<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>  <span class="at">--pherald-bot-username</span><span class="op">=</span>atmosphere_worker_bot <span class="dt">\</span></span>
-<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>  <span class="at">--pherald-qa-out-dir</span><span class="op">=</span><span class="st">&quot;</span><span class="va">${PHERALD_QA_DIR}</span><span class="st">&quot;</span> <span class="dt">\</span></span>
-<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>  <span class="at">--out</span><span class="op">=</span><span class="st">&quot;</span><span class="va">${QAUTO_QA_DIR}</span><span class="st">&quot;</span> <span class="dt">\</span></span>
-<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>  <span class="at">--run-id</span><span class="op">=</span><span class="st">&quot;</span><span class="va">${RUN_ID}</span><span class="st">&quot;</span></span>
-<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a><span class="co"># Exit 0 on all-PASS or all-PASS-with-S9-SKIP. Non-zero on any FAIL.</span></span></code></pre></div></li>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ~/Projects/Herald</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Add qa-bot user-id to OPERATOR_IDS so S5/S6/S8/S10 succeed</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">HERALD_OPERATOR_IDS</span><span class="op">=</span><span class="st">&quot;</span><span class="va">${HERALD_OPERATOR_IDS}</span><span class="st">,8971749017&quot;</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Re-export from .zshrc (or just open a new shell)</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="bu">source</span> ~/.zshrc</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Build pherald + qaherald</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> build <span class="at">-o</span> /tmp/pherald ./pherald/cmd/pherald</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> build <span class="at">-o</span> /tmp/qaherald ./qaherald/cmd/qaherald</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Start pherald listen in background with QA journaling</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="va">RUN_ID</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$(</span><span class="fu">date</span> <span class="at">-u</span> +%Y-%m-%dT%H-%M-%S<span class="va">)</span><span class="st">-w6.5live&quot;</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="va">PHERALD_QA_DIR</span><span class="op">=</span><span class="st">&quot;docs/qa/HRD-101-lifecycle-</span><span class="va">${RUN_ID}</span><span class="st">-pherald&quot;</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="va">QAUTO_QA_DIR</span><span class="op">=</span><span class="st">&quot;docs/qa/HRD-101-lifecycle-</span><span class="va">${RUN_ID}</span><span class="st">&quot;</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> <span class="st">&quot;</span><span class="va">${PHERALD_QA_DIR}</span><span class="st">/attachments&quot;</span> <span class="st">&quot;</span><span class="va">${QAUTO_QA_DIR}</span><span class="st">/attachments&quot;</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a><span class="ex">/tmp/pherald</span> listen <span class="at">--qa-out-dir</span> <span class="st">&quot;</span><span class="va">${PHERALD_QA_DIR}</span><span class="st">&quot;</span> <span class="at">--docs-dir</span> docs <span class="kw">&amp;</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a><span class="va">PHERALD_PID</span><span class="op">=</span><span class="va">$!</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a><span class="bu">trap</span> <span class="st">&#39;kill -TERM $PHERALD_PID 2&gt;/dev/null&#39;</span> EXIT</span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a><span class="fu">sleep</span> 5</span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Run qaherald lifecycle (T6-T8 must be done first)</span></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a><span class="ex">/tmp/qaherald</span> lifecycle <span class="dt">\</span></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>  <span class="at">--pherald-bot-username</span><span class="op">=</span>atmosphere_worker_bot <span class="dt">\</span></span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>  <span class="at">--pherald-qa-out-dir</span><span class="op">=</span><span class="st">&quot;</span><span class="va">${PHERALD_QA_DIR}</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>  <span class="at">--out</span><span class="op">=</span><span class="st">&quot;</span><span class="va">${QAUTO_QA_DIR}</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>  <span class="at">--run-id</span><span class="op">=</span><span class="st">&quot;</span><span class="va">${RUN_ID}</span><span class="st">&quot;</span></span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a><span class="co"># Exit 0 on all-PASS or all-PASS-with-S9-SKIP. Non-zero on any FAIL.</span></span></code></pre></div></li>
 <li><p><strong>Capture evidence</strong>:</p>
 <ul>
 <li><code>${PHERALD_QA_DIR}/transcript.jsonl</code> — pherald's view
@@ -826,24 +919,24 @@ by S5/S6/S8/S10 (and reverted by S10 + S15 cleanups; both files end in
 valid state)</li>
 </ul></li>
 <li><p><strong>Author operator README + commit</strong>:</p>
-<div class="sourceCode" id="cb8"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="op">&gt;</span> <span class="st">&quot;</span><span class="va">${QAUTO_QA_DIR}</span><span class="st">/README.md&quot;</span> <span class="op">&lt;&lt;EOF</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="st"># HRD-101 Wave 6.5 lifecycle evidence — &lt;run-id&gt;</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="st">&lt;5+ lines narrating: who ran it, when, which scenarios PASSed/FAILed/SKIPped,</span></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="st">bot reply quality observations, any anomalies. Operator-written, NOT auto-generated.&gt;</span></span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="op">EOF</span></span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> add docs/qa/HRD-101-lifecycle-<span class="va">${RUN_ID}</span><span class="pp">*</span></span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> commit <span class="at">-m</span> <span class="st">&quot;Wave 6.5 step 13: HRD-101 live 15-scenario lifecycle evidence (qaherald-auto)&quot;</span></span></code></pre></div></li>
-<li><p><strong>Tag v0.5.1 + 4-mirror push</strong>:</p>
 <div class="sourceCode" id="cb9"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> tag <span class="at">-a</span> v0.5.1 <span class="at">-m</span> <span class="st">&quot;Wave 6.5 close: full lifecycle live evidence + envelope action-guidance fix&quot;</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> push origin main</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> push origin v0.5.1</span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Verify all 4 mirrors converged on the same SHA + tag</span></span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> mirror <span class="kw">in</span> github.com:vasic-digital/Herald.git gitlab.com:vasic-digital/herald.git gitflic.ru:vasic-digital/herald.git gitverse.ru:vasic-digital/Herald.git<span class="kw">;</span> <span class="cf">do</span></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">git</span> ls-remote <span class="st">&quot;git@</span><span class="va">${mirror}</span><span class="st">&quot;</span> v0.5.1</span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span></code></pre></div></li>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="op">&gt;</span> <span class="st">&quot;</span><span class="va">${QAUTO_QA_DIR}</span><span class="st">/README.md&quot;</span> <span class="op">&lt;&lt;EOF</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="st"># HRD-101 Wave 6.5 lifecycle evidence — &lt;run-id&gt;</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="st">&lt;5+ lines narrating: who ran it, when, which scenarios PASSed/FAILed/SKIPped,</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="st">bot reply quality observations, any anomalies. Operator-written, NOT auto-generated.&gt;</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="op">EOF</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> add docs/qa/HRD-101-lifecycle-<span class="va">${RUN_ID}</span><span class="pp">*</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> commit <span class="at">-m</span> <span class="st">&quot;Wave 6.5 step 13: HRD-101 live 15-scenario lifecycle evidence (qaherald-auto)&quot;</span></span></code></pre></div></li>
+<li><p><strong>Tag v0.5.1 + 4-mirror push</strong>:</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> tag <span class="at">-a</span> v0.5.1 <span class="at">-m</span> <span class="st">&quot;Wave 6.5 close: full lifecycle live evidence + envelope action-guidance fix&quot;</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> push origin main</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> push origin v0.5.1</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Verify all 4 mirrors converged on the same SHA + tag</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> mirror <span class="kw">in</span> github.com:vasic-digital/Herald.git gitlab.com:vasic-digital/herald.git gitflic.ru:vasic-digital/herald.git gitverse.ru:vasic-digital/Herald.git<span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">git</span> ls-remote <span class="st">&quot;git@</span><span class="va">${mirror}</span><span class="st">&quot;</span> v0.5.1</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span></code></pre></div></li>
 </ol>
 <h3 id="open--known-constraints-for-tomorrow">Open / known constraints
 for tomorrow</h3>
