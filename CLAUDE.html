@@ -112,7 +112,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>18</td>
+<td>19</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -128,7 +128,21 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>r18: propagated the intent-recognition mandate (operator
+<td><strong>r19: propagated HelixConstitution §11.4.106 (Docs Chain
+documentation-sync mandate, 2026-05-29) into the inherited-covenant
+cluster as a short-form restatement citing the literal anchor
+<code>11.4.106</code>, inherited per §11.4.35. Herald-applicability
+classification: APPLICABLE (integration in progress) — Docs Chain
+mechanizes Herald's ~76-doc html/pdf/docx sibling sync (today regen-all
+<code>scripts/export_docs.sh</code>) via <code>exec:</code> transforms
+preserving Herald's exact logo-CSS pandoc flags; cites the migration
+plan <code>docs/research/docs_chain/HERALD_DOCS_CHAIN_PLAN.md</code>,
+the planned <code>verify</code> drift-gate E146, and the honest open
+prerequisites (Phase-4 CLI landed 2026-05-31; exec-staging
+relative-asset gap G6; binary-hash <code>verify</code> defect found by
+dogfooding, fix in flight). Restated + cited, not redefined; anchor now
+present in CLAUDE.md/AGENTS.md/QWEN.md/HERALD_CONSTITUTION.md §108.p.
+Prior r18: propagated the intent-recognition mandate (operator
 2026-05-31) as a short-form restatement — new "Intent recognition &amp;
 clarification" section + ToC entry — citing the authoritative contract
 <code>docs/design/INTENT_RECOGNITION.md</code> and noting inheritance
@@ -673,11 +687,11 @@ proof.</p>
 <code>--allow-residue</code>, <code>--skip-quiescence</code>,
 <code>--mutation-cleanup-later</code> flag exists.</p>
 <h2
-id="inherited-covenant-restatements--helix-11485--11487--11488--11489--11490--11491--11492--11493--11494--11495--11496--11497--11498--11499--114100-inherited-per-11435">Inherited
+id="inherited-covenant-restatements--helix-11485--11487--11488--11489--11490--11491--11492--11493--11494--11495--11496--11497--11498--11499--114100--114106-inherited-per-11435">Inherited
 covenant restatements — Helix §11.4.85 / §11.4.87 / §11.4.88 / §11.4.89
 / §11.4.90 / §11.4.91 / §11.4.92 / §11.4.93 / §11.4.94 / §11.4.95 /
-§11.4.96 / §11.4.97 / §11.4.98 / §11.4.99 / §11.4.100 (inherited per
-§11.4.35)</h2>
+§11.4.96 / §11.4.97 / §11.4.98 / §11.4.99 / §11.4.100 / §11.4.106
+(inherited per §11.4.35)</h2>
 <p>These twelve mandates are <strong>inherited</strong> from the
 HelixConstitution via parent-discovery (§11.4.35). Herald
 <strong>restates + cites</strong> them here — it does
@@ -1025,6 +1039,46 @@ restatement-with-non-applicability-but-cite shape. Inheritance per
 upcoming <code>CM-COVENANT-114-100-PROPAGATION</code> pre-build gate.
 Canonical authority: HelixConstitution Constitution.md §11.4.100
 (inherited per §11.4.35).</p>
+<h3
+id="114106--docs-chain-documentation-sync-mandate--derived-doc-artefacts-must-be-kept-in-sync-via-the-shared-docs-chain-engine-never-ad-hoc-helix-2026-05-29">§11.4.106
+— Docs Chain documentation-sync mandate — derived doc artefacts MUST be
+kept in sync via the shared Docs Chain engine, never ad-hoc (Helix,
+2026-05-29)</h3>
+<p>Universal mandate: the documentation-sync obligations (Issues_Summary
+parity §11.4.12, Fixed_Summary §11.4.53, Status/Status_Summary
+§11.4.45/§11.4.56, README doc-link + always-sync export
+§11.4.57/§11.4.59, universal markdown→html/pdf export §11.4.65, roster
+fingerprint §11.4.86, workable-items DB↔︎MD §11.4.93/§11.4.95,
+CONTINUATION exports §12.10) are mechanized by <strong>Docs
+Chain</strong> — a content-hashed incremental DAG sync engine
+(<code>digital.vasic.docs_chain</code>) consumed BY REFERENCE through
+the constitution submodule (Phase-6 distribution is operator-gated per
+§11.4.66). A consuming project registers its chains in
+<code>.docs_chain/contexts/*.yaml</code> and runs
+<code>docs_chain sync</code> / <code>verify</code>; the engine
+<strong>refuses to fake success</strong> (tool-absent → honest rollback,
+exit 3) and <strong>refuses silent merges</strong> (both-dirty →
+conflict, exit 2), making §11.4.6 no-guessing + §11.4.50
+deterministic-consistency mechanical rather than aspirational.
+<strong>Herald applicability: APPLICABLE (integration in
+progress).</strong> Herald's ~76 markdown docs each carry html/pdf/docx
+siblings produced today by the regen-all
+<code>scripts/export_docs.sh</code>; the migration plan (<a
+href="docs/research/docs_chain/HERALD_DOCS_CHAIN_PLAN.md"><code>docs/research/docs_chain/HERALD_DOCS_CHAIN_PLAN.md</code></a>)
+wires them via docs_chain <code>exec:</code> transforms (preserving
+Herald's exact logo-CSS pandoc flags — byte-compatible, zero regen-drift
+across ~223 siblings) to gain incremental recompute + a
+<code>verify</code> drift-gate (planned e2e invariant E146). Pending:
+the Phase-4 CLI (landed 2026-05-31), the exec-staging relative-asset
+contract (gap G6), and the binary-hash <code>verify</code> fix found by
+dogfooding (binary node-kinds were hashed inconsistently between the
+sync-record and verify-check paths). Cascade-pattern parallel: §11.4.96
+("Herald has no AOSP build, but the principle binds") —
+restatement-with-applicability-and-cite shape. Inheritance per §11.4.35
+with literal anchor <code>11.4.106</code> required by the
+<code>CM-COVENANT-114-106-PROPAGATION</code> pre-build gate. Canonical
+authority: HelixConstitution Constitution.md §11.4.106 (inherited per
+§11.4.35).</p>
 <h2
 id="participant-identity-attribution--notification-tagging-herald-109--contract-docsdesignparticipant_attributionmd--inherited-from-helixconstitution-per-11435">Participant
 identity, attribution &amp; notification-tagging (Herald §109 / contract

@@ -112,7 +112,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>12</td>
+<td>13</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -128,7 +128,22 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td>r12: added §110 (Intent recognition &amp; clarification) restating
+<td>r13: extended §108 with §108.p restating inherited HelixConstitution
+§11.4.106 (Docs Chain documentation-sync mandate, 2026-05-29) at Herald
+project-constitution level per §1.1 multi-file propagation discipline;
+inherited per §11.4.35, restated + cited, not redefined; literal anchor
+<code>11.4.106</code> now present in all four Herald governance docs
+(CLAUDE.md r19, AGENTS.md r16, QWEN.md, HERALD_CONSTITUTION.md §108.p) +
+the §108 cluster header &amp; ToC updated. Herald-applicability
+classification: APPLICABLE (integration in progress) — unlike the §108.o
+video non-applicability, Docs Chain directly governs Herald's ~76-doc
+html/pdf/docx sibling surface (migration plan
+<code>docs/research/docs_chain/HERALD_DOCS_CHAIN_PLAN.md</code>, planned
+E146 drift-gate); honest open prerequisites recorded (Phase-4 CLI landed
+2026-05-31; exec-staging relative-asset gap G6; binary-hash verify
+defect found by dogfooding, fix in flight). Required by the upcoming
+Helix-side <code>CM-COVENANT-114-106-PROPAGATION</code> pre-build gate.
+Prior r12: added §110 (Intent recognition &amp; clarification) restating
 the operator mandate (2026-05-31) at Herald project-constitution level —
 subscribers speak plain natural language (NO command syntax / no
 <code>COMMAND:</code> prefix); the three-tier intent-resolution
@@ -269,8 +284,8 @@ ANTI-BLUFF)</a></li>
 href="#108-inherited-covenant-restatements-helix-11485--11487--11488--11489--11490--11491--11492--11493--11494--11495--11496--11497">§108.
 Inherited covenant restatements (Helix §11.4.85 / §11.4.87 / §11.4.88 /
 §11.4.89 / §11.4.90 / §11.4.91 / §11.4.92 / §11.4.93 / §11.4.94 /
-§11.4.95 / §11.4.96 / §11.4.97 / §11.4.98 / §11.4.99 /
-§11.4.100)</a></li>
+§11.4.95 / §11.4.96 / §11.4.97 / §11.4.98 / §11.4.99 / §11.4.100 /
+§11.4.106)</a></li>
 <li><a
 href="#109-participant-identity-attribution--notification-tagging-operator-mandate-2026-05-31-inherited-from-helixconstitution-per-11435">§109.
 Participant identity, attribution &amp; notification-tagging</a></li>
@@ -685,10 +700,11 @@ regardless of how briefly it persisted — see commits
 <code>--allow-residue</code>, <code>--skip-quiescence</code>,
 <code>--mutation-cleanup-later</code> flag exists.</p>
 <h3
-id="108-inherited-covenant-restatements-helix-11485--11487--11488--11489--11490--11491--11492--11493--11494--11495--11496--11497--11498--11499--114100">§108.
+id="108-inherited-covenant-restatements-helix-11485--11487--11488--11489--11490--11491--11492--11493--11494--11495--11496--11497--11498--11499--114100--114106">§108.
 Inherited covenant restatements (Helix §11.4.85 / §11.4.87 / §11.4.88 /
 §11.4.89 / §11.4.90 / §11.4.91 / §11.4.92 / §11.4.93 / §11.4.94 /
-§11.4.95 / §11.4.96 / §11.4.97 / §11.4.98 / §11.4.99 / §11.4.100)</h3>
+§11.4.95 / §11.4.96 / §11.4.97 / §11.4.98 / §11.4.99 / §11.4.100 /
+§11.4.106)</h3>
 <p>These twelve mandates are <strong>inherited</strong> from the Helix
 Universal Constitution via parent-discovery (§11.4.35). Herald
 <strong>restates + cites</strong> them at project-constitution level per
@@ -1518,6 +1534,80 @@ prospectively the moment Herald ships any video-rendering surface; until
 then, the non-applicability is documented HERE (this very §108.o
 restatement) — the absence-of-implementation is itself the §108.o
 evidence shape.</p>
+<h4
+id="108p-docs-chain-documentation-sync-mandate-extends-universal-114106-helix-2026-05-29">§108.p.
+Docs Chain documentation-sync mandate (extends Universal §11.4.106;
+Helix 2026-05-29)</h4>
+<p><strong>Short tag:</strong>
+<code>docs-chain documentation sync</code>.</p>
+<p>Herald's derived documentation artefacts — every <code>.md</code>'s
+<code>.html</code>/<code>.pdf</code>/<code>.docx</code> siblings, the
+<code>*_Summary.md</code> parity docs (§11.4.12/§11.4.53/§11.4.56), the
+README doc-link section (§11.4.57), the workable-items DB↔︎MD projection
+(§11.4.93/§11.4.95), and the CONTINUATION exports (§12.10) — MUST be
+kept in sync by the shared <strong>Docs Chain</strong> engine
+(<code>digital.vasic.docs_chain</code>), a content-hashed incremental
+DAG sync engine consumed BY REFERENCE through the constitution submodule
+(Phase-6 distribution operator-gated per §11.4.66), NOT by ad-hoc
+per-doc scripting. The engine <strong>refuses to fake success</strong>
+(a missing transform tool → honest rollback, exit 3, no fabricated
+output) and <strong>refuses silent merges</strong> (both endpoints of a
+<code>sync</code> edge dirty → conflict, exit 2, zero writes) — making
+§11.4.6 (no-guessing) and §11.4.50 (deterministic consistency)
+mechanical rather than aspirational, and emitting per-run evidence to
+<code>qa-results/docs_chain/&lt;run-id&gt;/</code> (§11.4.69).</p>
+<p><strong>Herald-applicability classification: APPLICABLE (integration
+in progress).</strong> Unlike §108.o (video, non-applicable-but-cite),
+Docs Chain directly governs Herald's documentation surface. Herald's ~76
+tracked markdown docs each carry html/pdf/docx siblings produced today
+by the regen-all <code>scripts/export_docs.sh</code>. The migration plan
+<a
+href="../research/docs_chain/HERALD_DOCS_CHAIN_PLAN.md"><code>docs/research/docs_chain/HERALD_DOCS_CHAIN_PLAN.md</code></a>
+wires them through docs_chain <code>exec:</code> transforms that
+preserve Herald's exact logo-CSS pandoc flags
+(<code>-f gfm -t html5 --css print.css</code>; weasyprint pdf; pandoc
+docx) for byte-compatible, zero-regen-drift output across ~223 siblings,
+gaining content-hash incremental recompute (only-changed) + a
+<code>verify</code> drift-gate (planned
+<code>scripts/e2e_bluff_hunt.sh</code> invariant E146).</p>
+<p><strong>Open integration prerequisites (honest — not yet
+closed).</strong> (1) The Phase-4 docs_chain CLI
+(<code>sync</code>/<code>verify</code>/<code>doctor</code>/<code>graph</code>)
+landed 2026-05-31. (2) Gap G6: <code>exec:</code> transforms run against
+staged temp files, but Herald's html export uses relative logo-CSS /
+<code>&lt;img&gt;</code> paths — the exec-adapter path/cwd contract MUST
+be read from final source and the wrappers MUST reconstruct absolute
+asset paths before authoring (§11.4.6 no-guessing). (3) A binary-hash
+<code>verify</code> defect found by dogfooding — binary node-kinds
+(docx/pdf) hashed inconsistently between the sync-record and
+verify-check paths, producing false-positive STALE — is being fixed in
+docs_chain with a pinned regression test; until it lands the drift-gate
+is trusted for html only.</p>
+<p><strong>Canonical authority.</strong> Helix Universal Constitution
+§11.4.106. Herald §108.p is the project-binding restatement.</p>
+<p><strong>Propagation.</strong> §108.p is restated — citing this
+section as the canonical Herald source — in Herald's
+<code>CLAUDE.md</code>, <code>AGENTS.md</code>, <code>QWEN.md</code>.
+The universal mandate at Helix §11.4.106 is inherited via the §11.4.35
+parent-discovery contract; the literal anchor <code>11.4.106</code> MUST
+appear in all three Herald root docs. The Helix-side pre-build gate
+<code>CM-COVENANT-114-106-PROPAGATION</code> enforces this
+literal-anchor presence (paired §1.1 mutation: strip the anchor → gate
+FAILs).</p>
+<p><strong>Composition.</strong> §108.p composes with §107 (anti-bluff —
+a <code>verify</code> PASS is real evidence the siblings match their
+sources, never a metadata claim), §108.m (Universal §11.4.98
+full-automation — <code>sync</code>/<code>verify</code> run with no
+operator presence), §108.n (Universal §11.4.99 latest-source
+documentation — the engine keeps exports in sync but the operator still
+authors the source + revision header), and §108.j/§108.k (Universal
+§11.4.95/§11.4.96 — the workable-items DB↔︎MD sync edge is the same
+engine, pending DB materialization, gap G2).</p>
+<p><strong>Non-compliance is a release blocker.</strong> No
+<code>--skip-docs-sync</code>, <code>--exports-stale-OK</code>,
+<code>--regen-later</code> flag exists; once the drift-gate is live, a
+doc whose committed siblings are stale vs their source is a §107
+documentation-layer bluff.</p>
 <hr />
 <h3
 id="109-participant-identity-attribution--notification-tagging-operator-mandate-2026-05-31-inherited-from-helixconstitution-per-11435">§109.
