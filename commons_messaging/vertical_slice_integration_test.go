@@ -61,6 +61,18 @@ func (h handlerFunc) Handle(ctx context.Context, ev commons.InboundEvent) error 
 	return h(ctx, ev)
 }
 
+// §11.4.98 STATUS — SUPERSEDED (full-automation anti-bluff census, 2026-05-31).
+// This variant requires an operator to HAND-SEND a Telegram message DURING test
+// execution (see the 150s window below), which is a §11.4.98 PASS-bluff at the
+// automation layer — it cannot run in CI and a human dependency masks regressions.
+// It is fully superseded by TestMTProto_Wave6_AutonomousClosedLoop (e2e_bluff_hunt
+// invariant E136), which drives the IDENTICAL pherald→Claude-Code→reply round-trip
+// PROGRAMMATICALLY via an MTProto user-account (no human action mid-run). This file
+// is retained ONLY for optional operator spot-checks and is gated OFF by default
+// (the HERALD_TGRAM_LIVE_INBOUND=1 opt-in below); it MUST NOT be relied on for
+// regression coverage. The §11.4.98 audit (docs/audits/OPEN-WORK-AUDIT-2026-05-31.md)
+// flagged it as the one manual test the 534e785 retirement pass missed.
+//
 // TestVerticalSlice_TelegramClaudeRoundTrip is the §107 E19 evidence.
 //
 // Vertical slice: operator hand-sends a Telegram message → tgram.Subscribe
