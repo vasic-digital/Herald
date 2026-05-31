@@ -2460,6 +2460,19 @@ sc_anchor "E138 stress/chaos" "docs/qa/HRD-090-stress-chaos-20260529T054500Z/str
 check "E139 HRD-156 pherald watch→notify daemon — real SQLite + real fsnotify + real Diff + real fan-out → recording channel (create/status/delete; -race, hermetic, NOT PG-gated)" \
     "go test -race -count=1 -run 'TestRunWatch_EndToEndOutbound' ./pherald/cmd/pherald/..."
 
+# ---- E140-E142: participant identity / attribution / notification-tagging ----
+# (§11.4.104 / docs/design/PARTICIPANT_ATTRIBUTION.md — operator mandate 2026-05-31).
+# Hermetic, NOT PG-gated. PASS here means the user-visible attribution + @-tagging
+# behaviour actually works: created_by/assigned_to are set from the real message
+# sender, and the dispatched message body carries exactly the right @usernames per
+# the matrix (Operator + Claude never tagged; off-channel handles skipped).
+check "E140 inbound attribution — created_by = message sender (@username) / 'Claude' on system path / assigned_to defaults to Operator + explicit assign:@x override" \
+    "go test -race -count=1 -run 'TestInboundAttribution' ./pherald/internal/inbound/..."
+check "E141 outbound tagging E2E — real ChannelDispatcher→recording sink: operator→NO @-mention; →@bob = 'cc: @bob'; @carol→ = 'cc: @carol'; off-channel @dave = NO mention" \
+    "go test -race -count=1 -run 'TestNotifier_OutboundTagging_E2E|TestNotifier_NoTagging_BodiesVerbatim' ./pherald/internal/workflow/..."
+check "E142 tagging matrix + identity resolver — MentionsFor truth-table (every cell) + MemoryResolver resolve/round-trip/operator (the §11.4.104 contract surface)" \
+    "go test -race -count=1 -run 'TestMentionsFor|TestMemoryResolver' ./commons/..."
+
 # ----------------------------------------------------------------------
 echo ""
 echo "===================================================="
