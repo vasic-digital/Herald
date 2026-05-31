@@ -52,7 +52,31 @@ transforms:
 ```
 
 `exec:` transforms are supported (`{ exec: "./script.sh" }`) and receive
-`(input_path, output_path)` — confirmed by the conflict-demo's `cp.sh`.
+`(input_path, output_path)` — confirmed by the conflict-demo's `cp.sh`. Builtins
+shipped: `pandoc-html`, `weasyprint-pdf`, **`pandoc-docx`**, `members-fingerprint`.
+
+### 1.1 Verify-gate defect found by dogfooding (2026-05-31) — fixed in docs_chain
+
+Running the engine on docs_chain's **own** 6 docs (a `self-docs` context,
+markdown → html/pdf/docx) surfaced a real defect, captured live:
+
+- After `sync`, an immediate read-only `verify` reported **all `.docx` nodes and
+  some `.pdf` nodes STALE (exit 1)** while **every `.html` node verified clean**.
+- Yet two consecutive syncs of the same source produced **byte-identical** output
+  (`cmp` identical) — so the transforms are deterministic; the bug was **inconsistent
+  hashing of binary node-kinds between the sync-record path and the verify-check
+  path** (a text-normalizing content hasher applied to binary docx/pdf bytes in one
+  path but not the other). html, being genuine text, normalized consistently and
+  stayed stable.
+
+**Impact:** the `verify` drift-gate — the single most valuable thing docs_chain
+adds over `export_docs.sh` — is unusable for docx/pdf until fixed (every CI run
+would false-positive STALE with no source change). Fix **in flight** in docs_chain
+as of 2026-05-31 (binary kinds to be hashed by raw bytes consistently in both
+paths) + a pinned regression test; acceptance proof = dogfood `sync` then `verify`
+→ exit 0 for all kinds at `-count=3`.
+**This is why §5 step 4's "zero-diff" proof must run `verify` immediately after
+`sync` and assert exit 0 — not merely that files were produced.**
 
 ---
 
@@ -95,10 +119,24 @@ This:
 2. **closes gap G1 (no docx builtin)** with no docs_chain change — the docx leg is just another `exec` transform;
 3. keeps docs_chain's real value: content-hash **incremental** recompute (only-changed, vs `export_docs.sh`'s regen-all), `verify` as a CI **drift-gate**, and atomic-commit / conflict safety.
 
-> A later, optional docs_chain enhancement could add `pandoc-html5-css` /
-> `pandoc-docx` builtins parameterized by flags, retiring the wrappers. Not
-> required for complete adoption; tracked as a docs_chain-side nicety, not a
-> Herald blocker.
+> docs_chain ships a `pandoc-docx` builtin, but it (like `pandoc-html`) does NOT
+> carry Herald's exact flags / logo CSS, so the exec-wrapper decision stands for
+> byte-compatibility. A later docs_chain enhancement could add flag-parameterized
+> builtins (`pandoc-html5-css`, …) to retire the wrappers — a nicety, not a Herald
+> blocker.
+
+### 3.1 Open question to resolve before authoring the wrappers (no-guessing, §11.4.6)
+
+docs_chain stages `exec:` transforms to **temp** input/output files. Herald's html
+export resolves a **relative** `--css=…/assets/logo/print.css` and the markdown
+embeds **relative** `<img src="…/assets/logo/…">`. From a temp staging dir those
+relative paths will NOT resolve, breaking the logo CSS and image embedding. Before
+authoring `scripts/docs_chain/*.sh`, the exact exec-adapter contract must be read
+from the **final** docs_chain source (does it pass the original node path? set cwd
+to project root? expose `$DOCS_CHAIN_ROOT`?). The wrapper must reconstruct an
+absolute `print.css` path and run pandoc with a cwd/`--resource-path` that resolves
+the in-tree assets — verified by a byte-diff self-test against a committed sibling.
+This is tracked as **gap G6** (§6) and is the gating unknown for §5 step 2.
 
 ---
 
@@ -161,8 +199,17 @@ turning a slow blind regen into an incremental, gated, evidence-emitting step.
   the logo header). That is an in-place authoring step, not a derive edge; it must
   run **before** docs_chain sees the source, or be modeled as a pre-sync hook —
   not as a docs_chain node (which would fight the atomic-commit model).
-- **G5** — *resolved by the in-flight Phase-4 CLI* (the only consumer interface);
-  this plan's §5.1 unblocks the moment it lands.
+- **G5** — *resolved* by the Phase-4 CLI (the only consumer interface), which
+  landed 2026-05-31 (`docs_chain` branch `phase4-cli-config` → main); §5.1 unblocked.
+- **G6** — exec transforms run against **staged temp files**, but Herald's html/img
+  exports use **relative** asset paths (logo CSS + `<img>`). The wrappers must
+  reconstruct absolute asset paths / set `--resource-path` from the docs_chain root;
+  the exact exec-adapter path/cwd contract must be read from final source before
+  authoring (§3.1). Gating unknown for §5 step 2.
+- **Verify-binary-hash** — *found 2026-05-31; fix in flight* (§1.1): docx/pdf hashed
+  inconsistently between sync-record and verify-check, making the drift-gate
+  false-positive on binary kinds. Fix being landed in docs_chain with a pinned
+  regression test; §5 step 4 will not assert exit 0 until this lands.
 
 ---
 
