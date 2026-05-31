@@ -8,11 +8,11 @@
 
 | Field | Value |
 |---|---|
-| Revision | 2 |
+| Revision | 3 |
 | Created | 2026-05-21 |
 | Last modified | 2026-05-31 |
 | Status | active |
-| Status summary | r2: documented the `HERALD_TGRAM_OPERATOR_USERNAME` operator env var (Telegram env table row + Step 4b) per the participant/attribution contract `docs/design/PARTICIPANT_ATTRIBUTION.md` — designates the operator (env, not DB flag), drives `created_by`/`assigned_to` attribution + the @-tagging no-self-ping rule, generalizes to `HERALD_<CHANNEL>_OPERATOR_USERNAME`. Comprehensive step-by-step guide for obtaining and configuring every environment variable Herald requires — covers live integrations (Postgres, Redis, Telegram, Claude Code) AND reserved env-var names for planned integrations (Slack, Email, Max, Microsoft Teams, Lark, Discord, WhatsApp, Viber, OpenCode, Aider, Gemini, Cursor). Documents the dual-source resolution model (shell exports vs `.env`) per spec §3.3 + Universal Constitution §11.4.10. |
+| Status summary | r3: corrected the stale "Slack — planned, V2 / NOT YET IMPLEMENTED" section to **HRD-115 (adapter LIVE; live round-trip operator-cred-gated)** with the REAL env vars verified from source (`HERALD_SLACK_BOT_TOKEN` / `HERALD_SLACK_APP_TOKEN` / `HERALD_SLACK_CHANNEL_ID` — the planning-draft `HERALD_SLACK_SIGNING_SECRET` / `HERALD_SLACK_DEFAULT_CHANNEL` names were superseded by the shipped Socket-Mode adapter); cross-linked the new deep operator guides `messengers/SLACK.md` (Slack credential walkthrough) + `MTPROTO.md` (MTProto user-account login for the §11.4.98 harness). Prior r2: documented the `HERALD_TGRAM_OPERATOR_USERNAME` operator env var (Telegram env table row + Step 4b) per the participant/attribution contract `docs/design/PARTICIPANT_ATTRIBUTION.md` — designates the operator (env, not DB flag), drives `created_by`/`assigned_to` attribution + the @-tagging no-self-ping rule, generalizes to `HERALD_<CHANNEL>_OPERATOR_USERNAME`. Comprehensive step-by-step guide for obtaining and configuring every environment variable Herald requires — covers live integrations (Postgres, Redis, Telegram, Claude Code) AND reserved env-var names for planned integrations (Slack, Email, Max, Microsoft Teams, Lark, Discord, WhatsApp, Viber, OpenCode, Aider, Gemini, Cursor). Documents the dual-source resolution model (shell exports vs `.env`) per spec §3.3 + Universal Constitution §11.4.10. |
 | Issues | none |
 | Issues summary | — |
 | Fixed | (n/a — new guide) |
@@ -29,7 +29,7 @@
   - [Redis (LIVE)](#redis-live)
   - [Telegram — HRD-011 (LIVE)](#telegram--hrd-011-live)
   - [Claude Code dispatcher — HRD-012 (LIVE)](#claude-code-dispatcher--hrd-012-live)
-  - [Slack — planned, V2](#slack--planned-v2)
+  - [Slack — HRD-115 (adapter LIVE; cred-gated)](#slack--hrd-115-adapter-live-live-round-trip-operator-cred-gated)
   - [Email (SMTP) — planned, V2](#email-smtp--planned-v2)
   - [Email (Resend) — planned, V2](#email-resend--planned-v2)
   - [Max — planned, V2](#max--planned-v2)
@@ -46,8 +46,9 @@ This umbrella document covers the credentials model, resolution order, audit che
 
 ### Messengers — under [`messengers/`](messengers/)
 
-- [`messengers/TELEGRAM.md`](messengers/TELEGRAM.md) — **LIVE** (HRD-011)
-- [`messengers/SLACK.md`](messengers/SLACK.md) — planned V2
+- [`messengers/TELEGRAM.md`](messengers/TELEGRAM.md) — **LIVE** (HRD-011, bot setup); deep operator guide [`TELEGRAM.md`](TELEGRAM.md)
+- [`MTPROTO.md`](MTPROTO.md) — **MTProto user-account login** (the §11.4.98 full-automation harness; `qaherald mtproto login`) — see also the §"MTProto user-account harness" section below
+- [`messengers/SLACK.md`](messengers/SLACK.md) — **HRD-115** (adapter LIVE; live round-trip cred-gated)
 - [`messengers/EMAIL.md`](messengers/EMAIL.md) — planned V2 (SMTP + Resend)
 - [`messengers/MAX.md`](messengers/MAX.md) — planned V2
 - [`messengers/TEAMS.md`](messengers/TEAMS.md) — planned V3
@@ -315,18 +316,17 @@ go test ./commons_messaging/dispatch/claude_code/ -tags=integration -run TestDis
 
 Expected: PASS in ~20-30s — Claude receives an envelope, replies with the `<<<HERALD-REPLY>>>` JSON line, parsed with non-empty Outcome + Summary.
 
-### Slack — planned, V2
+### Slack — HRD-115 (adapter LIVE; live round-trip operator-cred-gated)
 
-**Status**: NOT YET IMPLEMENTED. Spec V3 §11.2 + §11.9. When the Slack channel lands as an HRD, env vars will follow this shape:
+**Status**: the Slack channel adapter is **implemented and hermetically tested** (Wave 7 — `commons_messaging/channels/slack/`, **Socket Mode**). The live round-trip (HRD-115) is gated only on operator-supplied credentials. **Full step-by-step credential-acquisition walkthrough → [`messengers/SLACK.md`](messengers/SLACK.md).** The adapter + live test read exactly these env vars (verified from source — the planning-draft `HERALD_SLACK_SIGNING_SECRET` / `HERALD_SLACK_DEFAULT_CHANNEL` names were superseded; the shipped adapter uses Socket Mode + `HERALD_SLACK_CHANNEL_ID`):
 
 | Env var | Description |
 |---|---|
-| `HERALD_SLACK_BOT_TOKEN` | `xoxb-...` from Slack app's "Install to Workspace" flow |
-| `HERALD_SLACK_SIGNING_SECRET` | For verifying inbound webhooks (Events API) |
-| `HERALD_SLACK_APP_TOKEN` | `xapp-...` for Socket Mode (alternative to Events API) |
-| `HERALD_SLACK_DEFAULT_CHANNEL` | Channel ID (e.g. `C012345ABCD`) — Slack channels DON'T use names internally |
+| `HERALD_SLACK_BOT_TOKEN` | `xoxb-...` bot token from the Slack app's "Install to Workspace" / OAuth flow |
+| `HERALD_SLACK_APP_TOKEN` | `xapp-...` app-level token for **Socket Mode** (the inbound transport) |
+| `HERALD_SLACK_CHANNEL_ID` | Target channel ID (e.g. `C012345ABCD`) — Slack channels are addressed by ID, not name |
 
-Reserve env var names now in your `.env` (commented out) to keep `.env.example` stable when Slack lands.
+Tokens are §107-redacted out of every error message (`sanitizeError()` + `TestSlack_Send_ErrorDoesNotLeakToken` plants a secret and asserts its absence). Once the three are set in `.env`, prove the live round-trip with the **E127 / `TestSlack_Live_Send`** gate — see [`messengers/SLACK.md`](messengers/SLACK.md) §7; evidence lands under `docs/qa/HRD-115-LIVE-*/` per §107.x.
 
 ### Email (SMTP) — planned, V2
 
