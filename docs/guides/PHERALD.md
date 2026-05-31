@@ -8,11 +8,11 @@
 
 | Field | Value |
 |---|---|
-| Revision | 1 |
+| Revision | 2 |
 | Created | 2026-05-30 |
-| Last modified | 2026-05-30 |
+| Last modified | 2026-05-31 |
 | Status | active |
-| Status summary | Nano-detail operator reference for `pherald` (Project Herald) — the richest Herald flavor binary. Documents every subcommand surfaced by `pherald --help` (`serve`, `listen`, `watch`, `migrate`, `wizard`, `commit-push` + the §43 GitOps commands), the env/credentials each needs, real example invocations with the binary's actual flags, and which subcommands are live vs not-yet-implemented. ANTI-BLUFF: every claim below was derived from running the built `pherald` binary (`pherald --help`, `pherald <sub> --help`, `pherald version --json`) and reading `pherald/cmd/pherald/main.go` — nothing invented. |
+| Status summary | r2: documented in §5 (`listen`) that subscribers speak plain natural language — no command syntax — and the three-tier intent-resolution discipline (command-recognition fast-path → Claude Code intent inference → `clarify` reply-tag-and-ask fallback) per the contract `docs/design/INTENT_RECOGNITION.md`, with an explicit live-vs-contract note (Tier-2 dispatch is LIVE; Tier-1 recognizer + Tier-3 `clarify` are the contract being implemented). Prior r1: nano-detail operator reference for `pherald` (Project Herald) — the richest Herald flavor binary. Documents every subcommand surfaced by `pherald --help` (`serve`, `listen`, `watch`, `migrate`, `wizard`, `commit-push` + the §43 GitOps commands), the env/credentials each needs, real example invocations with the binary's actual flags, and which subcommands are live vs not-yet-implemented. ANTI-BLUFF: every claim below was derived from running the built `pherald` binary (`pherald --help`, `pherald <sub> --help`, `pherald version --json`) and reading `pherald/cmd/pherald/main.go` — nothing invented. |
 | Issues | (none specific to this guide) |
 | Continuation | Bump when `migrate down`/`migrate validate` land (currently not-yet-implemented), and when `pherald listen` / `pherald watch` capture operator-supplied live evidence under `docs/qa/`. |
 
@@ -111,6 +111,10 @@ pherald serve --http-port 24791
 ## §5. `listen` — the inbound runtime
 
 `pherald listen` is the long-running inbound loop (Wave 6). It wires `tgram.Subscribe` (Telegram `getUpdates` long-poll) to the production `inbound.Dispatcher`: every inbound message is dispatched through Claude Code (Opus, pinned) per the §32 inbound pipeline, and the parsed `<<<HERALD-REPLY>>>` block is routed by `action` (`reply` / `issue.open` / `event.emit` / item mutations).
+
+**Subscribers speak plain natural language — no command syntax.** Subscribers writing to the bot do NOT need to know any command syntax: there is no `COMMAND:` prefix and no fixed grammar. They send a clear message in their own words and the System determines the intent. Intent resolution is the three-tier discipline defined in the contract [`docs/design/INTENT_RECOGNITION.md`](../design/INTENT_RECOGNITION.md): (1) a deterministic command-recognition fast-path for clear imperatives; (2) Claude Code intent inference (the LLM-driven dispatch this `listen` loop already runs) when no command matches; (3) a `clarify` fallback — when the intent cannot be determined, the System replies to the original message, @-tags the sender, and asks a precise clarifying question naming the candidate intents (never guessing an action, never silently dropping a message). The recognized command set (close/assign/status-change → `item.update`, "open a bug/task: …" → `issue.open`, "investigate ATM-N" → `investigation.start`, questions → `reply`) and the `clarify` action are specified in that contract; see also `docs/guides/MESSENGER_CHANNELS.md` §6B.
+
+> The Tier-2 Claude Code dispatch + `<<<HERALD-REPLY>>>` action routing described here are LIVE in this `listen` loop today; the deterministic Tier-1 `CommandRecognizer` and the Tier-3 `clarify` action are the contract Herald is implementing — `docs/design/INTENT_RECOGNITION.md` is the authoritative spec, not a claim that the fast-path is already wired into the binary.
 
 **Required environment** (verbatim from `pherald listen --help`):
 

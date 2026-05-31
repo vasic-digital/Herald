@@ -113,7 +113,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>1</td>
+<td>2</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -121,7 +121,7 @@
 </tr>
 <tr>
 <td>Last modified</td>
-<td>2026-05-30</td>
+<td>2026-05-31</td>
 </tr>
 <tr>
 <td>Status</td>
@@ -129,16 +129,24 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td>Nano-detail operator reference for <code>pherald</code> (Project
-Herald) — the richest Herald flavor binary. Documents every subcommand
-surfaced by <code>pherald --help</code> (<code>serve</code>,
-<code>listen</code>, <code>watch</code>, <code>migrate</code>,
-<code>wizard</code>, <code>commit-push</code> + the §43 GitOps
-commands), the env/credentials each needs, real example invocations with
-the binary's actual flags, and which subcommands are live vs
-not-yet-implemented. ANTI-BLUFF: every claim below was derived from
-running the built <code>pherald</code> binary
-(<code>pherald --help</code>, <code>pherald &lt;sub&gt; --help</code>,
+<td>r2: documented in §5 (<code>listen</code>) that subscribers speak
+plain natural language — no command syntax — and the three-tier
+intent-resolution discipline (command-recognition fast-path → Claude
+Code intent inference → <code>clarify</code> reply-tag-and-ask fallback)
+per the contract <code>docs/design/INTENT_RECOGNITION.md</code>, with an
+explicit live-vs-contract note (Tier-2 dispatch is LIVE; Tier-1
+recognizer + Tier-3 <code>clarify</code> are the contract being
+implemented). Prior r1: nano-detail operator reference for
+<code>pherald</code> (Project Herald) — the richest Herald flavor
+binary. Documents every subcommand surfaced by
+<code>pherald --help</code> (<code>serve</code>, <code>listen</code>,
+<code>watch</code>, <code>migrate</code>, <code>wizard</code>,
+<code>commit-push</code> + the §43 GitOps commands), the env/credentials
+each needs, real example invocations with the binary's actual flags, and
+which subcommands are live vs not-yet-implemented. ANTI-BLUFF: every
+claim below was derived from running the built <code>pherald</code>
+binary (<code>pherald --help</code>,
+<code>pherald &lt;sub&gt; --help</code>,
 <code>pherald version --json</code>) and reading
 <code>pherald/cmd/pherald/main.go</code> — nothing invented.</td>
 </tr>
@@ -373,6 +381,35 @@ through Claude Code (Opus, pinned) per the §32 inbound pipeline, and the
 parsed <code>&lt;&lt;&lt;HERALD-REPLY&gt;&gt;&gt;</code> block is routed
 by <code>action</code> (<code>reply</code> / <code>issue.open</code> /
 <code>event.emit</code> / item mutations).</p>
+<p><strong>Subscribers speak plain natural language — no command
+syntax.</strong> Subscribers writing to the bot do NOT need to know any
+command syntax: there is no <code>COMMAND:</code> prefix and no fixed
+grammar. They send a clear message in their own words and the System
+determines the intent. Intent resolution is the three-tier discipline
+defined in the contract <a
+href="../design/INTENT_RECOGNITION.md"><code>docs/design/INTENT_RECOGNITION.md</code></a>:
+(1) a deterministic command-recognition fast-path for clear imperatives;
+(2) Claude Code intent inference (the LLM-driven dispatch this
+<code>listen</code> loop already runs) when no command matches; (3) a
+<code>clarify</code> fallback — when the intent cannot be determined,
+the System replies to the original message, @-tags the sender, and asks
+a precise clarifying question naming the candidate intents (never
+guessing an action, never silently dropping a message). The recognized
+command set (close/assign/status-change → <code>item.update</code>,
+"open a bug/task: …" → <code>issue.open</code>, "investigate ATM-N" →
+<code>investigation.start</code>, questions → <code>reply</code>) and
+the <code>clarify</code> action are specified in that contract; see also
+<code>docs/guides/MESSENGER_CHANNELS.md</code> §6B.</p>
+<blockquote>
+<p>The Tier-2 Claude Code dispatch +
+<code>&lt;&lt;&lt;HERALD-REPLY&gt;&gt;&gt;</code> action routing
+described here are LIVE in this <code>listen</code> loop today; the
+deterministic Tier-1 <code>CommandRecognizer</code> and the Tier-3
+<code>clarify</code> action are the contract Herald is implementing —
+<code>docs/design/INTENT_RECOGNITION.md</code> is the authoritative
+spec, not a claim that the fast-path is already wired into the
+binary.</p>
+</blockquote>
 <p><strong>Required environment</strong> (verbatim from
 <code>pherald listen --help</code>):</p>
 <ul>

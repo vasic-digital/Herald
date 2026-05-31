@@ -8,11 +8,11 @@
 
 | Field | Value |
 |---|---|
-| Revision | 11 |
+| Revision | 12 |
 | Created | 2026-05-15 |
 | Last modified | 2026-05-31 |
 | Status | active |
-| Status summary | r11: added §109 (Participant identity, attribution & notification-tagging) restating the operator mandate (2026-05-31) at Herald project-constitution level — per-messenger Participant identity (`subscribers` + `subscriber_aliases.username`), the `HERALD_<CHANNEL>_OPERATOR_USERNAME` operator env var (`HERALD_TGRAM_OPERATOR_USERNAME=@milos85vasic`), `created_by`/`assigned_to` attribution, and the @-tagging matrix (Claude + Operator never tagged) as a table; cites the authoritative contract `docs/design/PARTICIPANT_ATTRIBUTION.md` and notes inheritance from HelixConstitution per §11.4.35; restated + cited, not redefined; ToC entry added. Prior r10: extended §108 with §108.o restating inherited HelixConstitution §11.4.100 (Video color + visual-quality fidelity mandate, 2026-05-28) at Herald project-constitution level per §1.1 multi-file propagation discipline; inherited per §11.4.35, restated + cited, not redefined; literal anchor `11.4.100` now present in all three Herald root docs (CLAUDE.md r16, AGENTS.md r12, QWEN.md). Herald-applicability classification: non-applicable-but-cite (Herald has NO video-playback surface — pherald downloads video attachments as opaque sha256-blobs without decoding/rendering); cascade-parallel to §108.k (Universal §11.4.96 "Herald has no AOSP build, but the principle binds"). Required by upcoming Helix-side `CM-COVENANT-114-100-PROPAGATION` pre-build gate. Prior r7: extended §108 with §108.j–§108.l restating the next three inherited HelixConstitution mandates — §11.4.95 workable-items SQLite DB tracked-in-git-not-gitignored, §11.4.96 safe-parallel-work-with-long-build catalogue + mandate, §11.4.97 maximum-use-of-idle-time + progress-update cadence — at Herald project-constitution level per §1.1 multi-file propagation discipline; inherited per §11.4.35, restated + cited, not redefined; literal anchors `11.4.95`/`11.4.96`/`11.4.97` now present in all three Herald root docs. Prior r6: extended §108 with §108.d–§108.i restating the next six inherited HelixConstitution mandates — §11.4.89 background-test execution, §11.4.90 Obsolete status + obsolescence audit, §11.4.91 summary-doc clarity, §11.4.92 multi-pass change-evaluation, §11.4.93 SQLite workable-items SSoT, §11.4.94 zero-idle parallel-by-default — at Herald project-constitution level per §1.1 multi-file propagation discipline; inherited per §11.4.35, restated + cited, not redefined; literal anchors `11.4.89`–`11.4.94` now present. Prior r5: added §108 (with §108.a/b/c) restating the three inherited HelixConstitution mandates — §11.4.85 stress + chaos test mandate, §11.4.87 endless-loop autonomous work + zero-idle agent dispatch + anti-bluff testing, §11.4.88 background-push — at Herald project-constitution level per §1.1 multi-file propagation discipline; inherited per §11.4.35, restated + cited, not redefined. Required by the §11.4.87 `CM-COVENANT-114-87-PROPAGATION` pre-build gate. Prior r4: added §107 End-user-usability covenant (verbatim operator mandate restated at Herald level per §1.1 propagation) + paired gate invariant I8a–c; corrected stale "Owned-submodule set: (none)" to reflect the 10 vendored modules (9 Helix-stack + containers). |
+| Status summary | r12: added §110 (Intent recognition & clarification) restating the operator mandate (2026-05-31) at Herald project-constitution level — subscribers speak plain natural language (NO command syntax / no `COMMAND:` prefix); the three-tier intent-resolution discipline (Tier 1 deterministic CommandRecognizer fast-path → Tier 2 LLM intent inference via the `<<<HERALD-DISPATCH-v1>>>` envelope → Tier 3 `action="clarify"` reply-tag-and-ask fallback) as a table; the command set Tier 1 recognizes as a table; the "never guess / never ignore" rules; cites the authoritative contract `docs/design/INTENT_RECOGNITION.md` and notes inheritance from HelixConstitution §11.4.105 (the root-§ being added on the constitution stream) per §11.4.35; restated + cited, not redefined; ToC entry added. Prior r11: added §109 (Participant identity, attribution & notification-tagging) restating the operator mandate (2026-05-31) at Herald project-constitution level — per-messenger Participant identity (`subscribers` + `subscriber_aliases.username`), the `HERALD_<CHANNEL>_OPERATOR_USERNAME` operator env var (`HERALD_TGRAM_OPERATOR_USERNAME=@milos85vasic`), `created_by`/`assigned_to` attribution, and the @-tagging matrix (Claude + Operator never tagged) as a table; cites the authoritative contract `docs/design/PARTICIPANT_ATTRIBUTION.md` and notes inheritance from HelixConstitution per §11.4.35; restated + cited, not redefined; ToC entry added. Prior r10: extended §108 with §108.o restating inherited HelixConstitution §11.4.100 (Video color + visual-quality fidelity mandate, 2026-05-28) at Herald project-constitution level per §1.1 multi-file propagation discipline; inherited per §11.4.35, restated + cited, not redefined; literal anchor `11.4.100` now present in all three Herald root docs (CLAUDE.md r16, AGENTS.md r12, QWEN.md). Herald-applicability classification: non-applicable-but-cite (Herald has NO video-playback surface — pherald downloads video attachments as opaque sha256-blobs without decoding/rendering); cascade-parallel to §108.k (Universal §11.4.96 "Herald has no AOSP build, but the principle binds"). Required by upcoming Helix-side `CM-COVENANT-114-100-PROPAGATION` pre-build gate. Prior r7: extended §108 with §108.j–§108.l restating the next three inherited HelixConstitution mandates — §11.4.95 workable-items SQLite DB tracked-in-git-not-gitignored, §11.4.96 safe-parallel-work-with-long-build catalogue + mandate, §11.4.97 maximum-use-of-idle-time + progress-update cadence — at Herald project-constitution level per §1.1 multi-file propagation discipline; inherited per §11.4.35, restated + cited, not redefined; literal anchors `11.4.95`/`11.4.96`/`11.4.97` now present in all three Herald root docs. Prior r6: extended §108 with §108.d–§108.i restating the next six inherited HelixConstitution mandates — §11.4.89 background-test execution, §11.4.90 Obsolete status + obsolescence audit, §11.4.91 summary-doc clarity, §11.4.92 multi-pass change-evaluation, §11.4.93 SQLite workable-items SSoT, §11.4.94 zero-idle parallel-by-default — at Herald project-constitution level per §1.1 multi-file propagation discipline; inherited per §11.4.35, restated + cited, not redefined; literal anchors `11.4.89`–`11.4.94` now present. Prior r5: added §108 (with §108.a/b/c) restating the three inherited HelixConstitution mandates — §11.4.85 stress + chaos test mandate, §11.4.87 endless-loop autonomous work + zero-idle agent dispatch + anti-bluff testing, §11.4.88 background-push — at Herald project-constitution level per §1.1 multi-file propagation discipline; inherited per §11.4.35, restated + cited, not redefined. Required by the §11.4.87 `CM-COVENANT-114-87-PROPAGATION` pre-build gate. Prior r4: added §107 End-user-usability covenant (verbatim operator mandate restated at Herald level per §1.1 propagation) + paired gate invariant I8a–c; corrected stale "Owned-submodule set: (none)" to reflect the 10 vendored modules (9 Helix-stack + containers). |
 | Issues | none |
 | Issues summary | — |
 | Fixed | R-14 (V2), V3-path-sync (V3 r3), §107 mandate + I8 gate invariant + owned-submodule list (r4), §108 Helix §11.4.85 + §11.4.87 + §11.4.88 propagation (r5), §108.d–§108.i Helix §11.4.89–§11.4.94 propagation (r6), §108.j–§108.l Helix §11.4.95–§11.4.97 propagation (r7) |
@@ -31,6 +31,7 @@
   - [§107. End-user-usability covenant (extends Universal §11.4 — MANDATORY ANTI-BLUFF)](#107-end-user-usability-covenant-extends-universal-114--mandatory-anti-bluff)
   - [§108. Inherited covenant restatements (Helix §11.4.85 / §11.4.87 / §11.4.88 / §11.4.89 / §11.4.90 / §11.4.91 / §11.4.92 / §11.4.93 / §11.4.94 / §11.4.95 / §11.4.96 / §11.4.97 / §11.4.98 / §11.4.99 / §11.4.100)](#108-inherited-covenant-restatements-helix-11485--11487--11488--11489--11490--11491--11492--11493--11494--11495--11496--11497)
   - [§109. Participant identity, attribution & notification-tagging](#109-participant-identity-attribution--notification-tagging-operator-mandate-2026-05-31-inherited-from-helixconstitution-per-11435)
+  - [§110. Intent recognition & clarification](#110-intent-recognition--clarification-operator-mandate-2026-05-31-inherited-from-helixconstitution-114105-per-11435)
 - [Overrides of Universal Constitution](#overrides-of-universal-constitution)
 - [Owned-submodule set (per Universal §4)](#owned-submodule-set-per-universal-4)
 - [Project-specific remotes](#project-specific-remotes)
@@ -467,6 +468,63 @@ De-dup the resulting set; for each mention resolve `UsernameFor(handle, channel)
 - **Anti-bluff (§107 / Helix §11.4).** Every layer ships unit + integration + E2E + full-automation tests with real captured evidence under `docs/qa/<run-id>/`: real SQLite round-trip with the new columns (byte-identical); a real `IdentityResolver` over real `subscribers`/`subscriber_aliases`; the tagging matrix proven by a truth-table test covering every cell + a per-cell-flip mutation that must FAIL; an E2E with a real item event → a real dispatched message whose body contains exactly the expected `@username`s, plus a NEGATIVE case proving the Operator is NOT tagged.
 
 **Non-compliance is a release blocker.** Documenting behaviour without the captured evidence above is itself a §107 PASS-bluff. No `--skip-attribution`, `--tag-later`, `--operator-tag-OK` flag exists.
+
+---
+
+### §110. Intent recognition & clarification (operator mandate, 2026-05-31; inherited from HelixConstitution §11.4.105 per §11.4.35)
+
+**Forensic anchor — verbatim operator mandate (2026-05-31):**
+
+> users must NOT need to know command syntax (no `COMMAND: …`). They send a clear natural-language message; the System determines the intent. The System recognizes the commands it has; if none matches it infers the exact intent; if it is *totally unable* it replies, tags the user (`@user …`), and asks to clarify precisely. We MUST always do our best to determine exact intent so we never annoy end users. This is a CORE part of the System.
+
+**Canonical authority.** The single authoritative contract every implementation stream codes against is [`docs/design/INTENT_RECOGNITION.md`](../design/INTENT_RECOGNITION.md). The mandatory rules are restated (root definitions) in HelixConstitution `Constitution.md` / `CLAUDE.md` / `AGENTS.md` / `QWEN.md` as §11.4.105 (the root-§ being added on the constitution stream) and inherited per §11.4.35; Herald §110 is the project-binding restatement. Herald **restates + cites**, it does NOT redefine or weaken.
+
+#### §110.1. No command syntax required
+
+Subscribers speak **plain natural language**. There is no `COMMAND:` prefix, no fixed grammar, and nothing the end user must memorize. Herald's job is to determine the intent from the message itself. A subscriber writing "can you close ATM-123 please" is exactly as valid as any other phrasing — the System maps it to the right action.
+
+#### §110.2. Three-tier intent resolution (the mandatory discipline)
+
+Every inbound subscriber message is resolved to exactly one action via three tiers, in order — the **first tier that succeeds wins**:
+
+| Tier | Mechanism | Behaviour |
+|---|---|---|
+| **Tier 1 — command recognition** | A deterministic `CommandRecognizer` in `pherald/internal/inbound`, tried BEFORE any LLM dispatch. | Maps a clear natural-language imperative to a structured action WITHOUT an LLM round-trip (fast-path; no prefix). Deliberately CONSERVATIVE — only a confident match (clear imperative verb + resolvable target) fast-paths; otherwise it returns "no match" and defers to Tier 2. A false command-match is worse than deferring to the LLM. |
+| **Tier 2 — intent inference** | The Claude Code dispatch (the LLM) when no command matched. | Infers the intent from the message and returns a `<<<HERALD-REPLY>>>` action. The `<<<HERALD-DISPATCH-v1>>>` envelope INSTRUCTS the LLM to recognize Herald's command set, map natural language to the right action, and NEVER guess. |
+| **Tier 3 — clarify (fallback)** | `action="clarify"` when neither a command nor a confident intent can be determined. | The System REPLIES to the original message, TAGS the sender (`@username`, resolved via the §11.4.104 `IdentityResolver.UsernameFor` — fall back to the raw sender handle if no alias), and asks a precise clarifying question naming the candidate intents. No guessing, no silent drop. |
+
+Tier 3 is the **anti-annoyance guarantee**: the subscriber is never ignored and never has to learn syntax — at worst they get a friendly, specific "@user, did you mean X or Y?" rather than a generic "I didn't understand".
+
+#### §110.3. The command set Tier 1 recognizes (natural-language → action)
+
+The recognizer maps unambiguous imperatives (with an `ATM-NNN`/item id where relevant) to the EXISTING inbound actions — no special prefix, case-insensitive, phrasing-tolerant:
+
+| Natural-language intent (examples) | action | fields |
+|---|---|---|
+| "close ATM-123", "mark ATM-5 fixed/done/resolved" | `item.update` | status=closed/fixed |
+| "set ATM-9 to in progress", "ATM-9 is blocked" | `item.update` | status=&lt;parsed&gt; |
+| "assign ATM-5 to @bob", "give ATM-5 to @bob" | `item.update` | assigned_to=@bob |
+| "open a bug: &lt;title&gt;", "create a task: &lt;title&gt;", "new feature request: &lt;title&gt;" | `issue.open` | type+title (created_by=sender) |
+| "investigate ATM-7", "look into ATM-7" | `investigation.start` | atm_id |
+| "status of ATM-9?", "what's ATM-9?" | `reply` (query) | atm_id |
+| anything conversational / a question | `reply` | — |
+| ambiguous / unparseable intent | `clarify` | question |
+
+#### §110.4. The `clarify` action — never guess, never ignore
+
+`<<<HERALD-REPLY>>>` gains `action: "clarify"` carrying a precise `question`. On `action=clarify`, the inbound handler sends a reply to the original message (quoting/threading it) whose body is `@<sender-username> <question>` — the sender resolved to their per-channel `@username` via the §11.4.104 `IdentityResolver`. The question MUST be specific (name the candidate intents), never a generic "I didn't understand".
+
+Two hard rules bind every tier:
+
+- **Never guess an action.** A wrong action is worse than a clarifying question (§11.4.6 no-guessing). The LLM (Tier 2) is instructed — via the envelope/system prompt — to RETURN `action=clarify` with a precise question whenever it cannot determine the intent with confidence, rather than guess.
+- **Never ignore a message.** Every inbound message resolves to exactly one action; genuine ambiguity reaches Tier 3 and is always answered, tagged, and threaded back to the sender.
+
+#### §110.5. Wiring & anti-bluff
+
+- **Wiring.** `pherald/internal/inbound` runs the `CommandRecognizer` (Tier 1) before the Claude Code dispatch (Tier 2); a parsed `Reply.Action` of `clarify` (Tier 3) routes to a `clarifyHandler` that tags the sender and asks. `commons_messaging/dispatch/claude_code` carries the additive envelope instruction (§110.2 Tier 2). The clarify reply reuses the §109 / §11.4.104 participant `@username` resolution.
+- **Anti-bluff (§107 / Helix §11.4).** Every tier ships unit + integration + E2E + full-automation tests with real captured evidence under `docs/qa/<run-id>/`: a Tier-1 truth-table of natural-language messages → expected action+fields (and the conservative negatives that MUST fall through to "no match"); a Tier-3 E2E where an ambiguous message drives a real dispatch whose recording-sink reply body is EXACTLY `@<sender> <specific question>` (proving the user is tagged + asked, not ignored) plus a NEGATIVE proving a clear command does NOT trigger clarify; a paired §1.1 mutation gate (break the recognizer's confidence guard so it false-matches, OR drop the clarify tag) that MUST FAIL.
+
+**Non-compliance is a release blocker.** Documenting intent-resolution behaviour without the captured evidence above is itself a §107 PASS-bluff. No `--skip-intent`, `--guess-OK`, `--clarify-later` flag exists.
 
 ---
 

@@ -8,11 +8,11 @@
 
 | Field | Value |
 |---|---|
-| Revision | 2 |
+| Revision | 3 |
 | Created | 2026-05-22 |
 | Last modified | 2026-05-31 |
 | Status | active |
-| Status summary | r2: added a §5 mention + doc-link for the `HERALD_<CHANNEL>_OPERATOR_USERNAME` operator env var and the participant/attribution contract (`docs/design/PARTICIPANT_ATTRIBUTION.md`) driving `created_by`/`assigned_to` attribution + notification @-tagging. First-cut consumer integration guide written after Wave 3b lands the §32 7-stage Runner (commit `c2b67c3`). Covers: adding Herald as a submodule, the parent-discovery contract for the HelixConstitution, credential configuration via the wizard, running migrations, starting `pherald serve`, emitting a first CloudEvent via `POST /v1/events`, verifying delivery, running the anti-bluff battery. Known limitations + Wave 4 transport roadmap (HTTP/3 + Brotli + TOON — design doc landed in commit `c60b3fd`) called out at the end. |
+| Status summary | r3: added a §5 mention + doc-link that subscribers speak plain natural language (no command syntax) and the System determines intent via the three-tier discipline (command-recognition fast-path → Claude Code intent inference → `clarify` reply-tag-and-ask fallback), never guessing / never ignoring — authoritative contract `docs/design/INTENT_RECOGNITION.md`, detail in `MESSENGER_CHANNELS.md` §6B + `PHERALD.md` §5. Prior r2: added a §5 mention + doc-link for the `HERALD_<CHANNEL>_OPERATOR_USERNAME` operator env var and the participant/attribution contract (`docs/design/PARTICIPANT_ATTRIBUTION.md`) driving `created_by`/`assigned_to` attribution + notification @-tagging. First-cut consumer integration guide written after Wave 3b lands the §32 7-stage Runner (commit `c2b67c3`). Covers: adding Herald as a submodule, the parent-discovery contract for the HelixConstitution, credential configuration via the wizard, running migrations, starting `pherald serve`, emitting a first CloudEvent via `POST /v1/events`, verifying delivery, running the anti-bluff battery. Known limitations + Wave 4 transport roadmap (HTTP/3 + Brotli + TOON — design doc landed in commit `c60b3fd`) called out at the end. |
 | Issues | none |
 | Issues summary | — |
 | Fixed | (n/a — first revision) |
@@ -182,6 +182,8 @@ The wizard:
 **Available services**: `telegram`, `claude-code`, `all`. Other channels (Slack, Email, etc.) are documented in `docs/guides/messengers/` but their wizard flows haven't shipped yet.
 
 **Operator identity for attribution + @-tagging.** Set `HERALD_TGRAM_OPERATOR_USERNAME` (e.g. `@milos85vasic`; generalizes to `HERALD_<CHANNEL>_OPERATOR_USERNAME`) to designate yourself as the operator. It drives workable-item `created_by`/`assigned_to` attribution and the notification @-tagging matrix (the operator and the `Claude` system agent are never tagged). Authoritative contract: [`docs/design/PARTICIPANT_ATTRIBUTION.md`](design/PARTICIPANT_ATTRIBUTION.md); operator setup in [`docs/guides/OPERATOR_CREDENTIALS.md`](guides/OPERATOR_CREDENTIALS.md) Step 4b; full behaviour in [`docs/guides/WORKABLE_ITEMS_INTEGRATION.md`](guides/WORKABLE_ITEMS_INTEGRATION.md) §3.6–§3.8.
+
+**Intent recognition — subscribers speak plain natural language.** Subscribers writing to a Herald channel (e.g. via `pherald listen`) do NOT need to know any command syntax (no `COMMAND:` prefix). They send a clear message in their own words and the System determines the intent via a three-tier discipline — a deterministic command-recognition fast-path, then Claude Code intent inference, then a `clarify` fallback that replies, @-tags the sender, and asks a precise clarifying question. The System never guesses an action and never ignores a message. Authoritative contract: [`docs/design/INTENT_RECOGNITION.md`](design/INTENT_RECOGNITION.md); operator-facing detail in [`docs/guides/MESSENGER_CHANNELS.md`](guides/MESSENGER_CHANNELS.md) §6B and [`docs/guides/PHERALD.md`](guides/PHERALD.md) §5.
 
 ---
 

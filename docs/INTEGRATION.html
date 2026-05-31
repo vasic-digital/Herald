@@ -112,7 +112,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>2</td>
+<td>3</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -128,7 +128,14 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td>r2: added a §5 mention + doc-link for the
+<td>r3: added a §5 mention + doc-link that subscribers speak plain
+natural language (no command syntax) and the System determines intent
+via the three-tier discipline (command-recognition fast-path → Claude
+Code intent inference → <code>clarify</code> reply-tag-and-ask
+fallback), never guessing / never ignoring — authoritative contract
+<code>docs/design/INTENT_RECOGNITION.md</code>, detail in
+<code>MESSENGER_CHANNELS.md</code> §6B + <code>PHERALD.md</code> §5.
+Prior r2: added a §5 mention + doc-link for the
 <code>HERALD_&lt;CHANNEL&gt;_OPERATOR_USERNAME</code> operator env var
 and the participant/attribution contract
 (<code>docs/design/PARTICIPANT_ATTRIBUTION.md</code>) driving
@@ -471,6 +478,20 @@ href="guides/OPERATOR_CREDENTIALS.md"><code>docs/guides/OPERATOR_CREDENTIALS.md<
 Step 4b; full behaviour in <a
 href="guides/WORKABLE_ITEMS_INTEGRATION.md"><code>docs/guides/WORKABLE_ITEMS_INTEGRATION.md</code></a>
 §3.6–§3.8.</p>
+<p><strong>Intent recognition — subscribers speak plain natural
+language.</strong> Subscribers writing to a Herald channel (e.g. via
+<code>pherald listen</code>) do NOT need to know any command syntax (no
+<code>COMMAND:</code> prefix). They send a clear message in their own
+words and the System determines the intent via a three-tier discipline —
+a deterministic command-recognition fast-path, then Claude Code intent
+inference, then a <code>clarify</code> fallback that replies, @-tags the
+sender, and asks a precise clarifying question. The System never guesses
+an action and never ignores a message. Authoritative contract: <a
+href="design/INTENT_RECOGNITION.md"><code>docs/design/INTENT_RECOGNITION.md</code></a>;
+operator-facing detail in <a
+href="guides/MESSENGER_CHANNELS.md"><code>docs/guides/MESSENGER_CHANNELS.md</code></a>
+§6B and <a
+href="guides/PHERALD.md"><code>docs/guides/PHERALD.md</code></a> §5.</p>
 <hr />
 <h2 id="6-database--redis-migrations--bring-up">§6. Database + Redis
 (migrations + bring-up)</h2>

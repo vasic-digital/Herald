@@ -112,7 +112,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>4</td>
+<td>5</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -128,7 +128,14 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td>r4: added a credentials-guide bullet + doc-link for the
+<td>r5: added an "Operator setup guides" note + doc-link that
+subscribers speak plain natural language (no command syntax) and the
+System determines intent via the three-tier discipline
+(command-recognition fast-path → Claude Code intent inference →
+<code>clarify</code> reply-tag-and-ask fallback) — authoritative
+contract <code>docs/design/INTENT_RECOGNITION.md</code>, detail in
+<code>docs/guides/MESSENGER_CHANNELS.md</code> §6B. Prior r4: added a
+credentials-guide bullet + doc-link for the
 <code>HERALD_&lt;CHANNEL&gt;_OPERATOR_USERNAME</code> operator env var
 and the participant/attribution contract
 (<code>docs/design/PARTICIPANT_ATTRIBUTION.md</code>) driving
@@ -358,6 +365,19 @@ ones are detailed end-to-end (obtain credentials → set env vars → verify
 integration tests → troubleshooting). <strong>Planned</strong> ones are
 placeholder stubs that reserve the env-var names so your
 <code>.env</code> stays stable as features land.</p>
+<blockquote>
+<p><strong>Subscribers speak plain natural language — no command
+syntax.</strong> Whichever messenger they use, subscribers do NOT need
+to learn any command syntax (no <code>COMMAND:</code> prefix). They send
+a clear message in their own words and the System determines the intent
+via a three-tier discipline (command-recognition fast-path → Claude Code
+intent inference → a <code>clarify</code> reply-tag-and-ask fallback),
+never guessing and never ignoring a message. Authoritative contract: <a
+href="docs/design/INTENT_RECOGNITION.md"><code>docs/design/INTENT_RECOGNITION.md</code></a>;
+operator-facing detail in <a
+href="docs/guides/MESSENGER_CHANNELS.md"><code>docs/guides/MESSENGER_CHANNELS.md</code></a>
+§6B.</p>
+</blockquote>
 <h3 id="messengers">Messengers</h3>
 <table>
 <thead>

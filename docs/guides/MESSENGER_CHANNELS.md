@@ -8,11 +8,11 @@
 
 | Field | Value |
 |---|---|
-| Revision | 2 |
+| Revision | 3 |
 | Created | 2026-05-28 |
 | Last modified | 2026-05-31 |
 | Status | active |
-| Status summary | r2: added §6A (Participant identity, attribution & @-tagging) documenting the participant/attribution contract (`docs/design/PARTICIPANT_ATTRIBUTION.md`) — per-channel `subscribers`/`subscriber_aliases.username` mapping, the `HERALD_<CHANNEL>_OPERATOR_USERNAME` operator env var (`HERALD_TGRAM_OPERATOR_USERNAME=@milos85vasic`), and the @-tagging matrix (Claude + Operator never tagged). Operator-facing reference for Herald's Wave 7 generic messenger-channel framework. Documents the `commons_messaging/channels.Channel` interface (the richer inbound contract that embeds the §11.0 outbound `commons.Channel`), the `init()`-driven registry that resolves channel names at runtime, the per-channel content-addressed inbox (`~/.herald/inbox/<channel>/<sha256>.<ext>`), the generalized self-filter that defends every adapter against echo-loops, the `HERALD_CHANNELS` selector that drives multi-channel `pherald listen`, the two live adapters (Telegram since Wave 6, Slack since Wave 7 T6), the URL-scheme parsers, the implementer checklist for adding a new channel, the troubleshooting cookbook, and the operator pre-deploy audit checklist. |
+| Status summary | r3: added §6B (Intent recognition — subscribers speak plain natural language) documenting the intent-recognition contract (`docs/design/INTENT_RECOGNITION.md`) — NO command syntax / no `COMMAND:` prefix; the three-tier resolution (Tier 1 deterministic CommandRecognizer fast-path → Tier 2 LLM intent inference → Tier 3 `clarify` reply-tag-and-ask fallback); the command set the System recognizes; and the never-guess / never-ignore behaviour. Prior r2: added §6A (Participant identity, attribution & @-tagging) documenting the participant/attribution contract (`docs/design/PARTICIPANT_ATTRIBUTION.md`) — per-channel `subscribers`/`subscriber_aliases.username` mapping, the `HERALD_<CHANNEL>_OPERATOR_USERNAME` operator env var (`HERALD_TGRAM_OPERATOR_USERNAME=@milos85vasic`), and the @-tagging matrix (Claude + Operator never tagged). Operator-facing reference for Herald's Wave 7 generic messenger-channel framework. Documents the `commons_messaging/channels.Channel` interface (the richer inbound contract that embeds the §11.0 outbound `commons.Channel`), the `init()`-driven registry that resolves channel names at runtime, the per-channel content-addressed inbox (`~/.herald/inbox/<channel>/<sha256>.<ext>`), the generalized self-filter that defends every adapter against echo-loops, the `HERALD_CHANNELS` selector that drives multi-channel `pherald listen`, the two live adapters (Telegram since Wave 6, Slack since Wave 7 T6), the URL-scheme parsers, the implementer checklist for adding a new channel, the troubleshooting cookbook, and the operator pre-deploy audit checklist. |
 | Issues | none |
 | Issues summary | — |
 | Fixed | (n/a — new guide) |
@@ -27,6 +27,7 @@
 - [§5. Per-channel inbox isolation](#5-per-channel-inbox-isolation)
 - [§6. Self-filter (anti-echo-loop)](#6-self-filter-anti-echo-loop)
 - [§6A. Participant identity, attribution & @-tagging](#6a-participant-identity-attribution--tagging-per-docsdesignparticipant_attributionmd)
+- [§6B. Intent recognition (subscribers speak plain natural language)](#6b-intent-recognition-subscribers-speak-plain-natural-language-per-docsdesignintent_recognitionmd)
 - [§7. URL schemes](#7-url-schemes)
 - [§8. Adding a new channel](#8-adding-a-new-channel)
 - [§9. Troubleshooting](#9-troubleshooting)
@@ -355,6 +356,39 @@ On any workable-item event, the outbound notification to each channel @-tags the
 - de-dup, then resolve each handle to the channel's `@username` and skip any participant with no alias on that channel.
 
 The `tgram` adapter renders a mention as `@username` (a Telegram username mention reaches a group member); other adapters render their channel's native mention syntax (Slack `<@U…>`, etc. — future). Attribution columns + the wiring points are documented in [`WORKABLE_ITEMS_INTEGRATION.md`](WORKABLE_ITEMS_INTEGRATION.md) §3.6–§3.8.
+
+---
+
+## §6B. Intent recognition (subscribers speak plain natural language, per `docs/design/INTENT_RECOGNITION.md`)
+
+Subscribers on **every** channel speak **plain natural language**. There is **no command syntax** — no `COMMAND:` prefix, no fixed grammar, nothing to memorize. A subscriber writes a clear message in their own words and the System determines the intent. "can you close ATM-123 please" is exactly as valid as any other phrasing. The single authoritative contract is [`docs/design/INTENT_RECOGNITION.md`](../design/INTENT_RECOGNITION.md).
+
+### §6B.1 Three-tier resolution
+
+Every inbound subscriber message (from any channel) is resolved to exactly one action via three tiers, in order — the first that succeeds wins:
+
+1. **Tier 1 — command recognition.** A deterministic `CommandRecognizer` (`pherald/internal/inbound`) maps a clear natural-language imperative to a structured action WITHOUT an LLM round-trip (fast-path; no prefix). It is conservative — only a confident match fast-paths, otherwise it defers to Tier 2.
+2. **Tier 2 — intent inference.** When no command matches, the shared Claude Code dispatch (the LLM) infers the intent from the message and returns the action. The dispatch envelope instructs the LLM to recognize Herald's command set, map natural language to the right action, and never guess.
+3. **Tier 3 — clarify (fallback).** When neither a command nor a confident intent can be determined, the System **replies** to the original message, **@-tags the sender** (resolved via the §6A participant `@username` mapping), and asks a **precise** clarifying question naming the candidate intents (e.g. "@user, did you want to close ATM-9, reassign it, or just get its status?").
+
+### §6B.2 The command set the System recognizes
+
+Recognized intents (case-insensitive, phrasing-tolerant — examples, not an exhaustive grammar):
+
+| Natural-language intent (examples) | resulting action |
+|---|---|
+| "close ATM-123", "mark ATM-5 fixed/done/resolved" | update the item's status |
+| "set ATM-9 to in progress", "ATM-9 is blocked" | update the item's status |
+| "assign ATM-5 to @bob", "give ATM-5 to @bob" | reassign the item |
+| "open a bug: …", "create a task: …", "new feature request: …" | open a new item (created_by = sender) |
+| "investigate ATM-7", "look into ATM-7" | start an investigation |
+| "status of ATM-9?", "what's ATM-9?" | reply with the item's status |
+| any question / conversational message | a conversational reply |
+| ambiguous / unparseable | a clarifying question (Tier 3) |
+
+### §6B.3 Never guess, never ignore
+
+Two rules bind every channel: a **wrong** action is worse than a clarifying question, so the System **never guesses** an action; and every inbound message resolves to exactly one action, so a subscriber is **never ignored** — genuine ambiguity is always answered with a tagged, threaded clarifying reply. This is the anti-annoyance guarantee: the subscriber never has to learn syntax and always gets a response.
 
 ---
 

@@ -8,11 +8,11 @@
 
 | Field | Value |
 |---|---|
-| Revision | 4 |
+| Revision | 5 |
 | Created | 2026-05-15 |
 | Last modified | 2026-05-31 |
 | Status | active |
-| Status summary | r4: added a credentials-guide bullet + doc-link for the `HERALD_<CHANNEL>_OPERATOR_USERNAME` operator env var and the participant/attribution contract (`docs/design/PARTICIPANT_ATTRIBUTION.md`) driving `created_by`/`assigned_to` attribution + notification @-tagging. Prior r3: updated spec links to V3 (active) + archive/ for V1/V2; repo-layout block reflects current docs/specs/mvp/ tree. |
+| Status summary | r5: added an "Operator setup guides" note + doc-link that subscribers speak plain natural language (no command syntax) and the System determines intent via the three-tier discipline (command-recognition fast-path → Claude Code intent inference → `clarify` reply-tag-and-ask fallback) — authoritative contract `docs/design/INTENT_RECOGNITION.md`, detail in `docs/guides/MESSENGER_CHANNELS.md` §6B. Prior r4: added a credentials-guide bullet + doc-link for the `HERALD_<CHANNEL>_OPERATOR_USERNAME` operator env var and the participant/attribution contract (`docs/design/PARTICIPANT_ATTRIBUTION.md`) driving `created_by`/`assigned_to` attribution + notification @-tagging. Prior r3: updated spec links to V3 (active) + archive/ for V1/V2; repo-layout block reflects current docs/specs/mvp/ tree. |
 | Issues | none |
 | Issues summary | — |
 | Fixed | spec-path references updated to specification.V3.md path |
@@ -157,6 +157,8 @@ In this order, read fully before submitting any change:
 ## Operator setup guides
 
 Every supported messenger and every supported LLM / agent dispatcher has its own step-by-step setup guide under [`docs/guides/`](docs/guides/). **Live** ones are detailed end-to-end (obtain credentials → set env vars → verify integration tests → troubleshooting). **Planned** ones are placeholder stubs that reserve the env-var names so your `.env` stays stable as features land.
+
+> **Subscribers speak plain natural language — no command syntax.** Whichever messenger they use, subscribers do NOT need to learn any command syntax (no `COMMAND:` prefix). They send a clear message in their own words and the System determines the intent via a three-tier discipline (command-recognition fast-path → Claude Code intent inference → a `clarify` reply-tag-and-ask fallback), never guessing and never ignoring a message. Authoritative contract: [`docs/design/INTENT_RECOGNITION.md`](docs/design/INTENT_RECOGNITION.md); operator-facing detail in [`docs/guides/MESSENGER_CHANNELS.md`](docs/guides/MESSENGER_CHANNELS.md) §6B.
 
 ### Messengers
 

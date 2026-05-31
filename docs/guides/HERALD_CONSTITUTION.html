@@ -112,7 +112,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>11</td>
+<td>12</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -128,12 +128,26 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td>r11: added §109 (Participant identity, attribution &amp;
-notification-tagging) restating the operator mandate (2026-05-31) at
-Herald project-constitution level — per-messenger Participant identity
-(<code>subscribers</code> + <code>subscriber_aliases.username</code>),
-the <code>HERALD_&lt;CHANNEL&gt;_OPERATOR_USERNAME</code> operator env
-var (<code>HERALD_TGRAM_OPERATOR_USERNAME=@milos85vasic</code>),
+<td>r12: added §110 (Intent recognition &amp; clarification) restating
+the operator mandate (2026-05-31) at Herald project-constitution level —
+subscribers speak plain natural language (NO command syntax / no
+<code>COMMAND:</code> prefix); the three-tier intent-resolution
+discipline (Tier 1 deterministic CommandRecognizer fast-path → Tier 2
+LLM intent inference via the
+<code>&lt;&lt;&lt;HERALD-DISPATCH-v1&gt;&gt;&gt;</code> envelope → Tier
+3 <code>action="clarify"</code> reply-tag-and-ask fallback) as a table;
+the command set Tier 1 recognizes as a table; the "never guess / never
+ignore" rules; cites the authoritative contract
+<code>docs/design/INTENT_RECOGNITION.md</code> and notes inheritance
+from HelixConstitution §11.4.105 (the root-§ being added on the
+constitution stream) per §11.4.35; restated + cited, not redefined; ToC
+entry added. Prior r11: added §109 (Participant identity, attribution
+&amp; notification-tagging) restating the operator mandate (2026-05-31)
+at Herald project-constitution level — per-messenger Participant
+identity (<code>subscribers</code> +
+<code>subscriber_aliases.username</code>), the
+<code>HERALD_&lt;CHANNEL&gt;_OPERATOR_USERNAME</code> operator env var
+(<code>HERALD_TGRAM_OPERATOR_USERNAME=@milos85vasic</code>),
 <code>created_by</code>/<code>assigned_to</code> attribution, and the
 @-tagging matrix (Claude + Operator never tagged) as a table; cites the
 authoritative contract
@@ -260,6 +274,9 @@ Inherited covenant restatements (Helix §11.4.85 / §11.4.87 / §11.4.88 /
 <li><a
 href="#109-participant-identity-attribution--notification-tagging-operator-mandate-2026-05-31-inherited-from-helixconstitution-per-11435">§109.
 Participant identity, attribution &amp; notification-tagging</a></li>
+<li><a
+href="#110-intent-recognition--clarification-operator-mandate-2026-05-31-inherited-from-helixconstitution-114105-per-11435">§110.
+Intent recognition &amp; clarification</a></li>
 </ul></li>
 <li><a href="#overrides-of-universal-constitution">Overrides of
 Universal Constitution</a></li>
@@ -1693,6 +1710,198 @@ behaviour without the captured evidence above is itself a §107
 PASS-bluff. No <code>--skip-attribution</code>,
 <code>--tag-later</code>, <code>--operator-tag-OK</code> flag
 exists.</p>
+<hr />
+<h3
+id="110-intent-recognition--clarification-operator-mandate-2026-05-31-inherited-from-helixconstitution-114105-per-11435">§110.
+Intent recognition &amp; clarification (operator mandate, 2026-05-31;
+inherited from HelixConstitution §11.4.105 per §11.4.35)</h3>
+<p><strong>Forensic anchor — verbatim operator mandate
+(2026-05-31):</strong></p>
+<blockquote>
+<p>users must NOT need to know command syntax (no
+<code>COMMAND: …</code>). They send a clear natural-language message;
+the System determines the intent. The System recognizes the commands it
+has; if none matches it infers the exact intent; if it is <em>totally
+unable</em> it replies, tags the user (<code>@user …</code>), and asks
+to clarify precisely. We MUST always do our best to determine exact
+intent so we never annoy end users. This is a CORE part of the
+System.</p>
+</blockquote>
+<p><strong>Canonical authority.</strong> The single authoritative
+contract every implementation stream codes against is <a
+href="../design/INTENT_RECOGNITION.md"><code>docs/design/INTENT_RECOGNITION.md</code></a>.
+The mandatory rules are restated (root definitions) in HelixConstitution
+<code>Constitution.md</code> / <code>CLAUDE.md</code> /
+<code>AGENTS.md</code> / <code>QWEN.md</code> as §11.4.105 (the root-§
+being added on the constitution stream) and inherited per §11.4.35;
+Herald §110 is the project-binding restatement. Herald <strong>restates
++ cites</strong>, it does NOT redefine or weaken.</p>
+<h4 id="1101-no-command-syntax-required">§110.1. No command syntax
+required</h4>
+<p>Subscribers speak <strong>plain natural language</strong>. There is
+no <code>COMMAND:</code> prefix, no fixed grammar, and nothing the end
+user must memorize. Herald's job is to determine the intent from the
+message itself. A subscriber writing "can you close ATM-123 please" is
+exactly as valid as any other phrasing — the System maps it to the right
+action.</p>
+<h4
+id="1102-three-tier-intent-resolution-the-mandatory-discipline">§110.2.
+Three-tier intent resolution (the mandatory discipline)</h4>
+<p>Every inbound subscriber message is resolved to exactly one action
+via three tiers, in order — the <strong>first tier that succeeds
+wins</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Tier</th>
+<th>Mechanism</th>
+<th>Behaviour</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Tier 1 — command recognition</strong></td>
+<td>A deterministic <code>CommandRecognizer</code> in
+<code>pherald/internal/inbound</code>, tried BEFORE any LLM
+dispatch.</td>
+<td>Maps a clear natural-language imperative to a structured action
+WITHOUT an LLM round-trip (fast-path; no prefix). Deliberately
+CONSERVATIVE — only a confident match (clear imperative verb +
+resolvable target) fast-paths; otherwise it returns "no match" and
+defers to Tier 2. A false command-match is worse than deferring to the
+LLM.</td>
+</tr>
+<tr>
+<td><strong>Tier 2 — intent inference</strong></td>
+<td>The Claude Code dispatch (the LLM) when no command matched.</td>
+<td>Infers the intent from the message and returns a
+<code>&lt;&lt;&lt;HERALD-REPLY&gt;&gt;&gt;</code> action. The
+<code>&lt;&lt;&lt;HERALD-DISPATCH-v1&gt;&gt;&gt;</code> envelope
+INSTRUCTS the LLM to recognize Herald's command set, map natural
+language to the right action, and NEVER guess.</td>
+</tr>
+<tr>
+<td><strong>Tier 3 — clarify (fallback)</strong></td>
+<td><code>action="clarify"</code> when neither a command nor a confident
+intent can be determined.</td>
+<td>The System REPLIES to the original message, TAGS the sender
+(<code>@username</code>, resolved via the §11.4.104
+<code>IdentityResolver.UsernameFor</code> — fall back to the raw sender
+handle if no alias), and asks a precise clarifying question naming the
+candidate intents. No guessing, no silent drop.</td>
+</tr>
+</tbody>
+</table>
+<p>Tier 3 is the <strong>anti-annoyance guarantee</strong>: the
+subscriber is never ignored and never has to learn syntax — at worst
+they get a friendly, specific "@user, did you mean X or Y?" rather than
+a generic "I didn't understand".</p>
+<h4
+id="1103-the-command-set-tier-1-recognizes-natural-language--action">§110.3.
+The command set Tier 1 recognizes (natural-language → action)</h4>
+<p>The recognizer maps unambiguous imperatives (with an
+<code>ATM-NNN</code>/item id where relevant) to the EXISTING inbound
+actions — no special prefix, case-insensitive, phrasing-tolerant:</p>
+<table>
+<thead>
+<tr>
+<th>Natural-language intent (examples)</th>
+<th>action</th>
+<th>fields</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>"close ATM-123", "mark ATM-5 fixed/done/resolved"</td>
+<td><code>item.update</code></td>
+<td>status=closed/fixed</td>
+</tr>
+<tr>
+<td>"set ATM-9 to in progress", "ATM-9 is blocked"</td>
+<td><code>item.update</code></td>
+<td>status=&lt;parsed&gt;</td>
+</tr>
+<tr>
+<td>"assign ATM-5 to @bob", "give ATM-5 to @bob"</td>
+<td><code>item.update</code></td>
+<td>assigned_to=@bob</td>
+</tr>
+<tr>
+<td>"open a bug: &lt;title&gt;", "create a task: &lt;title&gt;", "new
+feature request: &lt;title&gt;"</td>
+<td><code>issue.open</code></td>
+<td>type+title (created_by=sender)</td>
+</tr>
+<tr>
+<td>"investigate ATM-7", "look into ATM-7"</td>
+<td><code>investigation.start</code></td>
+<td>atm_id</td>
+</tr>
+<tr>
+<td>"status of ATM-9?", "what's ATM-9?"</td>
+<td><code>reply</code> (query)</td>
+<td>atm_id</td>
+</tr>
+<tr>
+<td>anything conversational / a question</td>
+<td><code>reply</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td>ambiguous / unparseable intent</td>
+<td><code>clarify</code></td>
+<td>question</td>
+</tr>
+</tbody>
+</table>
+<h4 id="1104-the-clarify-action--never-guess-never-ignore">§110.4. The
+<code>clarify</code> action — never guess, never ignore</h4>
+<p><code>&lt;&lt;&lt;HERALD-REPLY&gt;&gt;&gt;</code> gains
+<code>action: "clarify"</code> carrying a precise <code>question</code>.
+On <code>action=clarify</code>, the inbound handler sends a reply to the
+original message (quoting/threading it) whose body is
+<code>@&lt;sender-username&gt; &lt;question&gt;</code> — the sender
+resolved to their per-channel <code>@username</code> via the §11.4.104
+<code>IdentityResolver</code>. The question MUST be specific (name the
+candidate intents), never a generic "I didn't understand".</p>
+<p>Two hard rules bind every tier:</p>
+<ul>
+<li><strong>Never guess an action.</strong> A wrong action is worse than
+a clarifying question (§11.4.6 no-guessing). The LLM (Tier 2) is
+instructed — via the envelope/system prompt — to RETURN
+<code>action=clarify</code> with a precise question whenever it cannot
+determine the intent with confidence, rather than guess.</li>
+<li><strong>Never ignore a message.</strong> Every inbound message
+resolves to exactly one action; genuine ambiguity reaches Tier 3 and is
+always answered, tagged, and threaded back to the sender.</li>
+</ul>
+<h4 id="1105-wiring--anti-bluff">§110.5. Wiring &amp; anti-bluff</h4>
+<ul>
+<li><strong>Wiring.</strong> <code>pherald/internal/inbound</code> runs
+the <code>CommandRecognizer</code> (Tier 1) before the Claude Code
+dispatch (Tier 2); a parsed <code>Reply.Action</code> of
+<code>clarify</code> (Tier 3) routes to a <code>clarifyHandler</code>
+that tags the sender and asks.
+<code>commons_messaging/dispatch/claude_code</code> carries the additive
+envelope instruction (§110.2 Tier 2). The clarify reply reuses the §109
+/ §11.4.104 participant <code>@username</code> resolution.</li>
+<li><strong>Anti-bluff (§107 / Helix §11.4).</strong> Every tier ships
+unit + integration + E2E + full-automation tests with real captured
+evidence under <code>docs/qa/&lt;run-id&gt;/</code>: a Tier-1
+truth-table of natural-language messages → expected action+fields (and
+the conservative negatives that MUST fall through to "no match"); a
+Tier-3 E2E where an ambiguous message drives a real dispatch whose
+recording-sink reply body is EXACTLY
+<code>@&lt;sender&gt; &lt;specific question&gt;</code> (proving the user
+is tagged + asked, not ignored) plus a NEGATIVE proving a clear command
+does NOT trigger clarify; a paired §1.1 mutation gate (break the
+recognizer's confidence guard so it false-matches, OR drop the clarify
+tag) that MUST FAIL.</li>
+</ul>
+<p><strong>Non-compliance is a release blocker.</strong> Documenting
+intent-resolution behaviour without the captured evidence above is
+itself a §107 PASS-bluff. No <code>--skip-intent</code>,
+<code>--guess-OK</code>, <code>--clarify-later</code> flag exists.</p>
 <hr />
 <h2 id="overrides-of-universal-constitution">Overrides of Universal
 Constitution</h2>

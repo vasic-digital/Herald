@@ -112,7 +112,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>13</td>
+<td>14</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -128,11 +128,24 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td>r13: propagated the participant/attribution/tagging mandate
-(operator 2026-05-31) into the agent-rule cluster as a short-form
-restatement — new "Participant identity, attribution &amp;
-notification-tagging" section + ToC entry — citing the authoritative
-contract <code>docs/design/PARTICIPANT_ATTRIBUTION.md</code> and noting
+<td>r14: propagated the intent-recognition mandate (operator 2026-05-31)
+into the agent-rule cluster as a short-form restatement — new "Intent
+recognition &amp; clarification" section + ToC entry — citing the
+authoritative contract <code>docs/design/INTENT_RECOGNITION.md</code>
+and noting inheritance from HelixConstitution §11.4.105 (the root-§
+being added on the constitution stream), inherited per §11.4.35. Covers:
+subscribers speak plain natural language (NO command syntax / no
+<code>COMMAND:</code> prefix); three-tier resolution (Tier 1
+deterministic CommandRecognizer fast-path → Tier 2 LLM intent inference
+via the <code>&lt;&lt;&lt;HERALD-DISPATCH-v1&gt;&gt;&gt;</code> envelope
+→ Tier 3 <code>action="clarify"</code> reply-tag-and-ask fallback via
+the §11.4.104 IdentityResolver); never guess an action, never ignore a
+message. Restated + cited, not redefined. Prior r13: propagated the
+participant/attribution/tagging mandate (operator 2026-05-31) into the
+agent-rule cluster as a short-form restatement — new "Participant
+identity, attribution &amp; notification-tagging" section + ToC entry —
+citing the authoritative contract
+<code>docs/design/PARTICIPANT_ATTRIBUTION.md</code> and noting
 inheritance from HelixConstitution per §11.4.35. Covers per-messenger
 Participant identity
 (<code>subscribers</code>/<code>subscriber_aliases.username</code>), the
@@ -250,6 +263,10 @@ covenant restatements — Helix §11.4.85 / §11.4.87 / §11.4.88 / §11.4.89
 href="#participant-identity-attribution--notification-tagging-herald-109--contract-docsdesignparticipant_attributionmd--inherited-per-11435">Participant
 identity, attribution &amp; notification-tagging (Herald §109 / contract
 <code>docs/design/PARTICIPANT_ATTRIBUTION.md</code>)</a></li>
+<li><a
+href="#intent-recognition--clarification-herald-110--contract-docsdesignintent_recognitionmd--inherited-from-helixconstitution-114105-per-11435">Intent
+recognition &amp; clarification (Herald §110 / contract
+<code>docs/design/INTENT_RECOGNITION.md</code>)</a></li>
 <li><a
 href="#inheritance-gate-run-before-any-commit-that-touches-root-docs-or-constitution">Inheritance
 gate (run before any commit that touches root docs or
@@ -866,6 +883,55 @@ NEGATIVE case proving the Operator is NOT tagged (§107 / Helix §11.4
 anti-bluff). Canonical authority: HelixConstitution root
 §participant-attribution (inherited per §11.4.35); Herald contract
 <code>docs/design/PARTICIPANT_ATTRIBUTION.md</code>.</li>
+</ul>
+<h3
+id="intent-recognition--clarification-herald-110--contract-docsdesignintent_recognitionmd--inherited-from-helixconstitution-114105-per-11435">Intent
+recognition &amp; clarification (Herald §110 / contract
+<code>docs/design/INTENT_RECOGNITION.md</code> — inherited from
+HelixConstitution §11.4.105 per §11.4.35)</h3>
+<p><strong>Agent-binding rule (operator mandate, 2026-05-31).</strong>
+Subscribers must NOT need to know command syntax — there is no
+<code>COMMAND:</code> prefix and no fixed grammar. A subscriber sends a
+clear natural-language message and <strong>the System determines the
+intent</strong>. The <strong>single authoritative contract</strong>
+every agent codes against is <a
+href="docs/design/INTENT_RECOGNITION.md"><code>docs/design/INTENT_RECOGNITION.md</code></a>.
+These rules are restated (root definitions) in HelixConstitution
+<code>Constitution.md</code> / <code>CLAUDE.md</code> /
+<code>AGENTS.md</code> / <code>QWEN.md</code> as §11.4.105 (the root-§
+being added on the constitution stream) and inherited here per §11.4.35
+— the agent restates + cites, never redefines or weakens.</p>
+<ul>
+<li><strong>Three-tier resolution (first tier that succeeds
+wins).</strong> <strong>Tier 1 — command recognition:</strong> a
+deterministic <code>CommandRecognizer</code>
+(<code>pherald/internal/inbound</code>) maps a clear natural-language
+imperative to a structured action WITHOUT an LLM round-trip (fast-path,
+no prefix). It is CONSERVATIVE — only a confident match fast-paths; when
+in doubt it returns "no match" and defers to Tier 2. <strong>Tier 2 —
+intent inference:</strong> when no command matches, the Claude Code
+dispatch (the LLM) infers intent and returns a
+<code>&lt;&lt;&lt;HERALD-REPLY&gt;&gt;&gt;</code> action; the
+<code>&lt;&lt;&lt;HERALD-DISPATCH-v1&gt;&gt;&gt;</code> envelope
+INSTRUCTS the LLM to recognize Herald's command set, map natural
+language to the right action, and NEVER guess. <strong>Tier 3 — clarify
+(fallback):</strong> when neither a command nor a confident intent can
+be determined, <code>action="clarify"</code> — the System REPLIES to the
+original message, TAGS the sender (<code>@username</code>, via the
+§11.4.104 <code>IdentityResolver</code>), and asks a precise clarifying
+question naming the candidate intents.</li>
+<li><strong>Never guess, never ignore.</strong> A wrong action is worse
+than a clarifying question (§11.4.6 no-guessing); the subscriber is
+never silently dropped and never has to learn syntax. The agent ships
+unit + integration + E2E + full-automation tests with real captured
+evidence under <code>docs/qa/&lt;run-id&gt;/</code> — a Tier-1
+truth-table including the conservative negatives that MUST fall through
+to "no match", a Tier-3 E2E asserting the reply body is EXACTLY
+<code>@&lt;sender&gt; &lt;specific question&gt;</code>, and a paired
+§1.1 mutation (break the confidence guard or drop the clarify tag) that
+must FAIL (§107 / Helix §11.4 anti-bluff). Canonical authority:
+HelixConstitution Constitution.md §11.4.105 (inherited per §11.4.35);
+Herald contract <code>docs/design/INTENT_RECOGNITION.md</code>.</li>
 </ul>
 <h3
 id="inheritance-gate-run-before-any-commit-that-touches-root-docs-or-constitution">Inheritance

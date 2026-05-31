@@ -113,7 +113,7 @@ Channels (Operator Guide)</h1>
 <tbody>
 <tr>
 <td>Revision</td>
-<td>2</td>
+<td>3</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -129,7 +129,14 @@ Channels (Operator Guide)</h1>
 </tr>
 <tr>
 <td>Status summary</td>
-<td>r2: added §6A (Participant identity, attribution &amp; @-tagging)
+<td>r3: added §6B (Intent recognition — subscribers speak plain natural
+language) documenting the intent-recognition contract
+(<code>docs/design/INTENT_RECOGNITION.md</code>) — NO command syntax /
+no <code>COMMAND:</code> prefix; the three-tier resolution (Tier 1
+deterministic CommandRecognizer fast-path → Tier 2 LLM intent inference
+→ Tier 3 <code>clarify</code> reply-tag-and-ask fallback); the command
+set the System recognizes; and the never-guess / never-ignore behaviour.
+Prior r2: added §6A (Participant identity, attribution &amp; @-tagging)
 documenting the participant/attribution contract
 (<code>docs/design/PARTICIPANT_ATTRIBUTION.md</code>) — per-channel
 <code>subscribers</code>/<code>subscriber_aliases.username</code>
@@ -190,6 +197,9 @@ isolation</a></li>
 <li><a
 href="#6a-participant-identity-attribution--tagging-per-docsdesignparticipant_attributionmd">§6A.
 Participant identity, attribution &amp; @-tagging</a></li>
+<li><a
+href="#6b-intent-recognition-subscribers-speak-plain-natural-language-per-docsdesignintent_recognitionmd">§6B.
+Intent recognition (subscribers speak plain natural language)</a></li>
 <li><a href="#7-url-schemes">§7. URL schemes</a></li>
 <li><a href="#8-adding-a-new-channel">§8. Adding a new channel</a></li>
 <li><a href="#9-troubleshooting">§9. Troubleshooting</a></li>
@@ -847,6 +857,96 @@ member); other adapters render their channel's native mention syntax
 the wiring points are documented in <a
 href="WORKABLE_ITEMS_INTEGRATION.md"><code>WORKABLE_ITEMS_INTEGRATION.md</code></a>
 §3.6–§3.8.</p>
+<hr />
+<h2
+id="6b-intent-recognition-subscribers-speak-plain-natural-language-per-docsdesignintent_recognitionmd">§6B.
+Intent recognition (subscribers speak plain natural language, per
+<code>docs/design/INTENT_RECOGNITION.md</code>)</h2>
+<p>Subscribers on <strong>every</strong> channel speak <strong>plain
+natural language</strong>. There is <strong>no command syntax</strong> —
+no <code>COMMAND:</code> prefix, no fixed grammar, nothing to memorize.
+A subscriber writes a clear message in their own words and the System
+determines the intent. "can you close ATM-123 please" is exactly as
+valid as any other phrasing. The single authoritative contract is <a
+href="../design/INTENT_RECOGNITION.md"><code>docs/design/INTENT_RECOGNITION.md</code></a>.</p>
+<h3 id="6b1-three-tier-resolution">§6B.1 Three-tier resolution</h3>
+<p>Every inbound subscriber message (from any channel) is resolved to
+exactly one action via three tiers, in order — the first that succeeds
+wins:</p>
+<ol type="1">
+<li><strong>Tier 1 — command recognition.</strong> A deterministic
+<code>CommandRecognizer</code> (<code>pherald/internal/inbound</code>)
+maps a clear natural-language imperative to a structured action WITHOUT
+an LLM round-trip (fast-path; no prefix). It is conservative — only a
+confident match fast-paths, otherwise it defers to Tier 2.</li>
+<li><strong>Tier 2 — intent inference.</strong> When no command matches,
+the shared Claude Code dispatch (the LLM) infers the intent from the
+message and returns the action. The dispatch envelope instructs the LLM
+to recognize Herald's command set, map natural language to the right
+action, and never guess.</li>
+<li><strong>Tier 3 — clarify (fallback).</strong> When neither a command
+nor a confident intent can be determined, the System
+<strong>replies</strong> to the original message, <strong>@-tags the
+sender</strong> (resolved via the §6A participant <code>@username</code>
+mapping), and asks a <strong>precise</strong> clarifying question naming
+the candidate intents (e.g. "@user, did you want to close ATM-9,
+reassign it, or just get its status?").</li>
+</ol>
+<h3 id="6b2-the-command-set-the-system-recognizes">§6B.2 The command set
+the System recognizes</h3>
+<p>Recognized intents (case-insensitive, phrasing-tolerant — examples,
+not an exhaustive grammar):</p>
+<table>
+<thead>
+<tr>
+<th>Natural-language intent (examples)</th>
+<th>resulting action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>"close ATM-123", "mark ATM-5 fixed/done/resolved"</td>
+<td>update the item's status</td>
+</tr>
+<tr>
+<td>"set ATM-9 to in progress", "ATM-9 is blocked"</td>
+<td>update the item's status</td>
+</tr>
+<tr>
+<td>"assign ATM-5 to @bob", "give ATM-5 to @bob"</td>
+<td>reassign the item</td>
+</tr>
+<tr>
+<td>"open a bug: …", "create a task: …", "new feature request: …"</td>
+<td>open a new item (created_by = sender)</td>
+</tr>
+<tr>
+<td>"investigate ATM-7", "look into ATM-7"</td>
+<td>start an investigation</td>
+</tr>
+<tr>
+<td>"status of ATM-9?", "what's ATM-9?"</td>
+<td>reply with the item's status</td>
+</tr>
+<tr>
+<td>any question / conversational message</td>
+<td>a conversational reply</td>
+</tr>
+<tr>
+<td>ambiguous / unparseable</td>
+<td>a clarifying question (Tier 3)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="6b3-never-guess-never-ignore">§6B.3 Never guess, never
+ignore</h3>
+<p>Two rules bind every channel: a <strong>wrong</strong> action is
+worse than a clarifying question, so the System <strong>never
+guesses</strong> an action; and every inbound message resolves to
+exactly one action, so a subscriber is <strong>never ignored</strong> —
+genuine ambiguity is always answered with a tagged, threaded clarifying
+reply. This is the anti-annoyance guarantee: the subscriber never has to
+learn syntax and always gets a response.</p>
 <hr />
 <h2 id="7-url-schemes">§7. URL schemes</h2>
 <p>Adapters accept both env-driven <code>channels.Config</code>
