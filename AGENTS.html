@@ -112,7 +112,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>16</td>
+<td>17</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -128,12 +128,23 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td>r16: propagated HelixConstitution §11.4.106 (Docs Chain
-documentation-sync mandate, 2026-05-29) into the agent-rule
-inherited-covenant cluster as a short-form <code>**§11.4.106 …**</code>
-restatement citing the literal anchor <code>11.4.106</code>, inherited
-per §11.4.35; also added the cluster-header's previously-omitted
-§11.4.100. Herald-applicability APPLICABLE (in progress) — cites
+<td>r17: refreshed the stale "pre-implementation (2026-05-15) /
+Go-scaffold landed, 5 modules" project-status prose to current reality —
+<strong>18</strong> workspace modules (10 shared/foundation + 8 flavor
+binaries), waves 2–7 shipped, tag <strong>v0.6.0</strong> (2026-05-28),
+live <code>pherald listen</code> inbound runtime + Claude Code dispatch
++ Telegram &amp; Slack adapters + REST API + participant-attribution
+(§11.4.104) + intent-recognition (§11.4.105) + Docs Chain (§11.4.106);
+HRD-010/011/012/016 now LIVE; ~a-dozen open HRDs remain. Status prose
+ONLY — covenant/build/anti-bluff/inheritance content unchanged (merged
+from a parallel stream's worktree; took main's r16 §11.4.106 header +
+the stream's project-status prose). Prior r16: propagated
+HelixConstitution §11.4.106 (Docs Chain documentation-sync mandate,
+2026-05-29) into the agent-rule inherited-covenant cluster as a
+short-form <code>**§11.4.106 …**</code> restatement citing the literal
+anchor <code>11.4.106</code>, inherited per §11.4.35; also added the
+cluster-header's previously-omitted §11.4.100. Herald-applicability
+APPLICABLE (in progress) — cites
 <code>docs/research/docs_chain/HERALD_DOCS_CHAIN_PLAN.md</code>, the
 planned E146 drift-gate, and the open prerequisites (G6 exec-staging,
 dogfood binary-hash verify fix in flight); restated + cited, not
@@ -259,8 +270,9 @@ inherited per §11.4.35; restated + cited, not redefined.</td>
 </tr>
 <tr>
 <td>Continuation</td>
-<td>bump again when first-implementation cycle completes
-HRD-010..HRD-012/HRD-016 live integrations.</td>
+<td>bump again when the remaining open evidence-gated HRDs in
+<code>docs/Issues.md</code> close and the next release tag (post-v0.6.0)
+lands.</td>
 </tr>
 </tbody>
 </table>
@@ -351,13 +363,16 @@ hosts (GitHub + GitLab + GitFlic + GitVerse). Constitution §2.1.</li>
 <h2 id="herald-specific-agent-rules">Herald-specific agent rules</h2>
 <h3 id="project-status-load-bearing-for-every-task">Project status
 (load-bearing for every task)</h3>
-<p>Herald is <strong>pre-implementation</strong>. As of 2026-05-15 the
-repo contains:</p>
+<p>Herald is in <strong>active multi-wave implementation</strong> as of
+2026-05-31 — waves 2 through 7 have shipped and the latest tag is
+<strong>v0.6.0</strong> (2026-05-28). The repo contains:</p>
 <ul>
 <li><code>README.md</code> — mission, deployment model,
 constitution-inheritance contract, how to run.</li>
-<li><code>docs/specs/mvp/specification.V4.md</code> — MVP spec (section
-headings only; substantive content TBD).</li>
+<li><code>docs/specs/mvp/specification.V4.md</code> — MVP spec
+(participant-attribution §11.4.104 + intent-recognition §11.4.105
+incorporated; prior V-series archived under
+<code>docs/specs/mvp/archive/</code>).</li>
 <li><code>docs/guides/HERALD_CONSTITUTION.md</code> — project-specific
 constitutional extensions.</li>
 <li><code>docs/guides/CONSTITUTION_INHERITANCE.md</code> —
@@ -375,32 +390,40 @@ mutation meta-test (§1.1).</li>
 submodule of its own — see
 <code>docs/guides/CONSTITUTION_INHERITANCE.md</code> for the rationale
 and the discovery mechanism.</p>
-<p><strong>As of 2026-05-20</strong> the Go scaffold landed
-(first-implementation cycle r1). 5 Go modules (<code>commons</code>,
-<code>commons_prefix</code>, <code>commons_messaging</code>,
-<code>commons_storage</code>, <code>pherald</code>) compile + unit tests
-pass. <code>pherald version --json</code> returns build info. The full
-§11.0 type contract is realized in <code>commons/types.go</code>. The
-<code>null://</code> sandbox adapter is fully working with 8 unit tests.
-SQL migrations 000001..000005 embedded via <code>//go:embed</code>.
-Docker/Podman Compose for §26.5 Quickstart shipped under
-<code>quickstart/</code> (migrated from
-<code>containers/quickstart/</code> when the <code>containers/</code>
-submodule landed). On-demand container orchestration is provided by the
-<code>containers/</code> submodule
+<p><strong>As of 2026-05-31</strong> the codebase spans
+<strong>18</strong> Go workspace modules: 10 shared/foundation
+(<code>commons</code>, <code>commons_auth</code>,
+<code>commons_constitution</code>, <code>commons_infra</code>,
+<code>commons_messaging</code>, <code>commons_prefix</code>,
+<code>commons_storage</code>, <code>commons_tls</code>,
+<code>commons_watch</code>, <code>commons_workable</code>) + 8 flavor
+binaries (<code>pherald</code>, <code>sherald</code>,
+<code>cherald</code>, <code>bherald</code>, <code>rherald</code>,
+<code>iherald</code>, <code>scherald</code>, <code>qaherald</code>). The
+full §11.0 type contract is realized in <code>commons/types.go</code>.
+Live and tested: the <code>null://</code> sandbox adapter, the Telegram
+adapter (<code>getUpdates</code> long-poll + send + reply +
+<code>@</code>-mention render driving <code>pherald listen</code>), the
+Slack adapter (Wave 7), the Claude Code dispatcher (live
+<code>claude</code> invocation, Opus pinned, per-message timeout),
+<code>commons_storage</code> (pgx + River + Redis), the Gin
+<code>/v1/*</code> REST API, participant-attribution (§11.4.104),
+natural-language intent-recognition (§11.4.105), the Docs Chain
+documentation-sync mandate (§11.4.106), and the
+<code>commons_workable</code>/<code>commons_watch</code> ATMOSphere
+substrate (<code>pherald watch</code> daemon). On-demand container
+orchestration comes from the <code>containers/</code> submodule
 (<code>digital.vasic.containers</code>).</p>
 <p>Build + test from repo root:</p>
-<pre><code>go test ./commons/... ./commons_prefix/... ./commons_messaging/... ./commons_storage/...
-go build -o /tmp/pherald-dev ./pherald/cmd/pherald</code></pre>
-<p>What's NOT yet live (per <code>docs/Issues.md</code>):</p>
-<ul>
-<li>HRD-008 operator-side Quickstart compose validation.</li>
-<li>HRD-010 commons_storage live (pgx + River + Redis).</li>
-<li>HRD-011 Telegram adapter live (telebot + getUpdates).</li>
-<li>HRD-012 Claude Code dispatcher live
-(<code>claude --resume</code>).</li>
-<li>HRD-016 REST API per §41 (Gin Gonic).</li>
-</ul>
+<pre><code>go build ./commons/... ./commons_prefix/... ./commons_messaging/... ./commons_storage/... ./commons_constitution/... ./commons_infra/... ./pherald/...
+go test -race -count=1 ./commons/... ./commons_prefix/... ./commons_messaging/... ./commons_storage/... ./commons_constitution/... ./commons_infra/... ./pherald/...</code></pre>
+<p>Still open (roughly a dozen evidence-gated HRDs in
+<code>docs/Issues.md</code> — live-integration credentials +
+later-iteration channels); the bulk of the catalogue migrated to
+<code>docs/Fixed.md</code> in the v1.0.0 closure sweep. Consult
+<code>docs/Issues.md</code> for the current open set before claiming a
+feature is unimplemented — HRD-010/011/012/016 (storage, Telegram,
+Claude Code dispatch, REST API) are all now LIVE.</p>
 <p>When asked to "add a feature": find the spec section, open / claim
 the relevant HRD-NNN in <code>docs/Issues.md</code>, write Go + tests,
 ensure <code>go test</code> passes, close the HRD-NNN by migrating its

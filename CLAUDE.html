@@ -112,7 +112,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>19</td>
+<td>20</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -128,16 +128,26 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>r19: propagated HelixConstitution §11.4.106 (Docs Chain
-documentation-sync mandate, 2026-05-29) into the inherited-covenant
-cluster as a short-form restatement citing the literal anchor
-<code>11.4.106</code>, inherited per §11.4.35. Herald-applicability
-classification: APPLICABLE (integration in progress) — Docs Chain
-mechanizes Herald's ~76-doc html/pdf/docx sibling sync (today regen-all
-<code>scripts/export_docs.sh</code>) via <code>exec:</code> transforms
-preserving Herald's exact logo-CSS pandoc flags; cites the migration
-plan <code>docs/research/docs_chain/HERALD_DOCS_CHAIN_PLAN.md</code>,
-the planned <code>verify</code> drift-gate E146, and the honest open
+<td><strong>r20: refreshed the stale "first-implementation cycle r1
+(2026-05-20) / Go-scaffold landed" project-status prose to current
+reality — <strong>18</strong> workspace modules, waves 2–7 shipped, tag
+<strong>v0.6.0</strong> (2026-05-28), live <code>pherald listen</code> +
+Claude Code dispatch + Telegram &amp; Slack adapters + REST API +
+participant-attribution (§11.4.104) + intent-recognition (§11.4.105) +
+Docs Chain (§11.4.106); HRD-010/011/012/016 now LIVE; ~a-dozen open HRDs
+remain. Status prose ONLY — covenant/build/anti-bluff/inheritance
+content unchanged (merged a parallel stream's project-status prose onto
+main's r19 §11.4.106 header). Prior r19: propagated HelixConstitution
+§11.4.106 (Docs Chain documentation-sync mandate, 2026-05-29) into the
+inherited-covenant cluster as a short-form restatement citing the
+literal anchor <code>11.4.106</code>, inherited per §11.4.35.
+Herald-applicability classification: APPLICABLE (integration in
+progress) — Docs Chain mechanizes Herald's ~76-doc html/pdf/docx sibling
+sync (today regen-all <code>scripts/export_docs.sh</code>) via
+<code>exec:</code> transforms preserving Herald's exact logo-CSS pandoc
+flags; cites the migration plan
+<code>docs/research/docs_chain/HERALD_DOCS_CHAIN_PLAN.md</code>, the
+planned <code>verify</code> drift-gate E146, and the honest open
 prerequisites (Phase-4 CLI landed 2026-05-31; exec-staging
 relative-asset gap G6; binary-hash <code>verify</code> defect found by
 dogfooding, fix in flight). Restated + cited, not redefined; anchor now
@@ -400,14 +410,25 @@ gate.</li>
 </ol>
 </blockquote>
 <h2 id="project-status">Project status</h2>
-<p>Herald is in <strong>first-implementation cycle (r1)</strong> as of
-2026-05-20. The Go scaffold has landed; live-integration work
-(HRD-010..HRD-012, HRD-016) is still open. The repo contains:</p>
+<p>Herald is in <strong>active multi-wave implementation</strong> as of
+2026-05-31 — well past the original first-implementation scaffold (r1,
+2026-05-20). Waves 2 through 7 have shipped; the latest tag is
+<strong>v0.6.0</strong> (2026-05-28); the live
+<code>pherald listen</code> inbound runtime, Claude Code dispatch,
+Telegram + Slack channel adapters, participant-attribution (§11.4.104),
+natural-language intent-recognition (§11.4.105), and the Docs Chain
+documentation-sync mandate (§11.4.106) are all landed. Roughly a dozen
+HRDs remain open in <code>docs/Issues.md</code> (evidence-gated
+live-integration + later-iteration channels); the bulk of the catalogue
+migrated to <code>Fixed.md</code> in the v1.0.0 closure sweep. The repo
+contains:</p>
 <ul>
 <li><code>README.md</code> — mission, deployment model, inheritance
 contract, quickstart.</li>
-<li><code>docs/specs/mvp/specification.V4.md</code> — MVP spec stub
-(substantive sections TBD).</li>
+<li><code>docs/specs/mvp/specification.V4.md</code> — MVP spec
+(participant-attribution §11.4.104 + intent-recognition §11.4.105
+incorporated; the prior V-series archived under
+<code>docs/specs/mvp/archive/</code>).</li>
 <li><code>docs/guides/HERALD_CONSTITUTION.md</code> — Herald's project
 constitution (extends Helix).</li>
 <li><code>docs/guides/CONSTITUTION_INHERITANCE.md</code> —
@@ -421,8 +442,10 @@ below).</li>
 <p>Herald does <strong>not</strong> ship a <code>constitution/</code>
 submodule of its own; the parent project provides it. See
 <code>docs/guides/CONSTITUTION_INHERITANCE.md</code>.</p>
-<p><strong>As of 2026-05-20</strong> the Go scaffold has landed
-(first-implementation cycle r1). The repo now contains:</p>
+<p><strong>As of 2026-05-31</strong> the codebase spans
+<strong>18</strong> Go workspace modules (10 shared/foundation + 8
+flavor binaries) with the inbound runtime, channel adapters, and storage
+all live. Representative components:</p>
 <ul>
 <li><code>go.work</code> (gitignored locally; check in if the project
 wants reproducible workspaces — current convention: gitignored per spec
@@ -437,20 +460,26 @@ per-flavor factory.</li>
 <li><code>commons_messaging/channels/null/</code> — full §11.14
 <code>null://</code> sandbox adapter (working, tested).</li>
 <li><code>commons_messaging/channels/tgram/</code> — Telegram adapter
-SCAFFOLD (HRD-011 open).</li>
+(live <code>getUpdates</code> long-poll + send + reply +
+<code>@</code>-mention render; drives <code>pherald listen</code>).</li>
+<li><code>commons_messaging/channels/slack/</code> — Slack adapter (Wave
+7 multi-channel generalization).</li>
 <li><code>commons_messaging/dispatch/claude_code/</code> — Claude Code
-session-resolution + envelope formatter; live
-<code>claude --resume</code> invocation pending (HRD-012 open).</li>
-<li><code>commons_storage/</code> — 9 SQL migrations (000001..000005)
-embedded via <code>//go:embed</code>; pgx + River + Redis wiring pending
-(HRD-010 open).</li>
+session-resolution + envelope formatter; live <code>claude</code>
+invocation wired with Opus pinned and per-message timeout bound
+(HRD-146).</li>
+<li><code>commons_storage/</code> — SQL migrations embedded via
+<code>//go:embed</code>; pgx + River + Redis wiring live.</li>
+<li><code>commons_workable/</code> + <code>commons_watch/</code> —
+workable-items SQLite SSoT store + per-property change-feed +
+fsnotify/WAL-poll watcher (the ATMOSphere integration substrate).</li>
 <li><code>pherald/cmd/pherald/</code> — Cobra CLI;
-<code>pherald version</code> works end-to-end; other subcommands stubbed
-with HRD-NNN error pointers.</li>
+<code>pherald version</code>, <code>pherald listen</code> (inbound
+runtime), <code>pherald watch</code> (workable-items daemon), and the
+§43 command catalogue all wired end-to-end.</li>
 <li><code>quickstart/</code> — Herald-specific Docker/Podman Compose +
-Dockerfile + otel-config + <code>.env.example</code> per §26.5 (HRD-008
-open for operator validation). Migrated from
-<code>containers/quickstart/</code> 2026-05-20 when the
+Dockerfile + otel-config + <code>.env.example</code> per §26.5. Migrated
+from <code>containers/quickstart/</code> 2026-05-20 when the
 <code>containers/</code> submodule was added.</li>
 <li><code>containers/</code> — git submodule pointing at
 <code>git@github.com:vasic-digital/containers.git</code> (the
@@ -501,8 +530,7 @@ starts a real Gin server + hits every /v1 route + asserts response
 bodies, boots a real Postgres container via the <code>containers/</code>
 submodule, runs the M2 integration tests against it, and
 graceful-shutdowns. ALL 14 invariants must PASS — a single FAIL means a
-real feature is broken for end users. At 2026-05-20 it reports 14/14
-PASS.</p>
+real feature is broken for end users.</p>
 <p>When the user asks to "add a feature" the spec is the source of truth
 — find the relevant §, then the relevant module + package, then the
 relevant HRD-NNN if one is already open. New work opens a new HRD-NNN in
