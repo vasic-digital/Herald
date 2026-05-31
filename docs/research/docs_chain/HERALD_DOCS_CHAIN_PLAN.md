@@ -138,6 +138,17 @@ absolute `print.css` path and run pandoc with a cwd/`--resource-path` that resol
 the in-tree assets — verified by a byte-diff self-test against a committed sibling.
 This is tracked as **gap G6** (§6) and is the gating unknown for §5 step 2.
 
+**G6 RESOLVED (2026-05-31).** Read from final docs_chain source: exec transforms run with
+`cmd.Dir = projectRoot` (constant for both sync AND verify — `internal/runner/runner.go:350`),
+argv `<in_tmp> <out_tmp> [args…]`, and during `verify` the in/out temps are staged to a throwaway
+temp dir (`runner.go:414`). So a wrapper must NOT derive the doc's location from the staged temp
+(it differs between sync and verify). Fix: pass the doc's **real directory** as an explicit
+transform `arg` (TransformSpec.Args, appended after the IO paths), resolve in/out to absolute, and
+`cd "$root/$realdir"` so the relative `--css`/`<img>` resolution is IDENTICAL in sync and verify →
+deterministic, verify-stable output. Implemented in `scripts/docs_chain/{md_to_html,md_to_pdf,md_to_docx}.sh`.
+**Fleet-rollout note:** since `realdir` is per-doc, the generated fleet context uses per-directory
+transform variants (one `md2html_<dirslug>` set per distinct doc directory, ~10 total).
+
 ---
 
 ## 4. Where docs_chain helps Herald *beyond* the mandatory sync rules
@@ -201,15 +212,27 @@ turning a slow blind regen into an incremental, gated, evidence-emitting step.
   not as a docs_chain node (which would fight the atomic-commit model).
 - **G5** — *resolved* by the Phase-4 CLI (the only consumer interface), which
   landed 2026-05-31 (`docs_chain` branch `phase4-cli-config` → main); §5.1 unblocked.
-- **G6** — exec transforms run against **staged temp files**, but Herald's html/img
-  exports use **relative** asset paths (logo CSS + `<img>`). The wrappers must
-  reconstruct absolute asset paths / set `--resource-path` from the docs_chain root;
-  the exact exec-adapter path/cwd contract must be read from final source before
-  authoring (§3.1). Gating unknown for §5 step 2.
-- **Verify-binary-hash** — *found 2026-05-31; fix in flight* (§1.1): docx/pdf hashed
-  inconsistently between sync-record and verify-check, making the drift-gate
-  false-positive on binary kinds. Fix being landed in docs_chain with a pinned
-  regression test; §5 step 4 will not assert exit 0 until this lands.
+- **G6 — RESOLVED 2026-05-31** (§3.1): exec transforms get staged temps + `cwd=projectRoot`;
+  the wrapper takes the doc's real dir as an explicit arg and `cd`s there → deterministic,
+  verify-stable. Implemented + pilot-proven.
+- **Verify-binary-hash — FIXED 2026-05-31** (§1.1, docs_chain `59fe323`): binary kinds were
+  hashed via a text-normalizing hasher + pandoc/weasyprint embedded timestamps; fixed with a
+  RawByteHasher + per-node-kind hashing + SOURCE_DATE_EPOCH + weasyprint `--base-url`, with a
+  pinned regression test. `verify` exit 0 after sync for docx/pdf, proven.
+
+## 7. PILOT LANDED (2026-05-31) — the wiring works end-to-end
+
+`docs/guides/COMMONS_WATCH.md` wired via `.docs_chain/contexts/herald-pilot.yaml` + the three
+`scripts/docs_chain/*.sh` exec wrappers. Captured evidence: `docs/qa/DOCS-CHAIN-PILOT-20260531T0757Z/pilot-verify.txt`.
+Results: `doctor` exit 0; cold `sync` exit 0; `verify` exit 0 ×3 (stable); negative control (edit
+source → `verify` STALE exit 1 → restore → exit 0); **html byte-IDENTICAL** to the committed
+`export_docs.sh` output; docx/pdf differ by only 3–6 bytes (the SOURCE_DATE_EPOCH determinism
+improvement); logo print.css + image preserved in html, rendered in pdf; docx is logo-less — but
+so is the committed docx (pandoc's docx writer never embedded the raw-HTML logo; **status quo, not
+a regression**). Gated by `e2e_bluff_hunt.sh` **E146** (SKIP-with-reason when the binary/pandoc/
+weasyprint are absent). **Remaining: fleet rollout** — generate the full-corpus context with
+per-directory transform variants (§3.1 note), one-time re-render to the deterministic baseline,
+then retire the bulk `export_docs.sh` sweep.
 
 ---
 

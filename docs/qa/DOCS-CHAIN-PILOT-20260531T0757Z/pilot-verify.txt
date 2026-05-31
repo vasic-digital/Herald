@@ -1,0 +1,45 @@
+# Docs Chain — Herald wiring PILOT evidence (20260531T0757Z)
+
+Doc: docs/guides/COMMONS_WATCH.md  →  html/pdf/docx via scripts/docs_chain/*.sh exec wrappers
+Binary: docs_chain (built from ~/Projects/docs_chain, commit 5146860)
+Tools: pandoc 3.9.0.2 / WeasyPrint version 66.0
+
+## doctor
+context "herald-pilot" (.docs_chain/contexts/herald-pilot.yaml)
+  parse + graph: OK (4 nodes, 3 edges)
+  transforms: OK (all required tools present)
+exit=0
+
+## cold sync (rm state.json first — forces re-derive)
+herald-pilot             applied: committed [watch_docx watch_html watch_pdf]
+evidence: qa-results/docs_chain/20260531T075836Z
+exit=0
+
+## verify x3 immediately after sync (STABILITY PROOF — the binary-hash/determinism fix + the realdir-arg G6 fix)
+herald-pilot             in-sync
+verify#1 exit=0
+herald-pilot             in-sync
+verify#2 exit=0
+herald-pilot             in-sync
+verify#3 exit=0
+
+## NEGATIVE CONTROL — edit source → STALE exit 1 → sync → in-sync exit 0
+herald-pilot             STALE: [watch_html]
+verify(after edit) exit=1
+herald-pilot             in-sync (no changes)
+evidence: qa-results/docs_chain/20260531T075844Z
+resync exit=0
+herald-pilot             in-sync
+verify(restored) exit=0
+
+## LOGO PRESERVED
+html print.css link: 1
+html logo img: 1
+pdf: PDF document, version 1.7
+
+## BYTE-COMPAT vs committed export_docs.sh output
+html: BYTE-IDENTICAL
+ docs/guides/COMMONS_WATCH.docx | Bin 19789 -> 19783 bytes
+ docs/guides/COMMONS_WATCH.pdf  | Bin 72564 -> 72561 bytes
+ 2 files changed, 0 insertions(+), 0 deletions(-)
+(docx/pdf differ only by the SOURCE_DATE_EPOCH timestamp normalization = the determinism improvement)

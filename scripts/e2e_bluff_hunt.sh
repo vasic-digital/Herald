@@ -2511,6 +2511,35 @@ check "E144 Tier-3 clarify E2E — ambiguous message → reply '@<sender> <speci
 check "E145 Tier-2 envelope — the dispatch envelope instructs the LLM to recognize the command set + return action=clarify when intent is unclear, never guess (§11.4.6)" \
     "go test -race -count=1 -run 'TestFormatEnvelope_IntentInferenceInstruction' ./commons_messaging/dispatch/claude_code/..."
 
+# ---- E146: Docs Chain documentation-sync drift-gate (§11.4.106 / plan docs/research/docs_chain/) ----
+# PILOT scope (docs/guides/COMMONS_WATCH.md). Positive evidence: a cold `docs_chain sync` of the
+# herald-pilot context re-derives html/pdf/docx via the scripts/docs_chain/*.sh exec wrappers; the
+# wrappers replicate export_docs.sh's exact pandoc flags + pin SOURCE_DATE_EPOCH, so with the source
+# unchanged the re-derivation is BYTE-STABLE and leaves ZERO git-diff on the committed siblings — a
+# real drift assertion, not a metadata check. The negative control (edit source → verify STALE exit 1)
+# is captured in docs/qa/DOCS-CHAIN-PILOT-*/pilot-verify.txt. SKIP-with-reason (§11.4.3) when the
+# docs_chain binary / pandoc / weasyprint are absent (the binary is built from the sibling
+# ~/Projects/docs_chain repo, not installed system-wide).
+DC_BIN="$(command -v docs_chain 2>/dev/null || echo /tmp/docs_chain)"
+DC_PILOT_SIB="docs/guides/COMMONS_WATCH.html docs/guides/COMMONS_WATCH.pdf docs/guides/COMMONS_WATCH.docx"
+if [ -x "${DC_BIN}" ] && command -v pandoc >/dev/null 2>&1 && command -v weasyprint >/dev/null 2>&1 \
+   && [ -f .docs_chain/contexts/herald-pilot.yaml ]; then
+    rm -f .docs_chain/state.json
+    if "${DC_BIN}" sync --root . herald-pilot > /tmp/e2e_dc 2>&1 \
+       && git diff --quiet -- ${DC_PILOT_SIB}; then
+        echo "PASS  E146 Docs Chain drift-gate — pilot COMMONS_WATCH md→html/pdf/docx re-derives BYTE-STABLE (zero drift); logo print.css preserved (§11.4.106)"
+        pass=$((pass+1))
+    else
+        echo "FAIL  E146 Docs Chain drift — committed siblings differ from deterministic re-derivation (stale exports OR non-deterministic wrapper)"
+        tail -3 /tmp/e2e_dc 2>/dev/null | sed 's/^/      /'
+        fail=$((fail+1)); fail_names+=("E146")
+    fi
+    git checkout -- ${DC_PILOT_SIB} 2>/dev/null   # restore: the gate must leave the tree clean
+    rm -f .docs_chain/state.json
+else
+    echo "SKIP  E146 Docs Chain drift-gate — docs_chain binary / pandoc / weasyprint absent (build from ~/Projects/docs_chain); §11.4.3 SKIP-with-reason"
+fi
+
 # ----------------------------------------------------------------------
 echo ""
 echo "===================================================="

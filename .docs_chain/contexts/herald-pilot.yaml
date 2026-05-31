@@ -1,0 +1,15 @@
+context: herald-pilot
+description: PILOT — one Herald guide (COMMONS_WATCH) md -> html/pdf/docx via exec wrappers; proves verify-stability + logo-CSS preservation before fleet rollout
+nodes:
+  watch_md:   { kind: markdown, path: docs/guides/COMMONS_WATCH.md }
+  watch_html: { kind: html,     path: docs/guides/COMMONS_WATCH.html }
+  watch_pdf:  { kind: pdf,      path: docs/guides/COMMONS_WATCH.pdf }
+  watch_docx: { kind: docx,     path: docs/guides/COMMONS_WATCH.docx }
+edges:
+  - { type: derive-from, from: watch_md, to: watch_html, transform: md2html }
+  - { type: derive-from, from: watch_md, to: watch_pdf,  transform: md2pdf }
+  - { type: derive-from, from: watch_md, to: watch_docx, transform: md2docx }
+transforms:
+  md2html: { exec: "scripts/docs_chain/md_to_html.sh", args: ["docs/guides"] }
+  md2pdf:  { exec: "scripts/docs_chain/md_to_pdf.sh",  args: ["docs/guides"] }
+  md2docx: { exec: "scripts/docs_chain/md_to_docx.sh", args: ["docs/guides"] }
