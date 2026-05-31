@@ -1,0 +1,19 @@
+# MTProto live harness — re-confirmation (2026-05-31)
+
+Operator clicked the GitHub secret-scanning unblock (false-positive placeholder); all 4 mirrors synced at 6363de6.
+MTProto session present + alive (bootstrapped 2026-05-30); confirmed the §11.4.98 autonomous live round-trip still works TODAY.
+
+## qaherald mtproto whoami (read-only)
+MTProto session OK: user_id=2057253161 username=@milos85vasic session=~/.config/herald/mtproto.session
+
+## E135 TestMTProto_Subscribe_AutonomousRoundTrip — LIVE PASS (-tags=integration_mtproto -count=1)
+    MTProto user active: @milos85vasic (user_id=2057253161)
+    baseline getUpdates max_update_id=359150596
+    MTProto sent message_id=211685 text="herald-mtproto-autonomous-<nonce>"
+    PASS: autonomous round-trip — bot saw update_id=359150597 carrying our MTProto-sent text
+    --- PASS: TestMTProto_Subscribe_AutonomousRoundTrip (0.95s)
+
+INTERPRETATION: the live MTProto user-account → bot getUpdates round-trip is operational end-to-end
+(re-proves HRD-140 §11.4.98 live). This is the FOUNDATION for HRD-156 (ATMOSphere live round-trip);
+HRD-156's remaining T-B..T-F layers need the ATMOSphere repo (not present locally) to advance further.
+HRD-115 (Slack live) remains gated on operator-supplied Slack credentials (none in .env yet).
