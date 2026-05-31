@@ -2473,6 +2473,18 @@ check "E141 outbound tagging E2E — real ChannelDispatcher→recording sink: op
 check "E142 tagging matrix + identity resolver — MentionsFor truth-table (every cell) + MemoryResolver resolve/round-trip/operator (the §11.4.104 contract surface)" \
     "go test -race -count=1 -run 'TestMentionsFor|TestMemoryResolver' ./commons/..."
 
+# ---- E143-E145: natural-language intent recognition (§11.4.105) ----
+# (docs/design/INTENT_RECOGNITION.md — operator mandate 2026-05-31). Hermetic.
+# PASS here means users do NOT need command syntax: a clear NL command is
+# recognized (Tier 1), and an ambiguous message is NEVER guessed/ignored — it is
+# replied-to with the sender @-tagged + a precise clarifying question (Tier 3).
+check "E143 Tier-1 command recognizer — NL imperatives → action (close/assign/open/investigate/status) + CONSERVATIVE negatives that defer to the LLM (no false-match)" \
+    "go test -race -count=1 -run 'TestCommandRecognizer' ./pherald/internal/inbound/..."
+check "E144 Tier-3 clarify E2E — ambiguous message → reply '@<sender> <specific question>' (user tagged + asked, never ignored); raw-handle fallback; NEGATIVE: a clear command does NOT trigger clarify" \
+    "go test -race -count=1 -run 'TestClarify_E2E|TestClearCommand_DoesNotTriggerClarify|TestClarify_NilResolver_Graceful|TestClarify_EmptyQuestion_IsLoudError' ./pherald/internal/inbound/..."
+check "E145 Tier-2 envelope — the dispatch envelope instructs the LLM to recognize the command set + return action=clarify when intent is unclear, never guess (§11.4.6)" \
+    "go test -race -count=1 -run 'TestFormatEnvelope_IntentInferenceInstruction' ./commons_messaging/dispatch/claude_code/..."
+
 # ----------------------------------------------------------------------
 echo ""
 echo "===================================================="
