@@ -232,6 +232,12 @@ trap cleanup EXIT
 pass=0
 fail=0
 fail_names=()
+# §11.4 anti-bluff (P2-1): stress/chaos evidence anchors that SKIP because the
+# §11.4.85 suite has not been run yet are counted here and surfaced LOUDLY in the
+# summary — a green run with N unverified evidence anchors must NOT read as "all
+# proven". Distinct from `pass`: a SKIP is an honest gap (§11.4.3), not a PASS.
+sc_skip=0
+sc_skip_names=()
 
 check() {
     local name="$1"; shift
@@ -2115,6 +2121,8 @@ sc_anchor() {
     local label="$1" file="$2" anchor="$3"
     if [ -z "${file}" ] || [ ! -f "${file}" ]; then
         echo "SKIP  ${label} evidence anchor — no docs/qa/<run-id>/stress_chaos/ artefact present yet (run the §11.4.85 suite to capture it; §11.4.3 explicit SKIP-with-reason)"
+        sc_skip=$((sc_skip+1))
+        sc_skip_names+=("${label}")
         return 0
     fi
     if grep -qF "${anchor}" "${file}" 2>/dev/null; then
@@ -2506,7 +2514,15 @@ check "E145 Tier-2 envelope — the dispatch envelope instructs the LLM to recog
 # ----------------------------------------------------------------------
 echo ""
 echo "===================================================="
-echo "Result: ${pass} PASS / ${fail} FAIL"
+echo "Result: ${pass} PASS / ${fail} FAIL / ${sc_skip} stress-chaos-evidence SKIP"
+if [ "${sc_skip}" -gt 0 ]; then
+    echo ""
+    echo "Stress/chaos EVIDENCE anchors UNVERIFIED (§11.4.85 suite not yet run — honest §11.4.3 SKIP, NOT a PASS):"
+    for n in "${sc_skip_names[@]}"; do
+        echo "  - ${n} (paired live check ran; only the captured-evidence artefact is absent)"
+    done
+    echo "  → run the §11.4.85 stress+chaos suite to capture docs/qa/<run-id>/stress_chaos/ and convert these to PASS."
+fi
 if [ "${fail}" -gt 0 ]; then
     echo ""
     echo "Bluffs caught:"
@@ -2517,5 +2533,8 @@ if [ "${fail}" -gt 0 ]; then
 fi
 echo ""
 echo "All Herald user-visible features verified end-to-end."
+if [ "${sc_skip}" -gt 0 ]; then
+    echo "NOTE: ${sc_skip} stress/chaos evidence anchor(s) remain UNVERIFIED — see the SKIP list above. This is NOT a fully-proven run."
+fi
 echo "Anti-bluff covenant (§11.4) intact."
 exit 0
