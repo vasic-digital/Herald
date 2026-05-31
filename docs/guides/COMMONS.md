@@ -217,7 +217,7 @@ type Branding struct {
     Flavor      string // single-letter (or short) flavor key: "p", "s", "b", "sc", ...
     Prefix      string // 3-letter prefix per §8.2 (e.g. "PHR", "SHR")
     DisplayName string // human-readable display name (typically == AppName)
-    DefaultPort int    // default HTTP listen port (per-flavor, 70XXX range)
+    DefaultPort int    // default HTTP listen port (per-flavor, 24XXX range — e.g. pherald 24791, sherald 24793; 0 = CLI-only)
     Mission     string // one-line mission statement for --help / about
 }
 ```

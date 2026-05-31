@@ -112,7 +112,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>20</td>
+<td>21</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -128,7 +128,16 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>r20: refreshed the stale "first-implementation cycle r1
+<td><strong>r21: corrected the stale container-stack facts in §"Project
+conventions" — host ports are the <strong>24XXX</strong> reserved range
+(Postgres 24100 / Redis 24200 / OTel 24417-24418 / flavor serve ports
+24791/24793 per <code>commons/branding.go</code>), NOT "70XXX";
+container names are <code>herald-</code>-prefixed
+(<code>herald-postgres</code> etc.), not bare <code>herald</code> —
+verified against the committed
+<code>quickstart/docker-compose.quickstart.yml</code> + the e2e :24100
+PG reference (surfaced by the COMMONS_INFRA nano-detail guide subagent).
+Prior r20: refreshed the stale "first-implementation cycle r1
 (2026-05-20) / Go-scaffold landed" project-status prose to current
 reality — <strong>18</strong> workspace modules, waves 2–7 shipped, tag
 <strong>v0.6.0</strong> (2026-05-28), live <code>pherald listen</code> +
@@ -1334,8 +1343,17 @@ invariant when designing channel I/O.</li>
 <li><strong>Container stack:</strong> Postgres (main DB) + Redis
 (in-memory) bundled via the <code>containers</code> submodule
 (<code>https://github.com/vasic-digital/containers</code>). All
-container names start with <code>herald</code>; all host ports start
-with <code>70XXX</code> (70001, 70002, …) to avoid collisions.</li>
+container names are <code>herald-</code>-prefixed
+(<code>herald-postgres</code>, <code>herald-redis</code>,
+<code>herald-otel</code>, <code>herald-pherald</code>); all host ports
+are in the <strong><code>24XXX</code></strong> reserved range — Postgres
+<code>24100</code>, Redis <code>24200</code>, OTel
+<code>24417</code>/<code>24418</code>, and the per-flavor serve ports
+from <code>commons/branding.go</code> (<code>pherald</code> 24791,
+<code>sherald</code> 24793, …) — to avoid collisions. (An earlier
+"70XXX" framing is stale; the committed
+<code>quickstart/docker-compose.quickstart.yml</code> +
+<code>commons/branding.go</code> use 24XXX.)</li>
 <li><strong>Credentials:</strong> <code>.env</code> (git-ignored) with a
 committed <code>.env.example</code>. Resolution order: exported shell
 vars from <code>.bashrc</code>/<code>.zshrc</code> load first;

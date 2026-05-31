@@ -401,7 +401,7 @@ it):</p>
 <span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    Flavor      <span class="dt">string</span> <span class="co">// single-letter (or short) flavor key: &quot;p&quot;, &quot;s&quot;, &quot;b&quot;, &quot;sc&quot;, ...</span></span>
 <span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    Prefix      <span class="dt">string</span> <span class="co">// 3-letter prefix per §8.2 (e.g. &quot;PHR&quot;, &quot;SHR&quot;)</span></span>
 <span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    DisplayName <span class="dt">string</span> <span class="co">// human-readable display name (typically == AppName)</span></span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    DefaultPort <span class="dt">int</span>    <span class="co">// default HTTP listen port (per-flavor, 70XXX range)</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    DefaultPort <span class="dt">int</span>    <span class="co">// default HTTP listen port (per-flavor, 24XXX range — e.g. pherald 24791, sherald 24793; 0 = CLI-only)</span></span>
 <span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>    Mission     <span class="dt">string</span> <span class="co">// one-line mission statement for --help / about</span></span>
 <span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <h3 id="38-channelid">§3.8 <code>ChannelID</code></h3>
