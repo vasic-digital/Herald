@@ -35,6 +35,8 @@ func TestCRUD_RoundTrip(t *testing.T) {
 		BodyMd:          "## body",
 		CreatedAt:       "2026-05-28",
 		LastModified:    "2026-05-28",
+		CreatedBy:       "@milos85vasic",
+		AssignedTo:      "Claude",
 	}
 
 	if err := repo.Create(ctx, in); err != nil {

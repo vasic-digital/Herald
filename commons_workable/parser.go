@@ -11,8 +11,10 @@ var (
 	// atmIDRe matches the canonical [ATM-NNN] bracket id.
 	atmIDRe = regexp.MustCompile(`\[(ATM-\d+)\]`)
 
-	// metaRe matches a metadata line: **Status:** value (Status/Type/Severity).
-	metaRe = regexp.MustCompile(`(?i)^\*\*(Status|Type|Severity):\*\*\s*(.+?)\s*$`)
+	// metaRe matches a metadata line: **Status:** value. Recognised keys:
+	// Status / Type / Severity, plus the PARTICIPANT_ATTRIBUTION §4b
+	// attribution fields Created-By / Assigned-To.
+	metaRe = regexp.MustCompile(`(?i)^\*\*(Status|Type|Severity|Created-By|Assigned-To):\*\*\s*(.+?)\s*$`)
 )
 
 // ParseTracker parses ATMOSphere's real Markdown tracker format and
@@ -66,10 +68,10 @@ func ParseTracker(markdown, location string) ([]Item, error) {
 	var items []Item
 	for _, b := range blocks {
 		bodyMd := strings.TrimRight(strings.Join(b.body, "\n"), "\n")
-		status, typ, sev := scanMeta(b.body)
+		meta := scanMeta(b.body)
 
 		// No status -> section header, not a workable item.
-		if status == "" {
+		if meta.status == "" {
 			continue
 		}
 
@@ -83,21 +85,34 @@ func ParseTracker(markdown, location string) ([]Item, error) {
 
 		items = append(items, Item{
 			AtmID:           id,
-			Type:            typ,
-			Status:          status,
-			Severity:        sev,
+			Type:            meta.typ,
+			Status:          meta.status,
+			Severity:        meta.sev,
 			Title:           title,
 			CurrentLocation: location,
 			BodyMd:          bodyMd,
+			CreatedBy:       meta.createdBy,
+			AssignedTo:      meta.assignedTo,
 		})
 	}
 
 	return items, nil
 }
 
-// scanMeta extracts Status/Type/Severity from a body block's metadata
-// lines. Returns empty strings for fields not present.
-func scanMeta(body []string) (status, typ, sev string) {
+// itemMeta carries the metadata fields scanned from an item body block.
+type itemMeta struct {
+	status     string
+	typ        string
+	sev        string
+	createdBy  string
+	assignedTo string
+}
+
+// scanMeta extracts Status/Type/Severity plus the attribution fields
+// Created-By/Assigned-To from a body block's metadata lines. Returns
+// empty strings for fields not present (absent attribution -> "").
+func scanMeta(body []string) itemMeta {
+	var meta itemMeta
 	inFence := false
 	for _, ln := range body {
 		trimmed := strings.TrimSpace(ln)
@@ -116,14 +131,18 @@ func scanMeta(body []string) (status, typ, sev string) {
 		}
 		switch strings.ToLower(m[1]) {
 		case "status":
-			status = m[2]
+			meta.status = m[2]
 		case "type":
-			typ = m[2]
+			meta.typ = m[2]
 		case "severity":
-			sev = m[2]
+			meta.sev = m[2]
+		case "created-by":
+			meta.createdBy = m[2]
+		case "assigned-to":
+			meta.assignedTo = m[2]
 		}
 	}
-	return
+	return meta
 }
 
 // headingTitle strips the prefix segment and any [ATM-NNN] bracket from

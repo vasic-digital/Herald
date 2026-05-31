@@ -122,6 +122,8 @@ func propertyChanges(p, c Item) []Change {
 
 	type fieldDelta struct{ field, old, new string }
 	fields := []fieldDelta{
+		{"assigned_to", p.AssignedTo, c.AssignedTo},
+		{"created_by", p.CreatedBy, c.CreatedBy},
 		{"severity", p.Severity, c.Severity},
 		{"title", p.Title, c.Title},
 		{"type", p.Type, c.Type},

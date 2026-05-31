@@ -30,6 +30,8 @@ CREATE TABLE IF NOT EXISTS items (
     body_md          TEXT,
     created_at       TEXT,
     last_modified    TEXT,
+    created_by       TEXT NOT NULL DEFAULT '',
+    assigned_to      TEXT NOT NULL DEFAULT '',
     PRIMARY KEY (atm_id, current_location)
 );
 
@@ -86,7 +88,53 @@ func Open(path string) (*Store, error) {
 		return nil, fmt.Errorf("workable: apply schema: %w", err)
 	}
 
+	// Forward-migrate an EXISTING DB created under the pre-attribution
+	// schema: CREATE TABLE IF NOT EXISTS above is a no-op when `items`
+	// already exists, so the new columns must be added in-place. Each ADD
+	// COLUMN is guarded by a pragma_table_info presence check so the
+	// migration is idempotent and never errors on an already-current DB.
+	// No data is lost — ADD COLUMN with a DEFAULT backfills existing rows.
+	if err := migrateAddColumns(db); err != nil {
+		_ = db.Close()
+		return nil, fmt.Errorf("workable: migrate items: %w", err)
+	}
+
 	return &Store{db: db}, nil
+}
+
+// migrateAddColumns adds the attribution columns (created_by, assigned_to)
+// to a legacy `items` table that predates them. It is idempotent: a column
+// already present is skipped via a pragma_table_info() lookup.
+func migrateAddColumns(db *sql.DB) error {
+	type col struct{ name, ddl string }
+	wanted := []col{
+		{"created_by", `ALTER TABLE items ADD COLUMN created_by TEXT NOT NULL DEFAULT ''`},
+		{"assigned_to", `ALTER TABLE items ADD COLUMN assigned_to TEXT NOT NULL DEFAULT ''`},
+	}
+	for _, c := range wanted {
+		ok, err := columnExists(db, "items", c.name)
+		if err != nil {
+			return err
+		}
+		if ok {
+			continue
+		}
+		if _, err := db.Exec(c.ddl); err != nil {
+			return fmt.Errorf("add column %s: %w", c.name, err)
+		}
+	}
+	return nil
+}
+
+// columnExists reports whether `table` has a column named `name`.
+func columnExists(db *sql.DB, table, name string) (bool, error) {
+	var n int
+	err := db.QueryRow(
+		`SELECT COUNT(*) FROM pragma_table_info(?) WHERE name=?`, table, name).Scan(&n)
+	if err != nil {
+		return false, fmt.Errorf("pragma_table_info(%s): %w", table, err)
+	}
+	return n > 0, nil
 }
 
 // DB exposes the underlying *sql.DB for callers that need raw access

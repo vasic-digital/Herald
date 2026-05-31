@@ -17,6 +17,8 @@ type Item struct {
 	BodyMd          string
 	CreatedAt       string
 	LastModified    string
+	CreatedBy       string // canonical handle of who opened the item (PARTICIPANT_ATTRIBUTION §4b); "" when unknown/legacy
+	AssignedTo      string // canonical handle of the assignee (PARTICIPANT_ATTRIBUTION §4b); "" when unknown/legacy
 }
 
 // StatusValues is the canonical closed set of 10 workable-item statuses.

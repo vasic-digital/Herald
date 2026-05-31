@@ -21,7 +21,7 @@ func NewRepo(s *Store) *Repo { return &Repo{s: s} }
 
 const itemColumns = `atm_id, type, status, severity, title, description,
 	forensic_anchor, closure_criteria, composes_with, current_location,
-	body_md, created_at, last_modified`
+	body_md, created_at, last_modified, created_by, assigned_to`
 
 // Create inserts a new item. The status is validated against the closed
 // set before any DB access; an unknown/empty status is rejected loudly.
@@ -31,10 +31,10 @@ func (r *Repo) Create(ctx context.Context, it Item) error {
 	}
 	_, err := r.s.db.ExecContext(ctx,
 		`INSERT INTO items (`+itemColumns+`)
-		 VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+		 VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
 		it.AtmID, it.Type, it.Status, it.Severity, it.Title, it.Description,
 		it.ForensicAnchor, it.ClosureCriteria, it.ComposesWith, it.CurrentLocation,
-		it.BodyMd, it.CreatedAt, it.LastModified)
+		it.BodyMd, it.CreatedAt, it.LastModified, it.CreatedBy, it.AssignedTo)
 	if err != nil {
 		return fmt.Errorf("workable: create %s/%s: %w", it.AtmID, it.CurrentLocation, err)
 	}
@@ -51,7 +51,7 @@ func (r *Repo) GetByID(ctx context.Context, atmID, location string) (*Item, erro
 	err := row.Scan(
 		&it.AtmID, &it.Type, &it.Status, &it.Severity, &it.Title, &it.Description,
 		&it.ForensicAnchor, &it.ClosureCriteria, &it.ComposesWith, &it.CurrentLocation,
-		&it.BodyMd, &it.CreatedAt, &it.LastModified)
+		&it.BodyMd, &it.CreatedAt, &it.LastModified, &it.CreatedBy, &it.AssignedTo)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}
@@ -70,11 +70,12 @@ func (r *Repo) Update(ctx context.Context, it Item) error {
 	res, err := r.s.db.ExecContext(ctx,
 		`UPDATE items SET type=?, status=?, severity=?, title=?, description=?,
 		 forensic_anchor=?, closure_criteria=?, composes_with=?, body_md=?,
-		 created_at=?, last_modified=?
+		 created_at=?, last_modified=?, created_by=?, assigned_to=?
 		 WHERE atm_id=? AND current_location=?`,
 		it.Type, it.Status, it.Severity, it.Title, it.Description,
 		it.ForensicAnchor, it.ClosureCriteria, it.ComposesWith, it.BodyMd,
-		it.CreatedAt, it.LastModified, it.AtmID, it.CurrentLocation)
+		it.CreatedAt, it.LastModified, it.CreatedBy, it.AssignedTo,
+		it.AtmID, it.CurrentLocation)
 	if err != nil {
 		return fmt.Errorf("workable: update %s/%s: %w", it.AtmID, it.CurrentLocation, err)
 	}
@@ -108,7 +109,7 @@ func (r *Repo) List(ctx context.Context, location string) ([]Item, error) {
 		if err := rows.Scan(
 			&it.AtmID, &it.Type, &it.Status, &it.Severity, &it.Title, &it.Description,
 			&it.ForensicAnchor, &it.ClosureCriteria, &it.ComposesWith, &it.CurrentLocation,
-			&it.BodyMd, &it.CreatedAt, &it.LastModified); err != nil {
+			&it.BodyMd, &it.CreatedAt, &it.LastModified, &it.CreatedBy, &it.AssignedTo); err != nil {
 			return nil, fmt.Errorf("workable: list scan: %w", err)
 		}
 		out = append(out, it)
