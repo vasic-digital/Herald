@@ -32,7 +32,8 @@ func TestMigrationsBundle(t *testing.T) {
 	//   + 000011 for HRD-012 Task 7 claude_code_sessions (E18 persist)
 	//   + 000012 for Wave 3a Task 2 events_processed (V3 §32.2 idempotency archive)
 	//   + 000013 for HRD-089 task_resource_snapshots (v1.0.0 Batch D resource-monitor)
-	//   + 000014 for HRD-090 dead_letter_tasks (failure-terminal move + .queue.dead_letter).
+	//   + 000014 for HRD-090 dead_letter_tasks (failure-terminal move + .queue.dead_letter)
+	//   + 000015 for subscriber_aliases.username (PARTICIPANT_ATTRIBUTION §4d — per-channel @handle for tagging).
 	expectedNames := []string{
 		"000001_init_core",
 		"000002_idempotency_keys",
@@ -48,6 +49,7 @@ func TestMigrationsBundle(t *testing.T) {
 		"000012_events_processed",
 		"000013_task_resource_snapshots",
 		"000014_dead_letter_tasks",
+		"000015_subscriber_alias_username",
 	}
 
 	for _, name := range expectedNames {
@@ -82,7 +84,7 @@ func TestMigrationsBundle(t *testing.T) {
 	// And no unexpected files.
 	expectedCount := len(expectedNames) * 2 // up + down each
 	if len(files) != expectedCount {
-		t.Errorf("migration count = %d; want %d (5 original + 3 §44 + 1 HRD-010 + 1 HRD-011 + 1 HRD-012 + 1 W3a-T2 + 1 HRD-089 + 1 HRD-090 = 14 × {up, down})", len(files), expectedCount)
+		t.Errorf("migration count = %d; want %d (5 original + 3 §44 + 1 HRD-010 + 1 HRD-011 + 1 HRD-012 + 1 W3a-T2 + 1 HRD-089 + 1 HRD-090 + 1 alias-username = 15 × {up, down})", len(files), expectedCount)
 	}
 }
 
