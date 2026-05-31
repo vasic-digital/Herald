@@ -89,7 +89,7 @@
     code span.vs { color: #4070a0; } /* VerbatimString */
     code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
   </style>
-  <link rel="stylesheet" href="../../../assets/logo/print.css" />
+  <link rel="stylesheet" href="../../../../assets/logo/print.css" />
 </head>
 <body>
 <header id="title-block-header">
@@ -97,11 +97,21 @@
 </header>
 <div align="center">
 
-<img src="../../../assets/logo/herald_logo_square_128.png" alt="Herald" width="96" height="96" />
+<img src="../../../../assets/logo/herald_logo_square_128.png" alt="Herald" width="96" height="96" />
 
 </div>
 
-<h1 id="herald--specification-v3">Herald — Specification V3</h1>
+<blockquote>
+<p><strong>Superseded by V4 (2026-05-31).</strong> This V3 specification
+is preserved as a historical record. The active specification is <a
+href="../specification.V4.md"><code>../specification.V4.md</code></a>,
+which is a strict superset — it preserves every V3 section and adds
+participant identity/attribution/@-tagging (§7.6/§8.4/§34.7) +
+natural-language intent recognition (§32.6.B/§33.8/§34.8). See V4 §29.3
+for the full V3→V4 changelog.</p>
+</blockquote>
+<h1 id="herald--specification-v3-superseded">Herald — Specification V3
+(superseded)</h1>
 <table>
 <thead>
 <tr>
@@ -124,7 +134,8 @@
 </tr>
 <tr>
 <td>Status</td>
-<td>active</td>
+<td>superseded by V4 (2026-05-31) — see
+<code>../specification.V4.md</code></td>
 </tr>
 <tr>
 <td>Status summary</td>
@@ -2045,7 +2056,7 @@ mandatory (stdlib <code>log/slog</code>, OTel <code>slog</code> bridge,
 1.23 are allowed when CI proves no regression; the <code>commons</code>
 module is the authoritative version (every flavor MUST follow).</p>
 <p><strong>License:</strong> Herald is published under the terms in <a
-href="../../../LICENSE"><code>LICENSE</code></a> (parent project's
+href="../../../../LICENSE"><code>LICENSE</code></a> (parent project's
 chosen license). All <code>go.mod</code> files MUST declare the same
 license via a top-level comment, and every <code>LICENSE</code> file in
 vendored submodules MUST remain present. License compliance is checked
@@ -5484,9 +5495,9 @@ connection with the <code>constitution</code> Submodule — discovery via
 Constitution.</p>
 </blockquote>
 <p>See <a
-href="../../guides/HERALD_CONSTITUTION.md"><code>../../guides/HERALD_CONSTITUTION.md</code></a>
+href="../../../guides/HERALD_CONSTITUTION.md"><code>../../../guides/HERALD_CONSTITUTION.md</code></a>
 and <a
-href="../../guides/CONSTITUTION_INHERITANCE.md"><code>../../guides/CONSTITUTION_INHERITANCE.md</code></a>.</p>
+href="../../../guides/CONSTITUTION_INHERITANCE.md"><code>../../../guides/CONSTITUTION_INHERITANCE.md</code></a>.</p>
 <h3 id="221-how-constitution-rules-are-extended-via-constitutable">22.1
 How <code>constitution</code> rules are extended via
 <code>constitutable/</code></h3>
@@ -5517,7 +5528,7 @@ as a Submodule of another Project; in that case access to the
 alternative). For <strong>standalone development</strong> of Herald, the
 <code>constitution</code> is cloned <strong>alongside</strong> Herald
 (sibling-clone) — current development setup uses this layout. See <a
-href="../../guides/CONSTITUTION_INHERITANCE.md#standalone-development"><code>../../guides/CONSTITUTION_INHERITANCE.md</code>
+href="../../../guides/CONSTITUTION_INHERITANCE.md#standalone-development"><code>../../../guides/CONSTITUTION_INHERITANCE.md</code>
 §"Standalone development"</a> and R-10.</p>
 </blockquote>
 <blockquote>

@@ -444,7 +444,7 @@ For consumers who **only need read access**, any single mirror works — clone f
 - **ATMOSphere host-daemon deploy**: `docs/guides/ATMOSPHERE_DAEMON_DEPLOY.md` + `deploy/atmosphere-herald/` — the operator runbook + systemd/launchd units + `install.sh`/`uninstall.sh`/`seed-subscribers.sh` for running the `pherald watch` (outbound SSoT→notify) and `pherald listen` (inbound→CRUD) daemons on the ATMOSphere host (HRD-157).
 - **Herald Constitution**: `docs/guides/HERALD_CONSTITUTION.md` — project-specific constitutional extensions on top of the inherited Helix Constitution.
 - **Parent-discovery details**: `docs/guides/CONSTITUTION_INHERITANCE.md`.
-- **Spec V3** (the source of truth for the API + data model): `docs/specs/mvp/specification.V3.md`.
+- **Spec V3** (the source of truth for the API + data model): `docs/specs/mvp/specification.V4.md`.
 - **Open work**: `docs/Issues.md`. Closed work: `docs/Fixed.md`. Running status: `docs/Status.md`.
 
 If something in this guide is wrong or out of date, the spec wins. If the spec is unclear, file an HRD in `docs/Issues.md` per spec V3 §8.3.
@@ -483,7 +483,7 @@ Per HelixConstitution §11.4.99 + Herald §108.n (Latest-Source Documentation Cr
 | PostgreSQL official documentation | https://www.postgresql.org/docs/15/ | §2 prerequisite (`Postgres 15+`); §6 migration semantics (`000001..000014` schema versions; RLS-enforced; `app.current_tenant_id` GUC). |
 | Redis official documentation | https://redis.io/docs/ | §2 prerequisite (`Redis 7+`); §6 (hot idempotency cache 24h SETNX TTL; JWKS cache 5 min default). |
 | Anthropic — Claude Code documentation | https://docs.anthropic.com/claude-code | §2 optional dependency (`claude` CLI required only for the Claude Code dispatcher — HRD-012); §10 the dispatcher half of the vertical slice. |
-| Herald spec V3 (source of truth) | `docs/specs/mvp/specification.V3.md` | The ENTIRE document — spec wins on conflict (per the §"Spec V3" closing note); §32 7-stage Runner architecture; §33 LLM/agent dispatch architecture; §43 command catalogue; §107 anti-bluff covenant. |
+| Herald spec V3 (source of truth) | `docs/specs/mvp/specification.V4.md` | The ENTIRE document — spec wins on conflict (per the §"Spec V3" closing note); §32 7-stage Runner architecture; §33 LLM/agent dispatch architecture; §43 command catalogue; §107 anti-bluff covenant. |
 | Empirical Herald operator testing 2026-05-22+ | `docs/qa/` (Wave-3b commit `c2b67c3`; Wave-4a/4b; Wave-6 HRD-LIVE-* directories) | §1 Wave-3b 7-stage Runner status; §12 Wave-4 transport roadmap (HTTP/3 + Brotli + TOON design landed `c60b3fd`). |
 | HelixConstitution §11.4.99 (this document's authority) | `<parent>/constitution/Constitution.md` §11.4.99 (HelixConstitution commit `c640947`) | This footer pattern + cadence requirement. |
 

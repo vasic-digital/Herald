@@ -1,17 +1,19 @@
 <div align="center">
 
-<img src="../../../assets/logo/herald_logo_square_128.png" alt="Herald" width="96" height="96" />
+<img src="../../../../assets/logo/herald_logo_square_128.png" alt="Herald" width="96" height="96" />
 
 </div>
 
-# Herald — Specification V3
+> **Superseded by V4 (2026-05-31).** This V3 specification is preserved as a historical record. The active specification is [`../specification.V4.md`](../specification.V4.md), which is a strict superset — it preserves every V3 section and adds participant identity/attribution/@-tagging (§7.6/§8.4/§34.7) + natural-language intent recognition (§32.6.B/§33.8/§34.8). See V4 §29.3 for the full V3→V4 changelog.
+
+# Herald — Specification V3 (superseded)
 
 | Field | Value |
 |---|---|
 | Revision | 13 |
 | Created | 2026-05-20 |
 | Last modified | 2026-05-28 |
-| Status | active |
+| Status | superseded by V4 (2026-05-31) — see `../specification.V4.md` |
 | Status summary | **V3 r13 — Wave 7 generic messenger framework: Slack lands.** §11.0 gains the Wave 7 inbound-runtime extension note (the richer `commons_messaging/channels.Channel` interface embedding `commons.Channel` + `SendReplyGeneric` + `BotSelfIdentity` + `DownloadAttachment` + the `init()`-registered name→constructor registry + generalized `IsSelfEcho` across IdentityUsername/IdentityUserID/IdentityAddress + per-channel `~/.herald/inbox/<channel>/<sha256>.<ext>`). §32.2 marks Telegram **LIVE (Wave 6 / Wave 7)** + Slack **LIVE (Wave 7 T6 — Socket Mode)**. §43 catalogue gains the multi-channel `pherald listen` row (`HERALD_CHANNELS=tgram,slack`, per-channel namespaced env, one Subscribe goroutine per enabled channel into one dispatcher). Slack ships as a Socket Mode adapter (`commons_messaging/channels/slack/`, 5 source files + hermetic httptest tests, 22 PASS -race), vendored via `submodules/slack-go` @ v0.16.0 (commit 209ec09). qaherald gains a parallel raw-HTTP Slack `MessengerClient` + channel-keyed `Build()` dispatcher (`qaherald/internal/messenger/{slack.go,builder.go}`, 30 tests PASS -race — 17 new + 13 pre-existing tgram, zero regression; xoxb token NEVER in errors — `sanitizeError()` + `TestSlack_Send_ErrorDoesNotLeakToken` pin it). Per docs/superpowers/plans/2026-05-27-wave7-generic-messenger.md T6-T8. Workspace module count unchanged at 16. **Prior r12 — Wave 6 lands the pherald INBOUND runtime (closed-loop subscriber → CC → reply).** New `pherald listen` Cobra subcommand runs Telegram `getUpdates` long-poll (`OnText`/`OnPhoto`/`OnDocument`/`OnVoice` handlers) + bot self-filter (`bot.Me.Username` anti-echo guard captured at Subscribe construction; refuses to start if `getMe` returned no username) + sha256 content-addressed attachment download into `~/.herald/inbox/<sha256>.<ext>` (idempotent — duplicate downloads do NOT re-write) + Claude Code dispatch with Opus pinned in the spawned argv (`claude --model claude-opus-4-7 --resume <UUID> --print <envelope>`) + envelope pre-text — verbatim operator wording `"We have received new message from our communication channel <channel-name>. <classification sentence>. <attachment list>"` preceding the existing `<<<HERALD-DISPATCH-v1>>>` structured block + `<<<HERALD-REPLY>>>` parser with `action` routing (`reply` default / `issue.open` / `event.emit`) + `tgram.Adapter.SendReply(ctx, chatID, text, replyToID, attachments)` wiring `reply_to_message_id` from the original `message_id`. `--qa-out-dir <path>` flag journals every inbound + outbound + CC dispatch event as JSONL per §107.x. Three new spec subsections capture the substrate: §32.9 (bot self-filter), §33.6 (envelope pre-text — verbatim operator mandate), §33.7 (Opus model pin). §43 command catalogue gains `pherald listen` row. Workspace at 16 Go modules (Wave 5 added `qaherald`; Wave 6 added no new module — inbound is `pherald/internal/inbound/`). 12 Wave-6 commits T1=`ad87d7f`..T12=`96c7c6b`. 8 new e2e invariants E63-E70 land in this revision (currently SKIP-with-documented-reason — auto-convert to PASS once T10b lands operator-supplied live evidence under `docs/qa/HRD-100-<run-id>/`). Wave 6 mutation gate `tests/test_wave6_mutation_meta.sh` (3 paired hermetic mutations, 4/4 PASS). Tag **v0.4.0 deferred to T13b** (operator-supplied live evidence per §107.x). Prior r11 — Wave 4b lands TOON (Token-Oriented Object Notation, `application/toon`) content negotiation as Herald's preferred wire format with JSON as honest fallback. Every `/v1/*` business route now honors `Accept: application/toon` (responses are real TOON bytes via the `digital.vasic.toon` submodule + `toon-format/toon-go` upstream); `Accept: application/json` keeps JSON; q-value preference honored; `*/*` and missing Accept go to the server default (TOON; `HERALD_DEFAULT_RESPONSE_CODEC=json` flips). `POST /v1/events` accepts both TOON and JSON request bodies (TOON transcoded to JSON before the Runner's EventParser; Runner stays codec-agnostic). TOONMiddleware auto-wired into `cli.RunServe` so every flavor binary (`pherald`/`cherald`/`sherald`/`bherald`/`rherald`/`iherald`/`scherald`) inherits for free. Real compression evidence — for sherald /v1/safety_state, TOON body is 215B vs 226B JSON (~5% saved on a tiny payload; larger tabular payloads see 30-60% per upstream measurements). 7 new e2e invariants (E56-E62; E62 SKIP-with-reason — encoder-failure fallback is unit-tested in `commons/cli/toon_test.go` because no Herald handler exposes a TOON-unencodable Go type). New `tests/test_wave4b_mutation_meta.sh` (5/5 PASS — M1 strip TOONMiddleware → E57 FAIL; M2 swap `toon.Marshal` → `json.Marshal` (2026-05-17 PASS-bluff recurrence) → E60 FAIL; M3 no-op transcodeRequestBody → pherald unit test FAIL; working-tree quiescence check; post-flight green). Tag **v0.3.0**. Workspace module count unchanged at 15. Prior r10 — Wave 4a HTTP/3 + Brotli + Alt-Svc + TLS 1.3 transport substrate; tag v0.2.0. Prior r9 — Wave 3b pherald `/v1/events` LIVE. r8 — Wave 3a substrate. |
 | Issues | none |
 | Issues summary | — |
@@ -1049,7 +1051,7 @@ Herald and all flavors MUST BE written in **Go**.
 
 **Toolchain pin:** Go **≥ 1.22** is mandatory (stdlib `log/slog`, OTel `slog` bridge, `slices` + `maps` generics). The repo's `go.mod` files declare `go 1.22` and set `toolchain go1.22.x` to the current patch release. Bumps to ≥ 1.23 are allowed when CI proves no regression; the `commons` module is the authoritative version (every flavor MUST follow).
 
-**License:** Herald is published under the terms in [`LICENSE`](../../../LICENSE) (parent project's chosen license). All `go.mod` files MUST declare the same license via a top-level comment, and every `LICENSE` file in vendored submodules MUST remain present. License compliance is checked by the planned `cherald` flavor (per §18.10) on every CI run when configured.
+**License:** Herald is published under the terms in [`LICENSE`](../../../../LICENSE) (parent project's chosen license). All `go.mod` files MUST declare the same license via a top-level comment, and every `LICENSE` file in vendored submodules MUST remain present. License compliance is checked by the planned `cherald` flavor (per §18.10) on every CI run when configured.
 
 Layout (per R-18, research Topic 5):
 
@@ -2780,7 +2782,7 @@ Once Herald is fully implemented and verified, **promote candidate universal rul
 
 > **Note:** Herald's implementation MUST BE in direct connection with the `constitution` Submodule — discovery via `find_constitution.sh` parent-walk per §103 / §105 of Herald Constitution.
 
-See [`../../guides/HERALD_CONSTITUTION.md`](../../guides/HERALD_CONSTITUTION.md) and [`../../guides/CONSTITUTION_INHERITANCE.md`](../../guides/CONSTITUTION_INHERITANCE.md).
+See [`../../../guides/HERALD_CONSTITUTION.md`](../../../guides/HERALD_CONSTITUTION.md) and [`../../../guides/CONSTITUTION_INHERITANCE.md`](../../../guides/CONSTITUTION_INHERITANCE.md).
 
 ### 22.1 How `constitution` rules are extended via `constitutable/`
 
@@ -2794,7 +2796,7 @@ Each `constitutable/<path>` MUST contain at least one of: `Constitution.md`, `CL
 
 > **Note:** Tests in the `constitution` Submodule MUST be properly extended and updated as `constitutable/` content changes.
 
-> **Note:** Herald is **primarily** consumed as a Submodule of another Project; in that case access to the `constitution` Submodule is through the root of that project (cloned under `project_root/constitution` or a configured alternative). For **standalone development** of Herald, the `constitution` is cloned **alongside** Herald (sibling-clone) — current development setup uses this layout. See [`../../guides/CONSTITUTION_INHERITANCE.md` §"Standalone development"](../../guides/CONSTITUTION_INHERITANCE.md#standalone-development) and R-10.
+> **Note:** Herald is **primarily** consumed as a Submodule of another Project; in that case access to the `constitution` Submodule is through the root of that project (cloned under `project_root/constitution` or a configured alternative). For **standalone development** of Herald, the `constitution` is cloned **alongside** Herald (sibling-clone) — current development setup uses this layout. See [`../../../guides/CONSTITUTION_INHERITANCE.md` §"Standalone development"](../../../guides/CONSTITUTION_INHERITANCE.md#standalone-development) and R-10.
 
 > **Note:** Carefully investigate the codebase of the `constitution` Submodule before any changes are applied. Comprehensive analysis precedes any extension or promotion.
 

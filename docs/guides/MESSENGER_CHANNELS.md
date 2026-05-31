@@ -445,7 +445,7 @@ The framework's hot paths (registry resolution, multi-channel fan-in, generalize
 - [ ] **10. qaherald scenario.** Add a `MessengerClient` implementation under `qaherald/internal/messenger/<yourname>/` and a `builder` case so `qaherald` can drive round-trip QA against your channel. The bidirectional transcript lands under `docs/qa/HRD-NNN-<run-id>/`.
 - [ ] **11. e2e + mutation gates.** Add positive-evidence invariants to `scripts/e2e_bluff_hunt.sh` and (when a release cycle next runs a mutation gate) paired mutations covering the critical paths (`Send`, `SendReplyGeneric`, `BotSelfIdentity`).
 - [ ] **12. Docs.** Add a `§X. <Channel>` section to THIS guide between Telegram (§3) and the troubleshooting section (§9), following the §3/§4 template (required env, obtaining credentials, transport details, capabilities table, security notes).
-- [ ] **13. Spec V3 row.** Add the channel to `docs/specs/mvp/specification.V3.md` §11 capabilities matrix and §43 catalogue.
+- [ ] **13. Spec V3 row.** Add the channel to `docs/specs/mvp/specification.V4.md` §11 capabilities matrix and §43 catalogue.
 - [ ] **14. Issues row.** Open the implementing HRD in `docs/Issues.md`; migrate to `docs/Fixed.md` atomically on close per §11.4.19.
 
 ### §8.2 What you do NOT touch

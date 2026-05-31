@@ -31,7 +31,7 @@
 - [Intended stack](#intended-stack)
 - [Multi-host mirror convention](#multi-host-mirror-convention)
 - [Inheritance gate (run before any commit touching root docs)](#inheritance-gate-run-before-any-commit-touching-root-docs)
-- [Spec-change rule (load-bearing — `docs/specs/mvp/specification.V3.md` §"Specification documents")](#spec-change-rule-load-bearing-docsspecsmvpspecificationmd-specification-documents)
+- [Spec-change rule (load-bearing — `docs/specs/mvp/specification.V4.md` §"Specification documents")](#spec-change-rule-load-bearing-docsspecsmvpspecificationmd-specification-documents)
 - [Project conventions from the spec (apply when scaffolding)](#project-conventions-from-the-spec-apply-when-scaffolding)
 - [`constitutable/` directory (parent-project extension hook)](#constitutable-directory-parent-project-extension-hook)
 - [Documentation artefacts (PDF/HTML siblings)](#documentation-artefacts-pdfhtml-siblings)
@@ -67,14 +67,14 @@ Canonical: <https://github.com/HelixDevelopment/HelixConstitution>
 > 4. This file (Herald-specific notes below).
 > 5. `docs/guides/HERALD_CONSTITUTION.md` — Herald's project-specific constitutional extensions.
 > 6. `docs/guides/CONSTITUTION_INHERITANCE.md` — operator/agent guide for the discovery contract + the inheritance gate.
-> 7. `docs/specs/mvp/specification.V3.md` — mission spec (mostly TBD).
+> 7. `docs/specs/mvp/specification.V4.md` — mission spec (mostly TBD).
 
 ## Project status
 
 Herald is in **first-implementation cycle (r1)** as of 2026-05-20. The Go scaffold has landed; live-integration work (HRD-010..HRD-012, HRD-016) is still open. The repo contains:
 
 - `README.md` — mission, deployment model, inheritance contract, quickstart.
-- `docs/specs/mvp/specification.V3.md` — MVP spec stub (substantive sections TBD).
+- `docs/specs/mvp/specification.V4.md` — MVP spec stub (substantive sections TBD).
 - `docs/guides/HERALD_CONSTITUTION.md` — Herald's project constitution (extends Helix).
 - `docs/guides/CONSTITUTION_INHERITANCE.md` — operator/agent guide for parent-discovery + gate semantics.
 - `upstreams/` — Herald's mirror declarations (see below).
@@ -295,13 +295,13 @@ The gate inline-walks parents for `<ancestor>/constitution/Constitution.md`. I5 
 
 If either script fails, fix at root cause per Universal §11.4.4. Never silently accept the FAIL.
 
-## Spec-change rule (load-bearing — `docs/specs/mvp/specification.V3.md` §"Specification documents")
+## Spec-change rule (load-bearing — `docs/specs/mvp/specification.V4.md` §"Specification documents")
 
 Any modification to a file under `docs/specs/` (any depth) triggers **mandatory comprehensive planning and implementation** of the implied changes — you may not edit the spec in isolation. This rule does **not** apply to creating or renaming files; for those, ask the operator what to do with the new path. Treat every spec edit as a project-wide ripple, not a doc tweak.
 
 ## Project conventions from the spec (apply when scaffolding)
 
-These are declared in `docs/specs/mvp/specification.V3.md` and are easy to miss because no code enforces them yet:
+These are declared in `docs/specs/mvp/specification.V4.md` and are easy to miss because no code enforces them yet:
 
 - **Workable-item prefix:** `HRD-` (e.g. `HRD-001`). Use it for issues, status entries, fix logs.
 - **Flavor binaries:** each Herald flavor ships as its own CLI binary, named `<prefix>herald` — `pherald` (Project Herald), `sherald` (System Herald), etc. Designed for CI / pipeline / cron / AI-agent invocation.

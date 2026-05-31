@@ -32,11 +32,11 @@
 
 Paste the following block into any CLI agent (Claude Code / OpenCode / Cursor / Aider / Gemini CLI) to resume Herald work exactly where it was left:
 
-> You are working on the Herald project at `~/Projects/Herald` (also reachable as the `Herald/` submodule of a consuming project). The Helix Universal Constitution lives at `<ancestor>/constitution/` (parent-walk discovery). Read in this order: `CLAUDE.md`, `AGENTS.md`, `README.md`, `docs/guides/HERALD_CONSTITUTION.md`, `docs/guides/CONSTITUTION_INHERITANCE.md`, `docs/specs/mvp/specification.V3.md`. Then read `docs/CONTINUATION.md` (this file) for live state, `docs/Issues.md` for open work, `docs/Status.md` for current phase, `docs/Fixed.md` for closed history. Go workspace builds via `go test ./commons/... ./commons_prefix/... ./commons_messaging/... ./commons_storage/...`. Inheritance gate `tests/test_constitution_inheritance.sh` MUST exit 0 before any commit. Multi-mirror fan-out push to four hosts (GitHub + GitLab + GitFlic + GitVerse) is mandatory per Constitution §103.
+> You are working on the Herald project at `~/Projects/Herald` (also reachable as the `Herald/` submodule of a consuming project). The Helix Universal Constitution lives at `<ancestor>/constitution/` (parent-walk discovery). Read in this order: `CLAUDE.md`, `AGENTS.md`, `README.md`, `docs/guides/HERALD_CONSTITUTION.md`, `docs/guides/CONSTITUTION_INHERITANCE.md`, `docs/specs/mvp/specification.V4.md`. Then read `docs/CONTINUATION.md` (this file) for live state, `docs/Issues.md` for open work, `docs/Status.md` for current phase, `docs/Fixed.md` for closed history. Go workspace builds via `go test ./commons/... ./commons_prefix/... ./commons_messaging/... ./commons_storage/...`. Inheritance gate `tests/test_constitution_inheritance.sh` MUST exit 0 before any commit. Multi-mirror fan-out push to four hosts (GitHub + GitLab + GitFlic + GitVerse) is mandatory per Constitution §103.
 
 ## §1. Snapshot
 
-- **Active spec:** `docs/specs/mvp/specification.V3.md` Revision 13 (~5080 lines).
+- **Active spec:** `docs/specs/mvp/specification.V4.md` Revision 13 (~5080 lines).
 - **Archived specs:** V1 + V2 in `docs/specs/mvp/archive/` (frozen).
 - **Go modules:** `commons`, `commons_prefix`, `commons_messaging`, `commons_storage`, `pherald` (all compile + unit tests pass).
 - **Container scaffold:** `quickstart/{docker-compose.quickstart.yml, Dockerfile.pherald, otel-config.yaml, .env.example}` for §26.5 quickstart.
@@ -233,8 +233,8 @@ The containers `herald-postgres` (port 24100) and `herald-redis` (port 24200) ar
 
 ## §5. Long-form pointers
 
-- `docs/specs/mvp/specification.V3.md` — full active spec (Revision 13).
-- `docs/specs/mvp/specification.V3.md#30-v2-self-review-log` — every review pass.
+- `docs/specs/mvp/specification.V4.md` — full active spec (Revision 1, supersedes V3).
+- `docs/specs/mvp/specification.V4.md#30-v2-self-review-log` — every review pass.
 - `docs/guides/HERALD_CONSTITUTION.md` — §101..§106 extending Universal.
 - `docs/guides/CONSTITUTION_INHERITANCE.md` — parent-discovery + gate.
 - `tests/test_constitution_inheritance.sh` — the gate.

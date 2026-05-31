@@ -33,7 +33,7 @@
 
 ## Specification
 
-- **Active spec:** `docs/specs/mvp/specification.V3.md` (Revision 13, ~5080 lines).
+- **Active spec:** `docs/specs/mvp/specification.V4.md` (Revision 1, ~5313 lines (supersedes V3)).
 - **Archived specs:** V1 + V2 in `docs/specs/mvp/archive/` (frozen).
 - **Recent sections:** §37 Tracker-doc change events; §38 Workable-item announcement contract; §39 Message presentation + Herald Canonical Template; §40 Documentation + 15 named test challenges; §41 REST API surface (Gin Gonic); §42 Constitution-binding integration; §43 Constitution-derived flavor commands (27 entries → HRD-029..HRD-056) + §43.2 catalogue-check addendum (r8); §44 Foundation implementation contract + §44.M Wave 2 milestone capture (r8); §6.3 Branding extension with per-flavor fields (r8); §18.0 Wave 2 flavor-binary catalogue (r8).
 - **Spec-change rule:** §23 + HERALD_CONSTITUTION §106 + I7 gate — green throughout.

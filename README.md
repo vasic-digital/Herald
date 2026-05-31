@@ -12,10 +12,10 @@
 | Created | 2026-05-15 |
 | Last modified | 2026-05-31 |
 | Status | active |
-| Status summary | r5: added an "Operator setup guides" note + doc-link that subscribers speak plain natural language (no command syntax) and the System determines intent via the three-tier discipline (command-recognition fast-path → Claude Code intent inference → `clarify` reply-tag-and-ask fallback) — authoritative contract `docs/design/INTENT_RECOGNITION.md`, detail in `docs/guides/MESSENGER_CHANNELS.md` §6B. Prior r4: added a credentials-guide bullet + doc-link for the `HERALD_<CHANNEL>_OPERATOR_USERNAME` operator env var and the participant/attribution contract (`docs/design/PARTICIPANT_ATTRIBUTION.md`) driving `created_by`/`assigned_to` attribution + notification @-tagging. Prior r3: updated spec links to V3 (active) + archive/ for V1/V2; repo-layout block reflects current docs/specs/mvp/ tree. |
+| Status summary | r5: added an "Operator setup guides" note + doc-link that subscribers speak plain natural language (no command syntax) and the System determines intent via the three-tier discipline (command-recognition fast-path → Claude Code intent inference → `clarify` reply-tag-and-ask fallback) — authoritative contract `docs/design/INTENT_RECOGNITION.md`, detail in `docs/guides/MESSENGER_CHANNELS.md` §6B. Prior r4: added a credentials-guide bullet + doc-link for the `HERALD_<CHANNEL>_OPERATOR_USERNAME` operator env var and the participant/attribution contract (`docs/design/PARTICIPANT_ATTRIBUTION.md`) driving `created_by`/`assigned_to` attribution + notification @-tagging. Prior r3: updated spec links to V4 (active) + archive/ for V1/V2; repo-layout block reflects current docs/specs/mvp/ tree. |
 | Issues | none |
 | Issues summary | — |
-| Fixed | spec-path references updated to specification.V3.md path |
+| Fixed | spec-path references updated to specification.V4.md path |
 | Fixed summary | aligned README with the V1→V2→V3 supersession chain |
 | Continuation | — |
 
@@ -48,7 +48,7 @@ Ingesting system events and reliably fanning them out to multiple notification c
 Herald is **pre-implementation** (2026-05-15). The repository currently contains:
 
 - This README.
-- The current specification at [`docs/specs/mvp/specification.V3.md`](docs/specs/mvp/specification.V3.md) — comprehensive (~3900 lines): project-integration contract, inbound processing pipeline, LLM/agent dispatch with Claude Code, tri-stage reply protocol, versioned reports, multi-format outbound attachments, nine refined flavors. V1 and V2 preserved in [`docs/specs/mvp/archive/`](docs/specs/mvp/archive/) for traceability.
+- The current specification at [`docs/specs/mvp/specification.V4.md`](docs/specs/mvp/specification.V4.md) — comprehensive (~3900 lines): project-integration contract, inbound processing pipeline, LLM/agent dispatch with Claude Code, tri-stage reply protocol, versioned reports, multi-format outbound attachments, nine refined flavors. V1 and V2 preserved in [`docs/specs/mvp/archive/`](docs/specs/mvp/archive/) for traceability.
 - Project-specific Constitution + operator/agent guides under [`docs/guides/`](docs/guides/).
 - Mirror declarations at [`upstreams/`](upstreams/) — one shell script per host that exports `UPSTREAMABLE_REPOSITORY`.
 - The inheritance gate + paired mutation meta-test at [`tests/`](tests/).
@@ -104,7 +104,7 @@ Herald/
 │   │   └── CONSTITUTION_INHERITANCE.md        # operator/agent guide for the inheritance contract
 │   └── specs/
 │       └── mvp/
-│           ├── specification.V3.md           # active spec (operator-product)
+│           ├── specification.V4.md           # active spec (operator-product)
 │           └── archive/
 │               ├── specification.V1.md       # historical, superseded
 │               └── specification.V2.md       # historical, superseded
@@ -152,7 +152,7 @@ In this order, read fully before submitting any change:
 4. [`CLAUDE.md`](CLAUDE.md) / [`AGENTS.md`](AGENTS.md) — Herald-specific guidance.
 5. [`docs/guides/HERALD_CONSTITUTION.md`](docs/guides/HERALD_CONSTITUTION.md) — Herald's articles §101–§106.
 6. [`docs/guides/CONSTITUTION_INHERITANCE.md`](docs/guides/CONSTITUTION_INHERITANCE.md) — the discovery contract and gate semantics.
-7. [`docs/specs/mvp/specification.V3.md`](docs/specs/mvp/specification.V3.md) — current spec (active). Historical V1/V2 in [`docs/specs/mvp/archive/`](docs/specs/mvp/archive/).
+7. [`docs/specs/mvp/specification.V4.md`](docs/specs/mvp/specification.V4.md) — current spec (active). Historical V1/V2 in [`docs/specs/mvp/archive/`](docs/specs/mvp/archive/).
 
 ## Operator setup guides
 
@@ -257,6 +257,6 @@ Per HelixConstitution §11.4.99 + Herald §108.n (Latest-Source Documentation Cr
 | Telegram official Bot API documentation | https://core.telegram.org/bots/api | §"Messengers" table — Telegram channel status (LIVE — HRD-011 + HRD-100). The substantive setup steps are in [`docs/guides/messengers/TELEGRAM.md`](docs/guides/messengers/TELEGRAM.md) + [`docs/guides/TELEGRAM.md`](docs/guides/TELEGRAM.md) which carry their own §11.4.99 footers. |
 | Anthropic — Claude Code documentation | https://docs.anthropic.com/claude-code | §"LLM / agent dispatchers" table — Claude Code status (LIVE — HRD-012 Fixed). The substantive setup steps are in [`docs/guides/dispatchers/CLAUDE_CODE.md`](docs/guides/dispatchers/CLAUDE_CODE.md) which carries its own §11.4.99 footer. |
 | Herald active blockers — MTProto credential setup | [`docs/requirements/blockers/missing_env_variables.md`](docs/requirements/blockers/missing_env_variables.md) | §"Active blockers" link target — that document carries the canonical Telegram-userbot safety walkthrough (the `recover@telegram.org` pre-login email; no VoIP / Google Voice / Twilio / TextNow numbers; one phone = one `api_id` forever; Short-name STRICTLY alphanumeric — underscores REJECTED; ratelimit + floodwait middlewares) with its own §11.4.99 footer. |
-| Herald spec V3 (source of truth) | [`docs/specs/mvp/specification.V3.md`](docs/specs/mvp/specification.V3.md) | §"Status" claims about Herald implementation maturity; §"Mission" canonical statement; §"Repository layout"; the V1→V2→V3 supersession chain. The spec itself carries its own §11.4.99 footer covering the external service contracts its design decisions depend on. |
+| Herald spec V3 (source of truth) | [`docs/specs/mvp/specification.V4.md`](docs/specs/mvp/specification.V4.md) | §"Status" claims about Herald implementation maturity; §"Mission" canonical statement; §"Repository layout"; the V1→V2→V3 supersession chain. The spec itself carries its own §11.4.99 footer covering the external service contracts its design decisions depend on. |
 
 **Re-verification cadence (per §11.4.99 (C)):** This README does not contain operator-actionable external-service instructions directly — those are in the linked guides, each with its own cadence. README-level re-verification is **on Herald structural changes** (repo-layout changes, new flavors, new mirror hosts, new linked guides) — no time-bound staleness. Linked guides MUST be kept current per their own footers.
