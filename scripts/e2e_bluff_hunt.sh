@@ -236,6 +236,24 @@ fail_names=()
 check() {
     local name="$1"; shift
     if eval "$@" > /tmp/e2e_out 2>&1; then
+        # §11.4 anti-bluff guard (P2-3): a `go test -run <regex>` whose regex
+        # matches NO test exits 0 with "[no tests to run]" — a silent SKIP-as-
+        # green that turns the invariant into a no-op if a targeted test is
+        # ever renamed. Treat "selected zero tests" as FAIL. We FAIL only when
+        # NO package ran any test (no real `ok` line, no `--- PASS/FAIL` line),
+        # so a multi-package run where some subpackages legitimately have no
+        # matching tests still PASSes (one real run is enough).
+        if printf '%s' "$*" | grep -q 'go test' && printf '%s' "$*" | grep -q -- '-run '; then
+            if grep -q 'no tests to run' /tmp/e2e_out 2>/dev/null \
+               && ! grep -qE '^--- (PASS|FAIL)|^ok[[:space:]][^[]*$' /tmp/e2e_out 2>/dev/null; then
+                echo "FAIL  ${name}"
+                echo "      (go test -run selected ZERO tests — invariant is a no-op; renamed test? §11.4 anti-bluff)"
+                tail -5 /tmp/e2e_out | sed 's/^/      /'
+                fail=$((fail+1))
+                fail_names+=("${name}")
+                return
+            fi
+        fi
         echo "PASS  ${name}"
         pass=$((pass+1))
     else
