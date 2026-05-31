@@ -47,7 +47,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>21</td>
+<td>22</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -63,44 +63,63 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td>**r21: added two participant-attribution columns —
-<code>Created-By</code> + <code>Assigned-To</code> — to the Fixed
-pipe-table, placed immediately AFTER the <code>Criticality</code> column
-(before <code>Title</code>) so the metadata stays grouped and the long
-<code>Title</code> stays at the right edge (per
-<code>docs/design/PARTICIPANT_ATTRIBUTION.md</code> §4c). Table widens
-7→9 columns; header + separator + every data row updated
-programmatically (<code>/tmp/add_attribution_cols.py</code>) so every
-row's `</td>
+<td>**r22: §11.4.90 + §11.4.19 atomic Obsolete→Fixed migration —
+received the 4 <code>Obsolete</code>-status HRDs from
+<code>Issues.md</code>: HRD-143 (<code>TestSubscribe_LiveBotAPI</code>
+legacy attended live test, superseded by §11.4.98 + HRD-140's MTProto
+<code>TestMTProto_Subscribe_AutonomousRoundTrip</code>), HRD-144
+(<code>tests/test_wave6_live_loop.sh</code> legacy closed-loop script,
+superseded by §11.4.98 + HRD-141's
+<code>TestMTProto_Wave6_AutonomousClosedLoop</code>), HRD-145
+(<code>qaherald lifecycle --manual</code> interactive mode, superseded
+by §11.4.98 + HRD-142's
+<code>TestMTProto_Wave65_LifecycleAutonomous</code>), HRD-015
+(Go-scaffold inheritance-gate I8 invariants, superseded-by-design-change
+— the I8 gate slot was repurposed for the §107 covenant I8a/b/c). Each
+carries its full <code>**Obsolete-Details:**</code> line (Since / Reason
+/ Superseding-item / triple-check evidence per §11.4.90); each
+superseding artefact was re-verified present on disk before migration
+(the three HRD-140/141/142 MTProto tests under
+<code>qaherald/internal/lifecycle/</code>, the I8a/b/c checks at
+<code>tests/test_constitution_inheritance.sh:133-137</code>). Commit
+column reads "Obsolete (no code change)" — these are doc-status
+migrations, not feature closures. Prior **r21: added two
+participant-attribution columns — <code>Created-By</code> +
+<code>Assigned-To</code> — to the Fixed pipe-table, placed immediately
+AFTER the <code>Criticality</code> column (before <code>Title</code>) so
+the metadata stays grouped and the long <code>Title</code> stays at the
+right edge (per <code>docs/design/PARTICIPANT_ATTRIBUTION.md</code>
+§4c). Table widens 7→9 columns; header + separator + every data row
+updated programmatically (<code>/tmp/add_attribution_cols.py</code>) so
+every row's `</td>
 </tr>
 <tr>
 <td>Issues</td>
-<td>see <code>Issues.md</code> — r43 (Issues.md) captures this r19
-§11.4.19 atomic migration of 51 code-verified HRDs (flavor bindings
-HRD-019..025, §43 catalogue HRD-029..056, Batch-D pgx HRD-085..089, Wave
-7 HRD-116/118/119/120/121, ATMOSphere features
-HRD-148/149/151/152/153/154); 17 items remain open in Issues.md.</td>
+<td>see <code>Issues.md</code> — r47 (Issues.md) records this r22
+§11.4.90+§11.4.19 atomic Obsolete→Fixed migration of the 4 Obsolete HRDs
+(HRD-143/144/145 + HRD-015); 10 items remain open in Issues.md.</td>
 </tr>
 <tr>
 <td>Issues summary</td>
-<td>17 still open in <code>Issues.md</code>: HRD-008, HRD-015, HRD-081
+<td>10 still open in <code>Issues.md</code>: HRD-008, HRD-081
 (operator/upstream); HRD-115 (Slack adapter — operator-gated on LIVE
 round-trip evidence per §107.x); HRD-117 (spec doc-only); HRD-131,
 HRD-150, HRD-155, HRD-156, HRD-157, HRD-158 (ATMOSphere/SSoT externally
-gated); HRD-146, HRD-147 (dispatch-hardening / governance-subscriber
-follow-ups); HRD-143/144/145 (Obsolete).</td>
+gated). The 4 Obsolete HRDs (HRD-143/144/145 + HRD-015) migrated here
+per §11.4.90.</td>
 </tr>
 <tr>
 <td>Fixed</td>
 <td>HRD-001..HRD-007, HRD-009, HRD-009b, HRD-010, HRD-011, HRD-012,
-HRD-013, HRD-014, HRD-016, HRD-017, HRD-018, HRD-019..HRD-025, HRD-026,
-HRD-027, HRD-028, HRD-029..HRD-056, HRD-080, HRD-085..HRD-089, HRD-090,
-HRD-092, HRD-093, HRD-094, HRD-095, HRD-096, HRD-097, HRD-098, HRD-099,
-HRD-100, HRD-110, HRD-111, HRD-112, HRD-113, HRD-114, HRD-116, HRD-118,
-HRD-119, HRD-120, HRD-121, HRD-122, HRD-123, HRD-124, HRD-125, HRD-126,
-HRD-127, HRD-128, HRD-129, HRD-130, HRD-132, HRD-133, HRD-134, HRD-135,
-HRD-136, HRD-137, HRD-138, HRD-139, HRD-140, HRD-141, HRD-142, HRD-146,
-HRD-147, HRD-148, HRD-149, HRD-151, HRD-152, HRD-153, HRD-154</td>
+HRD-013, HRD-014, HRD-015, HRD-016, HRD-017, HRD-018, HRD-019..HRD-025,
+HRD-026, HRD-027, HRD-028, HRD-029..HRD-056, HRD-080, HRD-085..HRD-089,
+HRD-090, HRD-092, HRD-093, HRD-094, HRD-095, HRD-096, HRD-097, HRD-098,
+HRD-099, HRD-100, HRD-110, HRD-111, HRD-112, HRD-113, HRD-114, HRD-116,
+HRD-118, HRD-119, HRD-120, HRD-121, HRD-122, HRD-123, HRD-124, HRD-125,
+HRD-126, HRD-127, HRD-128, HRD-129, HRD-130, HRD-132, HRD-133, HRD-134,
+HRD-135, HRD-136, HRD-137, HRD-138, HRD-139, HRD-140, HRD-141, HRD-142,
+HRD-143, HRD-144, HRD-145, HRD-146, HRD-147, HRD-148, HRD-149, HRD-151,
+HRD-152, HRD-153, HRD-154</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
@@ -208,6 +227,137 @@ pipe-holding child can't wedge <code>Output()</code> past the deadline.
 <td><code>a975d8b</code></td>
 <td><code>docs/research/oom-investigation-2026-05-29.md</code>; source
 <code>commons_messaging/dispatch/claude_code/{dispatch,claude_code,bootstrap,procgroup_unix,procgroup_other}.go</code>.</td>
+</tr>
+<tr>
+<td>HRD-143</td>
+<td>task</td>
+<td>low</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
+<td><strong>[Obsolete → §11.4.90]</strong>
+<code>TestSubscribe_LiveBotAPI</code> legacy live test — superseded by
+§11.4.98 + HRD-140. <strong>Obsolete-Details:</strong> Since 2026-05-28;
+Reason=superseded-by-later-mandate; Superseding-item=Universal §11.4.98
+(full-automation anti-bluff mandate) + Herald §108.m + HRD-140
+(<code>TestMTProto_Subscribe_AutonomousRoundTrip</code>, Fixed.md row,
+commit <code>367d58b</code>); Triple-check evidence: (a) git-grep
+verified the test still exists at
+<code>commons_messaging/channels/tgram/subscribe_integration_test.go</code>
+with the literal source comment "requires the operator to hand-send a
+message to the configured chat within the 60s window" (direct §11.4.98
+violation — runtime human action required during test execution), (b)
+git-log shows <code>367d58b</code> (HRD-140) introduced the
+MTProto-driven autonomous replacement, (c) runtime path: the new HRD-140
+test PASSED LIVE in 1.30s end-to-end with zero human action per
+<code>docs/qa/HRD-LIVE-MTPROTO-20260528T125321Z/E135_subscribe/transcript.txt</code>.
+Action: file is retained as a documentation artefact (commented
+<code>t.Skipf(§11.4.98 supersession)</code> body) — operators MUST use
+HRD-140's MTProto path.</td>
+<td>2026-05-29</td>
+<td>Obsolete (no code change)</td>
+<td>Universal §11.4.98 (inherited per §11.4.35); Herald §108.m /
+CLAUDE.md §11.4.98 restatement; superseding HRD-140 in Fixed.md;
+Catalogue-Check: n/a (Obsolete classification, not new code)</td>
+</tr>
+<tr>
+<td>HRD-144</td>
+<td>task</td>
+<td>low</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
+<td><strong>[Obsolete → §11.4.90]</strong>
+<code>tests/test_wave6_live_loop.sh</code> legacy live closed-loop
+script — superseded by §11.4.98 + HRD-141.
+<strong>Obsolete-Details:</strong> Since 2026-05-28;
+Reason=superseded-by-later-mandate; Superseding-item=Universal §11.4.98
++ Herald §108.m + HRD-141
+(<code>TestMTProto_Wave6_AutonomousClosedLoop</code>, Fixed.md row,
+commits <code>7e50ed0</code>+<code>d7d6524</code>+<code>0797e85</code>);
+Triple-check evidence: (a) <code>ls tests/test_wave6_live_loop.sh</code>
+confirms file exists (9139 bytes on disk 2026-05-31), (b) git-log shows
+<code>7e50ed0</code> (HRD-141) introduced the MTProto-driven autonomous
+closed-loop replacement with journal-based §11.4.98 autonomy assertion,
+(c) runtime path: HRD-141 PASSED LIVE in 48.58s with full bidirectional
+<code>tgram.message in</code> + <code>cc.dispatch</code> +
+<code>cc.reply</code> journal trace per
+<code>docs/qa/HRD-LIVE-MTPROTO-20260528T125321Z/E136_wave6_closed_loop/transcript*.txt</code>.
+Action: shell script retained as historical reference; new e2e flow goes
+through HRD-141.</td>
+<td>2026-05-29</td>
+<td>Obsolete (no code change)</td>
+<td>Universal §11.4.98 (inherited per §11.4.35); Herald §108.m /
+CLAUDE.md §11.4.98 restatement; superseding HRD-141 in Fixed.md;
+Catalogue-Check: n/a (Obsolete classification, not new code)</td>
+</tr>
+<tr>
+<td>HRD-145</td>
+<td>task</td>
+<td>low</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
+<td><strong>[Obsolete → §11.4.90]</strong>
+<code>qaherald lifecycle --manual</code> interactive mode — superseded
+by §11.4.98 + HRD-142. <strong>Obsolete-Details:</strong> Since
+2026-05-28; Reason=superseded-by-later-mandate;
+Superseding-item=Universal §11.4.98 + Herald §108.m + HRD-142
+(<code>TestMTProto_Wave65_LifecycleAutonomous</code>, Fixed.md row,
+commit <code>1f2e75d</code>); Triple-check evidence: (a)
+<code>grep -n '"manual"' qaherald/cmd/qaherald/lifecycle.go</code>
+confirms
+<code>cmd.Flags().BoolVar(&amp;f.Manual, "manual", false, ...)</code> is
+wired in the Cobra subcommand, (b) git-log shows <code>1f2e75d</code>
+(HRD-142) introduced the 3-scenario MTProto-driven autonomous
+replacement (Help/Status/Continue fast-paths, journal-based assertions),
+(c) runtime path: HRD-142 PASSED LIVE in 26.04s with 3/3 subtests PASS
+per
+<code>docs/qa/HRD-LIVE-MTPROTO-20260528T125321Z/E137_wave65_lifecycle/transcript*.txt</code>.
+Action: <code>--manual</code> flag retained for ad-hoc operator
+debugging but explicitly NOT a §11.4.98-compliant test path — CI MUST
+use the MTProto build-tag path from HRD-142.</td>
+<td>2026-05-29</td>
+<td>Obsolete (no code change)</td>
+<td>Universal §11.4.98 (inherited per §11.4.35); Herald §108.m /
+CLAUDE.md §11.4.98 restatement; superseding HRD-142 in Fixed.md;
+Catalogue-Check: n/a (Obsolete classification, not new code)</td>
+</tr>
+<tr>
+<td>HRD-015</td>
+<td>task</td>
+<td>low</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
+<td><strong>[Obsolete → §11.4.90]</strong> Inheritance gate I8
+invariants for Go scaffold (go.work + commons/types.go + null adapter
+test passes) — superseded by design change.
+<strong>Obsolete-Details:</strong> Since 2026-05-30;
+Reason=superseded-by-design-change; Superseding-item=the
+inheritance-gate <code>I8</code> slot was repurposed for the §107
+end-user-usability covenant
+(<code>I8a</code>/<code>I8b</code>/<code>I8c</code> in
+<code>tests/test_constitution_inheritance.sh:133-137</code>), and the
+Go-scaffold verification HRD-015 requested is now covered by the broader
+anti-bluff test suite rather than a dedicated gate invariant;
+Triple-check evidence: (a)
+<code>grep -nE 'I8[abc]' tests/test_constitution_inheritance.sh</code>
+shows the three I8a/b/c checks (lines 133-137) assert the §107 covenant
+anchors in CLAUDE.md/AGENTS.md/HERALD_CONSTITUTION.md — NOT the
+Go-scaffold (the <code>I8</code> number was reassigned), (b) the null
+adapter is a full tested adapter
+(<code>commons_messaging/channels/null/</code> carries
+<code>null.go</code> + <code>null_test.go</code>) and
+<code>commons/types.go</code> exists + builds green
+(<code>go.work</code> is gitignored per spec §9.1, regenerated on
+clone); the 2026-05-30 green-baseline reported 18/18 Go modules
+<code>ok</code> + inheritance gate 15 PASS / 0 FAIL, (c) runtime:
+HRD-015's intent (verify the Go scaffold passes) is continuously
+satisfied by <code>go test ./...</code> +
+<code>scripts/e2e_bluff_hunt.sh</code>, so a separate I8 scaffold
+invariant is redundant. Action: closed Obsolete; no code change.</td>
+<td>2026-05-30</td>
+<td>Obsolete (no code change)</td>
+<td>spec V3 §40 + gate I7 pattern; superseded by the §107 I8a/b/c gate +
+the broader test suite; Catalogue-Check: n/a (Obsolete classification,
+not new code)</td>
 </tr>
 <tr>
 <td>HRD-019</td>

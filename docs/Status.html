@@ -47,7 +47,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>21</td>
+<td>22</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -63,7 +63,17 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>r21: the participant-attribution feature
+<td>**r22: §11.4.90 + §11.4.19 atomic Obsolete→Fixed migration of the 4
+<code>Obsolete</code> HRDs (HRD-143 legacy
+<code>TestSubscribe_LiveBotAPI</code>, HRD-144
+<code>tests/test_wave6_live_loop.sh</code>, HRD-145
+<code>qaherald lifecycle --manual</code>, HRD-015 Go-scaffold I8
+invariants) — moved out of <code>Issues.md</code> into
+<code>Fixed.md</code>, each preserving its
+<code>**Obsolete-Details:**</code> triple-check evidence; every
+superseding artefact (HRD-140/141/142 MTProto tests + the §107 I8a/b/c
+gate checks) re-verified present before migration. Open count 14→10.
+Prior <strong>r21: the participant-attribution feature
 (<code>docs/design/PARTICIPANT_ATTRIBUTION.md</code> §4c) added two
 columns — <code>Created-By</code> + <code>Assigned-To</code> — to the
 <code>Issues.md</code> (r46; both the Open + In-progress pipe-tables,
@@ -188,19 +198,21 @@ closed HRD-016 (Wave 3b pherald Runner live). r12 closed HRD-011
 </tr>
 <tr>
 <td>Issues</td>
-<td>15 open in <code>Issues.md</code> r44: HRD-008, HRD-081
+<td>10 open in <code>Issues.md</code> r47: HRD-008, HRD-081
 (operator/upstream); HRD-115 (Slack adapter — operator-gated on LIVE
 round-trip evidence per §107.x); HRD-117 (spec doc-only); HRD-131,
 HRD-150, HRD-155, HRD-156, HRD-157, HRD-158 (ATMOSphere/SSoT externally
-gated); HRD-143/144/145 (Obsolete). The v1.0.0 closure-migration moved
-HRD-019..025 + HRD-029..056 + HRD-085..089 + HRD-116/118/119/120/121 +
-HRD-148/149/151/152/153/154 to <code>Fixed.md</code>.</td>
+gated). The 4 Obsolete HRDs (HRD-143/144/145 + HRD-015) were migrated to
+<code>Fixed.md</code> per §11.4.90; the v1.0.0 closure-migration earlier
+moved HRD-019..025 + HRD-029..056 + HRD-085..089 +
+HRD-116/118/119/120/121 + HRD-148/149/151/152/153/154 to
+<code>Fixed.md</code>.</td>
 </tr>
 <tr>
 <td>Issues summary</td>
-<td>see <code>Issues.md</code> r43 — §11.4.19 atomic migration of 51
-code-verified HRDs Issues→Fixed (v1.0.0 closure-migration); 17 items
-remain open, the rest evidence-gated.</td>
+<td>see <code>Issues.md</code> r47 — §11.4.90+§11.4.19 atomic
+Obsolete→Fixed migration of the 4 Obsolete HRDs; 10 items remain open,
+the rest evidence-gated.</td>
 </tr>
 <tr>
 <td>Fixed</td>
