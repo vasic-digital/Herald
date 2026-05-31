@@ -82,7 +82,7 @@ scripts)</td>
 </tr>
 <tr>
 <td>COMPLIANT-with-creds-bootstrap</td>
-<td>31 Go funcs + 1 shell script = <strong>32</strong></td>
+<td>32 Go funcs + 1 shell script = <strong>33</strong></td>
 </tr>
 <tr>
 <td>NON-COMPLIANT-manual-dep</td>
@@ -91,8 +91,11 @@ scripts)</td>
 </tr>
 <tr>
 <td>STRUCTURALLY-BROKEN</td>
-<td><strong>1</strong> (carved out of COMPLIANT-with-creds-bootstrap
-above for clarity)</td>
+<td><strong>0</strong> (the former item —
+<code>TestDispatch_LiveClaudeInvocation</code> — was reclassified
+COMPLIANT-with-creds-bootstrap on 2026-05-31 after its
+dedicated-test-only-session-UUID fix landed; see the resolution note
+below)</td>
 </tr>
 <tr>
 <td>OBSOLETE-CANDIDATE</td>
@@ -110,7 +113,7 @@ scope)</td>
 <h2 id="summary">Summary</h2>
 <p>Herald's test surface is overwhelmingly COMPLIANT under §11.4.98: 758
 of the 794 audited tests are fully self-driving — they run hermetically
-with no external dependency or no human action of any kind. A further 32
+with no external dependency or no human action of any kind. A further 33
 tests are <code>COMPLIANT-with-creds-bootstrap</code> per the
 §11.4.98(B) explicit exception: they require one-time credential setup
 (Telegram bot token + chat id in <code>.env</code>, <code>claude</code>
@@ -141,14 +144,22 @@ second Telegram bot drives the scenarios) and IS fully self-driving;
 only the explicit <code>--manual</code> legacy path is
 NON-COMPLIANT.</li>
 </ol>
-<p>One additional item is <strong>STRUCTURALLY-BROKEN</strong> (not
-manual-dep): <code>TestDispatch_LiveClaudeInvocation</code> fails when
-the operator-supplied <code>HERALD_CLAUDE_SESSION_UUID</code> collides
-with the conductor's own active Claude dev session (proven 2026-05-28 in
-<code>docs/qa/HRD-LIVE-20260528T082128Z/05_dispatch_live/</code>). The
-fix path is different from the manual-dep rewrites: assign a dedicated
-test-only session UUID, not introduce automation. Carved out separately
-for transparency.</p>
+<p><strong>Update 2026-05-31 — the former STRUCTURALLY-BROKEN item is
+RESOLVED.</strong> <code>TestDispatch_LiveClaudeInvocation</code>
+(<code>commons_messaging/dispatch/claude_code/dispatch_integration_test.go:39-139</code>)
+no longer accepts the conductor-colliding
+<code>HERALD_CLAUDE_SESSION_UUID</code>. The 2026-05-28 audit predicted
+the fix (dedicated test-only session UUID); the code now implements it:
+the test hard-rejects <code>HERALD_CLAUDE_SESSION_UUID</code> with
+<code>t.Fatalf</code> (lines 55-56), requires a DEDICATED
+<code>HERALD_CLAUDE_TEST_SESSION_UUID</code> (SKIP-with-reason when
+absent, lines 58-60), and hard-fails if that test UUID collides with the
+conductor's live anchored session (the §11.4.98 rule-2 collision guard
+via <code>d.ResolveSession()</code>, lines 83-84). It is therefore
+reclassified <strong>COMPLIANT-with-creds-bootstrap</strong> — once a
+throwaway test-only session UUID is supplied (one-time bootstrap, not
+human action during execution), the test is fully self-driving and
+cannot collide with the dev conductor's session.</p>
 <p>The next-step plan: <strong>Wave 8 Track B — MTProto user-client
 harness</strong>. Telegram bots cannot see other bots' messages (proven
 blocker, docs/research/telegram-bot-to-bot-constraint.md), so a 2nd-bot
@@ -405,13 +416,29 @@ autonomous).</td>
 round-trip. PROVEN compliant 2026-05-28 (PASS 12.10s).</td>
 </tr>
 <tr>
+<td><code>TestDispatch_LiveClaudeInvocation</code></td>
+<td><code>commons_messaging/dispatch/claude_code/dispatch_integration_test.go:39-139</code></td>
+<td><code>claude</code> (or <code>HERALD_CLAUDE_BIN</code>) on PATH +
+<code>HERALD_CLAUDE_PROJECT_NAME</code> + a DEDICATED
+<code>HERALD_CLAUDE_TEST_SESSION_UUID</code></td>
+<td>Reclassified from STRUCTURALLY-BROKEN on 2026-05-31. Rejects
+<code>HERALD_CLAUDE_SESSION_UUID</code> (lines 55-56
+<code>t.Fatalf</code>), requires a throwaway test-only session UUID
+(lines 58-60), and hard-fails on conductor-session collision via
+<code>d.ResolveSession()</code> (lines 83-84, §11.4.98 rule-2). Once a
+dedicated test UUID is supplied, fully self-driving — no human action,
+no conductor collision.</td>
+</tr>
+<tr>
 <td><code>TestDispatch_PersistsSessionState</code></td>
 <td><code>commons_messaging/dispatch/claude_code/persist_integration_test.go</code></td>
 <td><code>HERALD_CLAUDE_BIN</code> +
 <code>HERALD_CLAUDE_PROJECT_NAME</code> +
 <code>HERALD_CLAUDE_SESSION_UUID</code> + Podman/Docker</td>
-<td>Dispatch + DB persistence round-trip. No human action (but see
-Structurally-Broken section — same UUID-collision caveat applies).</td>
+<td>Dispatch + DB persistence round-trip. No human action. (Historical
+caveat: the prior UUID-collision risk was specific to
+<code>TestDispatch_LiveClaudeInvocation</code>, now resolved via the
+dedicated test-only UUID — see its row above.)</td>
 </tr>
 <tr>
 <td><code>TestLiveBoot_PostgresOnly</code></td>
@@ -627,47 +654,54 @@ fallback.</td>
 </tbody>
 </table>
 <h2
-id="structurally-broken-carved-out-for-clarity--not-manual-dep">STRUCTURALLY-BROKEN
-(carved out for clarity — not manual-dep)</h2>
+id="structurally-broken-none--the-one-former-item-is-resolved">STRUCTURALLY-BROKEN
+(none — the one former item is RESOLVED)</h2>
+<p>The 2026-05-28 audit carved out a single STRUCTURALLY-BROKEN item,
+<code>TestDispatch_LiveClaudeInvocation</code>. <strong>It was fixed and
+reclassified COMPLIANT-with-creds-bootstrap on 2026-05-31</strong> — the
+count above is now 0. The table below is retained as a forensic record
+of the original finding and its resolution.</p>
 <table>
 <thead>
 <tr>
 <th>Test</th>
 <th>File</th>
-<th>Failure mode</th>
+<th>Original failure mode (2026-05-28)</th>
 <th>Root cause</th>
-<th>Fix plan</th>
+<th>Resolution (2026-05-31)</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><strong><code>TestDispatch_LiveClaudeInvocation</code></strong></td>
-<td><code>commons_messaging/dispatch/claude_code/dispatch_integration_test.go</code>
-(lines 30-116)</td>
-<td>FAILs with exit code -1 + empty stdout when operator supplies
+<td><code>commons_messaging/dispatch/claude_code/dispatch_integration_test.go:39-139</code></td>
+<td>FAILed with exit code -1 + empty stdout when operator supplied
 <code>HERALD_CLAUDE_SESSION_UUID</code> equal to the conductor's own
 active dev-session UUID (proven 2026-05-28 in
 <code>docs/qa/HRD-LIVE-20260528T082128Z/05_dispatch_live/</code> — FAIL
 after 180.02s).</td>
 <td>Two different processes calling
 <code>claude --resume &lt;same-UUID&gt;</code> collide; one wins, the
-other exits -1. NOT a manual-dep — the test would PASS today against a
-dedicated test-only session UUID.</td>
-<td>Per §11.4.98 rule 2 (lesson captured 2026-05-28): test runs MUST use
-a dedicated test-only session UUID, never the conductor's. Refactor the
-test to bootstrap its own throwaway session via
-<code>bootstrapSession()</code> (the bootstrap test is already proven
-COMPLIANT) instead of accepting the operator-supplied UUID. Single-file
-change in <code>dispatch_integration_test.go</code>; no architecture
-rewrite.</td>
+other exits -1. NOT a manual-dep — the test PASSes against a dedicated
+test-only session UUID.</td>
+<td><strong>DONE.</strong> The test now (a) hard-rejects
+<code>HERALD_CLAUDE_SESSION_UUID</code> via <code>t.Fatalf</code> (lines
+55-56), (b) requires a DEDICATED
+<code>HERALD_CLAUDE_TEST_SESSION_UUID</code>, SKIP-with-reason when
+absent (lines 58-60), and (c) hard-fails if that test UUID collides with
+the conductor's live anchored session via
+<code>d.ResolveSession()</code> (lines 83-84, §11.4.98 rule-2 collision
+guard). Reclassified COMPLIANT-with-creds-bootstrap — see that table
+above.</td>
 </tr>
 </tbody>
 </table>
 <h2 id="obsolete-candidate-none-detected">OBSOLETE-CANDIDATE (none
 detected)</h2>
 <p>No NON-COMPLIANT test exercises a removed or superseded code path.
-All 4 NON-COMPLIANT items + the 1 STRUCTURALLY-BROKEN item target
-production code that is live and load-bearing
+All 4 NON-COMPLIANT items (plus the former STRUCTURALLY-BROKEN item, now
+resolved + reclassified COMPLIANT-with-creds-bootstrap on 2026-05-31)
+target production code that is live and load-bearing
 (<code>tgram.Subscribe</code> long-poll loop,
 <code>claude_code.Dispatch</code>, <code>pherald listen</code> inbound
 runtime, the full §32.6 ticket-lifecycle pipeline). The rewrite path is
@@ -721,11 +755,17 @@ NON-COMPLIANT items rewritten end-to-end (canonical target:
 <code>TestSubscribe_LiveBotAPI</code>).</td>
 </tr>
 <tr>
+<td><strong>2026-05-31 (T+3d, landed early)</strong></td>
+<td><code>STRUCTURALLY-BROKEN TestDispatch_LiveClaudeInvocation</code>
+FIXED (dedicated test-only session UUID, conductor-collision guard) and
+reclassified COMPLIANT-with-creds-bootstrap — ahead of the predicted
+T+23d closeout. STRUCTURALLY-BROKEN count → 0.</td>
+</tr>
+<tr>
 <td>2026-06-20 (T+23d)</td>
 <td>Wave 8 Track B implementation closeout — all 4 NON-COMPLIANT items
-rewritten +
-<code>STRUCTURALLY-BROKEN TestDispatch_LiveClaudeInvocation</code> fixed
-(dedicated test-only session UUID).</td>
+rewritten. (The <code>TestDispatch_LiveClaudeInvocation</code> fix
+originally bundled here already landed 2026-05-31, see above.)</td>
 </tr>
 <tr>
 <td><strong>2026-06-27 (T+30d)</strong></td>
@@ -805,13 +845,14 @@ dependency</td>
 </table>
 <hr />
 <p><strong>Audit posture statement.</strong> Herald is, to within the 4
-NON-COMPLIANT items above + the 1 STRUCTURALLY-BROKEN item,
-§11.4.98-compliant today. The 5 outstanding items are fully scoped to a
-single Wave (8 Track B) and a single dependency (operator-supplied
-Telegram user-account credentials). No structural rearchitecture is
-required; the rewrites swap drivers and keep assertions. The
-release-gate clock is honest: 30 days, no extension hatch, two paths
-(rewrite OR §11.4.90 Obsolete). The DEFAULT path of
+NON-COMPLIANT items above, §11.4.98-compliant today (the former 1
+STRUCTURALLY-BROKEN item was fixed + reclassified
+COMPLIANT-with-creds-bootstrap on 2026-05-31). The 4 outstanding items
+are fully scoped to a single Wave (8 Track B) and a single dependency
+(operator-supplied Telegram user-account credentials). No structural
+rearchitecture is required; the rewrites swap drivers and keep
+assertions. The release-gate clock is honest: 30 days, no extension
+hatch, two paths (rewrite OR §11.4.90 Obsolete). The DEFAULT path of
 <code>tests/test_wave6.5_lifecycle.sh</code> (automated qaherald-driven)
 is COMPLIANT today; only its explicit legacy <code>--manual</code> mode
 counts toward the debt.</p>

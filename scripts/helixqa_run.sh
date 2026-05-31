@@ -19,6 +19,16 @@
 #     PG + Gin boot), not a mock.
 #   - The desktop/cli bank runs the REAL compiled flavor binaries.
 #   - Any FAIL → this script exits non-zero (release-gate composable).
+#   - The launcher ATTEMPTS to boot Postgres (quickstart compose, mirroring
+#     scripts/e2e_bluff_hunt.sh) before deciding whether the api bank can run.
+#     When PG cannot be brought up, the api bank is SKIPPED as a DISTINCT,
+#     clearly-non-green outcome — a CLI-only green MUST NOT masquerade as full
+#     coverage. Exit-status contract:
+#         0 = all selected banks ran AND passed (api bank included).
+#         1 = a bank reported FAILURE (release-gate block).
+#         2 = PARTIAL / UNPROVEN — CLI bank passed but the api bank was SKIPPED
+#             (Postgres unreachable); the pherald /v1/* HTTP+security surface
+#             was NEVER exercised this run.
 #
 # Usage:
 #   scripts/helixqa_run.sh                 # banks-driven run (default)
@@ -59,9 +69,86 @@ export HERALD_AUTH_HMAC_SECRET="${HERALD_AUTH_HMAC_SECRET:-test-secret-32-bytes-
 
 PHERALD_PID=""
 EXIT_CODE=0
+# API_SKIPPED records the distinct "partial / unproven" outcome: the CLI bank
+# ran but the pherald /v1/* HTTP+security surface was NEVER exercised this run
+# (Postgres could not be brought up). It maps to a DEDICATED exit status (2)
+# so a CLI-only green can never masquerade as full coverage. See the summary
+# block + the final `exit` resolution at the bottom of this script.
+API_SKIPPED=0
+API_SKIP_REASON=""
 
 log()  { printf '[helixqa_run] %s\n' "$*"; }
 fail() { printf '[helixqa_run] FAIL: %s\n' "$*" >&2; EXIT_CODE=1; }
+
+# ── pg_self_heal <password> — dev-container role-password normalization ──
+# Mirrors scripts/e2e_bluff_hunt.sh's pg_self_heal: the shared herald-postgres
+# dev container (host port ${HERALD_PG_PORT}) may carry an arbitrary
+# POSTGRES_PASSWORD from a prior session / compose-up. `pherald serve` connects
+# with the DSN password baked into HERALD_PG_DSN ("herald_dev" by default), so
+# reconcile the role password to what THIS run needs right before connecting.
+# The container's LOCAL unix socket uses trust auth, so the ALTER works via
+# podman/docker exec regardless of the current password. No-op (returns 0) when
+# the container or its runtime is unavailable — never hard-fails.
+pg_self_heal() {
+    local pw="$1" rt=""
+    if command -v podman >/dev/null 2>&1; then rt="podman"
+    elif command -v docker >/dev/null 2>&1; then rt="docker"
+    else return 0; fi
+    "${rt}" exec herald-postgres psql -U herald -d herald \
+        -c "ALTER USER herald WITH PASSWORD '${pw}'" >/dev/null 2>&1 || true
+    return 0
+}
+
+# ── boot_postgres — bring the real PG up before deciding API_READY ──────
+# Mirrors scripts/e2e_bluff_hunt.sh's E13 PG boot: if PG is already reachable
+# on :${HERALD_PG_PORT} this is a no-op; otherwise it boots the quickstart
+# compose `postgres` service (podman preferred, docker fallback) and waits for
+# reachability. Returns 0 when PG is reachable at the end, non-zero otherwise.
+# When NO container runtime is present it falls through to a non-zero return so
+# the caller emits the honest SKIP (never a fabricated PASS).
+boot_postgres() {
+    if command -v nc >/dev/null 2>&1 && nc -z 127.0.0.1 "${HERALD_PG_PORT}" 2>/dev/null; then
+        log "Postgres already reachable on :${HERALD_PG_PORT} (no boot needed)"
+        return 0
+    fi
+    # Pick a compose driver. podman-compose / docker compose both consume the
+    # quickstart compose file used by e2e_bluff_hunt.sh.
+    local composed=0
+    if command -v podman-compose >/dev/null 2>&1; then
+        log "booting Postgres via podman-compose (quickstart compose, project herald-e2e)"
+        HERALD_DB_PASSWORD="herald_dev" \
+        HERALD_REDIS_PASSWORD="test-redis-password-DO-NOT-USE-IN-PROD" \
+        HERALD_PROJECT_NAME="Herald-HelixQA" \
+        HERALD_TENANT_ID="00000000-0000-0000-0000-000000000099" \
+            podman-compose -f "${REPO_ROOT}/quickstart/docker-compose.quickstart.yml" \
+            --project-name herald-e2e up -d postgres >"${OUT_DIR}/pg_boot.log" 2>&1 && composed=1 || true
+    elif command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
+        log "booting Postgres via docker compose (quickstart compose, project herald-e2e)"
+        HERALD_DB_PASSWORD="herald_dev" \
+        HERALD_REDIS_PASSWORD="test-redis-password-DO-NOT-USE-IN-PROD" \
+        HERALD_PROJECT_NAME="Herald-HelixQA" \
+        HERALD_TENANT_ID="00000000-0000-0000-0000-000000000099" \
+            docker compose -f "${REPO_ROOT}/quickstart/docker-compose.quickstart.yml" \
+            --project-name herald-e2e up -d postgres >"${OUT_DIR}/pg_boot.log" 2>&1 && composed=1 || true
+    else
+        log "no container runtime (podman-compose / docker compose) available — cannot boot Postgres"
+        return 1
+    fi
+    if [ "${composed}" != 1 ]; then
+        log "Postgres compose-up failed — see ${OUT_DIR}/pg_boot.log"
+        return 1
+    fi
+    # Wait for reachability (max 30s), mirroring the e2e boot loop.
+    for _ in $(seq 1 30); do
+        if command -v nc >/dev/null 2>&1 && nc -z 127.0.0.1 "${HERALD_PG_PORT}" 2>/dev/null; then
+            log "Postgres now reachable on :${HERALD_PG_PORT}"
+            return 0
+        fi
+        sleep 1
+    done
+    log "Postgres never became reachable on :${HERALD_PG_PORT} within 30s"
+    return 1
+}
 
 cleanup() {
     if [ -n "${PHERALD_PID}" ] && kill -0 "${PHERALD_PID}" 2>/dev/null; then
@@ -117,12 +204,17 @@ for flavor in pherald sherald cherald bherald rherald iherald scherald qaherald;
 done
 export HERALD_BIN_DIR
 
-# ── Boot a real pherald serve for the api bank (best-effort) ──────────
-# pherald serve REQUIRES a reachable Postgres (Wave 3b). When PG is not
-# reachable we SKIP the live serve boot with a recorded reason (§11.4.3)
-# rather than fail — the api bank still records the unreachable evidence.
+# ── Boot a real pherald serve for the api bank ────────────────────────
+# pherald serve REQUIRES a reachable Postgres (Wave 3b). We now ATTEMPT to
+# bring PG up first (mirroring scripts/e2e_bluff_hunt.sh's E13 PG boot via the
+# quickstart compose) rather than passively skipping when PG happens to be
+# down. Only when NO container runtime can boot PG do we fall through to the
+# honest, clearly-non-green SKIP (API_SKIPPED=1 → distinct exit status 2).
 API_READY=0
-if command -v nc >/dev/null 2>&1 && nc -z 127.0.0.1 "${HERALD_PG_PORT}" 2>/dev/null; then
+if boot_postgres; then
+    # Reconcile the dev container role password to the DSN the serve probe uses
+    # ("herald_dev"), exactly like e2e_bluff_hunt.sh's pg_self_heal before E7-E12.
+    pg_self_heal "herald_dev"
     log "Postgres reachable on :${HERALD_PG_PORT} — booting pherald serve on :${HERALD_HTTP_PORT}"
     HERALD_AUTH_MODE="${HERALD_AUTH_MODE}" \
     HERALD_AUTH_HMAC_SECRET="${HERALD_AUTH_HMAC_SECRET}" \
@@ -152,11 +244,16 @@ if command -v nc >/dev/null 2>&1 && nc -z 127.0.0.1 "${HERALD_PG_PORT}" 2>/dev/n
         export HELIXQA_HTTP_BASE_URL="https://127.0.0.1:${HERALD_HTTP_PORT}"
         log "exported HELIXQA_HTTP_BASE_URL=${HELIXQA_HTTP_BASE_URL}"
     else
-        log "SKIP api-serve: pherald serve never accepted HTTPS within 10s (see pherald_serve.log)"
+        API_SKIPPED=1
+        API_SKIP_REASON="pherald serve never accepted HTTPS within 10s (PG was up; see pherald_serve.log)"
+        log "API bank SKIPPED — ${API_SKIP_REASON}; the pherald /v1/* HTTP+security surface is UNPROVEN this run"
+        echo "API bank SKIPPED at ${RUN_ID}: ${API_SKIP_REASON}" >"${OUT_DIR}/api_serve_skip.txt"
     fi
 else
-    log "SKIP api-serve: Postgres :${HERALD_PG_PORT} unreachable (§11.4.3 SKIP-with-reason). The api bank requires a live pherald serve backed by PG."
-    echo "SKIP api-serve: Postgres :${HERALD_PG_PORT} unreachable at ${RUN_ID}" >"${OUT_DIR}/api_serve_skip.txt"
+    API_SKIPPED=1
+    API_SKIP_REASON="Postgres :${HERALD_PG_PORT} unreachable and no container runtime could boot it (§11.4.3 SKIP-with-reason)"
+    log "API bank SKIPPED — ${API_SKIP_REASON}; the pherald /v1/* HTTP+security surface is UNPROVEN this run"
+    echo "API bank SKIPPED at ${RUN_ID}: ${API_SKIP_REASON}" >"${OUT_DIR}/api_serve_skip.txt"
 fi
 export HERALD_HTTP_PORT
 
@@ -212,11 +309,35 @@ if [ "${HELIXQA_AUTONOMOUS:-0}" = 1 ]; then
 fi
 
 # ── Summary ───────────────────────────────────────────────────────────
+# Resolve the exit status:
+#   1 = a bank reported FAILURE (release-gate block, set via fail()).
+#   2 = PARTIAL / UNPROVEN — the CLI bank ran but the api bank was SKIPPED
+#       (PG could not be brought up), so the pherald /v1/* HTTP+security
+#       surface was NEVER exercised. A CLI-only green MUST NOT masquerade as
+#       full coverage, so this is a DISTINCT non-zero status.
+#   0 = all selected banks ran AND passed (full coverage, api included).
+# FAIL (1) dominates PARTIAL (2): a real failure outranks an unproven surface.
+FINAL_RC="${EXIT_CODE}"
+if [ "${FINAL_RC}" = 0 ] && [ "${API_SKIPPED}" = 1 ]; then
+    FINAL_RC=2
+fi
+
 log "=========================================================="
 log "HelixQA run ${RUN_ID} complete"
 log "  banks run:    ${BANKS}"
-log "  api live:     $([ "${API_READY}" = 1 ] && echo yes || echo 'no (skipped, see api_serve_skip.txt)')"
+if [ "${API_READY}" = 1 ]; then
+    log "  api bank:     RAN + passed (live pherald /v1/* HTTP+security surface exercised)"
+else
+    log "  api bank:     SKIPPED — Postgres unreachable; the pherald /v1/* HTTP+security surface is UNPROVEN this run"
+    log "                reason: ${API_SKIP_REASON}"
+    log "                NOTE: this run is PARTIAL — CLI bank only. NOT full coverage."
+fi
 log "  evidence dir: ${OUT_DIR}"
+case "${FINAL_RC}" in
+    0) log "  result:       PASSED — all selected banks ran AND passed (api included)";;
+    2) log "  result:       PARTIAL/UNPROVEN (exit 2) — CLI bank passed but api bank was SKIPPED";;
+    *) log "  result:       FAILED (exit ${FINAL_RC}) — a bank reported failures";;
+esac
 log "=========================================================="
 
-exit "${EXIT_CODE}"
+exit "${FINAL_RC}"

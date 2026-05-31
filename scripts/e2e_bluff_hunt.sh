@@ -299,8 +299,8 @@ check "E2 version --json returns valid JSON with required fields" \
 # E3: Default test suite.
 echo ""
 echo "== E3: Default-mode go test suite =="
-check "E3 go test -race -count=1 across 11 Herald packages" \
-    "go test -race -count=1 ./commons/... ./commons_prefix/... ./commons_messaging/... ./commons_storage/... ./commons_constitution/... ./commons_infra/... ./pherald/..."
+check "E3 go test -race -count=1 across 11 Herald module trees (commons, commons_prefix, commons_messaging, commons_storage, commons_constitution, commons_infra, commons_auth, commons_tls, commons_watch, commons_workable, pherald)" \
+    "go test -race -count=1 ./commons/... ./commons_prefix/... ./commons_messaging/... ./commons_storage/... ./commons_constitution/... ./commons_infra/... ./commons_auth/... ./commons_tls/... ./commons_watch/... ./commons_workable/... ./pherald/..."
 
 # ----------------------------------------------------------------------
 # E4: Gate + paired meta.
@@ -2081,6 +2081,12 @@ SC_CREDSSCAN_DIR="$(sc_newest 'HRD-036-*')"
 # §43 stragglers — HRD-034 sherald backup-snapshot / HRD-047 scherald status-digest.
 SC_SYS_BACKUP_DIR="$(sc_newest 'HRD-034-*')"
 SC_SCHED_DIGEST_DIR="$(sc_newest 'HRD-047-*')"
+# Batch-D real-PG integration (HRD-085..089) + Wave 7 Slack adapter (HRD-115) +
+# qaherald Slack client (HRD-116) — resolve newest-timestamped run dir so a
+# re-capture under a new timestamp is still found (no hardcoded timestamp).
+SC_BATCHD_DIR="$(sc_newest 'HRD-085-089-*')"
+SC_SLACK_ADAPTER_DIR="$(sc_newest 'HRD-115-*')"
+SC_QAHERALD_SLACK_DIR="$(sc_newest 'HRD-116-*')"
 
 # sc_anchor <invariant-label> <evidence-file> <literal-anchor-string>
 # Asserts the captured-evidence file contains the load-bearing anchor value.
@@ -2334,7 +2340,7 @@ if [ "${HERALD_BATCHD_LIVE:-}" = "1" ] && nc -z 127.0.0.1 24100 2>/dev/null; the
 else
     echo "SKIP  E123 (set HERALD_BATCHD_LIVE=1 + a DEDICATED clean PG :24100 to exercise — the self-booting suite collides with this e2e's shared PG; §11.4.3 explicit SKIP-with-reason; committed real-PG evidence: docs/qa/HRD-085-089-20260528T070000Z/integration_realpg.log = 14 PASS / 0 FAIL)"
 fi
-sc_anchor "E123" "docs/qa/HRD-085-089-20260528T070000Z/integration_realpg.log" "QA-ANCHOR: HRD-085-089-BATCHD-REALPG-INTEGRATION-20260528"
+sc_anchor "E123" "${SC_BATCHD_DIR:+${SC_BATCHD_DIR}/integration_realpg.log}" "QA-ANCHOR: HRD-085-089-BATCHD-REALPG-INTEGRATION-20260528"
 
 # ---- E124-E131: Wave 7 multi-channel framework + Slack invariants (HRD-118) ----
 # All anchored to live test names in the channels framework (HRD-110..114) +
@@ -2351,7 +2357,7 @@ check "E125 tgram bot self-filter still drops self-echo + keeps cross-bot (post-
 
 check "E126 slack adapter — channels.Channel satisfied + auth.test self-identity + chat.postMessage wire bytes + init() registry wiring (T6)" \
     "go test -race -count=1 -run 'TestSlackSatisfiesChannel|TestSlackRegistryWiring|TestSlackBotSelfIdentityViaAuthTest|TestSlackSendCrossesWireWithText' ./commons_messaging/channels/slack/..."
-sc_anchor "E126" "docs/qa/HRD-115-20260528T080000Z/transcript.txt" "QA-ANCHOR: HRD-115-WAVE7-T6-SLACK-ADAPTER-20260528"
+sc_anchor "E126" "${SC_SLACK_ADAPTER_DIR:+${SC_SLACK_ADAPTER_DIR}/transcript.txt}" "QA-ANCHOR: HRD-115-WAVE7-T6-SLACK-ADAPTER-20260528"
 
 if [ -n "${HERALD_SLACK_BOT_TOKEN:-}" ] && [ -n "${HERALD_SLACK_CHANNEL_ID:-}" ] \
    && grep -q 'func TestSlack_Live_Send' qaherald/internal/messenger/*_test.go 2>/dev/null; then
@@ -2372,7 +2378,7 @@ check "E130 multi-channel pherald listen — Subscribers map dispatch + clean ct
 
 check "E131 qaherald messenger.Build(BuildConfig) — tgram + slack + unknown-channel-errors-loud (T7)" \
     "go test -race -count=1 -run 'TestBuilderTgram|TestBuilderSlack|TestBuilderUnknownErrors' ./qaherald/internal/messenger/..."
-sc_anchor "E131" "docs/qa/HRD-116-20260528T090000Z/transcript.txt" "QA-ANCHOR: HRD-116-WAVE7-T7-QAHERALD-SLACK-CLIENT-20260528"
+sc_anchor "E131" "${SC_QAHERALD_SLACK_DIR:+${SC_QAHERALD_SLACK_DIR}/transcript.txt}" "QA-ANCHOR: HRD-116-WAVE7-T7-QAHERALD-SLACK-CLIENT-20260528"
 
 # ---- E132-E133: tgram §11.4.85 stress + chaos (HRD-137) ----
 # Wave C closure — multi-recipient fan-out stress proves the Send path under
