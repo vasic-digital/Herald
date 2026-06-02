@@ -329,6 +329,16 @@ func recipientOf(ev commons.InboundEvent) commons.Recipient {
 // identical to the Wave 6 switch case.
 func (d *Dispatcher) actReply(ctx context.Context, dc dispatchCtx) error {
 	rcpt := recipientOf(dc.ev)
+	// An empty reply text must NOT be sent (adapters reject an empty body) and
+	// must NOT crash the inbound runtime: a single malformed/empty Claude reply
+	// would otherwise bubble a fatal error up through Subscribe → fail-loud →
+	// take down the entire multi-channel listener. Treat it as a no-op-with-log
+	// (the message was processed; Claude simply produced no text to send back).
+	if strings.TrimSpace(dc.reply.Text) == "" {
+		log.Printf("inbound: reply skipped — empty reply text (event=%s channel=%s user=%s); message processed, nothing to send back",
+			dc.ev.EventID, dc.ev.Sender.Channel, dc.ev.Sender.ChannelUserID)
+		return nil
+	}
 	if _, err := d.reply.SendReply(ctx, rcpt, dc.reply.Text, dc.replyToID, nil); err != nil {
 		return fmt.Errorf("inbound: send reply: %w", err)
 	}

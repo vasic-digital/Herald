@@ -1,0 +1,20 @@
+=== RUN   TestSlack_LiveRoundTrip
+    slack_roundtrip_test.go:113: pherald built at /tmp/claude-501/TestSlack_LiveRoundTrip3521368652/001/pherald
+    slack_roundtrip_test.go:130: QA user identity: milos85vasic
+    slack_roundtrip_test.go:162: pherald listen --channels slack PID=41583 (project=Herald-Slack-Test-1780389151762872000, journal=/tmp/claude-501/TestSlack_LiveRoundTrip3521368652/001/qa-journal)
+    slack_roundtrip_test.go:214: QA user posted probe ts=1780389157.417319 text="Please reply with a brief acknowledgement that includes this exact token verbatim: Herald-Slack-Test-1780389151762872000-41583"
+    slack_roundtrip_test.go:218: waiting up to 180s for journal entries proving autonomy chain (in/dispatch/reply)...
+    slack_roundtrip_test.go:226: ✓ journal: inbound message carrying our probe text (channel:slack)
+    slack_roundtrip_test.go:230: ✓ journal: cc.dispatch out referencing our probe text
+    slack_roundtrip_test.go:234: ✓ journal: cc.reply in — Claude responded
+    slack_roundtrip_test.go:248: PASS: §11.4.98 autonomy chain proven via journal — Slack user → bot inbound (Socket Mode) → Claude dispatch → Claude reply
+    slack_roundtrip_test.go:270: bot reply NOT observed in Slack within 40s: context deadline exceeded
+    slack_roundtrip_test.go:288: §11.4.98 autonomy chain PROVEN (in→dispatch→Claude-reply); reply-DELIVERY to Slack NOT proven — fresh bootstrap session returns empty reply text (HRD-159, cross-channel; tgram has the same gap). pherald log tail:
+        pherald listen: starting inbound runtime for channel(s): slack
+        pherald listen: QA journaling enabled — /tmp/claude-501/TestSlack_LiveRoundTrip3521368652/001/qa-journal
+        pherald listen: docs dir docs; 0 operator(s) authorised for Done:/Reopen:
+        pherald listen: workable-item mutation enabled (item.update/item.delete/confirmed-investigation)
+        2026/06/02 13:32:48 inbound: reply skipped — empty reply text (event= channel=slack user=C0B76L5BPDM); message processed, nothing to send back
+--- SKIP: TestSlack_LiveRoundTrip (61.05s)
+PASS
+ok  	github.com/vasic-digital/herald/qaherald/internal/lifecycle	62.219s

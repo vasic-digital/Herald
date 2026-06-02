@@ -194,6 +194,44 @@ implementation PR will re-verify.</p>
 </thead>
 <tbody>
 <tr>
+<td>HRD-159</td>
+<td>bug</td>
+<td>open</td>
+<td>high</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
+<td>§11.4.98 reply-DELIVERY evidence gap (CROSS-CHANNEL). The
+fully-automated round-trip harnesses prove the autonomy chain (user →
+Socket-Mode/MTProto inbound → Claude dispatch → Claude reply) but do NOT
+prove the final reply-DELIVERY leg (Claude's reply text posted back to
+the messenger): <code>pherald listen</code> bootstraps a FRESH,
+context-less Claude session per §11.4.98 rule-2 (no collision with the
+dev conductor), and such a session returns an EMPTY reply text →
+<code>inbound: reply skipped — empty reply text</code> → nothing is
+posted back. Affects BOTH channels: the Telegram round-trip
+(<code>qaherald/internal/lifecycle/mtproto_wave6_loop_test.go:255</code>)
+masked this with a soft "BONUS" log; the Slack round-trip
+(<code>slack_roundtrip_test.go</code>) now SKIPs-with-reason instead of
+false-passing. Found 2026-06-02 by hardening the Slack reply assertion
+(ts&gt;probe freshness gate) during HRD-115 live work. Fix options to
+investigate: (a) seed the bootstrap test session with minimal repo/reply
+context so a real reply is produced; (b) a dedicated long-lived
+context-rich QA session (non-colliding); (c) assert delivery against a
+deterministic fast-path reply (e.g. a status/help command that does NOT
+round-trip through CC). Robustness already hardened: an empty reply no
+longer crashes the listener (<code>dispatcher.go</code> actReply
+empty-text guard +
+<code>TestDispatcherEmptyReplyDoesNotCrash</code>).</td>
+<td>2026-06-02</td>
+<td>2026-06-02</td>
+<td><code>qaherald/internal/lifecycle/slack_roundtrip_test.go</code>
+(SKIP-with-reason);
+<code>qaherald/internal/lifecycle/mtproto_wave6_loop_test.go:255</code>
+(same gap, soft BONUS);
+<code>pherald/internal/inbound/dispatcher.go</code> actReply guard;
+§11.4.98; relates HRD-115.</td>
+</tr>
+<tr>
 <td>HRD-081</td>
 <td>task</td>
 <td>open</td>

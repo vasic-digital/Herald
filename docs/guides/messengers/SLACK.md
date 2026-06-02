@@ -29,6 +29,7 @@ This guide walks you through every step needed to enable Slack in Herald — fro
 - [Step 5 — Find the channel ID + invite the bot](#5--step-5--find-the-channel-id--invite-the-bot)
 - [Step 6 — Provide the credentials to Herald (env vars)](#6--step-6--provide-the-credentials-to-herald-env-vars)
 - [Step 7 — Verify the live round-trip (E127 / `TestSlack_Live_Send`)](#7--step-7--verify-the-live-round-trip-e127--testslack_live_send)
+- [Step 7a — The fully-automated inbound round-trip (§11.4.98 / `TestSlack_LiveRoundTrip`)](#7a--step-7a--the-fully-automated-inbound-round-trip-11498--testslack_liveroundtrip)
 - [Step 8 — Token security (§107 redaction, rotation)](#8--token-security-107-redaction-rotation)
 - [Step 9 — Troubleshooting](#9--step-9--troubleshooting)
 - [Step 10 — Pre-deploy operator audit checklist](#10--step-10--pre-deploy-operator-audit-checklist)
@@ -160,6 +161,7 @@ Herald reads exactly these env vars for Slack (verified against `pherald/cmd/phe
 | `HERALD_SLACK_BOT_TOKEN` | the `xoxb-…` bot token (§3) | outbound (`chat.postMessage`, `auth.test`, `files.*`); E127 live test | **Yes** |
 | `HERALD_SLACK_CHANNEL_ID` | the target channel ID, e.g. `C0123ABCD` (§5) | default outbound destination; E127 live test | **Yes** (for E127 + outbound) |
 | `HERALD_SLACK_APP_TOKEN` | the `xapp-…` app-level token (§4) | inbound **Socket Mode** (`Subscribe`) | Only for inbound; optional for outbound-only |
+| `HERALD_SLACK_QA_USER_TOKEN` | a Slack **user** OAuth token (`xoxp-…`) for a member of the channel (§7a) | the §11.4.98 self-driving inbound **round-trip** QA harness (`TestSlack_LiveRoundTrip`) — drives the *user* side | Only for the round-trip QA test |
 | `HERALD_SLACK_OPERATOR_USERNAME` | the operator's Slack `@username` | participant attribution / tagging (§109, the `HERALD_<CHANNEL>_OPERATOR_USERNAME` family) | Optional |
 
 **Where to put them.** Per [CLAUDE.md](../../../CLAUDE.md) credential rules and [`../OPERATOR_CREDENTIALS.md`](../OPERATOR_CREDENTIALS.md):
@@ -173,6 +175,8 @@ HERALD_SLACK_BOT_TOKEN=xoxb-<13-digit-team>-<13-digit-bot>-<24-char-secret>
 HERALD_SLACK_CHANNEL_ID=C0123ABCD
 # Only needed if you want inbound (Socket Mode) replies:
 HERALD_SLACK_APP_TOKEN=xapp-1-<app-id>-<config-token-id>-<secret>
+# Only needed for the §11.4.98 self-driving inbound round-trip QA test (§7a):
+# HERALD_SLACK_QA_USER_TOKEN=xoxp-<user-oauth-token>
 # Optional — attribution/tagging:
 # HERALD_SLACK_OPERATOR_USERNAME=@yourhandle
 ```
@@ -222,6 +226,39 @@ docs/qa/HRD-115-LIVE-<run-id>/
 (e.g. `docs/qa/HRD-115-LIVE-20260531T120000Z/transcript.txt`). Hand this back to the operator — this is what closes HRD-115 from "code complete, awaiting live evidence" to **Fixed**. Until it lands, HRD-115 stays open and E127 stays SKIP (the hermetic transcripts at `docs/qa/HRD-115-20260528T080000Z/` + `docs/qa/HRD-116-20260528T090000Z/` are the standing §107 evidence).
 
 > **Note on the test's current state.** As shipped, `TestSlack_Live_Send` is a **future operator-evidence task** — the e2e guard checks for its *presence* precisely so that running `-run TestSlack_Live_Send` against a missing test cannot silently report "no tests to run" as a PASS. If the test is not yet present in your checkout, E127 will SKIP with that exact reason; the hermetic `TestSlackClientSendCrossesWire` / `TestBuilderSlack` tests (E126/E131) already exercise the wire path against an httptest server.
+
+## 7a — Step 7a — The fully-automated inbound round-trip (§11.4.98 / `TestSlack_LiveRoundTrip`)
+
+§7 above (E127 / `TestSlack_Live_Send`) proves the **send** side — a real `chat.postMessage` returns a real `ts`. The **inbound round-trip** — a subscriber message arriving over Socket Mode, being dispatched to Claude Code, and getting a reply back — is proven by a separate, fully-self-driving harness: `TestSlack_LiveRoundTrip` (in `qaherald/internal/lifecycle/`, build tag `integration`). This is the §11.4.98-compliant analog of the Telegram/MTProto closed-loop harness; it is what closes **HRD-115** from "send-side proven" to a fully-proven round-trip.
+
+**Why a separate QA *user* token is required (the echo-wall).** A Slack **bot never receives its own messages** over Socket Mode — the platform deliberately suppresses self-echoes (and Herald's `§32.9` self-filter drops them defensively too). So the pherald bot can never see a message authored by *itself*. To drive a real inbound message the harness needs a **second, distinct identity**: a Slack **user** (`xoxp-…`) that posts into the channel as a human would. The bot then receives *that* user's message, exactly as it would in production.
+
+**`HERALD_SLACK_QA_USER_TOKEN`** is that user OAuth token:
+
+- **Type:** a **user** token (`xoxp-…`), NOT a bot token. (Install the app with a **User Token Scope**, or use a token minted for a real workspace user.)
+- **Scopes:** `chat:write` (to post the probe as the user) + `channels:history` (to read the bot's reply back via `conversations.history`). Use `groups:history` instead of `channels:history` if `HERALD_SLACK_CHANNEL_ID` is a **private** channel.
+- **Membership:** the user behind the token **must be a member of** `HERALD_SLACK_CHANNEL_ID` (post + history both require it). Invite the user (or yourself) to the channel first.
+
+**What the harness does, with ZERO human action during the run:**
+
+1. Builds `pherald` and spawns `pherald listen --channels slack` (wired to `HERALD_SLACK_BOT_TOKEN` + `HERALD_SLACK_APP_TOKEN`, journaling to a temp `--qa-out-dir`), with a **dedicated Claude session name** so it never collides with your dev session (§11.4.98 rule 2).
+2. Waits for the Socket Mode connection, then **posts a unique nonce-bearing probe as the QA user** (`chat.postMessage` via `HERALD_SLACK_QA_USER_TOKEN`).
+3. Asserts the autonomy chain via the pherald JSONL journal — inbound message (`channel:slack`) carrying the probe → `cc.dispatch` → `cc.reply` — and, as a bonus, reads the bot's reply back via `conversations.history`.
+4. SIGTERMs the listen subprocess and asserts a clean exit.
+5. Writes a **redacted** transcript (tokens + `wss://` scrubbed) under `docs/qa/HRD-115-LIVE-roundtrip-<TS>/`.
+
+**The exact command:**
+
+```bash
+cd /Users/milosvasic/Projects/Herald
+HERALD_SLACK_BOT_TOKEN='xoxb-…' \
+HERALD_SLACK_APP_TOKEN='xapp-…' \
+HERALD_SLACK_CHANNEL_ID='C0123ABCD' \
+HERALD_SLACK_QA_USER_TOKEN='xoxp-…' \
+go test -tags=integration -count=1 -run TestSlack_LiveRoundTrip ./qaherald/internal/lifecycle/... -timeout=300s -v
+```
+
+Without all four credentials (and a `claude` binary on `PATH` or `HERALD_CLAUDE_BIN`), the test **SKIPs with an explicit reason** (§11.4.3) — never a fake pass, never a manual-action prompt.
 
 ## 8 — Token security (§107 redaction, rotation)
 

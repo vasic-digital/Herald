@@ -213,6 +213,48 @@ func TestDispatcherReplyPassesMessageID(t *testing.T) {
 	}
 }
 
+// TestDispatcherEmptyReplyDoesNotCrash locks in the §107 robustness fix: an
+// empty (or whitespace-only) reply text from Claude must NOT be sent to the
+// adapter (adapters reject an empty body) and must NOT return an error — a
+// single empty reply otherwise bubbles up through Subscribe → fail-loud and
+// takes down the entire multi-channel inbound listener. Regression for the
+// live Slack round-trip "slack.SendReply: empty body" crash (2026-06-02).
+func TestDispatcherEmptyReplyDoesNotCrash(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		stdout string
+	}{
+		{"empty text", `<<<HERALD-REPLY>>> {"action":"reply","text":""}`},
+		{"whitespace-only text", `<<<HERALD-REPLY>>> {"action":"reply","text":"   \n\t "}`},
+		{"default action empty text", `<<<HERALD-REPLY>>> {"text":""}`},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			rr := &recordingReplier{}
+			d, err := inbound.NewDispatcher(inbound.Config{
+				ProjectName: "T",
+				Code:        stubCode{stdout: tc.stdout},
+				Reply:       rr,
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			ev := commons.InboundEvent{
+				EventID: "01H",
+				Sender:  commons.Recipient{Channel: "slack", ChannelUserID: "U123"},
+				Body:    commons.Body{Plain: "ping"},
+			}
+			// Must NOT error — the listener must survive an empty reply.
+			if err := d.Handle(context.Background(), ev); err != nil {
+				t.Fatalf("empty reply must not error (would fail-loud the listener): %v", err)
+			}
+			// Must NOT have called SendReply with the empty body.
+			if rr.called {
+				t.Fatalf("SendReply was called with an empty body (got %q) — adapters reject this and it crashes the subscriber", rr.lastText)
+			}
+		})
+	}
+}
+
 // Telegram getUpdates JSON-decodes numeric fields into float64 when
 // unmarshalled into map[string]any. Confirm extractReplyToMessageID
 // handles this realistic case (qaherald-flavored ingest path).

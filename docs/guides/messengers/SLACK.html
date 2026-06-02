@@ -189,6 +189,10 @@ Provide the credentials to Herald (env vars)</a></li>
 href="#7--step-7--verify-the-live-round-trip-e127--testslack_live_send">Step
 7 — Verify the live round-trip (E127 /
 <code>TestSlack_Live_Send</code>)</a></li>
+<li><a
+href="#7a--step-7a--the-fully-automated-inbound-round-trip-11498--testslack_liveroundtrip">Step
+7a — The fully-automated inbound round-trip (§11.4.98 /
+<code>TestSlack_LiveRoundTrip</code>)</a></li>
 <li><a href="#8--token-security-107-redaction-rotation">Step 8 — Token
 security (§107 redaction, rotation)</a></li>
 <li><a href="#9--step-9--troubleshooting">Step 9 —
@@ -565,6 +569,15 @@ public channels only.</p>
 <td>Only for inbound; optional for outbound-only</td>
 </tr>
 <tr>
+<td><code>HERALD_SLACK_QA_USER_TOKEN</code></td>
+<td>a Slack <strong>user</strong> OAuth token (<code>xoxp-…</code>) for
+a member of the channel (§7a)</td>
+<td>the §11.4.98 self-driving inbound <strong>round-trip</strong> QA
+harness (<code>TestSlack_LiveRoundTrip</code>) — drives the
+<em>user</em> side</td>
+<td>Only for the round-trip QA test</td>
+</tr>
+<tr>
 <td><code>HERALD_SLACK_OPERATOR_USERNAME</code></td>
 <td>the operator's Slack <code>@username</code></td>
 <td>participant attribution / tagging (§109, the
@@ -592,8 +605,10 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="va">HERALD_SLACK_CHANNEL_ID</span><span class="op">=</span>C0123ABCD</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Only needed if you want inbound (Socket Mode) replies:</span></span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="va">HERALD_SLACK_APP_TOKEN</span><span class="op">=</span>xapp-1-<span class="op">&lt;</span>app-id<span class="op">&gt;</span>-<span class="op">&lt;</span>config-token-id<span class="op">&gt;</span>-<span class="op">&lt;</span>secret<span class="op">&gt;</span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Optional — attribution/tagging:</span></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co"># HERALD_SLACK_OPERATOR_USERNAME=@yourhandle</span></span></code></pre></div>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Only needed for the §11.4.98 self-driving inbound round-trip QA test (§7a):</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co"># HERALD_SLACK_QA_USER_TOKEN=xoxp-&lt;user-oauth-token&gt;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Optional — attribution/tagging:</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="co"># HERALD_SLACK_OPERATOR_USERNAME=@yourhandle</span></span></code></pre></div>
 <blockquote>
 <p><strong>Resolution order (load-bearing).</strong> Exported shell vars
 win; <code>.env</code> is fallback only. If a stale shell export shadows
@@ -668,6 +683,84 @@ the hermetic <code>TestSlackClientSendCrossesWire</code> /
 <code>TestBuilderSlack</code> tests (E126/E131) already exercise the
 wire path against an httptest server.</p>
 </blockquote>
+<h2
+id="7a--step-7a--the-fully-automated-inbound-round-trip-11498--testslack_liveroundtrip">7a
+— Step 7a — The fully-automated inbound round-trip (§11.4.98 /
+<code>TestSlack_LiveRoundTrip</code>)</h2>
+<p>§7 above (E127 / <code>TestSlack_Live_Send</code>) proves the
+<strong>send</strong> side — a real <code>chat.postMessage</code>
+returns a real <code>ts</code>. The <strong>inbound round-trip</strong>
+— a subscriber message arriving over Socket Mode, being dispatched to
+Claude Code, and getting a reply back — is proven by a separate,
+fully-self-driving harness: <code>TestSlack_LiveRoundTrip</code> (in
+<code>qaherald/internal/lifecycle/</code>, build tag
+<code>integration</code>). This is the §11.4.98-compliant analog of the
+Telegram/MTProto closed-loop harness; it is what closes
+<strong>HRD-115</strong> from "send-side proven" to a fully-proven
+round-trip.</p>
+<p><strong>Why a separate QA <em>user</em> token is required (the
+echo-wall).</strong> A Slack <strong>bot never receives its own
+messages</strong> over Socket Mode — the platform deliberately
+suppresses self-echoes (and Herald's <code>§32.9</code> self-filter
+drops them defensively too). So the pherald bot can never see a message
+authored by <em>itself</em>. To drive a real inbound message the harness
+needs a <strong>second, distinct identity</strong>: a Slack
+<strong>user</strong> (<code>xoxp-…</code>) that posts into the channel
+as a human would. The bot then receives <em>that</em> user's message,
+exactly as it would in production.</p>
+<p><strong><code>HERALD_SLACK_QA_USER_TOKEN</code></strong> is that user
+OAuth token:</p>
+<ul>
+<li><strong>Type:</strong> a <strong>user</strong> token
+(<code>xoxp-…</code>), NOT a bot token. (Install the app with a
+<strong>User Token Scope</strong>, or use a token minted for a real
+workspace user.)</li>
+<li><strong>Scopes:</strong> <code>chat:write</code> (to post the probe
+as the user) + <code>channels:history</code> (to read the bot's reply
+back via <code>conversations.history</code>). Use
+<code>groups:history</code> instead of <code>channels:history</code> if
+<code>HERALD_SLACK_CHANNEL_ID</code> is a <strong>private</strong>
+channel.</li>
+<li><strong>Membership:</strong> the user behind the token <strong>must
+be a member of</strong> <code>HERALD_SLACK_CHANNEL_ID</code> (post +
+history both require it). Invite the user (or yourself) to the channel
+first.</li>
+</ul>
+<p><strong>What the harness does, with ZERO human action during the
+run:</strong></p>
+<ol type="1">
+<li>Builds <code>pherald</code> and spawns
+<code>pherald listen --channels slack</code> (wired to
+<code>HERALD_SLACK_BOT_TOKEN</code> +
+<code>HERALD_SLACK_APP_TOKEN</code>, journaling to a temp
+<code>--qa-out-dir</code>), with a <strong>dedicated Claude session
+name</strong> so it never collides with your dev session (§11.4.98 rule
+2).</li>
+<li>Waits for the Socket Mode connection, then <strong>posts a unique
+nonce-bearing probe as the QA user</strong>
+(<code>chat.postMessage</code> via
+<code>HERALD_SLACK_QA_USER_TOKEN</code>).</li>
+<li>Asserts the autonomy chain via the pherald JSONL journal — inbound
+message (<code>channel:slack</code>) carrying the probe →
+<code>cc.dispatch</code> → <code>cc.reply</code> — and, as a bonus,
+reads the bot's reply back via <code>conversations.history</code>.</li>
+<li>SIGTERMs the listen subprocess and asserts a clean exit.</li>
+<li>Writes a <strong>redacted</strong> transcript (tokens +
+<code>wss://</code> scrubbed) under
+<code>docs/qa/HRD-115-LIVE-roundtrip-&lt;TS&gt;/</code>.</li>
+</ol>
+<p><strong>The exact command:</strong></p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> /Users/milosvasic/Projects/Herald</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="va">HERALD_SLACK_BOT_TOKEN</span><span class="op">=</span><span class="st">&#39;xoxb-…&#39;</span> <span class="dt">\</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="va">HERALD_SLACK_APP_TOKEN</span><span class="op">=</span><span class="st">&#39;xapp-…&#39;</span> <span class="dt">\</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="va">HERALD_SLACK_CHANNEL_ID</span><span class="op">=</span><span class="st">&#39;C0123ABCD&#39;</span> <span class="dt">\</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="va">HERALD_SLACK_QA_USER_TOKEN</span><span class="op">=</span><span class="st">&#39;xoxp-…&#39;</span> <span class="dt">\</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test <span class="at">-tags</span><span class="op">=</span>integration <span class="at">-count</span><span class="op">=</span>1 <span class="at">-run</span> TestSlack_LiveRoundTrip ./qaherald/internal/lifecycle/... <span class="at">-timeout</span><span class="op">=</span>300s <span class="at">-v</span></span></code></pre></div>
+<p>Without all four credentials (and a <code>claude</code> binary on
+<code>PATH</code> or <code>HERALD_CLAUDE_BIN</code>), the test
+<strong>SKIPs with an explicit reason</strong> (§11.4.3) — never a fake
+pass, never a manual-action prompt.</p>
 <h2 id="8--token-security-107-redaction-rotation">8 — Token security
 (§107 redaction, rotation)</h2>
 <ul>
