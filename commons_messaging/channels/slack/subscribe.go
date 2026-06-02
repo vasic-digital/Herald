@@ -134,6 +134,12 @@ func (a *Adapter) dispatchMessageEvent(ctx context.Context, h commons.InboundHan
 			Channel:  commons.ChannelSlack,
 			ThreadID: inner.ThreadTimeStamp,
 		}
+		// Thread-context awareness (operator mandate 2026-06-02): fetch the
+		// thread's PRIOR messages (oldest→newest, current message excluded)
+		// so the dispatcher can bind a reply to the thread's MEANING. This is
+		// non-fatal — a fetch error leaves ThreadContext empty without
+		// dropping the message (see fetchThreadContext).
+		ev.ThreadContext = a.fetchThreadContext(ctx, inner.Channel, inner.ThreadTimeStamp, inner.TimeStamp)
 	}
 	for _, f := range inner.Files {
 		path, sumHex, derr := a.DownloadAttachment(ctx, f.ID, f.Mimetype)

@@ -157,6 +157,10 @@ func (a *Adapter) Subscribe(ctx context.Context, h commons.InboundHandler) error
 				"message_thread_id": msg.ThreadID,
 				"text":              msg.Text,
 			},
+			// Thread-context awareness (operator mandate 2026-06-02): when this
+			// message is a reply, surface the quoted parent so the dispatcher
+			// binds the reply by the thread's meaning. Empty when not a reply.
+			ThreadContext: threadContextFromReply(msg),
 		}
 		// Wave 7 T4: stamp the sender's native identity into ev.Raw and drop
 		// THIS bot's own echo via the channel-agnostic channels.IsSelfEcho
@@ -383,6 +387,9 @@ func buildEditedEvent(msg *telebot.Message) commons.InboundEvent {
 			"text":              msg.Text,
 			"edited":            true,
 		},
+		// Thread-context awareness (operator mandate 2026-06-02): an edited
+		// reply still carries its quoted parent; surface it like OnText does.
+		ThreadContext: threadContextFromReply(msg),
 	}
 	if msg.ThreadID != 0 {
 		ev.Thread = &commons.ConversationRef{
@@ -531,6 +538,9 @@ func buildEventWithAttachment(msg *telebot.Message, caption, path, sumHex, mime 
 			"attachment_path":   path,
 			"attachment_mime":   mime,
 		},
+		// Thread-context awareness (operator mandate 2026-06-02): a media
+		// message that replies to another surfaces its quoted parent too.
+		ThreadContext: threadContextFromReply(msg),
 	}
 	if msg.ThreadID != 0 {
 		ev.Thread = &commons.ConversationRef{

@@ -50,12 +50,13 @@ func (a ccAdapter) Dispatch(ctx context.Context, req CodeRequest) (CodeResponse,
 		return CodeResponse{}, fmt.Errorf("inbound.ccAdapter: nil claude_code.Dispatcher")
 	}
 	ccReq := claude_code.DispatchRequest{
-		InboundID:    req.InboundID,
-		Sender:       req.Sender,
-		Channel:      req.Channel,
-		Conversation: req.Conversation,
-		Attachments:  req.Attachments,
-		UserMessage:  req.UserMessage,
+		InboundID:     req.InboundID,
+		Sender:        req.Sender,
+		Channel:       req.Channel,
+		Conversation:  req.Conversation,
+		Attachments:   req.Attachments,
+		UserMessage:   req.UserMessage,
+		ThreadContext: req.ThreadContext,
 		Classification: claude_code.Classification{
 			Type:        req.Classification.Type,
 			Criticality: req.Classification.Criticality,

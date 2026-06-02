@@ -200,6 +200,8 @@ Participant identity, attribution &amp; @-tagging</a></li>
 <li><a
 href="#6b-intent-recognition-subscribers-speak-plain-natural-language-per-docsdesignintent_recognitionmd">§6B.
 Intent recognition (subscribers speak plain natural language)</a></li>
+<li><a href="#6c-threading--thread-context-cross-channel">§6C. Threading
+&amp; thread-context (cross-channel)</a></li>
 <li><a href="#7-url-schemes">§7. URL schemes</a></li>
 <li><a href="#8-adding-a-new-channel">§8. Adding a new channel</a></li>
 <li><a href="#9-troubleshooting">§9. Troubleshooting</a></li>
@@ -978,6 +980,92 @@ exactly one action, so a subscriber is <strong>never ignored</strong> —
 genuine ambiguity is always answered with a tagged, threaded clarifying
 reply. This is the anti-annoyance guarantee: the subscriber never has to
 learn syntax and always gets a response.</p>
+<hr />
+<h2 id="6c-threading--thread-context-cross-channel">§6C. Threading &amp;
+thread-context (cross-channel)</h2>
+<p>Herald keeps conversations <strong>in-thread on every channel that
+supports it</strong>, and makes its replies <strong>aware of the thread
+they belong to</strong> (operator mandate 2026-06-02). The
+reply-destination resolution is channel-agnostic — the inbound
+dispatcher (<code>pherald/internal/inbound/dispatcher.go</code>,
+<code>extractReplyToID</code>) derives one thread-parent id per channel
+and each adapter maps it onto its native threading field — while thread
+context is gathered by each adapter using its own history API.</p>
+<h3 id="6c1-per-channel-mechanism">§6C.1 Per-channel mechanism</h3>
+<table>
+<thead>
+<tr>
+<th>Channel</th>
+<th>Reply-in-thread mechanism</th>
+<th>Thread-context source</th>
+<th>Context scope</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Telegram</strong></td>
+<td><code>reply_to_message_id</code> (quoted reply) —
+<code>extractReplyToID</code> returns the Bot API
+<code>message_id</code>; the tgram adapter sends it as
+<code>reply_to_message_id</code></td>
+<td>the immediate quoted parent (<code>msg.ReplyTo</code>) —
+<code>commons_messaging/channels/tgram/thread_context.go</code></td>
+<td><strong>single immediate parent only</strong> — the Bot API exposes
+no full-thread-history fetch (basic groups <em>or</em> forum topics); a
+full history would require MTProto</td>
+</tr>
+<tr>
+<td><strong>Slack</strong></td>
+<td><code>thread_ts</code> — <code>extractReplyToID</code> prefers the
+inbound message's <code>thread_ts</code> (reply into the existing
+thread), else its own <code>ts</code> (start a thread); the slack
+adapter maps it onto <code>thread_ts</code></td>
+<td><code>conversations.replies</code> for the thread root —
+<code>commons_messaging/channels/slack/thread_context.go</code> (bounded
+to the most recent 20 prior messages)</td>
+<td>the thread's prior messages (excluding the current one)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="6c2-what-thread-context-aware-means">§6C.2 What
+"thread-context-aware" means</h3>
+<p>When an inbound message belongs to a thread, the channel adapter
+gathers the thread's prior messages, attaches them to the inbound event
+as <code>commons.ThreadContext</code> (<code>commons/types.go</code>),
+and the dispatcher renders them into the Claude Code dispatch envelope
+(<code>renderThreadContext</code> in
+<code>commons_messaging/dispatch/claude_code/</code>). The reply is
+therefore <strong>bound by the thread's meaning</strong> — a
+contribution made only when the thread's context warrants it, not an
+isolated answer. Inbound threaded messages are processed exactly like
+top-level ones; only the reply destination follows the thread.</p>
+<p>Context-gathering is <strong>non-fatal on every channel</strong>: if
+the history fetch fails or yields nothing, the adapter dispatches the
+message <strong>without</strong> prior context rather than dropping it —
+a context-fetch failure never silences a subscriber.</p>
+<h3 id="6c3-honest-limitation--telegram-single-parent">§6C.3 Honest
+limitation — Telegram single-parent</h3>
+<p>Telegram's Bot API delivers only the <strong>immediate quoted
+parent</strong> of a reply; there is no bot-accessible call to fetch an
+arbitrary full thread history (basic group chats and forum topics
+alike). Slack's <code>conversations.replies</code> returns the full
+thread. So Telegram thread context is exactly one message (the parent
+the reply is bound to), while Slack thread context is the whole
+(bounded) thread. See <a
+href="messengers/TELEGRAM.md#step-6a--threading--thread-context"><code>messengers/TELEGRAM.md</code>
+§6a</a> and <a
+href="messengers/SLACK.md#7b--step-7b--threading--thread-context"><code>messengers/SLACK.md</code>
+§7b</a> for the per-channel detail.</p>
+<h3 id="6c4-live-evidence">§6C.4 Live evidence</h3>
+<ul>
+<li><strong>Slack</strong> — <code>TestSlack_LiveRoundTrip</code> (an
+in-thread subscriber reply answered in-thread); transcript under
+<code>docs/qa/HRD-115-LIVE-roundtrip-&lt;TS&gt;/</code>.</li>
+<li><strong>Telegram</strong> —
+<code>TestMTProto_Wave6_AutonomousClosedLoop</code> (reply delivered via
+<code>reply_to_message_id</code>); evidence under
+<code>docs/qa/HRD-115-tgram-threading-&lt;run-id&gt;/</code>.</li>
+</ul>
 <hr />
 <h2 id="7-url-schemes">§7. URL schemes</h2>
 <p>Adapters accept both env-driven <code>channels.Config</code>

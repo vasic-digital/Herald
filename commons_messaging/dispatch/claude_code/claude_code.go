@@ -29,6 +29,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -225,6 +226,160 @@ type DispatchRequest struct {
 	Conversation   string // full thread bottom-to-top
 	Attachments    []commons.Attachment
 	UserMessage    string
+
+	// ThreadContext carries the PRIOR messages of the thread this message
+	// belongs to (oldest→newest), excluding the current message. When
+	// non-empty, FormatEnvelope renders a delimited THREAD CONTEXT block
+	// before the user message so the LLM's reply is bound by the thread's
+	// MEANING and only contributed when the context warrants one (operator
+	// mandate 2026-06-02). Empty → the envelope is byte-identical to its
+	// pre-thread-context form.
+	ThreadContext []commons.ThreadMessage
+}
+
+// threadContextMaxMessages caps how many of the most-recent prior messages
+// are rendered into the THREAD CONTEXT block — older messages beyond this
+// are summarised as a single elision line so the envelope cannot grow
+// unbounded on a long thread.
+const threadContextMaxMessages = 20
+
+// threadContextMaxTextLen caps each prior message's text length in the
+// rendered block; longer texts are truncated with an ellipsis so one
+// verbose prior message cannot dominate the envelope.
+const threadContextMaxTextLen = 500
+
+// threadSubjectRefRe matches Herald/ATMOSphere workable-item references
+// (HRD-123, ATM-9) anywhere in a thread's text, so the dispatcher can tell the
+// LLM which EXISTING item a thread is about. Compiled once; a *regexp.Regexp is
+// safe for concurrent use, so this introduces no data race.
+var threadSubjectRefRe = regexp.MustCompile(`(?i)\b((?:HRD|ATM)-\d+)\b`)
+
+// renderThreadContext builds the THREAD CONTEXT block: WHO is participating, the
+// PRIOR messages, and WHAT the thread is about (an existing workable item, or —
+// for the LLM to classify — a newly-reported issue / existing item / system or
+// project event), so the reply is a contribution BOUND to that subject and made
+// only when the thread's context warrants one (operator mandate 2026-06-02).
+// Returns the empty string when there are no prior messages — so the envelope is
+// byte-identical to its pre-thread-context form for the no-context case.
+func renderThreadContext(req DispatchRequest) string {
+	msgs := req.ThreadContext
+	if len(msgs) == 0 {
+		return ""
+	}
+	// Render only the last threadContextMaxMessages, oldest-first within
+	// that window; note any elided older messages on a leading line.
+	start := 0
+	elided := 0
+	if len(msgs) > threadContextMaxMessages {
+		start = len(msgs) - threadContextMaxMessages
+		elided = start
+	}
+	var sb strings.Builder
+	sb.WriteString("THREAD CONTEXT — this message is part of an existing thread; it has a MEANING and a SUBJECT, and\n")
+	sb.WriteString("your reply is a contribution bound to that subject, not an isolated answer.\n")
+
+	// WHO — the distinct participants of the thread (incl. the current sender).
+	fmt.Fprintf(&sb, "Participants: %s\n", threadParticipants(req))
+
+	// The prior messages.
+	sb.WriteString("Prior messages (oldest first):\n")
+	if elided > 0 {
+		fmt.Fprintf(&sb, "  [… %d earlier message(s) elided …]\n", elided)
+	}
+	for i := start; i < len(msgs); i++ {
+		m := msgs[i]
+		who := m.SenderHandle
+		if who == "" {
+			who = "unknown"
+		}
+		if m.SenderIsBot {
+			who += " | bot"
+		}
+		fmt.Fprintf(&sb, "  [%d] %s said: %s\n", (i-start)+1, who, truncateThreadText(m.Text))
+	}
+
+	// WHAT — the subject the thread is about.
+	if refs := detectWorkableRefs(req); len(refs) > 0 {
+		fmt.Fprintf(&sb, "SUBJECT: this thread references existing workable item(s): %s — treat the thread as\n", strings.Join(refs, ", "))
+		sb.WriteString("concerning them; consider their current state and make your reply relevant to that item (status,\n")
+		sb.WriteString("progress, a follow-up), not a generic answer.\n")
+	} else {
+		sb.WriteString("SUBJECT: determine from the messages above what this thread is about — a NEWLY-REPORTED issue, an\n")
+		sb.WriteString("EXISTING ticket / workable item (HRD-NNN / ATM-N), or a SYSTEM / PROJECT event — and make your\n")
+		sb.WriteString("reply relevant to that subject.\n")
+	}
+	sb.WriteString("Reply ONLY when the thread's context warrants a contribution regarding its subject; do not answer\n")
+	sb.WriteString("out of context.\n\n")
+	return sb.String()
+}
+
+// threadParticipants returns a de-duplicated, human-readable list of the
+// distinct senders in the thread (incl. the current sender, parsed from
+// req.Sender's "<channel>:<handle>" form), each tagged human/bot, so the LLM
+// knows WHO is participating in the thread.
+func threadParticipants(req DispatchRequest) string {
+	seen := map[string]bool{}
+	var out []string
+	add := func(handle string, isBot bool) {
+		h := strings.TrimSpace(handle)
+		if h == "" {
+			return
+		}
+		key := strings.ToLower(h)
+		if seen[key] {
+			return
+		}
+		seen[key] = true
+		tag := "human"
+		if isBot {
+			tag = "bot"
+		}
+		out = append(out, fmt.Sprintf("%s (%s)", h, tag))
+	}
+	for _, m := range req.ThreadContext {
+		add(m.SenderHandle, m.SenderIsBot)
+	}
+	cur := req.Sender // "<channel>:<handle>"
+	if i := strings.LastIndex(cur, ":"); i >= 0 && i+1 <= len(cur) {
+		cur = cur[i+1:]
+	}
+	add(cur, false)
+	if len(out) == 0 {
+		return "(unknown)"
+	}
+	return strings.Join(out, ", ")
+}
+
+// detectWorkableRefs scans the thread messages + the current user message for
+// Herald/ATMOSphere workable-item references (HRD-NNN / ATM-N), de-duplicated +
+// upper-cased, so the LLM is told which EXISTING item the thread concerns.
+func detectWorkableRefs(req DispatchRequest) []string {
+	seen := map[string]bool{}
+	var out []string
+	scan := func(s string) {
+		for _, m := range threadSubjectRefRe.FindAllString(s, -1) {
+			u := strings.ToUpper(m)
+			if !seen[u] {
+				seen[u] = true
+				out = append(out, u)
+			}
+		}
+	}
+	for _, m := range req.ThreadContext {
+		scan(m.Text)
+	}
+	scan(req.UserMessage)
+	return out
+}
+
+// truncateThreadText caps a single prior message's text and collapses
+// newlines so a multi-line prior message renders on one bullet line.
+func truncateThreadText(s string) string {
+	s = strings.ReplaceAll(s, "\n", " ")
+	if len(s) > threadContextMaxTextLen {
+		return s[:threadContextMaxTextLen] + "…"
+	}
+	return s
 }
 
 // Classification is the spec §32.6 classifier output.
@@ -254,7 +409,9 @@ func (d *Dispatcher) FormatEnvelope(req DispatchRequest) string {
 		}
 		fmt.Fprintf(&sb, "%s:%s:%d", a.Filename, a.MIMEType, a.SizeBytes)
 	}
-	sb.WriteString("]\n\nUser message:\n\n")
+	sb.WriteString("]\n\n")
+	sb.WriteString(renderThreadContext(req)) // empty when no prior thread → envelope unchanged
+	sb.WriteString("User message:\n\n")
 	sb.WriteString(req.UserMessage)
 	sb.WriteString("\n\n────────────────────────────────────────────────────────────\n")
 	sb.WriteString("HERALD TASK (run in background along with mainstream work):\n\n")

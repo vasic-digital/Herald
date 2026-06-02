@@ -25,6 +25,7 @@ This guide walks you through every step needed to enable Telegram in Herald — 
 - [Step 4 — Verify HealthCheck](#step-4--verify-healthcheck)
 - [Step 5 — Verify Send (E17)](#step-5--verify-send-e17)
 - [Step 6 — (Optional) Verify Subscribe + Vertical Slice (E19)](#step-6--optional-verify-subscribe--vertical-slice-e19)
+- [Step 6a — Threading & thread context](#step-6a--threading--thread-context)
 - [Step 7 — (Future) Webhook ingress for production](#step-7--future-webhook-ingress-for-production)
 - [Troubleshooting](#troubleshooting)
 - [Spec + code references](#spec--code-references)
@@ -343,6 +344,36 @@ E19 PASS: tenant=...; inbound=1; dispatch ok; outbound ok (channel_id=...)
 ```
 
 You should see TWO messages in your Telegram chat: yours, then Claude's reply.
+
+## Step 6a — Threading & thread context
+
+Herald keeps Telegram conversations **threaded** and makes its replies **aware of the message they answer** (operator mandate 2026-06-02).
+
+### Replies are quoted replies (`reply_to_message_id`)
+
+Every reply Herald sends in response to a subscriber message is delivered as a **quoted reply** — Telegram renders it visually attached to the originating message, so the subscriber sees exactly which message Herald is answering. The channel-agnostic dispatcher (`pherald/internal/inbound/dispatcher.go`, `extractReplyToID`) returns the inbound message's Bot API `message_id`; the tgram adapter parses it back to an integer and sends it as `reply_to_message_id` — Telegram's native threading mechanism.
+
+### Inbound replies are processed and answered as quoted replies
+
+When a subscriber **replies to a message** (creating a reply chain), that reply is a normal inbound message — Herald receives it via the `getUpdates` long-poll, dispatches it to Claude Code, and routes the answer back as a quoted reply to the subscriber's message. Threaded and top-level messages are handled identically except that the reply quotes the originating message.
+
+### Thread context = the immediate quoted parent (honest Bot-API limitation)
+
+When an inbound message **is itself a reply** to another message, the tgram adapter gathers thread context so Claude answers in context rather than in isolation (`commons_messaging/channels/tgram/thread_context.go`, `threadContextFromReply`):
+
+- The context is the **immediate quoted parent** — the single message the inbound message is replying to (telebot's `msg.ReplyTo`). It is attached to the inbound event as `commons.ThreadContext` and rendered into the Claude Code dispatch envelope, so the reply is **bound by the thread's meaning**.
+- **Limitation (documented honestly).** The Telegram **Bot API delivers only the immediate quoted parent** of a reply — there is **no `getMessages` / `getThreadHistory` equivalent for bots**, so an arbitrary **full thread history cannot be fetched** for a basic group chat. For **forum topics**, `message_thread_id` identifies the topic but the Bot API **still exposes no full-history fetch** for it. Therefore the maximum thread context this Bot-API adapter can supply is the **single immediate parent** — which is precisely the message the reply is bound to, so it is the load-bearing context for the dispatcher. A full multi-message history would require an **MTProto user-client**, which this Bot-API guide does not cover (see the MTProto note in [Sources verified](#sources-verified) below).
+- When the inbound message replies to nothing (a fresh / top-level message), the context is empty — the correct signal that there is no prior thread to bind to. Context extraction is non-fatal: it never drops the message.
+
+### Live evidence
+
+The quoted-reply round-trip is proven by `TestMTProto_Wave6_AutonomousClosedLoop` (the autonomous closed-loop harness), whose reply is delivered via `reply_to_message_id`. The captured evidence lands under:
+
+```
+docs/qa/HRD-115-tgram-threading-<run-id>/
+```
+
+(e.g. `docs/qa/HRD-115-tgram-threading-20260602/`). This is the standing §107.x evidence for Telegram threading + immediate-parent thread context.
 
 ## Step 7 — (Future) Webhook ingress for production
 

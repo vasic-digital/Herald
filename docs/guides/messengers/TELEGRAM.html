@@ -159,6 +159,8 @@ HealthCheck</a></li>
 <li><a
 href="#step-6--optional-verify-subscribe--vertical-slice-e19">Step 6 —
 (Optional) Verify Subscribe + Vertical Slice (E19)</a></li>
+<li><a href="#step-6a--threading--thread-context">Step 6a — Threading
+&amp; thread context</a></li>
 <li><a href="#step-7--future-webhook-ingress-for-production">Step 7 —
 (Future) Webhook ingress for production</a></li>
 <li><a href="#troubleshooting">Troubleshooting</a></li>
@@ -555,6 +557,75 @@ Code, (c) parse the reply, (d) send the reply back to your chat.</p>
 --- PASS: TestVerticalSlice_TelegramClaudeRoundTrip (Xs)</code></pre>
 <p>You should see TWO messages in your Telegram chat: yours, then
 Claude's reply.</p>
+<h2 id="step-6a--threading--thread-context">Step 6a — Threading &amp;
+thread context</h2>
+<p>Herald keeps Telegram conversations <strong>threaded</strong> and
+makes its replies <strong>aware of the message they answer</strong>
+(operator mandate 2026-06-02).</p>
+<h3 id="replies-are-quoted-replies-reply_to_message_id">Replies are
+quoted replies (<code>reply_to_message_id</code>)</h3>
+<p>Every reply Herald sends in response to a subscriber message is
+delivered as a <strong>quoted reply</strong> — Telegram renders it
+visually attached to the originating message, so the subscriber sees
+exactly which message Herald is answering. The channel-agnostic
+dispatcher (<code>pherald/internal/inbound/dispatcher.go</code>,
+<code>extractReplyToID</code>) returns the inbound message's Bot API
+<code>message_id</code>; the tgram adapter parses it back to an integer
+and sends it as <code>reply_to_message_id</code> — Telegram's native
+threading mechanism.</p>
+<h3
+id="inbound-replies-are-processed-and-answered-as-quoted-replies">Inbound
+replies are processed and answered as quoted replies</h3>
+<p>When a subscriber <strong>replies to a message</strong> (creating a
+reply chain), that reply is a normal inbound message — Herald receives
+it via the <code>getUpdates</code> long-poll, dispatches it to Claude
+Code, and routes the answer back as a quoted reply to the subscriber's
+message. Threaded and top-level messages are handled identically except
+that the reply quotes the originating message.</p>
+<h3
+id="thread-context--the-immediate-quoted-parent-honest-bot-api-limitation">Thread
+context = the immediate quoted parent (honest Bot-API limitation)</h3>
+<p>When an inbound message <strong>is itself a reply</strong> to another
+message, the tgram adapter gathers thread context so Claude answers in
+context rather than in isolation
+(<code>commons_messaging/channels/tgram/thread_context.go</code>,
+<code>threadContextFromReply</code>):</p>
+<ul>
+<li>The context is the <strong>immediate quoted parent</strong> — the
+single message the inbound message is replying to (telebot's
+<code>msg.ReplyTo</code>). It is attached to the inbound event as
+<code>commons.ThreadContext</code> and rendered into the Claude Code
+dispatch envelope, so the reply is <strong>bound by the thread's
+meaning</strong>.</li>
+<li><strong>Limitation (documented honestly).</strong> The Telegram
+<strong>Bot API delivers only the immediate quoted parent</strong> of a
+reply — there is <strong>no <code>getMessages</code> /
+<code>getThreadHistory</code> equivalent for bots</strong>, so an
+arbitrary <strong>full thread history cannot be fetched</strong> for a
+basic group chat. For <strong>forum topics</strong>,
+<code>message_thread_id</code> identifies the topic but the Bot API
+<strong>still exposes no full-history fetch</strong> for it. Therefore
+the maximum thread context this Bot-API adapter can supply is the
+<strong>single immediate parent</strong> — which is precisely the
+message the reply is bound to, so it is the load-bearing context for the
+dispatcher. A full multi-message history would require an
+<strong>MTProto user-client</strong>, which this Bot-API guide does not
+cover (see the MTProto note in <a href="#sources-verified">Sources
+verified</a> below).</li>
+<li>When the inbound message replies to nothing (a fresh / top-level
+message), the context is empty — the correct signal that there is no
+prior thread to bind to. Context extraction is non-fatal: it never drops
+the message.</li>
+</ul>
+<h3 id="live-evidence">Live evidence</h3>
+<p>The quoted-reply round-trip is proven by
+<code>TestMTProto_Wave6_AutonomousClosedLoop</code> (the autonomous
+closed-loop harness), whose reply is delivered via
+<code>reply_to_message_id</code>. The captured evidence lands under:</p>
+<pre><code>docs/qa/HRD-115-tgram-threading-&lt;run-id&gt;/</code></pre>
+<p>(e.g. <code>docs/qa/HRD-115-tgram-threading-20260602/</code>). This
+is the standing §107.x evidence for Telegram threading +
+immediate-parent thread context.</p>
 <h2 id="step-7--future-webhook-ingress-for-production">Step 7 — (Future)
 Webhook ingress for production</h2>
 <p>Long-poll (Steps 1-6) is what Herald uses today. For lower latency in
@@ -565,8 +636,8 @@ HRD-NNN.</p>
 <p>When webhook ingress lands, you'll:</p>
 <ol type="1">
 <li>Generate a 256-bit hex secret:
-<div class="sourceCode" id="cb20"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="ex">openssl</span> rand <span class="at">-hex</span> 32</span></code></pre></div></li>
+<div class="sourceCode" id="cb21"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="ex">openssl</span> rand <span class="at">-hex</span> 32</span></code></pre></div></li>
 <li>Set <code>HERALD_TGRAM_WEBHOOK_SECRET=&lt;the-hex&gt;</code>.</li>
 <li>Configure the bot's webhook URL via the Bot API:
 <pre><code>https://api.telegram.org/bot&lt;TOKEN&gt;/setWebhook?url=https://your-herald.example.com/v1/webhooks/tgram&amp;secret_token=&lt;the-hex&gt;</code></pre></li>

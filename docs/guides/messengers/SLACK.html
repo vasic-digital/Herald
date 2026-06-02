@@ -193,6 +193,8 @@ href="#7--step-7--verify-the-live-round-trip-e127--testslack_live_send">Step
 href="#7a--step-7a--the-fully-automated-inbound-round-trip-11498--testslack_liveroundtrip">Step
 7a — The fully-automated inbound round-trip (§11.4.98 /
 <code>TestSlack_LiveRoundTrip</code>)</a></li>
+<li><a href="#7b--step-7b--threading--thread-context">Step 7b —
+Threading &amp; thread context</a></li>
 <li><a href="#8--token-security-107-redaction-rotation">Step 8 — Token
 security (§107 redaction, rotation)</a></li>
 <li><a href="#9--step-9--troubleshooting">Step 9 —
@@ -761,6 +763,93 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="
 <code>PATH</code> or <code>HERALD_CLAUDE_BIN</code>), the test
 <strong>SKIPs with an explicit reason</strong> (§11.4.3) — never a fake
 pass, never a manual-action prompt.</p>
+<h2 id="7b--step-7b--threading--thread-context">7b — Step 7b — Threading
+&amp; thread context</h2>
+<p>Herald keeps Slack conversations <strong>in-thread</strong> and makes
+its replies <strong>aware of the thread they belong to</strong>. Two
+behaviours, both live (operator mandate 2026-06-02):</p>
+<h3 id="replies-land-in-thread-thread_ts">Replies land in-thread
+(<code>thread_ts</code>)</h3>
+<p>Every reply Herald sends in response to a subscriber message is
+delivered <strong>into a Slack thread</strong>, never as a loose
+top-level post:</p>
+<ul>
+<li>When the subscriber's message is <strong>already inside a
+thread</strong>, Herald reads that thread's root (the message's
+<code>thread_ts</code>) and posts its reply into the <strong>same
+thread</strong> — the conversation stays where the subscriber started
+it.</li>
+<li>When the subscriber's message is a <strong>top-level channel
+message</strong> (no <code>thread_ts</code>), Herald replies <strong>on
+that message</strong>, starting a thread anchored to it.</li>
+</ul>
+<p>Under the hood the channel-agnostic dispatcher
+(<code>pherald/internal/inbound/dispatcher.go</code>,
+<code>extractReplyToID</code>) <strong>prefers the inbound message's
+<code>thread_ts</code></strong> and otherwise falls back to the
+message's own <code>ts</code>; the Slack adapter maps that string
+straight onto the <code>thread_ts</code> field of
+<code>chat.postMessage</code>. The result: a subscriber who replies
+inside an existing thread is answered <strong>in that same
+thread</strong>.</p>
+<h3 id="inbound-threaded-messages-are-processed">Inbound threaded
+messages are processed</h3>
+<p>A subscriber reply made <strong>within a thread</strong> (or a reply
+that creates a thread) is a normal inbound message — Herald receives it
+over Socket Mode, dispatches it to Claude Code, and routes the answer
+back into the same thread. There is no "threads are ignored" gap:
+threaded and top-level messages are handled identically except that the
+reply destination follows the thread.</p>
+<h3 id="thread-context-binds-replies-to-the-threads-meaning">Thread
+context binds replies to the thread's meaning</h3>
+<p>When an inbound message belongs to a thread, the Slack adapter
+gathers the thread's <strong>prior messages</strong> so Claude can
+answer in context rather than in isolation:</p>
+<ul>
+<li>The adapter calls Slack's
+<strong><code>conversations.replies</code></strong> for the thread root
+(<code>commons_messaging/channels/slack/thread_context.go</code>,
+<code>fetchThreadContext</code>), takes the prior messages in
+oldest→newest order (bounded to the most recent 20 so a long thread
+cannot bloat the envelope), and <strong>excludes the current
+message</strong> (it is already the message being answered).</li>
+<li>Those prior messages are attached to the inbound event as
+<code>commons.ThreadContext</code> and rendered into the Claude Code
+dispatch envelope (<code>renderThreadContext</code>), so the reply is
+<strong>bound by the thread's meaning</strong> — a contribution to the
+discussion, made only when the thread's context warrants it.</li>
+<li>Context-gathering is <strong>non-fatal</strong>: if
+<code>conversations.replies</code> errors or returns nothing, the
+adapter logs and dispatches the message <strong>without</strong> prior
+context rather than dropping it. A context-fetch failure never silences
+a subscriber.</li>
+</ul>
+<h3 id="scopes-required-for-reading-the-thread">Scopes required for
+reading the thread</h3>
+<p>Reading thread history with <code>conversations.replies</code> needs
+the same history scope as ordinary inbound:</p>
+<ul>
+<li><strong><code>channels:history</code></strong> — when
+<code>HERALD_SLACK_CHANNEL_ID</code> is a <strong>public</strong>
+channel.</li>
+<li><strong><code>groups:history</code></strong> — when it is a
+<strong>private</strong> channel.</li>
+</ul>
+<p>These are the scopes you already added in §3 for inbound; no
+additional scope is needed for threading. (The §7a
+<code>TestSlack_LiveRoundTrip</code> QA harness uses
+<code>channels:history</code> / <code>groups:history</code> on the QA
+<strong>user</strong> token to read the bot's reply back.)</p>
+<h3 id="live-evidence">Live evidence</h3>
+<p>The in-thread round-trip is proven by
+<code>TestSlack_LiveRoundTrip</code> (§7a), whose three legs include an
+<strong>in-thread subscriber reply answered in-thread</strong>. The
+captured, token-redacted transcript lands under:</p>
+<pre><code>docs/qa/HRD-115-LIVE-roundtrip-&lt;TS&gt;/</code></pre>
+<p>(e.g.
+<code>docs/qa/HRD-115-LIVE-roundtrip-2026-06-02T09-24-28Z/</code>). This
+is the standing §107.x evidence for Slack threading + thread-context
+awareness.</p>
 <h2 id="8--token-security-107-redaction-rotation">8 — Token security
 (§107 redaction, rotation)</h2>
 <ul>

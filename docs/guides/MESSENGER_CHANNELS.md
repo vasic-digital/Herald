@@ -28,6 +28,7 @@
 - [§6. Self-filter (anti-echo-loop)](#6-self-filter-anti-echo-loop)
 - [§6A. Participant identity, attribution & @-tagging](#6a-participant-identity-attribution--tagging-per-docsdesignparticipant_attributionmd)
 - [§6B. Intent recognition (subscribers speak plain natural language)](#6b-intent-recognition-subscribers-speak-plain-natural-language-per-docsdesignintent_recognitionmd)
+- [§6C. Threading & thread-context (cross-channel)](#6c-threading--thread-context-cross-channel)
 - [§7. URL schemes](#7-url-schemes)
 - [§8. Adding a new channel](#8-adding-a-new-channel)
 - [§9. Troubleshooting](#9-troubleshooting)
@@ -396,6 +397,34 @@ Recognized intents (case-insensitive, phrasing-tolerant — examples, not an exh
 ### §6B.3 Never guess, never ignore
 
 Two rules bind every channel: a **wrong** action is worse than a clarifying question, so the System **never guesses** an action; and every inbound message resolves to exactly one action, so a subscriber is **never ignored** — genuine ambiguity is always answered with a tagged, threaded clarifying reply. This is the anti-annoyance guarantee: the subscriber never has to learn syntax and always gets a response.
+
+---
+
+## §6C. Threading & thread-context (cross-channel)
+
+Herald keeps conversations **in-thread on every channel that supports it**, and makes its replies **aware of the thread they belong to** (operator mandate 2026-06-02). The reply-destination resolution is channel-agnostic — the inbound dispatcher (`pherald/internal/inbound/dispatcher.go`, `extractReplyToID`) derives one thread-parent id per channel and each adapter maps it onto its native threading field — while thread context is gathered by each adapter using its own history API.
+
+### §6C.1 Per-channel mechanism
+
+| Channel | Reply-in-thread mechanism | Thread-context source | Context scope |
+|---|---|---|---|
+| **Telegram** | `reply_to_message_id` (quoted reply) — `extractReplyToID` returns the Bot API `message_id`; the tgram adapter sends it as `reply_to_message_id` | the immediate quoted parent (`msg.ReplyTo`) — `commons_messaging/channels/tgram/thread_context.go` | **single immediate parent only** — the Bot API exposes no full-thread-history fetch (basic groups *or* forum topics); a full history would require MTProto |
+| **Slack** | `thread_ts` — `extractReplyToID` prefers the inbound message's `thread_ts` (reply into the existing thread), else its own `ts` (start a thread); the slack adapter maps it onto `thread_ts` | `conversations.replies` for the thread root — `commons_messaging/channels/slack/thread_context.go` (bounded to the most recent 20 prior messages) | the thread's prior messages (excluding the current one) |
+
+### §6C.2 What "thread-context-aware" means
+
+When an inbound message belongs to a thread, the channel adapter gathers the thread's prior messages, attaches them to the inbound event as `commons.ThreadContext` (`commons/types.go`), and the dispatcher renders them into the Claude Code dispatch envelope (`renderThreadContext` in `commons_messaging/dispatch/claude_code/`). The reply is therefore **bound by the thread's meaning** — a contribution made only when the thread's context warrants it, not an isolated answer. Inbound threaded messages are processed exactly like top-level ones; only the reply destination follows the thread.
+
+Context-gathering is **non-fatal on every channel**: if the history fetch fails or yields nothing, the adapter dispatches the message **without** prior context rather than dropping it — a context-fetch failure never silences a subscriber.
+
+### §6C.3 Honest limitation — Telegram single-parent
+
+Telegram's Bot API delivers only the **immediate quoted parent** of a reply; there is no bot-accessible call to fetch an arbitrary full thread history (basic group chats and forum topics alike). Slack's `conversations.replies` returns the full thread. So Telegram thread context is exactly one message (the parent the reply is bound to), while Slack thread context is the whole (bounded) thread. See [`messengers/TELEGRAM.md` §6a](messengers/TELEGRAM.md#step-6a--threading--thread-context) and [`messengers/SLACK.md` §7b](messengers/SLACK.md#7b--step-7b--threading--thread-context) for the per-channel detail.
+
+### §6C.4 Live evidence
+
+* **Slack** — `TestSlack_LiveRoundTrip` (an in-thread subscriber reply answered in-thread); transcript under `docs/qa/HRD-115-LIVE-roundtrip-<TS>/`.
+* **Telegram** — `TestMTProto_Wave6_AutonomousClosedLoop` (reply delivered via `reply_to_message_id`); evidence under `docs/qa/HRD-115-tgram-threading-<run-id>/`.
 
 ---
 

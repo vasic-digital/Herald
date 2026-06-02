@@ -46,6 +46,13 @@ type CodeRequest struct {
 	Attachments    []commons.Attachment
 	UserMessage    string
 	Classification Classification
+
+	// ThreadContext carries the prior messages of the thread this event
+	// belongs to (oldest→newest, excludes the current message), copied
+	// verbatim from commons.InboundEvent.ThreadContext in Handle. cc_adapter.go
+	// forwards it to claude_code.DispatchRequest so the LLM's reply is bound
+	// by the thread's meaning (operator mandate 2026-06-02).
+	ThreadContext []commons.ThreadMessage
 }
 
 // CodeResponse carries the raw stdout from the CC invocation so that
@@ -299,6 +306,7 @@ func (d *Dispatcher) Handle(ctx context.Context, ev commons.InboundEvent) error 
 		Attachments:    ev.Attachments,
 		UserMessage:    ev.Body.Plain,
 		Classification: classification,
+		ThreadContext:  ev.ThreadContext,
 	}
 	resp, err := d.code.Dispatch(ctx, req)
 	if err != nil {

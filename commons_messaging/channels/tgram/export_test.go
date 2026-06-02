@@ -53,6 +53,13 @@ func ServiceMessageKindForTest(msg *telebot.Message) string {
 	return serviceMessageKind(msg)
 }
 
+// ThreadContextFromReplyForTest exposes threadContextFromReply for the
+// thread-context-awareness tests (operator mandate 2026-06-02). Production
+// callers invoke it inside the OnText / OnEdited / media InboundEvent builders.
+func ThreadContextFromReplyForTest(msg *telebot.Message) []commons.ThreadMessage {
+	return threadContextFromReply(msg)
+}
+
 // BotKickedFromUpdateForTest exposes botKickedFromUpdate for HRD-135 §3
 // tests — the predicate the OnMyChatMember closure consults before emitting
 // the bot-kicked log line + ErrBotKicked sentinel.
