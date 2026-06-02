@@ -19,11 +19,35 @@ import (
 // path relies on, so the bootstrap exercise the same parser the
 // runtime uses (§107: no separate "bootstrap-mode parser" — same code
 // path, same wire format).
+//
+// HRD-159 (reply-DELIVERY seeding, 2026-06-02): the bootstrap turn is
+// replayed verbatim by every `--resume` invocation, so it is the ONLY
+// durable place to seed standing reply-behaviour context into a fresh,
+// context-less session. Before this seeding, a bootstrap session would
+// frequently return an EMPTY reply for the first real inbound message
+// (no standing instruction told it it MUST always emit a non-empty
+// <<<HERALD-REPLY>>>), the dispatcher logged "reply skipped — empty
+// reply text", and nothing was posted back to the messenger — the
+// reply-DELIVERY leg silently no-op'd. The STANDING-CONTRACT block
+// below fixes that at the root: it instructs the session that for EVERY
+// future inbound message it MUST end with a single non-empty
+// <<<HERALD-REPLY>>> line whose human-facing field (summary for
+// answered/needs_more_info, text for action=reply) is NEVER empty, and
+// MUST NEVER reply with empty output. This is a §11.4.98-clean fix: the
+// session UUID is still freshly minted per bootstrap (no shared-UUID
+// collision), and the contract is plain prompt context, not a code
+// shortcut that synthesises a reply.
 const bootstrapPrompt = `You are the Claude Code session for the Herald project. This is the bootstrap message that establishes this session. Future inbound messages from Herald subscribers (Telegram, Slack, …) will arrive via this same session via 'claude --resume <UUID> --print "<envelope>"'.
+
+STANDING CONTRACT FOR EVERY FUTURE INBOUND MESSAGE (this instruction is permanent for the lifetime of this session):
+  1. EVERY reply you produce MUST end with a single line beginning with the marker <<<HERALD-REPLY>>> followed by one JSON object. There is no exception.
+  2. That JSON object MUST carry a NON-EMPTY human-facing field: "summary" (for outcome "answered"/"needs_more_info") or "text" (for action "reply"). NEVER leave it empty or whitespace-only.
+  3. You MUST NEVER respond with empty output. A subscriber is always waiting for a reply; an empty reply is a delivery failure. If you are unsure how to act, reply with a clarifying question (action "clarify") — but ALWAYS reply with non-empty content.
+  4. The marker line is what Herald posts back to the subscriber, so it must always contain a real, useful, non-empty message.
 
 Acknowledge by responding with the structured reply marker exactly as below (single line, no surrounding prose):
 
-<<<HERALD-REPLY>>> {"outcome":"answered","summary":"Herald inbound runtime session ready.","details":"Bootstrap acknowledged. Awaiting first subscriber message.","affected_paths":[],"reproduction_steps":[],"estimated_effort":"S","follow_up_questions":[]}`
+<<<HERALD-REPLY>>> {"outcome":"answered","summary":"Herald inbound runtime session ready.","details":"Bootstrap acknowledged. Standing contract accepted: every future inbound message gets a non-empty <<<HERALD-REPLY>>>. Awaiting first subscriber message.","affected_paths":[],"reproduction_steps":[],"estimated_effort":"S","follow_up_questions":[]}`
 
 // bootstrapSession spawns a fresh Claude Code session via
 // `claude --session-id <new-uuid> --model claude-opus-4-7 --print
