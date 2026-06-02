@@ -186,6 +186,19 @@
 #   SKIP-with-reason inside the Go tests themselves. Each evidence-anchor
 #   grep SKIPs-with-reason when no docs/qa/<run-id>/ dir is present.)
 #
+# Docs Chain verify-only drift-gate (§11.4.106; added 2026-06-02):
+#   E148. `docs_chain verify herald-docs` reports the whole tracked-doc corpus
+#         in-sync — the output line contains the literal "in-sync" AND the exit
+#         code is 0. This is the pure content-hash drift gate the constitution
+#         §11.4.106 names: it re-hashes every committed .md and its .html/.pdf/
+#         .docx siblings and refuses success the instant ANY sibling has drifted
+#         (a stale export is a §11.4 documentation-layer bluff). Unlike the
+#         E146/E147 sync-gates it needs NEITHER pandoc NOR weasyprint (verify
+#         only reads + hashes existing files), so it SKIPs-with-reason (§11.4.3)
+#         ONLY when the docs_chain binary itself is absent from PATH (CI may not
+#         carry it — built from the sibling ~/Projects/docs_chain repo). On a
+#         real STALE result it FAILs with the drifted node list shown.
+#
 # Exit 0 only when E1..E12 + E19..E88 (plus E13..E18 + E34 if attempted) all pass.
 # Failure prints the offending invariant so the operator knows EXACTLY
 # which feature is bluffing.
@@ -2570,6 +2583,33 @@ if [ -x "${DC_BIN}" ] && command -v pandoc >/dev/null 2>&1 && command -v weasypr
     rm -f .docs_chain/state.json
 else
     echo "SKIP  E147 Docs Chain FLEET drift-gate — docs_chain binary / pandoc / weasyprint absent (build from ~/Projects/docs_chain); §11.4.3 SKIP-with-reason"
+fi
+
+# ---- E148: Docs Chain verify-only drift-gate — `docs_chain verify herald-docs` (§11.4.106) ----
+# The pure content-hash drift gate the constitution §11.4.106 names: it re-hashes every tracked .md
+# and its .html/.pdf/.docx siblings and reports "in-sync" (exit 0) ONLY when nothing has drifted, or
+# "STALE: [...]" (exit 1) listing the drifted nodes — a stale committed sibling is a §11.4
+# documentation-layer bluff (the doc claims to be exported but the export is wrong). Distinct from the
+# E146/E147 sync-gates: `verify` only READS + HASHES existing files, so it needs NEITHER pandoc NOR
+# weasyprint — its sole prerequisite is the docs_chain binary on PATH. SKIP-with-reason (§11.4.3) when
+# that binary is absent (CI may not carry it — built from the sibling ~/Projects/docs_chain repo).
+# Positive evidence: the captured output line MUST contain the literal "in-sync" AND the exit code
+# MUST be 0 — both asserted (output-token + exit-status), so a future "exit 0 with a misleading body"
+# regression cannot pass-bluff this gate.
+echo ""
+echo "== E148: Docs Chain verify-only drift-gate (docs_chain verify herald-docs, §11.4.106) =="
+if [ -x "${DC_BIN}" ] && [ -f "${DC_FLEET_CTX}" ]; then
+    if dc_verify_out="$("${DC_BIN}" verify --root . herald-docs 2>&1)" \
+       && printf '%s' "${dc_verify_out}" | grep -q 'in-sync'; then
+        echo "PASS  E148 docs_chain verify herald-docs — whole tracked-doc corpus in-sync (exit 0 + 'in-sync'); §11.4.106 content-hash drift-gate"
+        pass=$((pass+1))
+    else
+        echo "FAIL  E148 docs_chain verify herald-docs — STALE (a committed .html/.pdf/.docx sibling drifted from its .md; §11.4 documentation-layer bluff — re-run scripts/export_docs.sh for the stale node(s))"
+        printf '%s\n' "${dc_verify_out}" | tail -3 | sed 's/^/      /'
+        fail=$((fail+1)); fail_names+=("E148")
+    fi
+else
+    echo "SKIP  E148 docs_chain verify-only drift-gate — docs_chain binary absent from PATH (build from ~/Projects/docs_chain); §11.4.3 SKIP-with-reason"
 fi
 
 # ----------------------------------------------------------------------
