@@ -294,6 +294,27 @@ func (c *liveClient) SendMessage(ctx context.Context, chatID int64, text string)
 	return 0, sanitizeMTProtoError(errors.New("send: updates payload contained no assigned message_id"))
 }
 
+// SendReply posts text as a reply that QUOTES replyToID (gotd Builder.Reply
+// sets reply_to_msg_id). Mirrors SendMessage otherwise. Used so pherald sees a
+// non-nil inbound msg.ReplyTo and gathers the quoted parent as thread context.
+func (c *liveClient) SendReply(ctx context.Context, chatID int64, text string, replyToID int64) (int64, error) {
+	if err := c.assertConnected(); err != nil {
+		return 0, err
+	}
+	peer, err := c.resolvePeer(ctx, chatID)
+	if err != nil {
+		return 0, err
+	}
+	upd, err := c.sender.To(peer).Reply(int(replyToID)).Text(ctx, text)
+	if err != nil {
+		return 0, sanitizeMTProtoError(fmt.Errorf("send reply: %w", err))
+	}
+	if id := extractSentMessageID(upd); id != 0 {
+		return id, nil
+	}
+	return 0, sanitizeMTProtoError(errors.New("send reply: updates payload contained no assigned message_id"))
+}
+
 // WaitForReply polls messages.getHistory for chatID until matcher matches
 // a message with Date > start (the per-call start time stamps the
 // boundary so stale history never triggers a spurious match), or until

@@ -127,6 +127,50 @@ func TestMTProto_Wave6_AutonomousClosedLoop(t *testing.T) {
 	}
 	t.Logf("MTProto active: @%s (user_id=%d)", myUsername, myID)
 
+	// THREAD-CONTEXT proof substrate — envelope capture (used by the
+	// THREAD-CONTEXT LEG below). The pherald journal records cc.dispatch as the
+	// RAW user_message text, NOT the rendered <<<HERALD-DISPATCH-v1>>> envelope
+	// (the THREAD CONTEXT block is rendered inside the dispatcher and passed
+	// straight to `claude --print <envelope>`; it is never journaled). To
+	// HARD-prove, anti-bluff §107, that the tgram adapter gathered the quoted
+	// parent (threadContextFromReply) AND that the dispatcher fed it to Claude,
+	// we intercept the REAL envelope bytes pherald hands to `claude`: a
+	// transparent wrapper at HERALD_CLAUDE_BIN tees its full argv (which contains
+	// `--print <envelope>`) to a capture file, then exec's the REAL claude so
+	// Tier-2 dispatch stays fully live (no faking — the autonomy chain above
+	// still dispatches through it unchanged). This keys the THREAD-CONTEXT
+	// assertion on the ACTUAL rendered envelope, strictly stronger than the
+	// journal (which lacks the envelope entirely). These helpers are local to
+	// this file because the equivalent slack_roundtrip helpers live behind a
+	// different build tag (integration) and never co-compile here.
+	realClaude := claudeBin
+	if realClaude == "" {
+		rc, lerr := exec.LookPath("claude")
+		if lerr != nil {
+			t.Fatalf("resolve real claude binary for envelope-capture wrapper: %v", lerr)
+		}
+		realClaude = rc
+	} else {
+		rc, lerr := exec.LookPath(realClaude)
+		if lerr != nil {
+			t.Fatalf("resolve HERALD_CLAUDE_BIN=%q for envelope-capture wrapper: %v", realClaude, lerr)
+		}
+		realClaude = rc
+	}
+	envCapturePath := filepath.Join(tmpDir, "cc_envelopes.log")
+	ccWrapperPath := filepath.Join(tmpDir, "claude-capture.sh")
+	ccWrapperSrc := "#!/bin/sh\n" +
+		"{\n" +
+		"  printf '<<<CC-ENVELOPE-RECORD>>>\\n'\n" +
+		"  for a in \"$@\"; do printf '%s\\n' \"$a\"; done\n" +
+		"  printf '<<<CC-ENVELOPE-END>>>\\n'\n" +
+		"} >> " + mtpShellSingleQuote(envCapturePath) + " 2>/dev/null\n" +
+		"exec " + mtpShellSingleQuote(realClaude) + " \"$@\"\n"
+	if werr := os.WriteFile(ccWrapperPath, []byte(ccWrapperSrc), 0o755); werr != nil {
+		t.Fatalf("write claude-capture wrapper: %v", werr)
+	}
+	t.Logf("envelope-capture wrapper at %s -> real claude %s (capture: %s)", ccWrapperPath, realClaude, envCapturePath)
+
 	// Spawn pherald listen with dedicated Claude session UUID per §11.4.98 rule (2)
 	qaDir := filepath.Join(tmpDir, "qa-journal")
 	if err := os.MkdirAll(qaDir, 0o700); err != nil {
@@ -138,6 +182,11 @@ func TestMTProto_Wave6_AutonomousClosedLoop(t *testing.T) {
 	pheraldCmd := exec.CommandContext(pheraldCtx, pheraldBin, "listen", "--qa-out-dir", qaDir)
 	pheraldCmd.Env = append(os.Environ(),
 		"HERALD_CLAUDE_PROJECT_NAME="+pheraldProjectName,
+		// Route every `claude` invocation through the transparent
+		// envelope-capture wrapper (THREAD-CONTEXT proof). The wrapper tees the
+		// rendered envelope then exec's the real claude, so Tier-2 dispatch is
+		// unaffected and the autonomy chain stays live.
+		"HERALD_CLAUDE_BIN="+ccWrapperPath,
 	)
 	pheraldCmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 	// CRITICAL: pherald listen resolves `docs/Issues.md` relative to its
@@ -298,6 +347,111 @@ func TestMTProto_Wave6_AutonomousClosedLoop(t *testing.T) {
 	t.Logf("✓ TELEGRAM reply-DELIVERY + THREADING PROVEN: bot reply message_id=%d is a quoted reply (reply_to_message_id=%d, our query MTProto-id=%d) text=%q",
 		reply.ID, reply.ReplyToMessageID, cmdSentID, strings.TrimSpace(reply.Text)[:min(70, len(strings.TrimSpace(reply.Text)))])
 
+	// ───────────────────────────────────────────────────────────────────────
+	// THREAD-CONTEXT LEG (operator mandate 2026-06-02): HARD-prove thread-context-
+	// awareness on TELEGRAM end-to-end — when a Subscriber sends a message that
+	// QUOTES another message, pherald includes the QUOTED PARENT as thread context
+	// in the Claude envelope (the rendered envelope carries a literal `THREAD
+	// CONTEXT` block naming Participants + the parent message text).
+	//
+	// Mechanism under test (verified by reading the code, NOT assumed):
+	//   tgram adapter: msg.ReplyTo != nil → threadContextFromReply(msg) populates
+	//     commons.InboundEvent.ThreadContext with the immediate quoted parent
+	//     (commons_messaging/channels/tgram/thread_context.go).
+	//   inbound dispatcher: ev.ThreadContext → CodeRequest.ThreadContext
+	//     (pherald/internal/inbound/dispatcher.go) → claude_code.DispatchRequest
+	//     .ThreadContext (cc_adapter.go).
+	//   claude_code: renderThreadContext writes the `THREAD CONTEXT … Participants:
+	//     … [N] <who> said: <parent text> …` block into the envelope
+	//     (commons_messaging/dispatch/claude_code/claude_code.go).
+	//
+	// Drive path: post a freeform PARENT (unique nonce) via SendMessage, then post
+	// a freeform REPLY that QUOTES the parent via client.SendReply(ctx, chatID,
+	// replyText, parentID) — this sets reply_to_message_id on the USER's outbound
+	// message, so pherald observes an inbound msg.ReplyTo != nil and the tgram
+	// adapter's threadContextFromReply populates the thread context. The reply is a
+	// freeform question carrying a unique nonce so it routes to CC/Tier-2 (the
+	// envelope path). We then HARD-assert, against the REAL captured envelope bytes
+	// (anti-bluff §107: the actual argv pherald handed to `claude`, NOT a metadata
+	// flag), that the envelope for THIS reply carries THREAD CONTEXT + Participants:
+	// + the PARENT message's text — proving the gather-and-feed chain end-to-end.
+	parentNonce := time.Now().UnixNano()
+	parentMsg := fmt.Sprintf("context-parent %d: the login flow is throwing 500s", parentNonce)
+	parentID, perr := client.SendMessage(ctx, chatID, parentMsg)
+	if perr != nil {
+		t.Fatalf("MTProto SendMessage (thread-context parent) failed: %v", perr)
+	}
+	t.Logf("MTProto sent thread-context PARENT message_id=%d text=%q", parentID, parentMsg)
+
+	// The QUOTED reply: SendReply sets reply_to_message_id = parentID on the
+	// user's outbound message, so pherald's inbound msg.ReplyTo is non-nil and the
+	// tgram adapter gathers the quoted parent as thread context. Freeform + unique
+	// nonce so it routes to CC/Tier-2 and exercises the envelope render path.
+	replyNonce := time.Now().UnixNano()
+	replyMsg := fmt.Sprintf("context-reply %d: which auth endpoint is returning the 500?", replyNonce)
+	replyID, rerr := client.SendReply(ctx, chatID, replyMsg, parentID)
+	if rerr != nil {
+		t.Fatalf("MTProto SendReply (thread-context quoted reply) failed: %v", rerr)
+	}
+	t.Logf("MTProto sent thread-context QUOTED REPLY message_id=%d text=%q (quotes parent message_id=%d)", replyID, replyMsg, parentID)
+
+	// Poll the capture file (bounded ~120s) for the cc envelope record that
+	// references our reply text (the record carrying replyMsg) — that is THIS
+	// quoted reply's rendered envelope.
+	const tcWindowSec = 120
+	t.Logf("waiting up to %ds for the cc envelope (quoted reply) to carry THREAD CONTEXT...", tcWindowSec)
+	var tcEnvelope string
+	var tcEnvelopeFound bool
+	tcDeadline := time.Now().Add(tcWindowSec * time.Second)
+	for time.Now().Before(tcDeadline) {
+		if data, rerr := os.ReadFile(envCapturePath); rerr == nil {
+			for _, rec := range mtpSplitEnvelopeRecords(string(data)) {
+				if strings.Contains(rec, replyMsg) {
+					tcEnvelope = rec
+					tcEnvelopeFound = true
+					break
+				}
+			}
+		}
+		if tcEnvelopeFound {
+			break
+		}
+		time.Sleep(2 * time.Second)
+	}
+
+	if !tcEnvelopeFound {
+		capTail, _ := os.ReadFile(envCapturePath)
+		logTail, _ := exec.Command("tail", "-40", filepath.Join(qaDir, "pherald.log")).CombinedOutput()
+		ct := string(capTail)
+		if len(ct) > 1200 {
+			ct = ct[len(ct)-1200:]
+		}
+		t.Fatalf("THREAD-CONTEXT leg FAILED: no captured cc envelope referenced the quoted reply text %q within %ds — pherald never dispatched it to claude. capture tail:\n%s\npherald log tail:\n%s",
+			replyMsg, tcWindowSec, ct, string(logTail))
+	}
+
+	// HARD assertions against the ACTUAL envelope bytes for the quoted reply.
+	var tcMissing []string
+	if !strings.Contains(tcEnvelope, "THREAD CONTEXT") {
+		tcMissing = append(tcMissing, `"THREAD CONTEXT"`)
+	}
+	if !strings.Contains(tcEnvelope, "Participants:") {
+		tcMissing = append(tcMissing, `"Participants:"`)
+	}
+	if !strings.Contains(tcEnvelope, parentMsg) {
+		tcMissing = append(tcMissing, fmt.Sprintf("quoted-parent text %q", parentMsg))
+	}
+	if len(tcMissing) > 0 {
+		logTail, _ := exec.Command("tail", "-40", filepath.Join(qaDir, "pherald.log")).CombinedOutput()
+		env := tcEnvelope
+		if len(env) > 2000 {
+			env = env[:2000] + "…"
+		}
+		t.Fatalf("THREAD-CONTEXT leg FAILED: the cc.dispatch envelope for the quoted reply did NOT carry %s — the tgram adapter did not gather the quoted parent OR the dispatcher did not feed it to Claude. Envelope record:\n%s\npherald log tail:\n%s",
+			strings.Join(tcMissing, " + "), env, string(logTail))
+	}
+	t.Logf("✓ TELEGRAM THREAD-CONTEXT PROVEN: rendered envelope for the quoted reply carried THREAD CONTEXT + Participants + the quoted parent")
+
 	// Ensure clean ctx
 	if err := ctx.Err(); err != nil && !errors.Is(err, context.DeadlineExceeded) && !errors.Is(err, context.Canceled) {
 		t.Errorf("unexpected ctx error: %v", err)
@@ -358,4 +512,40 @@ func consumePendingUpdates(t *testing.T, botToken string) {
 		r2.Body.Close()
 	}
 	t.Logf("pre-ack: discarded %d stale updates (max_update_id=%d)", len(r.Result), maxID)
+}
+
+// mtpShellSingleQuote wraps s in POSIX single quotes, escaping any embedded
+// single quote, so the generated envelope-capture wrapper references paths
+// safely even if t.TempDir() ever contains a quote or space. Local to this
+// (integration_mtproto-tagged) file — the equivalent slack helper lives behind
+// the `integration` build tag and never co-compiles here.
+func mtpShellSingleQuote(s string) string {
+	return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'"
+}
+
+// mtpSplitEnvelopeRecords splits the capture file written by the
+// envelope-capture wrapper into one string per claude invocation. Each record
+// is the argv between the <<<CC-ENVELOPE-RECORD>>> and <<<CC-ENVELOPE-END>>>
+// sentinels the wrapper emits; a trailing unterminated record (mid-write) is
+// ignored so a concurrent append cannot yield a half-record false match. Local
+// to this file for the same build-tag isolation reason as mtpShellSingleQuote.
+func mtpSplitEnvelopeRecords(s string) []string {
+	const begin = "<<<CC-ENVELOPE-RECORD>>>"
+	const end = "<<<CC-ENVELOPE-END>>>"
+	var out []string
+	rest := s
+	for {
+		bi := strings.Index(rest, begin)
+		if bi < 0 {
+			break
+		}
+		after := rest[bi+len(begin):]
+		ei := strings.Index(after, end)
+		if ei < 0 {
+			break // trailing unterminated record (still being written) — skip
+		}
+		out = append(out, after[:ei])
+		rest = after[ei+len(end):]
+	}
+	return out
 }

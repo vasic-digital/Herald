@@ -1,15 +1,68 @@
 package claude_code
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"os/exec"
 	"strings"
+	"sync"
 
 	"github.com/google/uuid"
 )
+
+// forkExecLock serialises the fork/exec START of every `claude` subprocess
+// this package spawns (the live-dispatch path in Dispatch and the cold-start
+// path in bootstrapSession). It is held ONLY across cmd.Start() — the moment
+// the process group is created (setProcessGroup sets SysProcAttr.Setpgid) —
+// and released before cmd.Wait(), so subprocesses still run and are reaped
+// fully concurrently.
+//
+// Why this is required (root-cause, 2026-06-02): setProcessGroup sets
+// SysProcAttr.Setpgid=true (HRD-146 process-group kill-on-timeout). Under
+// high-concurrency fork/exec on Darwin + the race detector, two goroutines
+// forking simultaneously while the child must setpgid()+execve() can wedge
+// the child between fork() and execve() — the parent then blocks forever in
+// syscall.forkExec's readlen() on the child status pipe (the stress suite
+// deterministically timed out after 10m with exactly one worker stuck there).
+// Go's os/exec already takes its internal ForkLock in *shared* mode for the
+// common path; this exclusive lock closes the residual Setpgid-fork window
+// our process-group setup opens, mirroring the ForkLock intent. Start is
+// microseconds, so serialising it does not meaningfully reduce throughput
+// (the subprocess body — the slow part — stays concurrent).
+var forkExecLock sync.Mutex
+
+// runOutputSerialized starts cmd under forkExecLock (serialising only the
+// fork/exec) and then waits for it OUTSIDE the lock, returning the captured
+// stdout. It is the concurrency-safe replacement for cmd.Output() for the
+// process-group-enabled `claude` invocations. Stderr is captured into an
+// *exec.ExitError (matching cmd.Output()'s contract) so the existing
+// ee.Stderr diagnostics in Dispatch / bootstrapSession keep working.
+func runOutputSerialized(cmd *exec.Cmd) ([]byte, error) {
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	forkExecLock.Lock()
+	startErr := cmd.Start()
+	forkExecLock.Unlock()
+	if startErr != nil {
+		return nil, startErr
+	}
+
+	waitErr := cmd.Wait()
+	if waitErr != nil {
+		// Mirror cmd.Output(): surface stderr on the ExitError so callers
+		// that inspect ee.Stderr keep their diagnostics.
+		if ee, ok := waitErr.(*exec.ExitError); ok && ee.Stderr == nil {
+			ee.Stderr = stderr.Bytes()
+		}
+		return stdout.Bytes(), waitErr
+	}
+	return stdout.Bytes(), nil
+}
 
 // Dispatch invokes `claude --resume <UUID> --print "<envelope>"` and parses
 // the structured reply line prefixed with <<<HERALD-REPLY>>>.
@@ -47,7 +100,11 @@ func (d *Dispatcher) Dispatch(ctx context.Context, req DispatchRequest) (Dispatc
 	// fallback on platforms without process groups (see setProcessGroup).
 	setProcessGroup(cmd)
 
-	out, err := cmd.Output()
+	// Serialise ONLY the fork/exec start (process-group creation) across
+	// concurrent Dispatch calls; the subprocess then runs + is waited on
+	// concurrently. See runOutputSerialized / forkExecLock for the
+	// root-cause (Setpgid + concurrent fork/exec deadlock).
+	out, err := runOutputSerialized(cmd)
 	if err != nil {
 		// Distinguish a deadline/cancellation from an ordinary non-zero
 		// exit. On timeout the child is SIGKILLed by exec.CommandContext, so

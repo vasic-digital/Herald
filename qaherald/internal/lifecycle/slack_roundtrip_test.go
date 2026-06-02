@@ -117,6 +117,53 @@ func TestSlack_LiveRoundTrip(t *testing.T) {
 	}
 	t.Logf("pherald built at %s", pheraldBin)
 
+	// LEG 4 substrate — envelope capture (THREAD-CONTEXT proof).
+	//
+	// The pherald journal records cc.dispatch as the RAW user_message text, NOT
+	// the rendered <<<HERALD-DISPATCH-v1>>> envelope (the THREAD CONTEXT block is
+	// rendered inside claude_code.Dispatcher.buildCmd → FormatEnvelopeWithPreText
+	// and passed straight to `claude --print <envelope>`; it is never journaled —
+	// see e2e_bluff_hunt E66's documented SKIP). To HARD-prove, anti-bluff, that
+	// the slack adapter gathered the thread (fetchThreadContext) AND that the
+	// dispatcher fed it to Claude, we intercept the REAL envelope bytes pherald
+	// hands to `claude`: a transparent wrapper at HERALD_CLAUDE_BIN tees its full
+	// argv (which contains `--print <envelope>`) to a capture file, then exec's
+	// the REAL claude so Tier-2 dispatch stays fully live (no faking — LEG 1's
+	// autonomy chain still dispatches through it unchanged). This keys the LEG-4
+	// assertion on the ACTUAL rendered envelope, strictly stronger than the
+	// journal (which lacks the envelope entirely).
+	realClaude := claudeBin
+	if realClaude == "" {
+		rc, lerr := exec.LookPath("claude")
+		if lerr != nil {
+			t.Fatalf("resolve real claude binary for envelope-capture wrapper: %v", lerr)
+		}
+		realClaude = rc
+	} else {
+		rc, lerr := exec.LookPath(realClaude)
+		if lerr != nil {
+			t.Fatalf("resolve HERALD_CLAUDE_BIN=%q for envelope-capture wrapper: %v", realClaude, lerr)
+		}
+		realClaude = rc
+	}
+	envCapturePath := filepath.Join(tmpDir, "cc_envelopes.log")
+	ccWrapperPath := filepath.Join(tmpDir, "claude-capture.sh")
+	// The wrapper records each invocation's argv (one envelope per record,
+	// delimited by a sentinel) then transparently delegates to the real claude.
+	// `printf %s\n "$@"` writes each arg on its own line; the envelope is a
+	// single `--print` arg, so the multi-line THREAD CONTEXT block lands intact.
+	ccWrapperSrc := "#!/bin/sh\n" +
+		"{\n" +
+		"  printf '<<<CC-ENVELOPE-RECORD>>>\\n'\n" +
+		"  for a in \"$@\"; do printf '%s\\n' \"$a\"; done\n" +
+		"  printf '<<<CC-ENVELOPE-END>>>\\n'\n" +
+		"} >> " + shellSingleQuote(envCapturePath) + " 2>/dev/null\n" +
+		"exec " + shellSingleQuote(realClaude) + " \"$@\"\n"
+	if werr := os.WriteFile(ccWrapperPath, []byte(ccWrapperSrc), 0o755); werr != nil {
+		t.Fatalf("write claude-capture wrapper: %v", werr)
+	}
+	t.Logf("envelope-capture wrapper at %s -> real claude %s (capture: %s)", ccWrapperPath, realClaude, envCapturePath)
+
 	// QA user-side Slack client (drives the USER side: chat.postMessage posts
 	// AS the user via the xoxp- token; conversations.history reads the bot's
 	// reply). The empty baseURL defaults to https://slack.com/api — real bytes.
@@ -149,6 +196,11 @@ func TestSlack_LiveRoundTrip(t *testing.T) {
 		// Pin the channel set on the spawned process so it does not pick up a
 		// stray HERALD_CHANNELS from the inherited env.
 		"HERALD_CHANNELS=slack",
+		// Route every `claude` invocation through the transparent
+		// envelope-capture wrapper (LEG 4 THREAD-CONTEXT proof). The wrapper
+		// tees the rendered envelope then exec's the real claude, so Tier-2
+		// dispatch (LEG 1) is unaffected.
+		"HERALD_CLAUDE_BIN="+ccWrapperPath,
 	)
 	pheraldCmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 	// pherald listen resolves docs/Issues.md relative to its CWD; run it from
@@ -400,6 +452,86 @@ func TestSlack_LiveRoundTrip(t *testing.T) {
 	t.Logf("✓ INBOUND-THREADED PROVEN: pherald processed the Subscriber's in-thread reply and answered IN THE SAME thread (reply ts=%s thread_ts=%s) text=%q",
 		inThreadReply.MessageID, inThreadReply.ReplyToMessageID, slackTrunc(inThreadReply.Text, 70))
 
+	// LEG 4 — THREAD-CONTEXT AWARENESS END-TO-END (operator mandate 2026-06-02).
+	// The Subscriber posts a FREEFORM (NOT a Tier-1 status query) message INSIDE
+	// the existing thread (thread_ts == probe2TS, the LEG-2 thread root). Because
+	// it is freeform it routes to CC/Tier-2 — exercising the envelope path. The
+	// slack adapter's fetchThreadContext (conversations.replies) gathers the
+	// thread's PRIOR messages → commons.InboundEvent.ThreadContext → the
+	// dispatcher renders a THREAD CONTEXT block (Participants + prior messages +
+	// SUBJECT) into the `claude --print <envelope>` argv. We HARD-assert, against
+	// the REAL captured envelope bytes (anti-bluff: actual argv pherald handed to
+	// claude, NOT a metadata flag), that the envelope for THIS message carries the
+	// THREAD CONTEXT marker + Participants: + the text of at least one PRIOR thread
+	// message — proving the gather-and-feed chain end-to-end.
+	tcNonce := fmt.Sprintf("ctxq-%d", pheraldCmd.Process.Pid)
+	tcQuery := "Can you summarise what this thread is about? (" + tcNonce + ")"
+	sendT4Ctx, sendT4Cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	tcQueryTS, serr4 := qaUser.SendInThread(sendT4Ctx, tcQuery, string(probe2TS))
+	sendT4Cancel()
+	if serr4 != nil {
+		teardown()
+		t.Fatalf("QA user SendInThread (freeform thread-context query) failed: %v", serr4)
+	}
+	t.Logf("QA user posted an IN-THREAD freeform query ts=%s (thread_ts=%s) text=%q", tcQueryTS, probe2TS, tcQuery)
+
+	// A PRIOR in-thread message whose text MUST appear in the rendered THREAD
+	// CONTEXT block. The LEG-2 status query (cmdProbe, carrying idToken) is the
+	// thread root; idToken is unique-per-run, so finding it inside the envelope
+	// for the freeform message is unambiguous proof the adapter gathered THIS
+	// thread (not a stale/empty context).
+	priorThreadMarker := idToken // "ATM-<pid>" — the LEG-2 root message's id token
+
+	// Poll the capture file (bounded ~120s) for the cc.dispatch envelope that
+	// references our freeform query AND carries THREAD CONTEXT + Participants: +
+	// the prior message. The wrapper appends one record per claude invocation;
+	// we scan for the record containing tcNonce (THIS message's envelope).
+	t.Logf("waiting up to 120s for the cc envelope (freeform in-thread message) to carry THREAD CONTEXT...")
+	var tcEnvelope string
+	var tcEnvelopeFound bool
+	tcDeadline := time.Now().Add(120 * time.Second)
+	for time.Now().Before(tcDeadline) {
+		if data, rerr := os.ReadFile(envCapturePath); rerr == nil {
+			for _, rec := range slackSplitEnvelopeRecords(string(data)) {
+				if strings.Contains(rec, tcNonce) {
+					tcEnvelope = rec
+					tcEnvelopeFound = true
+					break
+				}
+			}
+		}
+		if tcEnvelopeFound {
+			break
+		}
+		time.Sleep(2 * time.Second)
+	}
+
+	if !tcEnvelopeFound {
+		tail, _ := exec.Command("tail", "-40", filepath.Join(qaDir, "pherald.log")).CombinedOutput()
+		cap, _ := os.ReadFile(envCapturePath)
+		teardown()
+		t.Fatalf("THREAD-CONTEXT leg FAILED: no captured cc envelope referenced the freeform in-thread query nonce %q within 120s — pherald never dispatched it to claude. capture tail:\n%s\npherald log tail:\n%s",
+			tcNonce, slackTrunc(string(cap), 1200), string(tail))
+	}
+
+	// HARD assertions against the ACTUAL envelope bytes.
+	var tcMissing []string
+	if !strings.Contains(tcEnvelope, "THREAD CONTEXT") {
+		tcMissing = append(tcMissing, `"THREAD CONTEXT"`)
+	}
+	if !strings.Contains(tcEnvelope, "Participants:") {
+		tcMissing = append(tcMissing, `"Participants:"`)
+	}
+	if !strings.Contains(tcEnvelope, priorThreadMarker) {
+		tcMissing = append(tcMissing, fmt.Sprintf("prior-thread-message marker %q", priorThreadMarker))
+	}
+	if len(tcMissing) > 0 {
+		teardown()
+		t.Fatalf("THREAD-CONTEXT leg FAILED: the cc.dispatch envelope for the in-thread message did NOT carry %s — the adapter did not gather the thread OR the dispatcher did not feed it to Claude. Envelope record:\n%s",
+			strings.Join(tcMissing, " + "), slackTrunc(tcEnvelope, 2000))
+	}
+	t.Logf("✓ THREAD-CONTEXT PROVEN: cc.dispatch envelope for the in-thread message carried THREAD CONTEXT + Participants + prior message")
+
 	// Teardown now (before writing evidence) so we can record the exit status.
 	teardown()
 	if pheraldExitErr != nil {
@@ -434,6 +566,11 @@ func TestSlack_LiveRoundTrip(t *testing.T) {
 		InThreadIDToken: idToken2,
 		InThreadHandled: sawInThreadReply,
 		InThreadReply:   inThreadReply,
+		TCQuery:         tcQuery,
+		TCQueryTS:       string(tcQueryTS),
+		TCPriorMarker:   priorThreadMarker,
+		TCEnvelope:      tcEnvelope,
+		TCProven:        tcEnvelopeFound,
 		JournalPath:     journalPath,
 		LogPath:         filepath.Join(qaDir, "pherald.log"),
 	}); werr != nil {
@@ -460,8 +597,14 @@ type slackEvidence struct {
 	InThreadIDToken string
 	InThreadHandled bool // pherald replied in-thread to the in-thread message (HARD-proven)
 	InThreadReply   messenger.Reply
-	JournalPath     string
-	LogPath         string
+	// Leg 4 — thread-context awareness end-to-end.
+	TCQuery       string // the freeform in-thread message that exercised the envelope
+	TCQueryTS     string
+	TCPriorMarker string // a prior thread message's unique marker that MUST appear in the envelope
+	TCEnvelope    string // the REAL captured cc.dispatch envelope record for the freeform message
+	TCProven      bool   // the envelope carried THREAD CONTEXT + Participants + prior message (HARD-proven)
+	JournalPath   string
+	LogPath       string
 }
 
 // slackWriteEvidence writes a human-readable, REDACTED transcript +
@@ -500,6 +643,18 @@ func slackWriteEvidence(evidenceDir string, ev slackEvidence) error {
 		fmt.Fprintf(&b, "In-thread reply ts       : %s\n", ev.InThreadReply.MessageID)
 		fmt.Fprintf(&b, "In-thread reply text     : %s\n", ev.InThreadReply.Text)
 		fmt.Fprintf(&b, "Stayed in SAME thread    : %s (thread_ts == the original thread root)\n", ev.InThreadReply.ReplyToMessageID)
+	}
+	fmt.Fprintf(&b, "\n## Leg 4 — THREAD-CONTEXT awareness (Subscriber posts a FREEFORM message inside the thread)\n")
+	fmt.Fprintf(&b, "Freeform in-thread msg : %s\n", ev.TCQuery)
+	fmt.Fprintf(&b, "Freeform msg ts        : %s (thread_ts=%s)\n", ev.TCQueryTS, ev.CmdProbeTS)
+	fmt.Fprintf(&b, "Prior-message marker   : %s (must appear inside the rendered THREAD CONTEXT block)\n", ev.TCPriorMarker)
+	fmt.Fprintf(&b, "Envelope carried ctx   : %v (THREAD CONTEXT + Participants: + the prior thread message)\n", ev.TCProven)
+	if ev.TCProven {
+		// Record a REDACTED excerpt of the actual rendered envelope as the
+		// positive runtime evidence that pherald gathered the thread and fed it
+		// to Claude. slackRedact scrubs any xox-/wss:// before it touches disk.
+		fmt.Fprintf(&b, "Envelope excerpt (REDACTED, captured from the real `claude --print` argv):\n")
+		fmt.Fprintf(&b, "----- BEGIN THREAD CONTEXT EXCERPT -----\n%s\n----- END THREAD CONTEXT EXCERPT -----\n", slackThreadContextExcerpt(ev.TCEnvelope))
 	}
 	fmt.Fprintf(&b, "\nDirection legend: USER -> (Slack) -> pherald bot -> {Claude Code | Tier-1 recognizer} -> (Slack reply) -> USER\n")
 	if err := os.WriteFile(filepath.Join(evidenceDir, "TRANSCRIPT.md"), []byte(slackRedact(b.String())), 0o644); err != nil {
@@ -607,6 +762,58 @@ func slackTrunc(s string, n int) string {
 		return s
 	}
 	return s[:n] + "…"
+}
+
+// shellSingleQuote wraps s in POSIX single quotes, escaping any embedded
+// single quote, so the generated wrapper script references paths safely even
+// if t.TempDir() ever contains a quote or space. (TempDir paths are tame on
+// the CI hosts, but the quoting keeps the generated /bin/sh well-formed.)
+func shellSingleQuote(s string) string {
+	return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'"
+}
+
+// slackSplitEnvelopeRecords splits the capture file written by the
+// envelope-capture wrapper into one string per claude invocation. Each record
+// is the argv between the <<<CC-ENVELOPE-RECORD>>> and <<<CC-ENVELOPE-END>>>
+// sentinels the wrapper emits; a trailing unterminated record (mid-write) is
+// ignored so a concurrent append cannot yield a half-record false match.
+func slackSplitEnvelopeRecords(s string) []string {
+	const begin = "<<<CC-ENVELOPE-RECORD>>>"
+	const end = "<<<CC-ENVELOPE-END>>>"
+	var out []string
+	rest := s
+	for {
+		bi := strings.Index(rest, begin)
+		if bi < 0 {
+			break
+		}
+		after := rest[bi+len(begin):]
+		ei := strings.Index(after, end)
+		if ei < 0 {
+			break // trailing unterminated record (still being written) — skip
+		}
+		out = append(out, after[:ei])
+		rest = after[ei+len(end):]
+	}
+	return out
+}
+
+// slackThreadContextExcerpt extracts the THREAD CONTEXT block (from the marker
+// up to the trailing blank line that precedes the user message) from a captured
+// envelope, REDACTED, for a compact evidence excerpt. Falls back to a redacted
+// truncation of the whole record if the marker boundaries cannot be located.
+func slackThreadContextExcerpt(envelope string) string {
+	start := strings.Index(envelope, "THREAD CONTEXT")
+	if start < 0 {
+		return slackRedact(slackTrunc(envelope, 1200))
+	}
+	block := envelope[start:]
+	// The renderThreadContext block ends with a "\n\n" separator before the rest
+	// of the envelope; cut there to keep the excerpt focused.
+	if endIdx := strings.Index(block, "\n\n"); endIdx >= 0 {
+		block = block[:endIdx]
+	}
+	return slackRedact(slackTrunc(block, 1600))
 }
 
 // slackTSAfter reports whether Slack message ts a is strictly after ts b.

@@ -79,7 +79,11 @@ func (d *Dispatcher) bootstrapSession(ctx context.Context, anchor string) (uuid.
 	// bootstrap deadline.
 	setProcessGroup(cmd)
 
-	out, err := cmd.Output()
+	// Serialise ONLY the fork/exec start across concurrent bootstraps (the
+	// cold-start stress test fans out N parallel bootstrapSession calls);
+	// see runOutputSerialized / forkExecLock for the Setpgid-fork deadlock
+	// this closes.
+	out, err := runOutputSerialized(cmd)
 	if err != nil {
 		var ee *exec.ExitError
 		if errors.As(err, &ee) {

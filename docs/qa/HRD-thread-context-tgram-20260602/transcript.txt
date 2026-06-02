@@ -1,0 +1,11 @@
+# Telegram (MTProto) live thread-context-awareness evidence
+# TestMTProto_Wave6_AutonomousClosedLoop, 2026-06-02. Bot token redacted; chat id is config.
+
+✓ journal: tgram.message in carrying our text (sent_id=211860)
+✓ journal: cc.dispatch out referencing our text
+✓ journal: cc.reply in — Claude responded
+PASS: §11.4.98 autonomy chain proven via journal — MTProto → bot inbound → Claude dispatch → Claude reply
+✓ TELEGRAM reply-DELIVERY + THREADING PROVEN: bot reply message_id=211862 is a quoted reply
+  (reply_to_message_id=211861, our query MTProto-id=211861) text="Looking up the status of ATM-5472…"
+✓ TELEGRAM THREAD-CONTEXT PROVEN: rendered envelope for the quoted reply carried THREAD CONTEXT + Participants + the quoted parent
+--- PASS: TestMTProto_Wave6_AutonomousClosedLoop (61.64s)

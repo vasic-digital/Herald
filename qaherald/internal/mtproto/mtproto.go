@@ -115,6 +115,13 @@ type Client interface {
 	// MUST be a member of chatID; otherwise Telegram returns CHAT_WRITE_FORBIDDEN.
 	SendMessage(ctx context.Context, chatID int64, text string) (messageID int64, err error)
 
+	// SendReply posts text to chatID as the authenticated user, as a REPLY
+	// that QUOTES the message replyToID (Telegram reply_to_message_id). This
+	// makes pherald's inbound event carry a non-nil msg.ReplyTo, so the
+	// thread-context pipeline gathers the quoted parent — used by the live
+	// Telegram thread-context proof. Returns the assigned message_id.
+	SendReply(ctx context.Context, chatID int64, text string, replyToID int64) (messageID int64, err error)
+
 	// WaitForReply blocks until a message satisfying matcher arrives in
 	// chatID, or until ctx expires. The matcher is invoked for every new
 	// message in the chat (including the user's own SendMessage echoes —
