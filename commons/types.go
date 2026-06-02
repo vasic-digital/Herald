@@ -16,8 +16,8 @@ import (
 
 // Channel is the interface every channel adapter implements (spec §11.0).
 type Channel interface {
-	Name() string                                                  // "tgram", "slack", ...
-	Capabilities() Capabilities                                    // declarative feature flags
+	Name() string               // "tgram", "slack", ...
+	Capabilities() Capabilities // declarative feature flags
 	Send(ctx context.Context, msg OutboundMessage) (Receipt, error)
 	Subscribe(ctx context.Context, h InboundHandler) error // long-running, called by `serve`
 	HealthCheck(ctx context.Context) error
@@ -69,12 +69,12 @@ func (d DeliveryEvidence) String() string {
 
 // OutboundMessage is the value passed to Channel.Send (spec §11.0).
 type OutboundMessage struct {
-	EventID        string           // CloudEvents id (§4)
-	IdempotencyKey string           // explicit; falls back to EventID
-	TenantID       string           // UUID; matches `subscribers.tenant_id`
-	To             []Recipient      // resolved from preferences + tag fan-out
-	Subject        string           // optional (Email, RSS-like channels)
-	Body           Body             // rendered per-channel template output
+	EventID        string      // CloudEvents id (§4)
+	IdempotencyKey string      // explicit; falls back to EventID
+	TenantID       string      // UUID; matches `subscribers.tenant_id`
+	To             []Recipient // resolved from preferences + tag fan-out
+	Subject        string      // optional (Email, RSS-like channels)
+	Body           Body        // rendered per-channel template output
 	Attachments    []Attachment
 	Thread         *ConversationRef // optional; per §12
 	Priority       Priority         // ntfy-compatible 1..5
@@ -168,7 +168,27 @@ type InboundEvent struct {
 	Body        Body
 	Attachments []Attachment
 	Thread      *ConversationRef
-	Raw         map[string]any // adapter-specific raw payload (for diary)
+	// ThreadContext carries the PRIOR messages of the thread this event belongs
+	// to (oldest→newest), populated by the channel adapter when the inbound
+	// message is itself inside a thread (Slack thread_ts present; Telegram a
+	// reply_to chain). Empty for a fresh/top-level message. The dispatcher feeds
+	// this to Claude so a reply is bound by the thread's MEANING and only made
+	// when the thread's context warrants one — replies are contributions to a
+	// thread, not isolated answers (operator mandate 2026-06-02). It excludes the
+	// current inbound message itself (that is in Body).
+	ThreadContext []ThreadMessage
+	Raw           map[string]any // adapter-specific raw payload (for diary)
+}
+
+// ThreadMessage is one prior message in a thread, supplying the conversational
+// context that binds a reply to the thread's meaning (operator mandate
+// 2026-06-02). Adapters populate it from the channel's thread-history API
+// (Slack conversations.replies; Telegram the reply_to chain).
+type ThreadMessage struct {
+	SenderHandle string    // resolved/raw sender handle; "Claude" for this bot's own prior messages
+	SenderIsBot  bool      // true when authored by a bot (incl. this Herald bot)
+	Text         string    // the message text
+	Timestamp    time.Time // when it was sent (zero if the adapter cannot determine it)
 }
 
 // ConversationRef is the per-channel thread identifier (§12 + §11.0).
