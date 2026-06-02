@@ -1,0 +1,5 @@
+# Herald full-corpus docs_chain verify — 2026-06-02T07:09:00Z
+# binary: docs_chain (Phase 4 CLI) — sync | verify | doctor | graph | watch
+# docs_chain HEAD: 6f6f65d
+herald-docs              STALE: [AGENTS_docx CLAUDE_docx README_docx docs_CONTINUATION_docx docs_CONTINUATION_pdf docs_Fixed_docx docs_Issues_docx docs_Status_docx docs_Status_pdf docs_guides_HERALD_CONSTITUTION_docx docs_guides_OPERATOR_CREDENTIALS_docx docs_guides_OPERATOR_CREDENTIALS_pdf docs_guides_messengers_SLACK_docx]
+VERIFY_EXIT=1
