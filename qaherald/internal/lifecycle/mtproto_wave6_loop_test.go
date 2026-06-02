@@ -24,14 +24,14 @@ import (
 // replacement for tests/test_wave6_live_loop.sh. It exercises the full
 // closed-loop end-to-end with NO operator action during the test:
 //
-//   1. MTProto user sends a unique message to HERALD_TGRAM_CHAT_ID.
-//   2. pherald listen (spawned by this test) polls Telegram, sees the
-//      message, dispatches to Claude Code, gets back a HERALD-REPLY.
-//   3. pherald calls tgram.SendReply with reply_to_message_id pointing
-//      at our MTProto-sent message_id.
-//   4. MTProto sees the bot's reply via WaitForReply matcher
-//      (FromUserID != myUserID && ReplyToMessageID == ourSentMsgID).
-//   5. Assert reply landed within timeout + journal captured the flow.
+//  1. MTProto user sends a unique message to HERALD_TGRAM_CHAT_ID.
+//  2. pherald listen (spawned by this test) polls Telegram, sees the
+//     message, dispatches to Claude Code, gets back a HERALD-REPLY.
+//  3. pherald calls tgram.SendReply with reply_to_message_id pointing
+//     at our MTProto-sent message_id.
+//  4. MTProto sees the bot's reply via WaitForReply matcher
+//     (FromUserID != myUserID && ReplyToMessageID == ourSentMsgID).
+//  5. Assert reply landed within timeout + journal captured the flow.
 //
 // Honest-SKIP per §11.4.3 when credentials absent OR session missing.
 // NEVER falls back to a manual-dep path.
@@ -256,6 +256,47 @@ func TestMTProto_Wave6_AutonomousClosedLoop(t *testing.T) {
 	} else {
 		t.Logf("note: bot reply not observed via MTProto within 30s (Claude may have returned empty text — autonomy still proven via journal): %v", err)
 	}
+
+	// THREADING LEG (operator mandate 2026-06-02): a reply MUST be delivered as a
+	// REPLY to the originating message on every messenger that supports it. On
+	// Telegram that is reply_to_message_id. We prove it DETERMINISTICALLY via the
+	// Tier-1 fast-path (no dependency on Claude session fidelity / HRD-159): the
+	// MTProto user posts a natural-language status query, the deterministic
+	// CommandRecognizer answers "Looking up the status of ATM-<pid>…" via
+	// tgram.SendReply with reply_to_message_id = our query's message_id, and we
+	// HARD-assert the reply is observed AND carries ReplyToMessageID == that id —
+	// which is exactly Telegram's threading mechanism (a quoted reply).
+	idToken := fmt.Sprintf("ATM-%d", pheraldCmd.Process.Pid)
+	cmdMsg := "What is the status of " + idToken + "?"
+	cmdSentID, serr := client.SendMessage(ctx, chatID, cmdMsg)
+	if serr != nil {
+		t.Fatalf("MTProto SendMessage (Tier-1 status query) failed: %v", serr)
+	}
+	t.Logf("MTProto sent Tier-1 status query message_id=%d text=%q", cmdSentID, cmdMsg)
+	thrCtx, thrCancel := context.WithTimeout(ctx, 60*time.Second)
+	defer thrCancel()
+	// Match the bot's reply by TEXT (the deterministic "Looking up the status of
+	// ATM-<pid>…" carries our unique id token — the bot emits it ONLY in response
+	// to our query, so the text proves causation). We do NOT match on
+	// reply_to_message_id equality: the MTProto user's message_id (cmdSentID) and
+	// the Bot-API chat-local message_id pherald replies-to are DIFFERENT id
+	// namespaces. THREADING is proven by asserting the observed reply IS a quoted
+	// reply (ReplyToMessageID != 0) — i.e. pherald sent it as a reply_to, not a
+	// standalone message.
+	reply, terr := client.WaitForReply(thrCtx, chatID, func(m mtproto.Message) bool {
+		return m.FromUserID != myID && strings.Contains(m.Text, idToken)
+	})
+	if terr != nil {
+		tail, _ := exec.Command("tail", "-25", filepath.Join(qaDir, "pherald.log")).CombinedOutput()
+		t.Fatalf("§11.4.98 Telegram reply-DELIVERY FAILED: no reply carrying %q (in response to our status query message_id=%d) observed via MTProto — the reply did not reach Telegram. pherald log tail:\n%s",
+			idToken, cmdSentID, string(tail))
+	}
+	if reply.ReplyToMessageID == 0 {
+		t.Fatalf("Telegram reply NOT threaded: the bot's reply (id=%d, text=%q) has NO reply_to_message_id — it was sent as a standalone message, not a quoted reply (operator mandate: replies MUST be threaded on Telegram via reply_to_message_id)",
+			reply.ID, strings.TrimSpace(reply.Text))
+	}
+	t.Logf("✓ TELEGRAM reply-DELIVERY + THREADING PROVEN: bot reply message_id=%d is a quoted reply (reply_to_message_id=%d, our query MTProto-id=%d) text=%q",
+		reply.ID, reply.ReplyToMessageID, cmdSentID, strings.TrimSpace(reply.Text)[:min(70, len(strings.TrimSpace(reply.Text)))])
 
 	// Ensure clean ctx
 	if err := ctx.Err(); err != nil && !errors.Is(err, context.DeadlineExceeded) && !errors.Is(err, context.Canceled) {

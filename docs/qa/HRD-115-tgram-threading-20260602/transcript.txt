@@ -1,0 +1,10 @@
+# Telegram (MTProto) live threading evidence — TestMTProto_Wave6_AutonomousClosedLoop
+# Run 2026-06-02. Bot token redacted; chat id is configuration, not a credential.
+
+✓ journal: tgram.message in carrying our text (sent_id=211853)
+✓ journal: cc.dispatch out referencing our text
+✓ journal: cc.reply in — Claude responded
+PASS: §11.4.98 autonomy chain proven via journal — MTProto → bot inbound → Claude dispatch → Claude reply
+✓ TELEGRAM reply-DELIVERY + THREADING PROVEN: bot reply message_id=211855 is a quoted reply
+  (reply_to_message_id=211854, our query MTProto-id=211854) text="Looking up the status of ATM-54408…"
+--- PASS: TestMTProto_Wave6_AutonomousClosedLoop (49.64s)
