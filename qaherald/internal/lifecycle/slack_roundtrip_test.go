@@ -290,29 +290,115 @@ func TestSlack_LiveRoundTrip(t *testing.T) {
 	}
 	t.Logf("QA user posted Tier-1 status-query probe ts=%s text=%q", probe2TS, cmdProbe)
 
+	// Find the bot's reply IN THE THREAD via conversations.replies. A correctly
+	// threaded reply (thread_ts set) does NOT appear in conversations.history's
+	// top-level timeline, so we must look inside the thread rooted at the probe.
+	// Finding the bot's reply HERE proves BOTH that it was delivered AND that it
+	// is in-thread (operator mandate 2026-06-02: replies MUST be threaded on
+	// every messenger that supports it).
 	var sawCmdReply bool
 	var deliveredReply messenger.Reply
-	cmdCtx, cmdCancel := context.WithTimeout(context.Background(), 45*time.Second)
-	if reply, werr := qaUser.WaitForReply(cmdCtx, probe2TS, func(r messenger.Reply) bool {
-		// Bot-authored, strictly newer than this probe, carrying the unique id
-		// token the deterministic Tier-1 reply echoes ("Looking up the status of
-		// ATM-<pid>…"). ts>probe2 excludes any stale earlier message.
-		return r.SenderIsBot && slackTSAfter(string(r.MessageID), string(probe2TS)) && strings.Contains(r.Text, idToken)
-	}, 40*time.Second); werr == nil {
-		sawCmdReply = true
-		deliveredReply = reply
-		t.Logf("✓ reply-DELIVERY PROVEN: Tier-1 reply landed in Slack (ts=%s > probe ts=%s) text=%q",
-			reply.MessageID, probe2TS, slackTrunc(reply.Text, 90))
-	} else {
-		t.Logf("Tier-1 reply NOT observed in Slack within 40s: %v", werr)
+	threadDeadline := time.Now().Add(45 * time.Second)
+	for time.Now().Before(threadDeadline) {
+		thrCtx, thrCancel := context.WithTimeout(context.Background(), 15*time.Second)
+		replies, rerr := qaUser.GetThreadReplies(thrCtx, string(probe2TS))
+		thrCancel()
+		if rerr != nil {
+			t.Logf("conversations.replies poll error (will retry): %v", rerr)
+		} else {
+			for _, r := range replies {
+				// The bot's reply is the thread message that is NOT the probe
+				// (root) and carries the unique id token. We CANNOT key on
+				// SenderIsBot: the QA user posts via an app-associated user token,
+				// so its messages also carry the app's bot_id — only the user-id
+				// (and the ts) distinguish them. Excluding the probe ts + matching
+				// the id token unambiguously selects pherald's reply.
+				if string(r.MessageID) != string(probe2TS) && strings.Contains(r.Text, idToken) {
+					sawCmdReply = true
+					deliveredReply = r
+					break
+				}
+			}
+		}
+		if sawCmdReply {
+			break
+		}
+		time.Sleep(2 * time.Second)
 	}
-	cmdCancel()
 
 	if !sawCmdReply {
 		tail, _ := exec.Command("tail", "-25", filepath.Join(qaDir, "pherald.log")).CombinedOutput()
-		t.Fatalf("§11.4.98 reply-DELIVERY leg FAILED: the deterministic Tier-1 reply (carrying %q) was not observed in Slack newer than the probe (ts=%s) — the round-trip reply did not reach Slack. pherald log tail:\n%s",
+		t.Fatalf("§11.4.98 reply-DELIVERY leg FAILED: the deterministic Tier-1 reply (carrying %q) was not found IN THE THREAD rooted at the probe (ts=%s) — the round-trip reply did not reach Slack. pherald log tail:\n%s",
 			idToken, probe2TS, string(tail))
 	}
+	t.Logf("✓ reply-DELIVERY PROVEN: Tier-1 reply found in the thread (reply ts=%s) text=%q",
+		deliveredReply.MessageID, slackTrunc(deliveredReply.Text, 90))
+
+	// HARD assertion — the reply MUST be IN-THREAD under the probe. Because we
+	// fetched it via conversations.replies(ts=probe), it is in the thread by
+	// construction; we additionally assert ReplyToMessageID == the probe ts
+	// (the qaherald client sets it from thread_ts) as belt-and-braces.
+	if string(deliveredReply.ReplyToMessageID) != string(probe2TS) {
+		t.Fatalf("reply NOT in-thread: reply thread parent=%q, want probe ts=%q — the reply was posted top-level, not threaded (operator mandate: replies MUST be threaded on Slack via thread_ts)",
+			deliveredReply.ReplyToMessageID, probe2TS)
+	}
+	t.Logf("✓ THREADING PROVEN: reply is in-thread under the probe (thread_ts=%s == probe ts=%s)", deliveredReply.ReplyToMessageID, probe2TS)
+
+	// LEG 3 — INBOUND THREADED MESSAGE (operator mandate 2026-06-02): a Subscriber
+	// must be processed when they reply WITHIN an existing thread, and pherald MUST
+	// reply back into that SAME thread. The QA user now posts a SECOND status query
+	// as a threaded reply (thread_ts == probe2TS) inside the thread LEG 2 created.
+	// pherald receives an inbound message carrying thread_ts and — because
+	// extractReplyToID PREFERS thread_ts — must reply into the same thread.
+	idToken2 := fmt.Sprintf("ATM-%d", pheraldCmd.Process.Pid+1)
+	inThreadQuery := "And the status of " + idToken2 + "?"
+	sendT3Ctx, sendT3Cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	inThreadQueryTS, serr3 := qaUser.SendInThread(sendT3Ctx, inThreadQuery, string(probe2TS))
+	sendT3Cancel()
+	if serr3 != nil {
+		teardown()
+		t.Fatalf("QA user SendInThread (reply within existing thread) failed: %v", serr3)
+	}
+	t.Logf("QA user posted an IN-THREAD reply ts=%s (thread_ts=%s) text=%q", inThreadQueryTS, probe2TS, inThreadQuery)
+
+	var sawInThreadReply bool
+	var inThreadReply messenger.Reply
+	t3Deadline := time.Now().Add(45 * time.Second)
+	for time.Now().Before(t3Deadline) {
+		t3Ctx, t3Cancel := context.WithTimeout(context.Background(), 15*time.Second)
+		replies, rerr := qaUser.GetThreadReplies(t3Ctx, string(probe2TS))
+		t3Cancel()
+		if rerr != nil {
+			t.Logf("conversations.replies poll error (will retry): %v", rerr)
+		} else {
+			for _, r := range replies {
+				// pherald's reply to the in-thread query: carries idToken2 and is
+				// neither the in-thread query nor any earlier message.
+				if string(r.MessageID) != string(inThreadQueryTS) && strings.Contains(r.Text, idToken2) {
+					sawInThreadReply = true
+					inThreadReply = r
+					break
+				}
+			}
+		}
+		if sawInThreadReply {
+			break
+		}
+		time.Sleep(2 * time.Second)
+	}
+	if !sawInThreadReply {
+		tail, _ := exec.Command("tail", "-25", filepath.Join(qaDir, "pherald.log")).CombinedOutput()
+		teardown()
+		t.Fatalf("INBOUND-THREADED processing FAILED: pherald did not reply (carrying %q) to the Subscriber's in-thread message — a reply within an existing thread was not processed/answered in-thread. pherald log tail:\n%s",
+			idToken2, string(tail))
+	}
+	if string(inThreadReply.ReplyToMessageID) != string(probe2TS) {
+		teardown()
+		t.Fatalf("INBOUND-THREADED reply landed in the WRONG thread: parent=%q want probe ts=%q — a reply to an in-thread message must stay in the SAME thread",
+			inThreadReply.ReplyToMessageID, probe2TS)
+	}
+	t.Logf("✓ INBOUND-THREADED PROVEN: pherald processed the Subscriber's in-thread reply and answered IN THE SAME thread (reply ts=%s thread_ts=%s) text=%q",
+		inThreadReply.MessageID, inThreadReply.ReplyToMessageID, slackTrunc(inThreadReply.Text, 70))
 
 	// Teardown now (before writing evidence) so we can record the exit status.
 	teardown()
@@ -334,17 +420,22 @@ func TestSlack_LiveRoundTrip(t *testing.T) {
 	evidenceDir := filepath.Join(repoRoot, "docs", "qa",
 		fmt.Sprintf("HRD-115-LIVE-roundtrip-%s", time.Now().UTC().Format("2006-01-02T15-04-05Z")))
 	if werr := slackWriteEvidence(evidenceDir, slackEvidence{
-		Nonce:          nonce,
-		Probe:          probe,
-		ProbeTS:        string(probeTS),
-		QAUsername:     qaUsername,
-		CmdProbe:       cmdProbe,
-		CmdProbeTS:     string(probe2TS),
-		IDToken:        idToken,
-		ReplyDelivered: sawCmdReply,
-		DeliveredReply: deliveredReply,
-		JournalPath:    journalPath,
-		LogPath:        filepath.Join(qaDir, "pherald.log"),
+		Nonce:           nonce,
+		Probe:           probe,
+		ProbeTS:         string(probeTS),
+		QAUsername:      qaUsername,
+		CmdProbe:        cmdProbe,
+		CmdProbeTS:      string(probe2TS),
+		IDToken:         idToken,
+		ReplyDelivered:  sawCmdReply,
+		DeliveredReply:  deliveredReply,
+		InThreadQuery:   inThreadQuery,
+		InThreadQueryTS: string(inThreadQueryTS),
+		InThreadIDToken: idToken2,
+		InThreadHandled: sawInThreadReply,
+		InThreadReply:   inThreadReply,
+		JournalPath:     journalPath,
+		LogPath:         filepath.Join(qaDir, "pherald.log"),
 	}); werr != nil {
 		t.Errorf("write §107.x evidence: %v", werr)
 	} else {
@@ -363,8 +454,14 @@ type slackEvidence struct {
 	IDToken        string // unique id echoed in the Tier-1 reply
 	ReplyDelivered bool   // Tier-1 reply observed back in Slack (HARD-proven)
 	DeliveredReply messenger.Reply
-	JournalPath    string
-	LogPath        string
+	// Leg 3 — inbound threaded-message processing.
+	InThreadQuery   string // the Subscriber's reply posted WITHIN the existing thread
+	InThreadQueryTS string
+	InThreadIDToken string
+	InThreadHandled bool // pherald replied in-thread to the in-thread message (HARD-proven)
+	InThreadReply   messenger.Reply
+	JournalPath     string
+	LogPath         string
 }
 
 // slackWriteEvidence writes a human-readable, REDACTED transcript +
@@ -392,6 +489,17 @@ func slackWriteEvidence(evidenceDir string, ev slackEvidence) error {
 	if ev.ReplyDelivered {
 		fmt.Fprintf(&b, "Delivered reply ts   : %s\n", ev.DeliveredReply.MessageID)
 		fmt.Fprintf(&b, "Delivered reply text : %s\n", ev.DeliveredReply.Text)
+		fmt.Fprintf(&b, "In-thread under      : %s (thread_ts == the status-query ts ⇒ threaded reply)\n", ev.DeliveredReply.ReplyToMessageID)
+	}
+	fmt.Fprintf(&b, "\n## Leg 3 — INBOUND threaded message (Subscriber replies WITHIN an existing thread)\n")
+	fmt.Fprintf(&b, "Subscriber in-thread msg : %s\n", ev.InThreadQuery)
+	fmt.Fprintf(&b, "In-thread msg ts         : %s (thread_ts=%s)\n", ev.InThreadQueryTS, ev.CmdProbeTS)
+	fmt.Fprintf(&b, "Unique id token          : %s\n", ev.InThreadIDToken)
+	fmt.Fprintf(&b, "Processed + answered     : %v\n", ev.InThreadHandled)
+	if ev.InThreadHandled {
+		fmt.Fprintf(&b, "In-thread reply ts       : %s\n", ev.InThreadReply.MessageID)
+		fmt.Fprintf(&b, "In-thread reply text     : %s\n", ev.InThreadReply.Text)
+		fmt.Fprintf(&b, "Stayed in SAME thread    : %s (thread_ts == the original thread root)\n", ev.InThreadReply.ReplyToMessageID)
 	}
 	fmt.Fprintf(&b, "\nDirection legend: USER -> (Slack) -> pherald bot -> {Claude Code | Tier-1 recognizer} -> (Slack reply) -> USER\n")
 	if err := os.WriteFile(filepath.Join(evidenceDir, "TRANSCRIPT.md"), []byte(slackRedact(b.String())), 0o644); err != nil {

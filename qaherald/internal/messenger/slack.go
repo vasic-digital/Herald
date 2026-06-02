@@ -155,11 +155,11 @@ type slackResponse struct {
 	// the raw bytes (Preflight does this for conversations.info).
 	Channel json.RawMessage `json:"channel,omitempty"`
 	// auth.test fields
-	User    string `json:"user,omitempty"`
-	UserID  string `json:"user_id,omitempty"`
-	Team    string `json:"team,omitempty"`
-	TeamID  string `json:"team_id,omitempty"`
-	BotID   string `json:"bot_id,omitempty"`
+	User   string `json:"user,omitempty"`
+	UserID string `json:"user_id,omitempty"`
+	Team   string `json:"team,omitempty"`
+	TeamID string `json:"team_id,omitempty"`
+	BotID  string `json:"bot_id,omitempty"`
 	// files.info fields
 	File *slackFile `json:"file,omitempty"`
 	// conversations.info fields
@@ -175,14 +175,14 @@ type slackResponse struct {
 // surface is not uniform). We decode twice into the right shape per
 // method instead of trying to unify.
 type slackChannelInfo struct {
-	ID         string `json:"id"`
-	Name       string `json:"name"`
-	IsGroup    bool   `json:"is_group"`
-	IsChannel  bool   `json:"is_channel"`
-	IsIM       bool   `json:"is_im"`
-	IsMpim     bool   `json:"is_mpim"`
-	IsPrivate  bool   `json:"is_private"`
-	IsMember   bool   `json:"is_member"`
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	IsGroup   bool   `json:"is_group"`
+	IsChannel bool   `json:"is_channel"`
+	IsIM      bool   `json:"is_im"`
+	IsMpim    bool   `json:"is_mpim"`
+	IsPrivate bool   `json:"is_private"`
+	IsMember  bool   `json:"is_member"`
 }
 
 type slackFile struct {
@@ -196,14 +196,14 @@ type slackFile struct {
 }
 
 type slackMessage struct {
-	Type     string `json:"type"`
-	TS       string `json:"ts"`
-	ThreadTS string `json:"thread_ts,omitempty"`
-	User     string `json:"user,omitempty"`
-	BotID    string `json:"bot_id,omitempty"`
-	Username string `json:"username,omitempty"`
-	Text     string `json:"text,omitempty"`
-	SubType  string `json:"subtype,omitempty"`
+	Type     string      `json:"type"`
+	TS       string      `json:"ts"`
+	ThreadTS string      `json:"thread_ts,omitempty"`
+	User     string      `json:"user,omitempty"`
+	BotID    string      `json:"bot_id,omitempty"`
+	Username string      `json:"username,omitempty"`
+	Text     string      `json:"text,omitempty"`
+	SubType  string      `json:"subtype,omitempty"`
 	Files    []slackFile `json:"files,omitempty"`
 }
 
@@ -246,6 +246,39 @@ func (c *SlackClient) callJSON(ctx context.Context, method string, payload any) 
 	if !env.OK {
 		// Slack's error field is short (e.g. "invalid_auth"); safe to
 		// include — does NOT contain the token.
+		return env, respBytes, fmt.Errorf("%s failed: %s", method, sanitizeError(env.Error, c.token))
+	}
+	return env, respBytes, nil
+}
+
+// callFormGet dispatches a GET with form/query parameters for Slack READ methods
+// that REJECT a JSON request body. conversations.replies in particular returns
+// {"ok":false,"error":"invalid_arguments"} when called with
+// Content-Type: application/json — it (and the cursor-paginated read methods)
+// require the arguments as URL query parameters. The token stays in the
+// Authorization header (never in the URL), and errors remain method-only so the
+// token cannot leak.
+func (c *SlackClient) callFormGet(ctx context.Context, method string, params url.Values) (slackResponse, []byte, error) {
+	u := c.methodURL(method) + "?" + params.Encode()
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u, nil)
+	if err != nil {
+		return slackResponse{}, nil, fmt.Errorf("%s: build request", method)
+	}
+	req.Header.Set("Authorization", "Bearer "+c.token)
+	resp, err := c.hc.Do(req)
+	if err != nil {
+		return slackResponse{}, nil, fmt.Errorf("%s: request failed", method)
+	}
+	defer resp.Body.Close()
+	respBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return slackResponse{}, nil, fmt.Errorf("%s: read response", method)
+	}
+	var env slackResponse
+	if err := json.Unmarshal(respBytes, &env); err != nil {
+		return slackResponse{}, respBytes, fmt.Errorf("%s: decode response envelope", method)
+	}
+	if !env.OK {
 		return env, respBytes, fmt.Errorf("%s failed: %s", method, sanitizeError(env.Error, c.token))
 	}
 	return env, respBytes, nil
@@ -404,6 +437,27 @@ func (c *SlackClient) Send(ctx context.Context, text string) (MessageID, error) 
 	return MessageID(env.TS), nil
 }
 
+// SendInThread posts text as a reply INSIDE the thread rooted at threadTS (the
+// chat.postMessage thread_ts parameter). This models a Subscriber replying
+// WITHIN an existing thread — the inbound message pherald receives then carries
+// thread_ts, and pherald MUST reply back into that same thread. Returns the new
+// message's own ts.
+func (c *SlackClient) SendInThread(ctx context.Context, text, threadTS string) (MessageID, error) {
+	payload := map[string]any{
+		"channel":   c.channelID,
+		"text":      text,
+		"thread_ts": threadTS,
+	}
+	env, _, err := c.callJSON(ctx, "chat.postMessage", payload)
+	if err != nil {
+		return "", err
+	}
+	if env.TS == "" {
+		return "", fmt.Errorf("chat.postMessage(thread): %w (empty ts)", ErrEmptyResponse)
+	}
+	return MessageID(env.TS), nil
+}
+
 // SendPhoto uploads a photo with optional caption via files.upload
 // multipart. Slack does not differentiate photo / document / voice at
 // the upload layer — all are files.upload with optional filetype hint.
@@ -491,6 +545,32 @@ func (c *SlackClient) GetUpdates(ctx context.Context, offset int64) ([]Reply, in
 		out = append(out, slackToReply(m, raw))
 	}
 	return out, highWater, nil
+}
+
+// GetThreadReplies fetches every message in the thread rooted at threadTS via
+// conversations.replies. This is REQUIRED to observe a bot reply that pherald
+// correctly posted with thread_ts set: conversations.history returns only the
+// top-level channel timeline and does NOT include threaded replies, so a
+// properly-threaded reply is invisible to GetUpdates/WaitForReply. The returned
+// slice includes the thread root (the original message) followed by its replies;
+// a reply carries ReplyToMessageID == threadTS (thread_ts != its own ts).
+func (c *SlackClient) GetThreadReplies(ctx context.Context, threadTS string) ([]Reply, error) {
+	// conversations.replies REJECTS a JSON body (invalid_arguments) — it must be
+	// called with URL query parameters (callFormGet), unlike chat.postMessage.
+	params := url.Values{}
+	params.Set("channel", c.channelID)
+	params.Set("ts", threadTS)
+	params.Set("limit", "100")
+	env, _, err := c.callFormGet(ctx, "conversations.replies", params)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]Reply, 0, len(env.Messages))
+	for _, m := range env.Messages {
+		raw, _ := json.Marshal(m)
+		out = append(out, slackToReply(m, raw))
+	}
+	return out, nil
 }
 
 // tsToOffset converts a Slack dotted-float ts ("1654.0001") into a
@@ -731,7 +811,7 @@ func (c *SlackClient) Preflight(ctx context.Context, expectedChatID int64) (Pref
 	}
 	_ = infoEnv // top-level fields not needed; we re-decode the raw
 	var infoShape struct {
-		OK      bool             `json:"ok"`
+		OK      bool              `json:"ok"`
 		Channel *slackChannelInfo `json:"channel"`
 	}
 	if jerr := json.Unmarshal(rawInfo, &infoShape); jerr == nil && infoShape.Channel != nil {

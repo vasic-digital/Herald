@@ -274,11 +274,7 @@ func (d *Dispatcher) Handle(ctx context.Context, ev commons.InboundEvent) error 
 		}
 	}
 
-	replyToID, _ := extractReplyToMessageID(ev.Raw)
-	rt := ""
-	if replyToID > 0 {
-		rt = strconv.Itoa(replyToID)
-	}
+	rt := extractReplyToID(ev.Raw)
 
 	// TIER 1 (docs/design/INTENT_RECOGNITION.md §1/§2): the deterministic
 	// CommandRecognizer is tried BEFORE the LLM dispatch. On a confident match
@@ -621,11 +617,7 @@ func (d *Dispatcher) handleConfirm(ctx context.Context, ev commons.InboundEvent,
 	if err != nil {
 		return fmt.Errorf("inbound: CONFIRM %s: %w", token, err)
 	}
-	replyToID, _ := extractReplyToMessageID(ev.Raw)
-	rt := ""
-	if replyToID > 0 {
-		rt = strconv.Itoa(replyToID)
-	}
+	rt := extractReplyToID(ev.Raw)
 	var execErr error
 	switch a.Kind {
 	case "update":
@@ -690,11 +682,7 @@ func (d *Dispatcher) fastPath(ctx context.Context, ev commons.InboundEvent, c Cl
 		return false, nil
 	}
 	rcpt := commons.Recipient{Channel: ev.Sender.Channel, ChannelUserID: ev.Sender.ChannelUserID}
-	replyToID, _ := extractReplyToMessageID(ev.Raw)
-	rt := ""
-	if replyToID > 0 {
-		rt = strconv.Itoa(replyToID)
-	}
+	rt := extractReplyToID(ev.Raw)
 	if err != nil {
 		// Fast-path handler errored (e.g. non-operator rejection on
 		// Done:/Reopen:). Surface the message to the operator via the
@@ -712,6 +700,55 @@ func (d *Dispatcher) fastPath(ctx context.Context, ev commons.InboundEvent, c Cl
 	}
 	log.Printf("inbound dispatched: %s (event=%s channel=%s user=%s replyTo=%s)", label, ev.EventID, ev.Sender.Channel, ev.Sender.ChannelUserID, rt)
 	return true, nil
+}
+
+// extractReplyToID returns the CHANNEL-AGNOSTIC thread-parent id (as the string
+// the inbound.Replier contract expects) so EVERY reply is delivered IN-THREAD on
+// every messenger that supports threading. Per-channel semantics:
+//
+//   - Slack: ev.Raw["message_id"] is the message ts (e.g. "1780389836.066119")
+//     and ev.Raw["thread_ts"] is the thread root when the incoming message is
+//     already inside a thread. We PREFER thread_ts (reply into the existing
+//     thread); otherwise we return the message's own ts so the reply STARTS a
+//     thread on it. The slack adapter maps this string straight onto thread_ts.
+//   - Telegram: ev.Raw["message_id"] is the integer Bot API message_id (int from
+//     in-process Subscribe, float64 from a getUpdates JSON round-trip). We return
+//     it as a decimal string; the tgram adapter parses it back to the int
+//     reply_to_message_id — Telegram's threading mechanism.
+//
+// Returns "" only when no usable id is present (no Raw, no message_id, and no
+// thread_ts) — callers then send a non-threaded message, the correct degraded
+// behaviour. This REPLACES the former int-only extraction at the reply sites,
+// which silently dropped Slack threading (a string ts is unparseable as int).
+func extractReplyToID(raw map[string]any) string {
+	if raw == nil {
+		return ""
+	}
+	// Slack: a message already in a thread carries thread_ts (the thread root).
+	// Telegram never sets this key, so this branch is Slack-only.
+	if ts, ok := raw["thread_ts"].(string); ok && ts != "" {
+		return ts
+	}
+	v, ok := raw["message_id"]
+	if !ok {
+		return ""
+	}
+	switch x := v.(type) {
+	case string: // Slack ts ("<epoch>.<seq>") — top-level message; thread on it.
+		return x
+	case int:
+		return strconv.Itoa(x)
+	case int64:
+		return strconv.FormatInt(x, 10)
+	case int32:
+		return strconv.Itoa(int(x))
+	case float64: // Telegram getUpdates JSON number.
+		return strconv.FormatInt(int64(x), 10)
+	case float32:
+		return strconv.FormatInt(int64(x), 10)
+	default:
+		return ""
+	}
 }
 
 // extractReplyToMessageID reads ev.Raw["message_id"] — populated by

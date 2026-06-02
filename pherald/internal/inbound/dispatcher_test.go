@@ -22,10 +22,11 @@ import (
 // message_id to/from strings) so the existing numeric assertions stay
 // meaningful.
 type recordingReplier struct {
-	called      bool
-	lastChatID  int64
-	lastReplyTo int
-	lastText    string
+	called         bool
+	lastChatID     int64
+	lastReplyTo    int
+	lastReplyToRaw string // the verbatim thread-parent id (Slack ts string / Telegram decimal)
+	lastText       string
 }
 
 func (r *recordingReplier) SendReply(_ context.Context, recipient commons.Recipient, body, replyToID string, _ []commons.Attachment) (string, error) {
@@ -34,6 +35,7 @@ func (r *recordingReplier) SendReply(_ context.Context, recipient commons.Recipi
 		chatID, _ := strconv.ParseInt(recipient.ChannelUserID, 10, 64)
 		r.lastChatID = chatID
 	}
+	r.lastReplyToRaw = replyToID
 	if replyToID != "" {
 		rt, _ := strconv.Atoi(replyToID)
 		r.lastReplyTo = rt
@@ -210,6 +212,83 @@ func TestDispatcherReplyPassesMessageID(t *testing.T) {
 	}
 	if rr.lastText != "pong" {
 		t.Fatalf("text: got %q want pong", rr.lastText)
+	}
+}
+
+// TestDispatcherRepliesInThread proves replies are delivered IN-THREAD on every
+// messenger that supports threading (operator mandate 2026-06-02). The dispatcher
+// must pass the correct CHANNEL-AGNOSTIC thread-parent id to SendReply:
+//   - Telegram: the integer message_id (→ reply_to_message_id),
+//   - Slack top-level message: the message ts (→ thread_ts, starting a thread),
+//   - Slack in-thread message: the thread_ts root (→ reply into the same thread).
+//
+// Regression for the bug where the int-only extractor dropped the Slack string
+// ts, so Slack replies were posted top-level instead of threaded.
+func TestDispatcherRepliesInThread(t *testing.T) {
+	// A Tier-1 status query routes deterministically through actReply (no CC),
+	// so the thread-parent id the Replier receives is exactly what the wire gets.
+	const query = "What is the status of ATM-5?"
+	cases := []struct {
+		name      string
+		channel   string
+		raw       map[string]any
+		wantReply string // expected verbatim thread-parent id passed to SendReply
+	}{
+		{
+			name:      "telegram integer message_id threads via reply_to_message_id",
+			channel:   "tgram",
+			raw:       map[string]any{"message_id": 777},
+			wantReply: "777",
+		},
+		{
+			name:      "telegram getUpdates float64 message_id",
+			channel:   "tgram",
+			raw:       map[string]any{"message_id": float64(424242)},
+			wantReply: "424242",
+		},
+		{
+			name:      "slack top-level message threads on its own ts",
+			channel:   "slack",
+			raw:       map[string]any{"message_id": "1780389834.821619", "thread_ts": ""},
+			wantReply: "1780389834.821619",
+		},
+		{
+			name:      "slack in-thread message replies into the existing thread root",
+			channel:   "slack",
+			raw:       map[string]any{"message_id": "1780389836.066119", "thread_ts": "1780389800.000100"},
+			wantReply: "1780389800.000100",
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			rr := &recordingReplier{}
+			d, err := inbound.NewDispatcher(inbound.Config{
+				ProjectName: "T",
+				Code:        stubCode{stdout: `<<<HERALD-REPLY>>> {"action":"reply","text":"unused (tier-1 fast-path answers)"}`},
+				Reply:       rr,
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			ev := commons.InboundEvent{
+				EventID: "01H",
+				Sender:  commons.Recipient{Channel: tc.channel, ChannelUserID: "C123"},
+				Body:    commons.Body{Plain: query},
+				Raw:     tc.raw,
+			}
+			if err := d.Handle(context.Background(), ev); err != nil {
+				t.Fatalf("Handle: %v", err)
+			}
+			if !rr.called {
+				t.Fatal("replier not called (status query should route to actReply)")
+			}
+			if rr.lastReplyToRaw != tc.wantReply {
+				t.Fatalf("thread-parent id: got %q want %q — reply would NOT be threaded correctly", rr.lastReplyToRaw, tc.wantReply)
+			}
+			if rr.lastReplyToRaw == "" {
+				t.Fatal("empty thread-parent id — reply would be posted top-level, not in-thread")
+			}
+		})
 	}
 }
 

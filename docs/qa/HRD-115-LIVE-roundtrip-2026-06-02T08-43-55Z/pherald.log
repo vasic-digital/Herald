@@ -1,7 +1,0 @@
-pherald listen: starting inbound runtime for channel(s): slack
-pherald listen: QA journaling enabled — /tmp/claude-501/TestSlack_LiveRoundTrip574926395/001/qa-journal
-pherald listen: docs dir docs; 0 operator(s) authorised for Done:/Reopen:
-pherald listen: workable-item mutation enabled (item.update/item.delete/confirmed-investigation)
-2026/06/02 13:43:34 inbound: reply skipped — empty reply text (event= channel=slack user=C0B76L5BPDM); message processed, nothing to send back
-2026/06/02 13:43:55 inbound recognized (tier1): action=reply (event=)
-2026/06/02 13:43:55 inbound dispatched: reply (event= channel=slack user=C0B76L5BPDM replyTo=)
