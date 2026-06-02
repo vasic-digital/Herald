@@ -43,7 +43,7 @@ func (a *Adapter) fetchThreadContext(ctx context.Context, channelID, threadTS, e
 			continue
 		}
 		out = append(out, commons.ThreadMessage{
-			SenderHandle: threadSenderHandle(m.User, m.Username, m.BotID),
+			SenderHandle: a.threadSenderHandle(ctx, m.User, m.Username, m.BotID),
 			SenderIsBot:  m.BotID != "",
 			Text:         m.Text,
 			Timestamp:    parseSlackTS(m.Timestamp),
@@ -52,12 +52,15 @@ func (a *Adapter) fetchThreadContext(ctx context.Context, channelID, threadTS, e
 	return out
 }
 
-// threadSenderHandle resolves the best available identifier for a thread
-// message's author: the user id when present, else the bot's username, else
-// the bot id. Empty only when Slack supplied none of the three.
-func threadSenderHandle(user, username, botID string) string {
+// threadSenderHandle resolves the best available HUMAN-READABLE identifier for a
+// thread message's author. When a user id is present it is resolved to an
+// "@handle" via users.info (resolveUserHandle) so the dispatcher sees real
+// usernames instead of raw "U0123ABC" ids — including an app/bot user, which
+// resolves to its real handle rather than the literal "bot". Falls back to the
+// bot's username, then the bot id. Empty only when Slack supplied none.
+func (a *Adapter) threadSenderHandle(ctx context.Context, user, username, botID string) string {
 	if user != "" {
-		return user
+		return a.resolveUserHandle(ctx, user)
 	}
 	if username != "" {
 		return username

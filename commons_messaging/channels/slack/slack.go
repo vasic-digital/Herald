@@ -52,6 +52,14 @@ type Adapter struct {
 	// thereafter without an extra wire roundtrip.
 	selfMu   sync.Mutex
 	selfID   string // bot_user_id (U…) cached after first successful auth.test
+
+	// cached user-id → display-handle resolutions (users.info). Wave 7
+	// participant-handle fix — the inbound hot path (thread context + sender)
+	// resolves Slack user-ids to "@handle" once per id and reuses the result,
+	// mirroring the selfID caching pattern above but keyed by user-id (a
+	// thread carries many distinct authors). See resolve.go.
+	userMu      sync.Mutex
+	userHandles map[string]string
 }
 
 // New constructs a live Slack adapter pointing at the real Slack Web API.

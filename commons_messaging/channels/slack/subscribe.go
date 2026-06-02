@@ -103,10 +103,24 @@ func (a *Adapter) dispatchMessageEvent(ctx context.Context, h commons.InboundHan
 	if inner == nil {
 		return nil
 	}
+	// Bug fix (Wave 7 participant resolution): the inbound SENDER is the
+	// message AUTHOR (inner.User), NOT the conversation/channel id
+	// (inner.Channel). Attributing inbound traffic to the channel id
+	// mis-credits every poster in a shared channel to a single synthetic
+	// "user". The channel id is still preserved in ev.Raw["channel"] and
+	// drives the reply destination + thread fetch.
+	//
+	// DisplayName is the human-readable "@handle" resolved via users.info
+	// (resolveUserHandle) so §11.4.104 attribution/@-tagging surfaces a real
+	// username, not the raw "U0123ABC" id — and a bot/app user resolves to
+	// its real handle rather than the literal "bot". Resolution is best-
+	// effort: an unknown id falls back to the raw id deterministically.
+	senderHandle := a.resolveUserHandle(ctx, inner.User)
 	ev := commons.InboundEvent{
 		Sender: commons.Recipient{
 			Channel:       string(commons.ChannelSlack),
-			ChannelUserID: inner.Channel,
+			ChannelUserID: inner.User,
+			DisplayName:   senderHandle,
 		},
 		Body: commons.Body{Plain: inner.Text},
 		Raw: map[string]any{

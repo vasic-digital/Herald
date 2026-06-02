@@ -49,8 +49,20 @@ func TestSlackSubscribeMessageEventReachesHandler(t *testing.T) {
 	if ev.Sender.Channel != "slack" {
 		t.Fatalf("Sender.Channel=%q want slack", ev.Sender.Channel)
 	}
-	if ev.Sender.ChannelUserID != "C0CHAT" {
-		t.Fatalf("Sender.ChannelUserID=%q want C0CHAT", ev.Sender.ChannelUserID)
+	// The inbound SENDER is the message AUTHOR (inner.User), NOT the
+	// channel/conversation id — attributing every poster in a shared channel
+	// to the channel id was the original mis-attribution bug. The channel id
+	// is preserved in ev.Raw["channel"] for the reply destination.
+	if ev.Sender.ChannelUserID != "U0HUMAN" {
+		t.Fatalf("Sender.ChannelUserID=%q want U0HUMAN (the author, not the channel)", ev.Sender.ChannelUserID)
+	}
+	if ev.Raw["channel"] != "C0CHAT" {
+		t.Fatalf("Raw.channel=%v want C0CHAT (channel id preserved for reply dest)", ev.Raw["channel"])
+	}
+	// With baseURL=http://localhost users.info is unreachable, so DisplayName
+	// falls back deterministically to the raw user id (never drops the sender).
+	if ev.Sender.DisplayName != "U0HUMAN" {
+		t.Fatalf("Sender.DisplayName=%q want U0HUMAN fallback (users.info unreachable)", ev.Sender.DisplayName)
 	}
 	if ev.Body.Plain != "hello slack" {
 		t.Fatalf("Body.Plain=%q want hello slack", ev.Body.Plain)
