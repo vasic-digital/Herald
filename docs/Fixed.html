@@ -47,7 +47,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>23</td>
+<td>24</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -55,7 +55,7 @@
 </tr>
 <tr>
 <td>Last modified</td>
-<td>2026-05-31</td>
+<td>2026-06-02</td>
 </tr>
 <tr>
 <td>Status</td>
@@ -63,9 +63,23 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td>**r23: §11.4.19 received HRD-117 (Wave 7 T8 spec-doc) from Issues.md
-— closed because its deliverable is verified present in active spec V4
-(§11.0/§32.2/§43; doc-only, product code already Fixed under
+<td>**r24: §11.4.19 atomic Issues→Fixed migration of HRD-115 (Wave 7
+Slack channel adapter — live round-trip proven on a real workspace: send
++ Socket-Mode inbound + Tier-1 reply-delivery + threading;
+participant-handle resolution fixed <code>7e7a04e</code>; evidence
+<code>docs/qa/HRD-115-LIVE-roundtrip-2026-06-02T08-43-55Z/</code>) +
+HRD-081 (podman-compose
+<code>--wait</code>/<code>Status()</code>-ps-parse fix landed upstream
+in <code>digital.vasic.containers</code> <code>222fb90</code>, Herald
+pointer bumped <code>af48c97</code>, live-proven podman-compose
+1.5.0/podman 5.8.2 per §11.4.76 extend-upstream). Both inserted as the
+top two Recently-fixed rows. HRD-159 (cross-channel empty-CC-reply
+delivery gap) STAYS OPEN in Issues.md — the seeding fix
+(<code>f0c7858</code>, bootstrapPrompt standing-contract + deterministic
+test) landed but real-Claude-honors-contract live confirmation is still
+pending. Prior r23: §11.4.19 received HRD-117 (Wave 7 T8 spec-doc) from
+Issues.md — closed because its deliverable is verified present in active
+spec V4 (§11.0/§32.2/§43; doc-only, product code already Fixed under
 HRD-116/118/119/120/121). Inserted after the HRD-116 Wave-7 cluster row.
 Prior r22: §11.4.90 + §11.4.19 atomic Obsolete→Fixed migration —
 received the 4 <code>Obsolete</code>-status HRDs from
@@ -105,25 +119,27 @@ every row's `</td>
 </tr>
 <tr>
 <td>Issues summary</td>
-<td>10 still open in <code>Issues.md</code>: HRD-008, HRD-081
-(operator/upstream); HRD-115 (Slack adapter — operator-gated on LIVE
-round-trip evidence per §107.x); HRD-117 (spec doc-only); HRD-131,
-HRD-150, HRD-155, HRD-156, HRD-157, HRD-158 (ATMOSphere/SSoT externally
-gated). The 4 Obsolete HRDs (HRD-143/144/145 + HRD-015) migrated here
-per §11.4.90.</td>
+<td>8 still open in <code>Issues.md</code>: HRD-008 (operator
+quickstart-compose validation); HRD-159 (cross-channel empty-CC-reply
+delivery gap — seeding fix <code>f0c7858</code> landed, awaiting
+real-Claude live confirmation); HRD-131, HRD-150, HRD-155, HRD-156,
+HRD-157, HRD-158 (ATMOSphere/SSoT externally gated). HRD-115 (Slack
+adapter) + HRD-081 (podman-compose fix) migrated to Fixed here per
+§11.4.19 r24. The 4 Obsolete HRDs (HRD-143/144/145 + HRD-015) migrated
+here per §11.4.90.</td>
 </tr>
 <tr>
 <td>Fixed</td>
 <td>HRD-001..HRD-007, HRD-009, HRD-009b, HRD-010, HRD-011, HRD-012,
 HRD-013, HRD-014, HRD-015, HRD-016, HRD-017, HRD-018, HRD-019..HRD-025,
-HRD-026, HRD-027, HRD-028, HRD-029..HRD-056, HRD-080, HRD-085..HRD-089,
-HRD-090, HRD-092, HRD-093, HRD-094, HRD-095, HRD-096, HRD-097, HRD-098,
-HRD-099, HRD-100, HRD-110, HRD-111, HRD-112, HRD-113, HRD-114, HRD-116,
-HRD-118, HRD-119, HRD-120, HRD-121, HRD-122, HRD-123, HRD-124, HRD-125,
-HRD-126, HRD-127, HRD-128, HRD-129, HRD-130, HRD-132, HRD-133, HRD-134,
-HRD-135, HRD-136, HRD-137, HRD-138, HRD-139, HRD-140, HRD-141, HRD-142,
-HRD-143, HRD-144, HRD-145, HRD-146, HRD-147, HRD-148, HRD-149, HRD-151,
-HRD-152, HRD-153, HRD-154</td>
+HRD-026, HRD-027, HRD-028, HRD-029..HRD-056, HRD-080, HRD-081,
+HRD-085..HRD-089, HRD-090, HRD-092, HRD-093, HRD-094, HRD-095, HRD-096,
+HRD-097, HRD-098, HRD-099, HRD-100, HRD-110, HRD-111, HRD-112, HRD-113,
+HRD-114, HRD-115, HRD-116, HRD-118, HRD-119, HRD-120, HRD-121, HRD-122,
+HRD-123, HRD-124, HRD-125, HRD-126, HRD-127, HRD-128, HRD-129, HRD-130,
+HRD-132, HRD-133, HRD-134, HRD-135, HRD-136, HRD-137, HRD-138, HRD-139,
+HRD-140, HRD-141, HRD-142, HRD-143, HRD-144, HRD-145, HRD-146, HRD-147,
+HRD-148, HRD-149, HRD-151, HRD-152, HRD-153, HRD-154</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
@@ -148,7 +164,13 @@ dispatcher live; HRD-016 pherald <code>/v1/events</code> Runner wiring
 §11.4.74 mandates propagated; I6 gate refined; Wave 2 flavor scaffolds
 (HRD-092..097) closed atomically; Wave 3a substrate (HRD-099
 commons_auth JWT verifier) + 2 live REST routes (HRD-028, HRD-098)
-closed atomically.</td>
+closed atomically. r24 (§11.4.19): HRD-115 (Wave 7 Slack channel adapter
+— live round-trip proven, send + Socket-Mode inbound + Tier-1
+reply-delivery + threading, participant-handle resolution fix
+<code>7e7a04e</code>) + HRD-081 (podman-compose
+<code>--wait</code>/<code>Status()</code>-ps-parse fix landed upstream
+containers <code>222fb90</code>, Herald pointer <code>af48c97</code>,
+live podman-compose 1.5.0/podman 5.8.2).</td>
 </tr>
 <tr>
 <td>Continuation</td>
@@ -176,6 +198,56 @@ closed atomically.</td>
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>HRD-115</td>
+<td>task</td>
+<td>high</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
+<td>Wave 7 T6 Slack channel adapter (Socket Mode) reaches live parity
+with Telegram — <code>commons_messaging/channels/slack/</code>
+implements <code>channels.Channel</code> (Send / SendReply+thread_ts /
+Subscribe via Socket Mode / BotSelfIdentity / content-addressed
+DownloadAttachment / HealthCheck) and is now LIVE-ROUND-TRIP PROVEN on a
+real workspace: send + Socket-Mode inbound + Tier-1 reply-DELIVERY +
+threading all confirmed end-to-end. Participant-handle resolution fixed
+this session (ids→@handles, sender=poster not channel). Residual
+empty-CC-reply is NOT a Slack defect (cross-channel, tgram has it too) —
+tracked by HRD-159.</td>
+<td>2026-06-02</td>
+<td><code>7e7a04e</code> (participant-handle resolution fix; live
+round-trip evidence captured)</td>
+<td>live round-trip evidence
+<code>docs/qa/HRD-115-LIVE-roundtrip-2026-06-02T08-43-55Z/</code> (+
+<code>docs/qa/HRD-115-LIVE-20260602T074249Z/</code>); §11.4.104
+IdentityResolver in the listen path; e2e E124-E131; residual
+empty-CC-reply tracked by HRD-159; spec V3 §11 Slack + §32.2;
+Catalogue-Check: reuse <code>slack-go/slack@209ec09</code>.</td>
+</tr>
+<tr>
+<td>HRD-081</td>
+<td>task</td>
+<td>low</td>
+<td>Claude</td>
+<td>@milos85vasic</td>
+<td>podman-compose runtime detection fixed upstream in
+<code>digital.vasic.containers/pkg/compose</code> — classify runtime and
+omit <code>--wait</code> for podman-compose (with host-side healthcheck
+polling fallback) plus fix <code>Status()</code> ps JSON parsing (the
+old docker-style <code>ps --format {{.Name}}</code> template errored
+against <code>podman ps</code> and reported 0 services). Per §11.4.76
+the upstream submodule was extended, never reimplemented.</td>
+<td>2026-06-02</td>
+<td><code>af48c97</code> (Herald pointer bump) + <code>222fb90</code>
+(upstream containers fix)</td>
+<td>§11.4.76 (extend upstream, never reimplement); deterministic tests
+<code>containers/pkg/compose/podman_compose_test.go</code> (argv-capture
+<code>--wait</code> matrix + ps JSON parser vs real fixture + paired
+negative
+<code>TestParsePodmanStatusJSON_NegativeOldParserMissesServices</code>);
+live-proven against podman-compose 1.5.0 / podman 5.8.2; evidence
+<code>docs/qa/HRD-081-20260602/evidence.md</code>.</td>
+</tr>
 <tr>
 <td>HRD-147</td>
 <td>task</td>
