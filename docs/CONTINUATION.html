@@ -120,7 +120,7 @@
 </tr>
 <tr>
 <td>Last modified</td>
-<td>2026-05-31</td>
+<td>2026-06-02</td>
 </tr>
 <tr>
 <td>Status</td>
@@ -128,10 +128,60 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>r22 (2026-05-29 day-4) — ATMOSphere↔︎Herald workable-items
+<td><strong>r25 (2026-06-02) — Messaging-features day: Slack live parity
++ threading + thread-context, all LIVE-PROVEN, all pushed (Herald HEAD
+<code>14fed75</code>, 4 mirrors verified via ls-remote; docs_chain
+<code>02eb81b</code> origin; all submodules clean).</strong> Delivered
+this session (9 Herald commits <code>005ff22</code>→<code>14fed75</code>
++ docs_chain <code>80d3d8d</code>/<code>02eb81b</code>): (1)
+<strong>docs_chain fully integrated</strong> — engine Phase-4/5 gaps
+filled (watch daemon, md↔︎sqlite, colorize-html), latent row-hash bug
+fixed, real-binary e2e GREEN; Herald 66-doc corpus drift caught +
+reconciled, <code>verify herald-docs</code> exit 0; routine doc flow now
+<code>docs_chain sync herald-docs</code> (not export_docs.sh). (2)
+<strong>Slack live parity</strong> — send + inbound Socket-Mode +
+reply-delivery + §11.4.104 resolver + <code>--channels</code> flag
+(<code>1f2b60c</code>/<code>43abe9b</code>/<code>f5c9aa5</code>);
+evidence <code>docs/qa/HRD-115-LIVE-*</code>. (3) <strong>Threading both
+channels</strong> — Slack <code>thread_ts</code>, Telegram
+<code>reply_to_message_id</code>, via channel-agnostic
+<code>extractReplyToID</code>
+(<code>28af644</code>/<code>e412383</code>); live-proven. (4)
+<strong>Inbound threaded messages</strong> — a Subscriber replying
+WITHIN a thread is answered IN the same thread; live-proven. (5)
+<strong>Thread-context-awareness</strong>
+(<code>daebefc</code>/<code>bc246a2</code>) —
+<code>InboundEvent.ThreadContext</code>; adapters gather the thread
+(Slack conversations.replies; Telegram quoted-parent, Bot-API
+single-parent limit documented); envelope conveys WHO (participants
+human/bot) + prior messages + WHAT (<code>detectWorkableRefs</code>
+HRD-N/ATM-N → names existing item, else classify
+newly-reported-issue/existing-item/system-event); LIVE-PROVEN BOTH
+channels via an <code>HERALD_CLAUDE_BIN</code> envelope-capture wrapper
+(the cc.dispatch JOURNAL does NOT contain the rendered envelope — only
+raw user message — so the wrapper captures <code>claude --print</code>
+argv). (6) <strong>Real bug fixed</strong> (<code>14fed75</code>) —
+fork/exec deadlock under concurrent dispatch (Setpgid child wedges
+fork→execve → parent blocks in forkExec pipe-read; stress test hung
+10min under -race); fix = forkExecLock across cmd.Start() only; -race
+-count=3 stress PASS. (7) <code>mtproto.Client.SendReply</code> added
+(quoted reply). <strong>Worked subagent-driven, max parallelism,
+file-DISJOINT (2 batches/7 agents); conductor = integration+commit+push
+seam; live tests serialized (shared channel/chat); anti-bluff real
+evidence, zero secrets in git (verified).</strong> <strong>OPEN
+follow-ups (honest, candidate parallel streams for tomorrow):</strong>
+HRD-159 (CC fresh-session empty-reply, cross-channel — Tier-2 reply not
+delivered; only Tier-1 deterministic + autonomy chain proven); Slack
+participant-handle resolution (raw user-ids not @usernames, app-token QA
+user shows as bot, inbound sender maps to channel-id not poster); Slack
+live LEG-2 occasional flakiness under heavy channel load (re-run
+passes); HRD-115 ready for Issues→Fixed; broader open HRDs (081, 131,
+150/155/156/157/158 ATMOSphere cluster — do cohesively, 008). Live-test
+cheat-sheet + gotchas in <code>.remember/remember.md</code> (local).
+Prior r22 (2026-05-29 day-4) — ATMOSphere↔︎Herald workable-items
 integration DELIVERED end-to-end across 3 repos (Herald
 <code>2412512</code> / HelixConstitution <code>8ec2b38</code> /
-ATMOSphere <code>5462a38</code>; all synced).</strong> Phase 1 plan
+ATMOSphere <code>5462a38</code>; all synced).** Phase 1 plan
 <code>~/Documents/ATMOSphere_Herald_Integration_Plan.md</code>
 (+PDF/HTML/DOCX) from 5 parallel verified-source analysis agents. Phase
 2 Herald build (all <code>-race</code> anti-bluff-tested, pushed to 4
@@ -492,11 +542,13 @@ MUST exit 0 before any commit. Multi-mirror fan-out push to four hosts
 </blockquote>
 <h2 id="1-snapshot">§1. Snapshot</h2>
 <ul>
-<li><strong>HEAD:</strong> <code>bff48a5</code> (2026-05-31).
+<li><strong>HEAD:</strong> <code>14fed75</code> (2026-06-02).
 <strong>All 4 mirrors (GitHub / GitLab / GitFlic / GitVerse) in
-sync</strong>; all 9 Helix-stack submodules + <code>containers/</code>
-clean + at pinned commits; the <code>docs_chain</code> sibling repo
-(<code>~/Projects/docs_chain</code>) clean + pushed.</li>
+sync</strong> (verified via <code>ls-remote</code>); all 9 Helix-stack
+submodules + <code>containers/</code> clean + at pinned commits; the
+<code>docs_chain</code> sibling repo
+(<code>~/Projects/docs_chain</code>) clean + pushed at
+<code>02eb81b</code>.</li>
 <li><strong>Active spec:</strong>
 <code>docs/specs/mvp/specification.V4.md</code> (V1–V3 archived under
 <code>docs/specs/mvp/archive/</code>).</li>
@@ -659,6 +711,33 @@ HRDs (HRD-133/134/135/136/137/138) Issues→Fixed. Deterministic across
 Full tgram suite <strong>26/26 PASS, 0 SKIP</strong> (was 24/24 with
 chaos SKIPped). All 4 mirrors synced.</p>
 <h2 id="3-active-work">§3. Active work</h2>
+<p><strong>2026-06-02 — Messaging features (Slack live parity +
+threading + thread-context) COMPLETE + live-proven + pushed. NOTHING IN
+FLIGHT.</strong> Clean checkpoint: Herald <code>14fed75</code> on all 4
+mirrors (ls-remote verified), docs_chain <code>02eb81b</code> origin,
+all submodules clean. The day's work (docs_chain integration, Slack live
+parity, threading both channels, inbound-threaded processing,
+thread-context-awareness with participants+subject, fork/exec deadlock
+fix, mtproto SendReply) is summarized in the r25 Status-summary above
+with commit ids; live evidence under <code>docs/qa/HRD-115-LIVE-*</code>
++ <code>docs/qa/HRD-thread-context-tgram-*</code>. Worked
+subagent-driven (2 batches/7 agents, file-disjoint,
+conductor-integrated). <strong>OPEN follow-ups (next session — candidate
+parallel streams):</strong> (1) <strong>HRD-159</strong> CC
+fresh-session empty-reply (cross-channel — Tier-2 CC reply not
+delivered; touches <code>commons_messaging/dispatch/claude_code</code>).
+(2) <strong>Slack participant-handle resolution</strong> —
+thread-context Participants show raw Slack user-ids not @usernames, the
+app-associated QA user shows as "bot", and the Slack inbound sender maps
+to the channel-id not the poster (touches
+<code>commons_messaging/channels/slack/</code> + the §11.4.104
+resolver). (3) <strong>Slack live LEG-2 flakiness</strong> under heavy
+same-channel load (re-run passes — consider adaptive timeout / channel
+cleanup). (4) <strong>HRD-115</strong> is round-trip+threading+context
+live-proven → ready for Issues→Fixed (§11.4.19). (5) Broader open HRDs
+(081, 131, 150/155/156/157/158 ATMOSphere cluster — cohesive not split,
+008). Live-test cheat-sheet + gotchas in
+<code>.remember/remember.md</code> (local-only handoff buffer).</p>
 <p><strong>2026-05-30 — HelixQA incorporated as Herald's anti-bluff QA
 SSoT (COMPLETE, real-evidence-proven). Nothing in flight.</strong>
 HelixQA (<code>git@github.com:HelixDevelopment/helixqa.git</code>) is a
