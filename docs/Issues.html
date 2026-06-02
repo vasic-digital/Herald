@@ -299,11 +299,24 @@ Socket-Mode validity
 <code>--channels</code> flag (G4), Slack <code>&lt;@U…&gt;</code> §109
 outbound tagging (<code>slack/mentions.go</code> →
 <code>workflow.go</code> notifier), build-tagged <code>slack</code>
-integration + stress/chaos tests. <strong>STILL OPEN:</strong> a
-self-driving §11.4.98 inbound round-trip needs a SECOND Slack identity
-(2nd bot or user token) — a bot cannot see its own messages; the 4
-provided vars cannot self-drive a round-trip. Closing on send-only
-evidence would be a §107 bluff.</td>
+integration + stress/chaos tests. <strong>ROUND-TRIP NOW LIVE-PROVEN
+2026-06-02:</strong> operator supplied the QA user token
+(<code>HERALD_SLACK_QA_USER_TOKEN</code>, xoxp-); the fully-automated
+<code>TestSlack_LiveRoundTrip</code> PASSES end-to-end — a Slack user
+posts → bot receives via Socket Mode → autonomy chain
+(inbound→cc.dispatch→cc.reply) proven via journal AND reply-DELIVERY
+proven: the deterministic Tier-1 reply
+<code>Looking up the status of ATM-&lt;pid&gt;…</code> landed back in
+Slack (ts&gt;probe, unique-id echoed); pherald listen exited cleanly
+(the empty-reply listener-crash fixed in <code>dispatcher.go</code>).
+Evidence
+<code>docs/qa/HRD-115-LIVE-roundtrip-2026-06-02T08-43-55Z/</code>. The
+Slack adapter is at live parity with Telegram (send + inbound +
+reply-delivery all live-proven). <strong>Residual is NOT a Slack
+defect:</strong> CC/Tier-2 reply-delivery from a FRESH bootstrap test
+session returns empty text — a cross-channel issue (tgram has it too)
+tracked by <strong>HRD-159</strong>, not HRD-115. Ready for Issues→Fixed
+at the next §11.4.19 sweep.</td>
 </tr>
 <tr>
 <td>HRD-131</td>
