@@ -112,7 +112,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>25</td>
+<td>26</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -754,6 +754,27 @@ HRDs (HRD-133/134/135/136/137/138) Issues→Fixed. Deterministic across
 Full tgram suite <strong>26/26 PASS, 0 SKIP</strong> (was 24/24 with
 chaos SKIPped). All 4 mirrors synced.</p>
 <h2 id="3-active-work">§3. Active work</h2>
+<p><strong>2026-06-02 (r27) — docs_chain INSTALLED + Batch 2 (3 parallel
+streams) COMPLETE + pushed. NOTHING IN FLIGHT.</strong> Herald
+<code>f776b90</code> on all 4 mirrors (ls-remote verified).
+<code>docs_chain</code> now built + installed at
+<code>~/.local/bin/docs_chain</code> (from
+<code>~/Projects/docs_chain</code> @ <code>02eb81b</code>);
+<code>verify herald-docs</code> reports <strong>in-sync</strong> and is
+the live §11.4.106 drift-gate. Batch 2 (file-disjoint subagent streams,
+conductor-integrated): <code>4df729f</code> reconciled siblings to
+docs_chain canonical (export_docs.sh docx/pdf had drifted);
+<code>02faf56</code> added e2e <strong>E148</strong> pure read-only
+<code>docs_chain verify</code> drift-gate (E146/E147 sync-gates already
+existed); <code>bc8a9da</code> added the
+<code>pherald/internal/inbound</code> full-pipeline reply-DELIVERY
+regression-guard (seeded stub→reply posted back; does NOT close
+HRD-159); <code>f776b90</code> CLAUDE.md r22 documents docs_chain as the
+routine doc-sync flow. <strong>Routine doc rule going forward: edit
+<code>.md</code> → <code>docs_chain sync herald-docs</code> →
+<code>verify</code> in-sync → commit (NOT export_docs.sh for
+docx/pdf).</strong> Open HRDs unchanged (8, all external-dep-blocked).
+Live-test cheat-sheet in <code>.remember/remember.md</code>.</p>
 <p><strong>2026-06-02 (r26) — Autonomous parallel batch COMPLETE +
 pushed. NOTHING IN FLIGHT.</strong> Clean checkpoint: Herald
 <code>4534fb4</code> on all 4 mirrors (ls-remote verified), containers
