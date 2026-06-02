@@ -112,7 +112,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>24</td>
+<td>25</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -128,16 +128,59 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>r25 (2026-06-02) — Messaging-features day: Slack live parity
-+ threading + thread-context, all LIVE-PROVEN, all pushed (Herald HEAD
-<code>14fed75</code>, 4 mirrors verified via ls-remote; docs_chain
-<code>02eb81b</code> origin; all submodules clean).</strong> Delivered
-this session (9 Herald commits <code>005ff22</code>→<code>14fed75</code>
-+ docs_chain <code>80d3d8d</code>/<code>02eb81b</code>): (1)
-<strong>docs_chain fully integrated</strong> — engine Phase-4/5 gaps
-filled (watch daemon, md↔︎sqlite, colorize-html), latent row-hash bug
-fixed, real-binary e2e GREEN; Herald 66-doc corpus drift caught +
-reconciled, <code>verify herald-docs</code> exit 0; routine doc flow now
+<td><strong>r26 (2026-06-02) — Autonomous parallel batch (operator
+mandate: 3-5 subagent-driven streams, max parallelism). Ran 4
+file-disjoint streams + 1 migration agent; conductor =
+integration+commit+push seam (subagents did NOT touch git or mutation
+gates — §107.y quiescence held by construction). DELIVERED (Herald
+<code>f0c7858</code>→<code>4534fb4</code>, 5 commits + containers
+<code>222fb90</code>; all 4 mirrors verified at <code>4534fb4</code> via
+ls-remote; submodule pushed): (1) HRD-159 PARTIAL — seeded
+<code>bootstrapPrompt</code> with a permanent STANDING CONTRACT so a
+fresh CC session never returns empty (<code>f0c7858</code>);
+deterministic full-automation test (<code>HERALD_CLAUDE_BIN</code>
+stateful fake, paired negative + revert-guard); stays OPEN pending
+real-Claude live confirmation. (2) Slack participant-handle resolution
+(<code>7e7a04e</code>) — <code>resolveUserHandle</code> (users.info,
+cached) maps ids→@handles; inbound Sender = poster
+(<code>inner.User</code>) not channel; bot/app user resolves to real
+handle; httptest-proven, hit-counted, paired-mutation-verified. (3)
+HRD-081 FIXED — podman-compose detection landed UPSTREAM (containers
+<code>222fb90</code>: omit <code>--wait</code> + host-poll fallback; fix
+<code>Status()</code> ps JSON — old docker template saw 0 services
+because podman ps uses <code>Names</code>≠<code>Name</code>);
+live-proven podman-compose 1.5.0/podman 5.8.2; Herald pointer
+<code>af48c97</code>; §107.x evidence
+<code>docs/qa/HRD-081-20260602/</code>. (4) v1.0.0 readiness audit
+(<code>docs/qa/v1_0_0_migration_audit/manifest.md</code>) — corrected a
+STALE premise ("~52 stuck HRDs"; that bulk migration already happened
+r43-r47). (5) §11.4.19 atomic migration HRD-115 + HRD-081 Issues→Fixed
+(<code>4534fb4</code>; Issues r48→r49, Fixed r23→r24, open 10→8,
+siblings regenerated, stale <code>| Issues |</code> line reconciled).
+<strong>REMAINING 8 OPEN — ALL external-dependency-blocked in this
+environment (§11.4.87(E)/§11.4.94 idle-permitted):</strong> HRD-159 +
+HRD-008 need LIVE/operator confirmation; HRD-150/155 upstream tool is
+DONE+tested (<code>constitution/scripts/workable-items/</code> has
+sync/diff/validate/add/update/reopen/close/report + atmosphere parser,
+suite green) but kept OPEN — operator wants the ATMOSphere cluster
+(150/155/156/157/158/131) COHESIVE, and end-to-end §107 verification
+needs the ATMOSphere repo which is NOT checked out at ~/Projects;
+HRD-156/157/158/131-materialization are ATMOSphere cross-repo.
+<strong>UNBLOCK INPUTS NEEDED FROM OPERATOR:</strong> (a) provide/point
+to the ATMOSphere working copy to progress the cluster; (b) run the
+HRD-159/008/115 live confirmations; (c) authorize splitting the cluster
+to close 150/155 on upstream-tests-alone (NOT recommended without
+ATMOSphere e2e).</strong> Prior <strong>r25 (2026-06-02) —
+Messaging-features day: Slack live parity + threading + thread-context,
+all LIVE-PROVEN, all pushed (Herald HEAD <code>14fed75</code>, 4 mirrors
+verified via ls-remote; docs_chain <code>02eb81b</code> origin; all
+submodules clean).</strong> Delivered this session (9 Herald commits
+<code>005ff22</code>→<code>14fed75</code> + docs_chain
+<code>80d3d8d</code>/<code>02eb81b</code>): (1) <strong>docs_chain fully
+integrated</strong> — engine Phase-4/5 gaps filled (watch daemon,
+md↔︎sqlite, colorize-html), latent row-hash bug fixed, real-binary e2e
+GREEN; Herald 66-doc corpus drift caught + reconciled,
+<code>verify herald-docs</code> exit 0; routine doc flow now
 <code>docs_chain sync herald-docs</code> (not export_docs.sh). (2)
 <strong>Slack live parity</strong> — send + inbound Socket-Mode +
 reply-delivery + §11.4.104 resolver + <code>--channels</code> flag
@@ -711,6 +754,30 @@ HRDs (HRD-133/134/135/136/137/138) Issues→Fixed. Deterministic across
 Full tgram suite <strong>26/26 PASS, 0 SKIP</strong> (was 24/24 with
 chaos SKIPped). All 4 mirrors synced.</p>
 <h2 id="3-active-work">§3. Active work</h2>
+<p><strong>2026-06-02 (r26) — Autonomous parallel batch COMPLETE +
+pushed. NOTHING IN FLIGHT.</strong> Clean checkpoint: Herald
+<code>4534fb4</code> on all 4 mirrors (ls-remote verified), containers
+submodule <code>222fb90</code> pushed. Delivered via 4 file-disjoint
+subagent streams + 1 migration agent (conductor
+integrated/committed/pushed serially; subagents never ran git or
+mutation gates): HRD-159 seeding fix (partial, <code>f0c7858</code>),
+Slack participant-handle resolution (<code>7e7a04e</code>), HRD-081
+podman-compose fix upstream (<code>222fb90</code>/<code>af48c97</code>,
+<strong>Fixed</strong>), v1.0.0 readiness audit + §11.4.19 migration of
+HRD-115 + HRD-081 (<strong>Fixed</strong>; open 10→8). <strong>All 8
+remaining open HRDs are external-dependency-blocked in this environment
+— the autonomous loop is at a legitimate idle point
+(§11.4.87(E)).</strong> Blockers + the exact operator unblock-inputs are
+in the r26 Status-summary above. KEY: the constitution workable-items
+tool (HRD-150/155 substrate) is already implemented + tested upstream,
+but the ATMOSphere repo is NOT checked out at
+<code>~/Projects/ATMOSphere</code>, so the ATMOSphere cluster
+(150/155/156/157/158 + HRD-131 DB materialization) cannot be
+e2e-verified/closed here; operator wants the cluster handled cohesively.
+HRD-159/008/115-live need operator-run live confirmations. <strong>NEXT
+SESSION:</strong> operator provides ATMOSphere checkout → resume the
+cohesive ATMOSphere cluster; OR run the live confirmations for
+HRD-159/008.</p>
 <p><strong>2026-06-02 — Messaging features (Slack live parity +
 threading + thread-context) COMPLETE + live-proven + pushed. NOTHING IN
 FLIGHT.</strong> Clean checkpoint: Herald <code>14fed75</code> on all 4
