@@ -112,7 +112,7 @@
 <tbody>
 <tr>
 <td>Revision</td>
-<td>21</td>
+<td>22</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -120,7 +120,7 @@
 </tr>
 <tr>
 <td>Last modified</td>
-<td>2026-05-31</td>
+<td>2026-06-02</td>
 </tr>
 <tr>
 <td>Status</td>
@@ -128,13 +128,28 @@
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>r21: corrected the stale container-stack facts in §"Project
-conventions" — host ports are the <strong>24XXX</strong> reserved range
-(Postgres 24100 / Redis 24200 / OTel 24417-24418 / flavor serve ports
-24791/24793 per <code>commons/branding.go</code>), NOT "70XXX";
-container names are <code>herald-</code>-prefixed
-(<code>herald-postgres</code> etc.), not bare <code>herald</code> —
-verified against the committed
+<td><strong>r22: documented <code>docs_chain</code> as the canonical
+routine doc-sync flow in §"Documentation artefacts (PDF/HTML siblings)"
+— the engine is now INSTALLED on PATH
+(<code>~/.local/bin/docs_chain</code>, built from
+<code>digital.vasic.docs_chain</code> @ <code>02eb81b</code>); commands
+<code>docs_chain sync herald-docs</code> (regenerate html/pdf/docx
+siblings), <code>docs_chain verify herald-docs</code> (= e2e invariant
+E146, the §11.4.106 drift-gate; assert <code>in-sync</code> before
+committing), <code>docs_chain doctor herald-docs</code> (validate the
+263-node/197-edge context graph + transform-tool presence); context
+config <code>.docs_chain/contexts/herald-docs.yaml</code> is generated
+by <code>scripts/docs_chain/gen_context.py</code> (do not hand-edit);
+captured the staleness lesson (export_docs.sh docx/pdf can drift STALE
+vs docs_chain canonical output — PREFER <code>docs_chain sync</code>
+after editing tracked docs); <code>scripts/export_docs.sh</code>
+retained as fallback; logo-injection note intact. Prior r21: corrected
+the stale container-stack facts in §"Project conventions" — host ports
+are the <strong>24XXX</strong> reserved range (Postgres 24100 / Redis
+24200 / OTel 24417-24418 / flavor serve ports 24791/24793 per
+<code>commons/branding.go</code>), NOT "70XXX"; container names are
+<code>herald-</code>-prefixed (<code>herald-postgres</code> etc.), not
+bare <code>herald</code> — verified against the committed
 <code>quickstart/docker-compose.quickstart.yml</code> + the e2e :24100
 PG reference (surfaced by the COMMONS_INFRA nano-detail guide subagent).
 Prior r20: refreshed the stale "first-implementation cycle r1
@@ -268,7 +283,7 @@ Wave 5 T1 qaherald skeleton + commons_tls enumeration fold-in (r9), Wave
 6 inbound runtime + CC headless bridge code-doc closure (r10), Helix
 §11.4.85 + §11.4.87 + §11.4.88 propagation (r11), Helix
 §11.4.89–§11.4.94 propagation (r12), Helix §11.4.95–§11.4.97 propagation
-(r13)</td>
+(r13), docs_chain documented as routine doc-sync flow (r22)</td>
 </tr>
 <tr>
 <td>Fixed summary</td>
@@ -312,7 +327,19 @@ safe-parallel-work-with-long-build catalogue + mandate, §11.4.97
 maximum-use-of-idle-time + progress-update cadence) into the same
 covenant cluster as short-form restatements citing the literal anchors
 <code>11.4.95</code>/<code>11.4.96</code>/<code>11.4.97</code>,
-inherited per §11.4.35; restated + cited, not redefined.</td>
+inherited per §11.4.35; restated + cited, not redefined; r22 rewrites
+§"Documentation artefacts (PDF/HTML siblings)" to make
+<code>docs_chain</code> (installed on PATH at
+<code>~/.local/bin/docs_chain</code>, built @ <code>02eb81b</code>) the
+documented routine doc-sync flow —
+<code>sync</code>/<code>verify</code>(=E146 §11.4.106
+drift-gate)/<code>doctor herald-docs</code>, context
+<code>.docs_chain/contexts/herald-docs.yaml</code> (generated, not
+hand-edited) — with <code>scripts/export_docs.sh</code> kept as fallback
+and the staleness lesson (export_docs docx/pdf can drift STALE vs
+docs_chain canonical; PREFER <code>docs_chain sync</code> + confirm
+<code>verify</code> in-sync before commit) captured; logo-injection note
+intact.</td>
 </tr>
 <tr>
 <td>Continuation</td>
@@ -1399,13 +1426,51 @@ migration), <code>Status.md</code> (status summary),
 <code>CONTINUATION.md</code> (live-test handoff prompt for
 operator-supplied credentials). The <code>*_Summary.md</code> variants
 are derived; do not hand-edit.</p>
+<p><strong>Routine doc-sync flow — <code>docs_chain</code> (canonical as
+of 2026-06-02).</strong> The <code>docs_chain</code> engine
+(<code>digital.vasic.docs_chain</code>, built @ commit
+<code>02eb81b</code>) is INSTALLED on PATH at
+<code>~/.local/bin/docs_chain</code> and is now the canonical
+documentation-sync flow (the §11.4.106 mechanization). After editing any
+tracked <code>.md</code>, regenerate its siblings with
+<code>docs_chain sync</code> — NOT <code>export_docs.sh</code> (see the
+staleness lesson below). Commands:</p>
+<ul>
+<li><code>docs_chain sync herald-docs</code> — regenerate the
+html/pdf/docx siblings via content-hashed incremental per-directory
+exec-wrapper transforms, atomically, updating
+<code>.docs_chain/state.json</code>. This is the routine "I edited a
+doc" command.</li>
+<li><code>docs_chain verify herald-docs</code> — read-only drift gate
+(exit 0 + <code>in-sync</code>, or <code>STALE: [...]</code>). This is
+e2e invariant <strong>E146</strong> and the §11.4.106 drift-gate; run it
+before committing and confirm <code>in-sync</code>.</li>
+<li><code>docs_chain doctor herald-docs</code> — validate the context
+graph (263 nodes, 197 edges) + that all transform tools are
+present.</li>
+<li>Context config: <code>.docs_chain/contexts/herald-docs.yaml</code>,
+generated by <code>scripts/docs_chain/gen_context.py</code> — do
+<strong>not</strong> hand-edit it.</li>
+</ul>
+<p><strong>Staleness lesson (2026-06-02).</strong> Editing a tracked
+<code>.md</code> and regenerating with
+<code>scripts/export_docs.sh</code> can leave docx/pdf siblings that
+<code>docs_chain verify</code> flags STALE (export_docs.sh produces
+byte-identical HTML, but its docx/pdf can drift from the docs_chain
+canonical output). So after editing tracked docs, run
+<code>docs_chain sync herald-docs</code> and confirm
+<code>docs_chain verify herald-docs</code> is <code>in-sync</code>
+BEFORE committing. <code>scripts/export_docs.sh</code> REMAINS a valid
+fallback when <code>docs_chain</code> is unavailable, but PREFER
+<code>docs_chain sync</code>.</p>
 <p><strong>Logo branding (added 2026-05-21).</strong> Every tracked
 Markdown doc now leads with a centered Herald logo header
 (pandoc-friendly <code>&lt;div align="center"&gt;</code> wrapping a
 <code>&lt;img src="..." alt="Herald" width="96" height="96" /&gt;</code>
 image reference to <code>assets/logo/herald_logo_square_128.png</code>).
-The export pipeline propagates that logo into the HTML, PDF, and DOCX
-siblings:</p>
+The export pipeline (both <code>docs_chain</code> and the
+<code>export_docs.sh</code> fallback) propagates that logo into the
+HTML, PDF, and DOCX siblings:</p>
 <ul>
 <li>Logo source: <code>assets/logo/herald_logo.png</code> (1664x928 RGB
 master). Square + transparent variants live under
@@ -1419,14 +1484,17 @@ HTML/PDF route.</li>
 skips submodules/, containers/, constitutable/, docs/diary/, LICENSE;
 respects YAML front-matter; computes the relative path per doc
 depth.</li>
-<li>Export: <code>bash scripts/export_docs.sh [&lt;md&gt;...]</code>
-regenerates HTML (pandoc), PDF (<code>--pdf-engine=weasyprint</code>),
-DOCX (pandoc-native) for every <code>.md</code> that already has at
-least one sibling artefact committed. Pass no args to regenerate
-everything.</li>
+<li>Export (fallback):
+<code>bash scripts/export_docs.sh [&lt;md&gt;...]</code> regenerates
+HTML (pandoc), PDF (<code>--pdf-engine=weasyprint</code>), DOCX
+(pandoc-native) for every <code>.md</code> that already has at least one
+sibling artefact committed. Pass no args to regenerate everything.
+PREFER <code>docs_chain sync herald-docs</code> per the staleness lesson
+above.</li>
 <li>When you add a new <code>.md</code>, run the injector once; when you
-edit one whose sibling exports are tracked, run the exporter for that
-one file.</li>
+edit one whose sibling exports are tracked, run
+<code>docs_chain sync herald-docs</code> (fallback: the exporter for
+that one file).</li>
 </ul>
 <h2 id="notes-for-future-scaffolding">Notes for future scaffolding</h2>
 <ul>
