@@ -118,7 +118,12 @@ Optional flags:
 Signal handling: SIGINT/SIGTERM cancels the long-poll cleanly via
 signal.NotifyContext.`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			cfg, err := loadListenConfigFromEnv()
+			// --channels (Wave 7, HRD-114b): when non-empty, OVERRIDES
+			// HERALD_CHANNELS for this invocation; when empty, the env var
+			// (default ["tgram"]) is used. This makes the documented
+			// `pherald listen --channels slack` form work end-to-end.
+			channelsFlag, _ := cmd.Flags().GetString("channels")
+			cfg, err := loadListenConfigFromEnv(channelsFlag)
 			if err != nil {
 				return err
 			}
@@ -147,7 +152,12 @@ signal.NotifyContext.`,
 			}
 			ctx, cancel := signal.NotifyContext(cmd.Context(), syscall.SIGINT, syscall.SIGTERM)
 			defer cancel()
-			fmt.Fprintln(cmd.OutOrStdout(), "pherald listen: starting Telegram getUpdates long-poll loop")
+			enabledNames := make([]string, 0, len(cfg.Subscribers))
+			for name := range cfg.Subscribers {
+				enabledNames = append(enabledNames, name)
+			}
+			sort.Strings(enabledNames)
+			fmt.Fprintf(cmd.OutOrStdout(), "pherald listen: starting inbound runtime for channel(s): %s\n", strings.Join(enabledNames, ", "))
 			if cfg.QAOutDir != "" {
 				fmt.Fprintf(cmd.OutOrStdout(), "pherald listen: QA journaling enabled — %s\n", cfg.QAOutDir)
 			}
@@ -161,6 +171,8 @@ signal.NotifyContext.`,
 			return runListen(ctx, cfg)
 		},
 	}
+	cmd.Flags().String("channels", "",
+		"Comma-separated channel set to bring up (e.g. \"slack\" or \"tgram,slack\"). Overrides HERALD_CHANNELS when set; empty falls back to the env var (default tgram). Wave 7 HRD-114b.")
 	cmd.Flags().String("qa-out-dir", "",
 		"If set, journal inbound/CC/outbound events to <dir>/transcript.jsonl + copy attachments to <dir>/attachments/<sha256>.<ext> (Wave 6 T10a §107.x evidence)")
 	cmd.Flags().String("docs-dir", "docs",
@@ -269,6 +281,15 @@ type listenConfig struct {
 	// "no ItemMutator configured" error — graceful preserved behaviour, never
 	// a silent drop (§107 fail-loud). Hermetic listen_test leaves it nil.
 	Items inbound.ItemMutator
+	// Resolver is the §11.4.104 participant identity resolver (GAP G1/G2).
+	// Production wires an env-backed commons.MemoryResolver (operator handle
+	// per channel via OperatorHandleFromEnv) so created_by/assigned_to
+	// attribution (§2) and the §110 Tier-3 clarify-tag @username resolution
+	// run for EVERY channel (Slack AND Telegram). When nil, the dispatcher
+	// skips attribution + falls back to the raw sender handle for clarify
+	// tags (Wave 6 behaviour preserved). Hermetic tests may inject a stub or
+	// leave it nil.
+	Resolver commons.IdentityResolver
 }
 
 // loadListenConfigFromEnv resolves env into listenConfig + constructs the
@@ -277,17 +298,24 @@ type listenConfig struct {
 // env var is missing — never a "boots silently with anonymous defaults"
 // path (anonymous serve plane is a §107 PASS-bluff per main.go's
 // buildVerifier doc-comment).
-func loadListenConfigFromEnv() (listenConfig, error) {
+//
+// channelsOverride (Wave 7 HRD-114b) is the --channels flag value: when
+// non-empty it OVERRIDES HERALD_CHANNELS; when empty the env var is read
+// (default ["tgram"]). Production passes cmd.Flags().GetString("channels");
+// tests pass "" to exercise the env path or an explicit string to exercise
+// the override path.
+func loadListenConfigFromEnv(channelsOverride string) (listenConfig, error) {
 	projectName := commons.ProjectName()
 	claudeBin := os.Getenv("HERALD_CLAUDE_BIN")
 
-	// Wave 7 (HRD-114): resolve the enabled channel set from HERALD_CHANNELS
-	// (comma-split; default ["tgram"] when unset/empty). Each enabled
-	// channel is constructed via the channels.New registry (Wave 7 T2) with
-	// its namespaced env (perChannelConfig). The Subscribers map fans them
-	// all into one Dispatcher; a channelRouter routes each reply back to the
-	// adapter for the recipient's channel.
-	enabled := loadEnabledChannels()
+	// Wave 7 (HRD-114): resolve the enabled channel set from the --channels
+	// flag (override) or HERALD_CHANNELS (comma-split; default ["tgram"] when
+	// both are unset/empty). Each enabled channel is constructed via the
+	// channels.New registry (Wave 7 T2) with its namespaced env
+	// (perChannelConfig). The Subscribers map fans them all into one
+	// Dispatcher; a channelRouter routes each reply back to the adapter for
+	// the recipient's channel.
+	enabled := resolveChannelListWithOverride(channelsOverride)
 	subscribers := map[string]func(ctx context.Context, h commons.InboundHandler) error{}
 	repliers := map[string]inbound.Replier{}
 
@@ -337,6 +365,10 @@ func loadListenConfigFromEnv() (listenConfig, error) {
 		Subscribers: subscribers,
 		Code:        inbound.NewCCAdapter(ccDispatcher),
 		Replier:     &channelRouter{repliers: repliers},
+		// GAP G1/G2: build the §11.4.104 participant resolver from the
+		// enabled channel set so attribution + clarify-tagging run for every
+		// channel (Slack AND Telegram), consuming HERALD_<CHANNEL>_OPERATOR_USERNAME.
+		Resolver: buildResolver(enabled),
 	}
 
 	// HERALD_INBOUND_CC_FAKE is the listen_test seam — see package doc.
@@ -350,12 +382,31 @@ func loadListenConfigFromEnv() (listenConfig, error) {
 }
 
 // loadEnabledChannels reads HERALD_CHANNELS (comma-separated channel names)
-// and returns the trimmed, non-empty, de-duplicated set in declaration
-// order. Unset / empty → ["tgram"] (Wave 6 single-channel behaviour
-// preserved). Whitespace around each name is trimmed; empty segments
+// and returns the trimmed, non-empty, de-duplicated set in declaration order.
+// Unset / empty → ["tgram"] (Wave 6 single-channel behaviour preserved).
+// Whitespace around each name is trimmed; empty segments
 // (leading/trailing/double commas) are skipped.
 func loadEnabledChannels() []string {
-	raw := os.Getenv("HERALD_CHANNELS")
+	return resolveChannelList(os.Getenv("HERALD_CHANNELS"))
+}
+
+// resolveChannelListWithOverride implements the Wave 7 HRD-114b source
+// precedence for `pherald listen`: the override (the --channels flag value)
+// wins when non-empty; otherwise HERALD_CHANNELS is read. When both are
+// empty/unset the default ["tgram"] is returned. Kept separate from
+// loadEnabledChannels so other callers (pherald watch) that have no
+// --channels flag keep the env-only behaviour unchanged.
+func resolveChannelListWithOverride(override string) []string {
+	if strings.TrimSpace(override) != "" {
+		return resolveChannelList(override)
+	}
+	return resolveChannelList(os.Getenv("HERALD_CHANNELS"))
+}
+
+// resolveChannelList parses a comma-separated channel-name string into the
+// trimmed, non-empty, de-duplicated set in declaration order, defaulting to
+// ["tgram"] when nothing remains.
+func resolveChannelList(raw string) []string {
 	out := []string{}
 	seen := map[string]bool{}
 	for _, p := range strings.Split(raw, ",") {
@@ -486,6 +537,11 @@ func runListen(ctx context.Context, cfg listenConfig) error {
 		Events:      cfg.EventEmitter,
 		Commands:    cfg.Commands,
 		Items:       cfg.Items,
+		// GAP G1/G2: thread the participant resolver so item.update injects
+		// created_by/assigned_to (§2) and the §110 Tier-3 clarify reply tags
+		// the sender's @username. nil is tolerated by the dispatcher (Wave 6
+		// behaviour) but production always wires a non-nil resolver here.
+		Resolver: cfg.Resolver,
 	})
 	if err != nil {
 		return fmt.Errorf("pherald listen: build inbound dispatcher: %w", err)

@@ -131,19 +131,26 @@ The fan-in semantics are deliberate: ONE Claude Code session sees subscriber tra
 
 ---
 
-## §2. Enabling channels (`HERALD_CHANNELS`)
+## §2. Enabling channels (`--channels` flag / `HERALD_CHANNELS` env)
 
-`HERALD_CHANNELS` is the single env var that controls which channels Wave 7 `pherald listen` brings up:
+Two equivalent ways control which channels Wave 7 `pherald listen` brings up, with the **flag taking precedence**:
 
-| Value | Behaviour |
-|---|---|
-| _unset_ or empty | Wave 6 single-channel default — Telegram only (`tgram`). |
-| `tgram` | Telegram only. Identical to the default. |
-| `tgram,slack` | Both Telegram and Slack — one Subscribe goroutine per channel, one shared inbound dispatcher. |
-| `slack` | Slack only (Telegram disabled — no `HERALD_TGRAM_*` required). |
-| `tgram,foo` | **FAILS LOUD AT BOOT** — `foo` is not registered, so `channels.New("foo")` returns `ErrUnknownChannel`. |
+1. **`--channels <comma-list>`** — the per-invocation override (e.g. `pherald listen --channels slack` or `--channels tgram,slack`). When set (non-empty), it **overrides** `HERALD_CHANNELS` for that run.
+2. **`HERALD_CHANNELS`** env var — the persistent default. Used when `--channels` is empty / omitted.
 
-Whitespace inside the value is tolerated; ordering does not matter; duplicates are collapsed; leading/trailing/double commas are skipped. The parser is `loadEnabledChannels()` (`pherald/cmd/pherald/listen.go:289..305`).
+When both are empty/unset, the Wave 6 single-channel default (`tgram`) applies.
+
+| `--channels` | `HERALD_CHANNELS` | Channels brought up |
+|---|---|---|
+| _(omitted)_ | _unset_ or empty | Telegram only (`tgram`) — Wave 6 default. |
+| _(omitted)_ | `tgram` | Telegram only. |
+| _(omitted)_ | `tgram,slack` | Both Telegram and Slack — one Subscribe goroutine per channel, one shared inbound dispatcher. |
+| _(omitted)_ | `slack` | Slack only (Telegram disabled — no `HERALD_TGRAM_*` required). |
+| `slack` | `tgram` | **Slack only** — the flag overrides the env. |
+| `tgram,slack` | _(anything)_ | Both Telegram and Slack. |
+| `tgram,foo` | _(anything)_ | **FAILS LOUD AT BOOT** — `foo` is not registered, so `channels.New("foo")` returns `ErrUnknownChannel`. |
+
+Whitespace inside the value is tolerated; ordering does not matter; duplicates are collapsed; leading/trailing/double commas are skipped. The precedence resolver is `resolveChannelListWithOverride()` (flag-or-env) wrapping `resolveChannelList()` (the comma parser) in `pherald/cmd/pherald/listen.go`.
 
 **Fail-loud invariants.**
 

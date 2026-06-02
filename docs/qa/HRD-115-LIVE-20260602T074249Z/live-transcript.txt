@@ -1,0 +1,19 @@
+# HRD-115 Slack live evidence — 2026-06-02T07:42:49Z
+# Channel: C0B76L5BPDM  Operator: @milosvasic
+
+## 1. Slack adapter live Send (Web API, bot token) — commons_messaging/channels/slack
+=== RUN   TestSend_LiveWebAPI
+    send_integration_test.go:51: Send OK: ChannelMsgID=1780386173.306249 Evidence=routed LatencyMillis=1083
+--- PASS: TestSend_LiveWebAPI (1.08s)
+PASS
+ok  	github.com/vasic-digital/herald/commons_messaging/channels/slack	2.055s
+
+## 2. qaherald MessengerClient live Send (E127 anchor TestSlack_Live_Send)
+=== RUN   TestSlack_Live_Send
+    slack_live_integration_test.go:45: Send OK: MessageID(ts)=1780386175.151239
+--- PASS: TestSlack_Live_Send (0.95s)
+PASS
+ok  	github.com/vasic-digital/herald/qaherald/internal/messenger	1.308s
+
+## 3. App-token Socket-Mode validity (apps.connections.open → live wss URL)
+apps.connections.open: ok=True has_wss_url=True error=-

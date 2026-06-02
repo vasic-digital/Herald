@@ -46,9 +46,19 @@ qa-results/
 # project workable items and MUST be version-controlled. This is a deliberate Herald
 # divergence from the parent §11.4.93 "gitignored-with-regeneration" default — for Herald
 # the DB IS the authoritative artefact, so it is committed, not regenerated-on-clone.
-# The transient SQLite WAL/SHM sidecars are the only DB files that stay ignored:
+# The transient SQLite WAL/SHM sidecars are the only DB files that stay ignored
+# (both the dotted HRD-131 path and the canonical §11.4.95 no-dot path, until the
+# two are reconciled — a `pherald listen` run materializes docs/workable_items.db):
 docs/.workable_items.db-shm
 docs/.workable_items.db-wal
+docs/workable_items.db-shm
+docs/workable_items.db-wal
+
+# weasyprint PDF-engine temp leak: the docs_chain md_to_pdf wrapper / weasyprint
+# drops `toPdfViaTempFile<PID>-N.{html,pdf}` scratch files into each doc dir during
+# a sync/verify run. They are pure transient scratch — never commit them.
+toPdfViaTempFile*-*.html
+toPdfViaTempFile*-*.pdf
 
 # Runtime artifacts (pid files, pherald background process IDs)
 *.pid

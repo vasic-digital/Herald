@@ -1,0 +1,4 @@
+## 4. pherald listen --channels slack — real boot + Socket Mode subscribe (10s, no fail-loud)
+pherald listen: starting inbound runtime for channel(s): slack
+pherald listen: docs dir docs; 0 operator(s) authorised for Done:/Reopen:
+pherald listen: workable-item mutation enabled (item.update/item.delete/confirmed-investigation)

@@ -248,7 +248,24 @@ satisfaction.</td>
 spec V3 §11 Slack + §32.2; evidence
 <code>docs/qa/HRD-115-20260528T080000Z/</code>; Catalogue-Check: reuse
 <code>slack-go/slack@209ec09</code> (vendored submodule v0.16.0,
-2026-05-28).</td>
+2026-05-28). <strong>LIVE PROGRESS 2026-06-02:</strong> operator
+supplied
+<code>HERALD_SLACK_{BOT_TOKEN,APP_TOKEN,CHANNEL_ID,OPERATOR_USERNAME}</code>;
+live-proven outbound Send (Web API, real <code>ts</code>),
+<code>TestSlack_Live_Send</code> PASS (E127 anchor), app-token
+Socket-Mode validity
+(<code>apps.connections.open ok=true wss-url</code>), and
+<code>pherald listen --channels slack</code> real boot — evidence
+<code>docs/qa/HRD-115-LIVE-20260602T074249Z/</code>. Also wired:
+§11.4.104 participant Resolver in the listen path (Slack+Telegram),
+<code>--channels</code> flag (G4), Slack <code>&lt;@U…&gt;</code> §109
+outbound tagging (<code>slack/mentions.go</code> →
+<code>workflow.go</code> notifier), build-tagged <code>slack</code>
+integration + stress/chaos tests. <strong>STILL OPEN:</strong> a
+self-driving §11.4.98 inbound round-trip needs a SECOND Slack identity
+(2nd bot or user token) — a bot cannot see its own messages; the 4
+provided vars cannot self-drive a round-trip. Closing on send-only
+evidence would be a §107 bluff.</td>
 </tr>
 <tr>
 <td>HRD-131</td>

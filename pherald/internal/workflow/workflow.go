@@ -25,6 +25,7 @@ import (
 	"fmt"
 
 	"github.com/vasic-digital/herald/commons"
+	"github.com/vasic-digital/herald/commons_messaging/channels/slack"
 	"github.com/vasic-digital/herald/commons_messaging/channels/tgram"
 	workable "github.com/vasic-digital/herald/commons_workable"
 	"github.com/vasic-digital/herald/pherald/internal/runner"
@@ -224,14 +225,18 @@ func (n *Notifier) tag(body string, c workable.Change, channel string) string {
 	if len(handles) == 0 {
 		return body
 	}
-	// Per-channel mention rendering. Telegram is the only channel with a
-	// rendered-mention syntax today (tgram.PrependMentions resolves each
-	// handle to its tgram @username → "cc: @a @b" prefix). Other channels
-	// have no mention renderer yet (Wave 7 — Slack <@U…>, etc.), so the body
-	// is dispatched untagged there rather than mis-resolving handles against
-	// the wrong channel's alias table.
-	if channel == tgram.Channel {
+	// Per-channel mention rendering. Each channel resolves the taggable
+	// handles to its own alias syntax (tgram → "@username"; slack → "<@U…>")
+	// via that channel's PrependMentions, which resolves each handle against
+	// the correct per-channel alias table. A channel with no mention renderer
+	// dispatches the body untagged rather than mis-resolving handles against
+	// the wrong channel's aliases.
+	switch channel {
+	case tgram.Channel:
 		return tgram.PrependMentions(body, handles, n.resolver)
+	case slack.Channel:
+		return slack.PrependMentions(body, handles, n.resolver)
+	default:
+		return body
 	}
-	return body
 }

@@ -355,39 +355,69 @@ returns a non-cancellation error, <code>runListen</code> cancels its
 siblings and propagates the error — silent partial failure is forbidden
 (<code>pherald/cmd/pherald/listen.go:399..462</code>).</p>
 <hr />
-<h2 id="2-enabling-channels-herald_channels">§2. Enabling channels
-(<code>HERALD_CHANNELS</code>)</h2>
-<p><code>HERALD_CHANNELS</code> is the single env var that controls
-which channels Wave 7 <code>pherald listen</code> brings up:</p>
+<h2 id="2-enabling-channels---channels-flag--herald_channels-env">§2.
+Enabling channels (<code>--channels</code> flag /
+<code>HERALD_CHANNELS</code> env)</h2>
+<p>Two equivalent ways control which channels Wave 7
+<code>pherald listen</code> brings up, with the <strong>flag taking
+precedence</strong>:</p>
+<ol type="1">
+<li><strong><code>--channels &lt;comma-list&gt;</code></strong> — the
+per-invocation override (e.g.
+<code>pherald listen --channels slack</code> or
+<code>--channels tgram,slack</code>). When set (non-empty), it
+<strong>overrides</strong> <code>HERALD_CHANNELS</code> for that
+run.</li>
+<li><strong><code>HERALD_CHANNELS</code></strong> env var — the
+persistent default. Used when <code>--channels</code> is empty /
+omitted.</li>
+</ol>
+<p>When both are empty/unset, the Wave 6 single-channel default
+(<code>tgram</code>) applies.</p>
 <table>
 <thead>
 <tr>
-<th>Value</th>
-<th>Behaviour</th>
+<th><code>--channels</code></th>
+<th><code>HERALD_CHANNELS</code></th>
+<th>Channels brought up</th>
 </tr>
 </thead>
 <tbody>
 <tr>
+<td><em>(omitted)</em></td>
 <td><em>unset</em> or empty</td>
-<td>Wave 6 single-channel default — Telegram only
-(<code>tgram</code>).</td>
+<td>Telegram only (<code>tgram</code>) — Wave 6 default.</td>
 </tr>
 <tr>
+<td><em>(omitted)</em></td>
 <td><code>tgram</code></td>
-<td>Telegram only. Identical to the default.</td>
+<td>Telegram only.</td>
 </tr>
 <tr>
+<td><em>(omitted)</em></td>
 <td><code>tgram,slack</code></td>
 <td>Both Telegram and Slack — one Subscribe goroutine per channel, one
 shared inbound dispatcher.</td>
 </tr>
 <tr>
+<td><em>(omitted)</em></td>
 <td><code>slack</code></td>
 <td>Slack only (Telegram disabled — no <code>HERALD_TGRAM_*</code>
 required).</td>
 </tr>
 <tr>
+<td><code>slack</code></td>
+<td><code>tgram</code></td>
+<td><strong>Slack only</strong> — the flag overrides the env.</td>
+</tr>
+<tr>
+<td><code>tgram,slack</code></td>
+<td><em>(anything)</em></td>
+<td>Both Telegram and Slack.</td>
+</tr>
+<tr>
 <td><code>tgram,foo</code></td>
+<td><em>(anything)</em></td>
 <td><strong>FAILS LOUD AT BOOT</strong> — <code>foo</code> is not
 registered, so <code>channels.New("foo")</code> returns
 <code>ErrUnknownChannel</code>.</td>
@@ -396,8 +426,9 @@ registered, so <code>channels.New("foo")</code> returns
 </table>
 <p>Whitespace inside the value is tolerated; ordering does not matter;
 duplicates are collapsed; leading/trailing/double commas are skipped.
-The parser is <code>loadEnabledChannels()</code>
-(<code>pherald/cmd/pherald/listen.go:289..305</code>).</p>
+The precedence resolver is <code>resolveChannelListWithOverride()</code>
+(flag-or-env) wrapping <code>resolveChannelList()</code> (the comma
+parser) in <code>pherald/cmd/pherald/listen.go</code>.</p>
 <p><strong>Fail-loud invariants.</strong></p>
 <ol type="1">
 <li>Unknown channel name → <code>pherald listen</code> refuses to boot
